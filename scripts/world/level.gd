@@ -19,6 +19,8 @@ var is_boss_room := false
 var _lore_index := 0
 var _after_boss: Array[Node2D] = []
 
+const AMBIENT := Color(0.56, 0.52, 0.6)
+
 
 func build(room_text: String, with_camera := true) -> void:
 	_make_room(null)
@@ -69,8 +71,22 @@ func _populate(with_camera: bool) -> void:
 
 	for m in room.markers:
 		_spawn_marker(m)
+	for spot in room.brazier_spots:
+		var fire := Brazier.new()
+		fire.position = spot
+		add_child(fire)
 	add_child(player)
-	add_child(Sparks.new())
+
+	# O mundo fica na penumbra e as luzes (fogo, Essência, herói) devolvem a
+	# cor. Partículas e números ficam numa camada própria, fora da sombra.
+	var shade := CanvasModulate.new()
+	shade.color = biome.sky.get("ambient", AMBIENT) if biome else AMBIENT
+	add_child(shade)
+	var overlay := CanvasLayer.new()
+	overlay.layer = 1
+	overlay.follow_viewport_enabled = true
+	add_child(overlay)
+	overlay.add_child(Sparks.new())
 
 	if with_camera:
 		camera = CameraRig.new()

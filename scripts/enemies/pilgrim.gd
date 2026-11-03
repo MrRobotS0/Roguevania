@@ -80,7 +80,13 @@ func _explode(scale: float) -> void:
 	super._die()
 
 
+var _fire: PointLight2D
+
+
 func draw_body() -> void:
+	if _fire == null:
+		_fire = Glow.attach(self, Palette.BURN, 70.0, 0.0, Vector2(0, -12))
+	_fire.energy = 1.4 * clampf(state_time / FUSE, 0.0, 1.0) if state == "ignite" else 0.15
 	var sway := sin(_anim * 5.0) * 1.0
 	px(-5 + sway, -16, 10, 16, ROBE)
 	px(-5 + sway, -4, 10, 4, ROBE_DARK)

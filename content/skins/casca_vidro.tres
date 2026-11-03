@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "casca_vidro"
+title = "Casca de Vidro"
+unlock = "essence"
+cost = 140
+cloak = Color(0.435, 0.702, 0.722, 1)
+cloak_dark = Color(0.247, 0.498, 0.525, 1)
+hood = Color(0.141, 0.278, 0.310, 1)
+eye = Color(1.000, 1.000, 1.000, 1)
+scarf = Color(0.749, 0.902, 0.918, 1)
+lore = "Um fulgurante tentou te engolir. Ficou com a forma."

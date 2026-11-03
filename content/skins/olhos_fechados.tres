@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "olhos_fechados"
+title = "Olhos Fechados"
+unlock = "feat"
+feat = "boss"
+feat_text = "Derrote o Imperador Cego"
+cloak = Color(0.239, 0.165, 0.361, 1)
+cloak_dark = Color(0.157, 0.106, 0.243, 1)
+hood = Color(0.082, 0.063, 0.122, 1)
+eye = Color(0.420, 0.357, 0.533, 1)
+scarf = Color(0.949, 0.757, 0.306, 1)
+closed_eyes = true
+lore = "O futuro se vê de olhos fechados. Ele tinha razão."

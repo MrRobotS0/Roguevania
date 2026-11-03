@@ -22,7 +22,7 @@ func use_path(p: String, wipe := false) -> void:
 
 
 func _defaults() -> Dictionary:
-	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0}
+	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho"}
 
 
 func _load() -> void:
@@ -62,4 +62,34 @@ func record_run(won: bool, kills: int) -> void:
 	else:
 		data["deaths"] += 1
 	data["best_kills"] = maxi(int(data["best_kills"]), kills)
+	save()
+
+
+# --- aparências ---------------------------------------------------------------------
+
+func feat_done(feat: String) -> bool:
+	match feat:
+		"boss":
+			return int(data["wins"]) >= 1
+		"deaths10":
+			return int(data["deaths"]) >= 10
+	return false
+
+
+func has_skin(s: SkinData) -> bool:
+	match s.unlock:
+		"essence":
+			return is_unlocked(s.id)
+		"feat":
+			return feat_done(s.feat)
+	return true
+
+
+func current_skin() -> SkinData:
+	var s := Catalog.skin(String(data["skin"]))
+	return s if has_skin(s) else Catalog.skin("andarilho")
+
+
+func wear(id: String) -> void:
+	data["skin"] = id
 	save()

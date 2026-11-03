@@ -112,6 +112,8 @@ func _ready() -> void:
 	await _case("gerador: 20 mapas com caminho do início à saída", _generator)
 	await _case("sala do chefe carrega com o imperador", _boss_room)
 	await _case("sala de treino carrega", _training_room)
+	await _case("aparências: trancadas, compradas, feitos e salvas", _skins)
+	await _case("fonte tem toda letra dos textos do jogo", _font_covers_text)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -573,3 +575,49 @@ func _training_room() -> void:
 	_check(level.enemies().size() == 5, "%d inimigos" % level.enemies().size())
 	await _frames(30)
 	_check(level.player.is_on_floor(), "herói não pousou no chão")
+
+
+func _skins() -> void:
+	Meta.use_path("user://teste.save", true)
+	var all := Catalog.skins()
+	_check(all.size() >= 6, "faltam aparências")
+	_check(Meta.current_skin().id == "andarilho", "começa sem a inicial")
+	var vidro := Catalog.skin("casca_vidro")
+	var olhos := Catalog.skin("olhos_fechados")
+	_check(not Meta.has_skin(vidro) and not Meta.has_skin(olhos), "trancada aparece liberada")
+	Meta.wear("casca_vidro")
+	_check(Meta.current_skin().id == "andarilho", "vestiu aparência que não tem")
+	Meta.unlock("casca_vidro")
+	Meta.record_run(true, 3)
+	_check(Meta.has_skin(vidro) and Meta.has_skin(olhos), "compra ou feito não liberou")
+	Meta.wear("olhos_fechados")
+	Meta.use_path("user://teste.save")
+	_check(Meta.current_skin().id == "olhos_fechados", "escolha não ficou salva")
+	var p := Player.new()
+	add_child(p)
+	_check(p.skin.id == "olhos_fechados", "herói não usou a aparência")
+	p.queue_free()
+	Meta.use_path("user://teste.save", true)
+
+
+func _font_covers_text() -> void:
+	var texts: Array[String] = ["ÁÀÂÃÉÊÍÓÔÕÚÇ ÇÃO NÍVEL FÚRIA ASTÚCIA ESSÊNCIA", Screen.TITLE_OPTIONS.map(func(o: Array) -> String: return o[1]).reduce(func(a: String, b: String) -> String: return a + b, "")]
+	var b := Catalog.biome("mar_de_cinzas")
+	texts.append(b.title)
+	texts.append(b.subtitle)
+	for l in b.lore:
+		texts.append(String(l))
+	for r in Catalog.all_gear():
+		texts.append(r.title)
+		texts.append(r.lore)
+	for k in Catalog.skins():
+		texts.append(k.title + k.lore + k.how_to_get())
+	for bl: Dictionary in Catalog.BLESSINGS:
+		texts.append(String(bl["title"]) + String(bl["detail"]))
+	var missing := {}
+	for t in texts:
+		for ch in t.to_upper():
+			var base: String = PixelFont.ACCENTS[ch][0] if PixelFont.ACCENTS.has(ch) else ch
+			if not PixelFont.BODY.has(base) or not PixelFont.GLYPHS.has(base) and base not in ["↑", "↓"]:
+				missing[ch] = true
+	_check(missing.is_empty(), "sem desenho: %s" % [missing.keys()])

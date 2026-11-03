@@ -39,6 +39,8 @@ func _ready() -> void:
 		_shown_hp = hp
 		poise = maxf(poise, 0.6)
 		essence_drop *= 4
+		outline_color = Color("5a1a10")
+		Glow.attach(self, Palette.DANGER, 46.0, 0.45, Vector2(0, -h * 0.5))
 
 
 func set_state(next: String) -> void:
@@ -66,6 +68,7 @@ func hurt(d: Damage) -> bool:
 		if d.lift > 0.0:
 			velocity.y = -d.lift / weight
 		Fx.burst(center(), Palette.HIT, 12 if d.crit else 6, 180.0 if d.crit else 120.0)
+		Fx.streak(center(), d.dir, Palette.UI_CRIT if d.crit else Palette.SLASH)
 	if hp <= 0:
 		_die()
 		return true
@@ -91,7 +94,14 @@ func on_interrupted() -> void:
 
 
 func _die() -> void:
-	Fx.burst(center(), body_color(), 18, 170.0, 0.6, 500.0, 3.0, 40.0)
+	# o corpo se desfaz em cinza, parte por parte, com as cores que tinha
+	var parts: Array = []
+	for p in last_parts:
+		var r: Rect2 = p[0]
+		parts.append([Rect2(r.position + global_position, r.size), p[1]])
+	if parts.is_empty():
+		Fx.burst(center(), body_color(), 18, 170.0, 0.6, 500.0, 3.0, 40.0)
+	Fx.ash(parts)
 	Fx.burst(center(), Palette.HIT, 10, 220.0, 0.45)
 	Fx.add_shake(3.0)
 	Sfx.play("enemy_die", -4.0)
@@ -181,17 +191,36 @@ func front_rect(width: float, height: float, lift := 2.0) -> Rect2:
 
 # --- desenho ---------------------------------------------------------------------
 
+# Animação comum a todos: respira parado, balança andando, se encolhe ao
+# apanhar e cresce no aviso. Passos inteiros de pixel, sem tremido.
+func _pose() -> Vector2:
+	var grow := 0.0
+	var squeeze := 0.0
+	if flash > 0.0:
+		grow = -2.0
+		squeeze = 2.0
+	elif telegraphing():
+		grow = 1.0 + float(int(state_time * 10.0) % 2)
+	elif absf(velocity.x) > 8.0 and is_on_floor():
+		grow = float(int(_anim * 8.0) % 2)
+	else:
+		grow = float(int(_anim * 2.0) % 2)
+	return Vector2((w + squeeze) / w, (h + grow) / h)
+
+
 func _draw() -> void:
+	draw_set_transform(Vector2.ZERO, 0.0, _pose())
 	begin_tint()
 	draw_body()
 	end_tint()
+	draw_set_transform(Vector2.ZERO)
 	draw_statuses(_anim)
 	if telegraphing() and int(state_time * 12.0) % 2 == 0:
 		PixelFont.draw_centered(self, "!", Vector2(0, -h - 9), Palette.DANGER, 2)
-	if elite:
-		var glow := Palette.DANGER
-		glow.a = 0.25 + 0.15 * sin(_anim * 4.0)
-		draw_rect(Rect2(-w * 0.5 - 2, -h - 2, w + 4, h + 2), glow, false, 1.0)
+	if elite and int(_anim * 12.0) % 3 == 0:
+		var spark := Palette.DANGER
+		spark.a = 0.8
+		Fx.burst(global_position + Vector2(randf_range(-w * 0.5, w * 0.5), -randf_range(0, h)), spark, 1, 10.0, 0.6, -40.0, 1.0)
 	if _hp_visible > 0.0 and alive():
 		var bw := 16.0 if not elite else 26.0
 		var y := -h - 5.0

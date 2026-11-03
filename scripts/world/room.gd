@@ -37,6 +37,10 @@ var spawns: Array[Dictionary]:
 
 var _chunks := {}
 var _revealed := {}
+var _depth := PackedByteArray()      # distância (em blocos) até o ar mais próximo
+var decor: Array = []                # [tipo, célula]: enfeites desenhados atrás de tudo
+var brazier_spots: Array[Vector2] = []
+var glints: Array[Vector2] = []      # cacos de vidro que piscam
 
 
 func _init() -> void:
@@ -48,6 +52,7 @@ static func default_colors() -> Dictionary:
 		"stone": Palette.STONE, "deep": Palette.STONE_DEEP, "top": Palette.STONE_TOP,
 		"light": Palette.STONE_LIGHT, "shadow": Palette.STONE_SHADOW, "moss": Palette.MOSS,
 		"wood": Palette.WOOD, "wood_top": Palette.WOOD_TOP, "wood_dark": Palette.WOOD_DARK,
+		"bone": Color("c8bca4"), "cloth": Color("6a1e26"), "vein": Palette.GLASS,
 	}
 
 
@@ -84,6 +89,8 @@ func load_grid(lines: PackedStringArray) -> void:
 				line = line.substr(0, x) + "." + line.substr(x + 1)
 		grid[y] = line
 	_build_collision()
+	_build_depth()
+	_build_decor()
 	_build_chunks()
 
 
@@ -226,9 +233,42 @@ class Chunk:
 	extends Node2D
 	var room: Room
 	var area: Rect2i
+	var back := false
 
 	func _draw() -> void:
-		room.draw_area(self, area)
+		if back:
+			room.draw_decor(self, area)
+		else:
+			room.draw_area(self, area)
+
+
+class Glints:
+	extends Node2D
+	var room: Room
+	var _t := 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var cam := get_viewport().get_camera_2d()
+		if cam == null:
+			return
+		var view := Rect2(cam.get_screen_center_position() - Vector2(260, 150), Vector2(520, 300))
+		for i in room.glints.size():
+			var p: Vector2 = room.glints[i]
+			if not view.has_point(p):
+				continue
+			var k := fposmod(_t * 0.7 + i * 0.37, 1.0)
+			if k > 0.12:
+				continue
+			var c := Palette.FLASH
+			c.a = 1.0 - k / 0.12
+			var soft := Color(c, c.a * 0.5)
+			draw_rect(Rect2(p + Vector2(-1, 0), Vector2(3, 1)), soft)
+			draw_rect(Rect2(p + Vector2(0, -1), Vector2(1, 3)), soft)
+			draw_rect(Rect2(p, Vector2(1, 1)), c)
 
 
 func _build_chunks() -> void:
@@ -237,11 +277,170 @@ func _build_chunks() -> void:
 	_chunks.clear()
 	for cy in range(0, rows, CHUNK):
 		for cx in range(0, cols, CHUNK):
+			var area := Rect2i(cx, cy, mini(CHUNK, cols - cx), mini(CHUNK, rows - cy))
+			var behind := Chunk.new()
+			behind.room = self
+			behind.area = area
+			behind.back = true
+			behind.z_index = -1
+			add_child(behind)
 			var chunk := Chunk.new()
 			chunk.room = self
-			chunk.area = Rect2i(cx, cy, mini(CHUNK, cols - cx), mini(CHUNK, rows - cy))
+			chunk.area = area
 			add_child(chunk)
 			_chunks[Vector2i(cx / CHUNK, cy / CHUNK)] = chunk
+	var g := Glints.new()
+	g.room = self
+	g.z_index = 1
+	add_child(g)
+
+
+# --- profundidade e enfeites --------------------------------------------------------
+
+func depth(x: int, y: int) -> int:
+	if x < 0 or y < 0 or x >= cols or y >= rows:
+		return 9
+	return _depth[y * cols + x]
+
+
+func _build_depth() -> void:
+	_depth = PackedByteArray()
+	_depth.resize(cols * rows)
+	_depth.fill(9)
+	var todo: Array[Vector2i] = []
+	for y in rows:
+		for x in cols:
+			if not _solidish(x, y):
+				_depth[y * cols + x] = 0
+				todo.append(Vector2i(x, y))
+	var head := 0
+	while head < todo.size():
+		var c := todo[head]
+		head += 1
+		var d := _depth[c.y * cols + c.x] + 1
+		if d > 8:
+			continue
+		for n: Vector2i in [Vector2i(c.x + 1, c.y), Vector2i(c.x - 1, c.y), Vector2i(c.x, c.y + 1), Vector2i(c.x, c.y - 1)]:
+			if n.x < 0 or n.y < 0 or n.x >= cols or n.y >= rows:
+				continue
+			if _depth[n.y * cols + n.x] > d:
+				_depth[n.y * cols + n.x] = d
+				todo.append(n)
+
+
+func _air(x: int, y: int) -> bool:
+	return cell(x, y) == "."
+
+
+func _build_decor() -> void:
+	decor.clear()
+	brazier_spots.clear()
+	glints.clear()
+	var last_brazier := -99
+	for y in rows:
+		for x in cols:
+			if not _air(x, y):
+				continue
+			var hv := _hash(x * 3 + 1, y * 5 + 2)
+			if is_solid(x, y + 1):
+				var room_up := 0
+				while room_up < 5 and _air(x, y - room_up - 1):
+					room_up += 1
+				var base := Vector2((x + 0.5) * TILE, (y + 1) * TILE)
+				if hv < 9 and room_up >= 4:
+					decor.append(["tree", Vector2i(x, y)])
+				elif hv < 17 and room_up >= 3:
+					decor.append(["column", Vector2i(x, y)])
+				elif hv < 30:
+					decor.append(["bones", Vector2i(x, y)])
+				elif hv < 54:
+					decor.append(["mound", Vector2i(x, y)])
+				elif hv < 70:
+					decor.append(["shards", Vector2i(x, y)])
+					glints.append(base + Vector2(hv % 9 - 4, -3))
+				elif hv < 90 and x - last_brazier > 14 and room_up >= 2 and _air(x - 1, y) and _air(x + 1, y):
+					brazier_spots.append(base)
+					last_brazier = x
+			elif is_solid(x, y - 1) and _air(x, y + 1) and _air(x, y + 2):
+				if hv < 22:
+					decor.append(["banner", Vector2i(x, y)])
+				elif hv < 40:
+					decor.append(["chain", Vector2i(x, y)])
+
+
+func draw_decor(ci: CanvasItem, area: Rect2i) -> void:
+	for d in decor:
+		var c: Vector2i = d[1]
+		if area.has_point(c):
+			_draw_prop(ci, d[0], c)
+
+
+func _draw_prop(ci: CanvasItem, kind: String, c: Vector2i) -> void:
+	var hv := _hash(c.x * 7, c.y * 3)
+	var floor_y := float((c.y + 1) * TILE)
+	var top_y := float(c.y * TILE)
+	var cx := float(c.x * TILE + 8)
+	var dark: Color = Color(colors["shadow"]).lerp(colors["stone"], 0.35)
+	match kind:
+		"tree":
+			# árvore morta, galhos secos para os dois lados
+			var tall := 34 + hv % 14
+			ci.draw_rect(Rect2(cx - 2, floor_y - tall, 3, tall), dark)
+			ci.draw_rect(Rect2(cx - 3, floor_y - 3, 5, 3), dark)
+			for i in 3:
+				var by := floor_y - tall + 4 + i * 8
+				var side := 1 if (hv + i) % 2 == 0 else -1
+				var reach := 6 + (hv >> (i + 1)) % 6
+				ci.draw_rect(Rect2(cx + (1 if side > 0 else -1 - reach), by, reach, 1), dark)
+				ci.draw_rect(Rect2(cx + side * reach - (1 if side < 0 else 0), by - 3, 1, 3), dark)
+		"column":
+			var tall := 22 + hv % 18
+			var stone: Color = Color(colors["stone"]).darkened(0.3)
+			ci.draw_rect(Rect2(cx - 6, floor_y - tall, 12, tall), stone)
+			ci.draw_rect(Rect2(cx - 8, floor_y - 4, 16, 4), stone.darkened(0.15))
+			ci.draw_rect(Rect2(cx - 6, floor_y - tall, 12, 1), Color(colors["top"]).darkened(0.25))
+			ci.draw_rect(Rect2(cx - 2, floor_y - tall + 3, 1, tall - 7), stone.darkened(0.25))
+			ci.draw_rect(Rect2(cx + 3, floor_y - tall + 3, 1, tall - 7), stone.darkened(0.25))
+			ci.draw_rect(Rect2(cx + 1, floor_y - tall - 3, 5, 3), stone)
+		"bones":
+			var bone: Color = colors["bone"]
+			ci.draw_rect(Rect2(cx - 5 + hv % 4, floor_y - 2, 7, 1), bone.darkened(0.2))
+			ci.draw_rect(Rect2(cx - 6 + hv % 4, floor_y - 3, 2, 2), bone.darkened(0.2))
+			ci.draw_rect(Rect2(cx + 2, floor_y - 4, 4, 4), bone)
+			ci.draw_rect(Rect2(cx + 3, floor_y - 3, 1, 1), Palette.UI_SHADOW)
+		"mound":
+			var ash: Color = Color(colors["moss"]).darkened(0.35)
+			var wide := 10 + hv % 12
+			for i in 3:
+				ci.draw_rect(Rect2(cx - wide * 0.5 + i * 3, floor_y - 1 - i, wide - i * 6, 1), ash.lightened(i * 0.06))
+		"shards":
+			var glass: Color = colors["vein"]
+			glass.a = 0.8
+			ci.draw_rect(Rect2(cx - 4 + hv % 5, floor_y - 3, 1, 3), glass)
+			ci.draw_rect(Rect2(cx - 2 + hv % 5, floor_y - 5, 2, 5), glass)
+			ci.draw_rect(Rect2(cx + 2 + hv % 3, floor_y - 2, 1, 2), glass)
+		"banner":
+			var cloth: Color = colors["cloth"]
+			var long := 18 + hv % 10
+			var trim := Palette.GOLD.darkened(0.35)
+			ci.draw_rect(Rect2(cx - 6, top_y, 12, 2), colors["wood"])
+			ci.draw_rect(Rect2(cx - 5, top_y + 2, 10, long), cloth)
+			ci.draw_rect(Rect2(cx - 5, top_y + 2, 1, long), cloth.lightened(0.15))
+			ci.draw_rect(Rect2(cx - 3, top_y + 6, 6, 1), trim)
+			ci.draw_rect(Rect2(cx - 1, top_y + 8, 2, 5), trim)
+			# ponta rasgada
+			ci.draw_rect(Rect2(cx - 5, top_y + 2 + long, 3, 3), cloth)
+			ci.draw_rect(Rect2(cx + 1, top_y + 2 + long, 4, 2 + hv % 3), cloth)
+		"chain":
+			var links := 3 + hv % 4
+			var metal: Color = Color(colors["shadow"]).lightened(0.18)
+			for i in links:
+				if i % 2 == 0:
+					ci.draw_rect(Rect2(cx - 1, top_y + i * 4, 3, 4), metal)
+					ci.draw_rect(Rect2(cx, top_y + i * 4 + 1, 1, 2), colors["shadow"])
+				else:
+					ci.draw_rect(Rect2(cx, top_y + i * 4, 1, 4), metal)
+			ci.draw_rect(Rect2(cx - 2, top_y + links * 4, 5, 2), metal)
 
 
 func draw_area(ci: CanvasItem, area: Rect2i) -> void:
@@ -281,9 +480,7 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 		and _solidish(x - 1, y + 1) and _solidish(x + 1, y + 1)
 
 	if buried:
-		ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), colors["deep"])
-		if _hash(x, y) < 40:
-			ci.draw_rect(Rect2(p + Vector2(_hash(y, x) % 12 + 2, _hash(x, y) % 12 + 2), Vector2(2, 1)), colors["shadow"])
+		_draw_buried(ci, x, y, p)
 		return
 
 	ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), colors["stone"])
@@ -309,6 +506,47 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 		if hv < 110:
 			ci.draw_rect(Rect2(p + Vector2(hv % 11, -1), Vector2(3 + hv % 3, 1)), colors["moss"])
 			ci.draw_rect(Rect2(p + Vector2(hv % 11 + 1, 1), Vector2(1, 1 + hv % 3)), Color(colors["moss"]).darkened(0.3))
+		elif hv < 150:
+			ci.draw_rect(Rect2(p + Vector2(hv % 13, -1), Vector2(2, 1)), Color(colors["top"]).darkened(0.2))
+		# a cinza se acumula no pé das paredes
+		var drift: Color = Color(colors["moss"]).darkened(0.12)
+		if _solidish(x - 1, y - 1):
+			for i in 5:
+				ci.draw_rect(Rect2(p.x + i * 2, p.y - 5 + i, 2, 5 - i), drift)
+		if _solidish(x + 1, y - 1):
+			for i in 5:
+				ci.draw_rect(Rect2(p.x + TILE - 2 - i * 2, p.y - 5 + i, 2, 5 - i), drift)
+
+
+# Dentro da rocha: escurece com a profundidade e tem pedras, ossos
+# enterrados e veios de vidro (onde os fulgurantes vivem).
+func _draw_buried(ci: CanvasItem, x: int, y: int, p: Vector2) -> void:
+	var k := clampf((depth(x, y) - 2) / 4.0, 0.0, 1.0)
+	var base: Color = Color(colors["deep"]).lerp(colors["shadow"], k * 0.85)
+	ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), base)
+	var hv := _hash(x, y)
+	var hv2 := _hash(y + 17, x + 5)
+	if hv < 64:
+		var rock: Color = Color(colors["deep"]).lerp(colors["stone"], 0.3).lerp(colors["shadow"], k * 0.75)
+		var at := p + Vector2(hv % 8 + 1, hv2 % 9 + 2)
+		var size := Vector2(5 + hv % 4, 3 + hv2 % 2)
+		ci.draw_rect(Rect2(at, size), rock)
+		ci.draw_rect(Rect2(at, Vector2(size.x, 1)), rock.lightened(0.12))
+		ci.draw_rect(Rect2(at + Vector2(0, size.y), Vector2(size.x, 1)), base.darkened(0.25))
+	elif hv < 70 and k < 0.6:
+		var bone: Color = Color(colors["bone"]).lerp(base, 0.45 + k * 0.4)
+		var at := p + Vector2(3 + hv2 % 4, 5 + hv2 % 6)
+		ci.draw_rect(Rect2(at, Vector2(7, 1)), bone)
+		ci.draw_rect(Rect2(at + Vector2(-1, -1), Vector2(2, 3)), bone)
+		ci.draw_rect(Rect2(at + Vector2(6, -1), Vector2(2, 3)), bone)
+	elif hv < 84:
+		var vein: Color = colors["vein"]
+		vein.a = 0.4 * (1.0 - k * 0.6)
+		var at := p + Vector2(2 + hv2 % 6, 3 + hv2 % 5)
+		for i in 5:
+			ci.draw_rect(Rect2(at + Vector2(i * 2, i if hv2 % 2 == 0 else -i), Vector2(2, 1)), vein)
+	if hv2 < 90:
+		ci.draw_rect(Rect2(p + Vector2(hv2 % 14 + 1, hv % 13 + 1), Vector2(1, 1)), base.lightened(0.1))
 
 
 func _draw_plank(ci: CanvasItem, x: int, y: int) -> void:

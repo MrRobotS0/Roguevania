@@ -81,3 +81,32 @@ func _ready() -> void:
 		var click := InputEventMouseButton.new()
 		click.button_index = pair[1]
 		InputMap.action_add_event(pair[0], click)
+
+
+# --- dicas de tecla na tela --------------------------------------------------------
+# A última coisa que o jogador apertou decide se as dicas mostram teclado ou controle.
+
+const KEY_HINTS := {
+	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "Q",
+	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO",
+}
+const PAD_HINTS := {
+	"attack1": "X", "attack2": "Y", "skill1": "LB", "skill2": "RB", "heal": "LT",
+	"interact": "CIMA", "confirm": "A", "cancel": "B", "move": "CIMA/BAIXO", "roll": "B", "jump": "A",
+}
+
+var pad_mode := false
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		pad_mode = true
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
+		pad_mode = true
+	elif event is InputEventKey or event is InputEventMouseButton:
+		pad_mode = false
+
+
+func hint(action: String) -> String:
+	var table := PAD_HINTS if pad_mode else KEY_HINTS
+	return table.get(action, "?")

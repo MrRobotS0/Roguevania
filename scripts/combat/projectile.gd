@@ -27,6 +27,16 @@ var _spin := 0.0
 
 func _ready() -> void:
 	z_index = 6
+	match style:
+		"bomb":
+			Glow.attach(self, Palette.BURN, 40.0, 0.8)
+		"orb":
+			Glow.attach(self, color, 36.0, 0.9)
+		"shard", "javelin":
+			Glow.attach(self, Palette.GLASS, 26.0, 0.5)
+		_:
+			if color == Palette.BURN or color.r > 0.9 and color.g < 0.7:
+				Glow.attach(self, Palette.BURN, 26.0, 0.6)
 
 
 func _physics_process(delta: float) -> void:

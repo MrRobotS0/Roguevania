@@ -19,13 +19,25 @@ var _t := 0.0
 var _fired := false
 
 
+var _light: PointLight2D
+
+
 func _ready() -> void:
 	z_index = 3
+	if style == "light":
+		_light = Glow.attach(self, Palette.SLASH, maxf(width * 3.0, 60.0), 0.0, Vector2(0, -20))
 	Sfx.play("crack" if style == "glass" else "omen", -8.0)
 
 
 func _physics_process(delta: float) -> void:
 	_t += delta
+	if _light:
+		if _fired:
+			_light.energy = 1.6 * (1.0 - clampf((_t - delay) / linger, 0.0, 1.0))
+			_light.position.y = -height * 0.5
+			_light.texture_scale = height * 1.4 / 128.0
+		else:
+			_light.energy = 0.5 * clampf(_t / delay, 0.0, 1.0)
 	if not _fired and _t >= delay:
 		_fired = true
 		_fire()

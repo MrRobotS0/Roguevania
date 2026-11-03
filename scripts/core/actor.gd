@@ -18,6 +18,7 @@ var statuses := {}
 var flash := 0.0
 var _burn_clock := 0.0
 var _tint := Color(0, 0, 0, 0)
+var _burn_light: PointLight2D
 
 
 func setup_body(layer: int) -> void:
@@ -66,6 +67,12 @@ func tick_statuses(delta: float) -> void:
 		statuses[name] -= delta
 		if statuses[name] <= 0.0:
 			statuses.erase(name)
+	if has_status("burn") != (_burn_light != null):
+		if _burn_light:
+			_burn_light.queue_free()
+			_burn_light = null
+		else:
+			_burn_light = Glow.attach(self, Palette.BURN, 40.0, 0.8, Vector2(0, -h * 0.5))
 	if has_status("burn") and alive():
 		_burn_clock -= delta
 		if _burn_clock <= 0.0:
@@ -77,18 +84,53 @@ func tick_statuses(delta: float) -> void:
 
 
 # --- desenho ------------------------------------------------------------------
+# Entre begin_tint() e end_tint() as partes do corpo não vão direto para a
+# tela: são juntadas e desenhadas no fim com contorno escuro de 1 px (o
+# personagem não some no cenário) e uma linha de luz em cima de cada parte.
+
+const OUTLINE := Color("0b0910")
+
+var outline_color := OUTLINE
+var _collect := false
+var _parts: Array = []
+var last_parts: Array = []     # o último corpo desenhado (vira cinza ao morrer)
+
 
 func px(x: float, y: float, rw: float, rh: float, c: Color) -> void:
 	if facing < 0:
 		x = -x - rw
-	draw_rect(Rect2(x, y, rw, rh), _tint if _tint.a > 0.0 else c)
+	raw(Rect2(x, y, rw, rh), c)
+
+
+# Parte já em coordenadas locais, sem espelhar (ex.: cachecol com física).
+func raw(r: Rect2, c: Color) -> void:
+	var color := _tint if _tint.a > 0.0 else c
+	if _collect:
+		_parts.append([r, color])
+	else:
+		draw_rect(r, color)
 
 
 func begin_tint() -> void:
 	_tint = Palette.FLASH if flash > 0.0 else Color(0, 0, 0, 0)
+	_parts.clear()
+	_collect = true
 
 
 func end_tint() -> void:
+	_collect = false
+	for p in _parts:
+		var c: Color = p[1]
+		if c.a >= 0.99:
+			draw_rect((p[0] as Rect2).grow(1.0), outline_color)
+	var lit := _tint.a <= 0.0
+	for p in _parts:
+		var r: Rect2 = p[0]
+		var c: Color = p[1]
+		draw_rect(r, c)
+		if lit and c.a >= 0.99 and r.size.y >= 3.0 and r.size.x >= 2.0:
+			draw_rect(Rect2(r.position, Vector2(r.size.x, 1)), c.lightened(0.2))
+	last_parts = _parts.duplicate()
 	_tint = Color(0, 0, 0, 0)
 
 

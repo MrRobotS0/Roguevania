@@ -18,6 +18,15 @@ const SKILLS := [
 	"res://content/skills/lanca_vidro.tres",
 ]
 
+const SKINS := [
+	"res://content/skins/andarilho.tres",
+	"res://content/skins/manto_cinza.tres",
+	"res://content/skins/herdeiro_vesper.tres",
+	"res://content/skins/casca_vidro.tres",
+	"res://content/skins/olhos_fechados.tres",
+	"res://content/skins/saco_penitente.tres",
+]
+
 const BIOMES := {
 	"mar_de_cinzas": "res://content/biomes/mar_de_cinzas/biome.tres",
 }
@@ -67,3 +76,17 @@ static func random_gear(rng: RandomNumberGenerator, tier: int, exclude: Array = 
 
 static func biome(id: String) -> BiomeData:
 	return load(BIOMES[id])
+
+
+static func skins() -> Array[SkinData]:
+	var out: Array[SkinData] = []
+	for p in SKINS:
+		out.append(load(p))
+	return out
+
+
+static func skin(id: String) -> SkinData:
+	for s in skins():
+		if s.id == id:
+			return s
+	return load(SKINS[0])

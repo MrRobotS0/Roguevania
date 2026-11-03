@@ -36,6 +36,16 @@ func dust(pos: Vector2, count := 5) -> void:
 	burst(pos, Palette.DUST, count, 55.0, 0.3, 120.0, 2.0, 25.0)
 
 
+func ash(parts: Array) -> void:
+	if is_instance_valid(sparks):
+		sparks.ash(parts)
+
+
+func streak(pos: Vector2, dir: float, color: Color) -> void:
+	if is_instance_valid(sparks):
+		sparks.streak(pos, dir, color)
+
+
 func number(pos: Vector2, value: int, crit := false) -> void:
 	if is_instance_valid(sparks):
 		sparks.number(pos, value, crit)

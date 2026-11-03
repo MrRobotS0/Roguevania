@@ -13,6 +13,11 @@ const LINES := [
 var refilled := false
 
 
+func _ready() -> void:
+	super._ready()
+	Glow.attach(self, Palette.ESSENCE, 50.0, 0.7, Vector2(10, -20))
+
+
 func prompt() -> String:
 	return "FALAR COM A VIGIA"
 
@@ -38,6 +43,11 @@ func _offers() -> Array[Dictionary]:
 		var kind := "ARMA" if r is WeaponData else "HABILIDADE"
 		out.append({"id": r.id, "title": r.title, "cost": r.unlock_cost,
 			"detail": "%s DE %s · PASSA A APARECER NAS PARTIDAS" % [kind, Combat.STAT_NAMES[r.stat]]})
+	for s in Catalog.skins():
+		if s.unlock != "essence" or Meta.is_unlocked(s.id):
+			continue
+		out.append({"id": s.id, "title": "Aparência: " + s.title, "cost": s.cost,
+			"detail": "SÓ MUDA O VISUAL · ESCOLHA NO TÍTULO", "figure": s.colors()})
 	for b: Dictionary in Catalog.BLESSINGS:
 		if Meta.is_unlocked(b["id"]):
 			continue
@@ -52,8 +62,11 @@ func _open_shop(p: Player) -> void:
 	var options: Array[Dictionary] = []
 	for o in offers:
 		var cost: int = o["cost"]
-		options.append({"label": "%s  ·  %d" % [o["title"], cost], "detail": o["detail"],
-			"disabled": p.essence < cost, "color": Palette.ESSENCE})
+		var option := {"label": "%s  ·  %d" % [o["title"], cost], "detail": o["detail"],
+			"disabled": p.essence < cost, "color": Palette.ESSENCE}
+		if o.has("figure"):
+			option["figure"] = o["figure"]
+		options.append(option)
 	options.append({"label": "SAIR", "detail": "A ESSÊNCIA QUE SOBRAR SE PERDE SE VOCÊ MORRER"})
 	var line: String = LINES[int(Run.time) % LINES.size()]
 	menu().open_choice("A VIGIA  ·  ESSÊNCIA: %d" % p.essence, line, options,

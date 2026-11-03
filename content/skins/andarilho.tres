@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "andarilho"
+title = "O Andarilho"
+unlock = "starter"
+cloak = Color(0.180, 0.365, 0.541, 1)
+cloak_dark = Color(0.122, 0.247, 0.376, 1)
+hood = Color(0.102, 0.165, 0.271, 1)
+eye = Color(0.561, 0.969, 0.910, 1)
+scarf = Color(0.910, 0.639, 0.239, 1)
+lore = "Você acordou com ele. Ninguém lembra de costurar."

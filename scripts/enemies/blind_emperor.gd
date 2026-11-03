@@ -31,6 +31,7 @@ var _summon_cd := 6.0
 var _hit_done := false
 var _alpha := 1.0
 var _cast_count := 1
+var _crown: PointLight2D
 
 
 func _init() -> void:
@@ -47,6 +48,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	_crown = Glow.attach(self, EYE, 70.0, 0.4, Vector2(0, -38))
 	set_state("intro")
 	facing = -1
 
@@ -202,6 +204,7 @@ func _die() -> void:
 
 
 func draw_body() -> void:
+	_crown.energy = (1.1 if state in ["cast", "intro"] else 0.35) * _alpha
 	if _alpha <= 0.02:
 		return
 	var a := _alpha

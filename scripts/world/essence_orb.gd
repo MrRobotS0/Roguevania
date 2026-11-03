@@ -11,6 +11,7 @@ var _t := 0.0
 
 func _ready() -> void:
 	z_index = 7
+	Glow.attach(self, Palette.ESSENCE, 22.0, 0.7)
 	velocity = Vector2(randf_range(-90, 90), randf_range(-200, -110))
 
 

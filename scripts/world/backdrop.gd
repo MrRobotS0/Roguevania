@@ -58,10 +58,14 @@ func _dunes(size: Vector2, at: Vector2) -> void:
 		draw_rect(Rect2(x + 34, base - 128, 46, 22), far)
 		draw_rect(Rect2(x + 44, base - 140, 8, 14), far)
 		draw_rect(Rect2(x + 74, base - 90, 30, 10), far)
-	# três camadas de dunas
-	_dune_layer(size, at, 0.15, size.y - 95.0, 30.0, 0.011, far.lerp(glow, 0.2))
-	_dune_layer(size, at, 0.3, size.y - 70.0, 24.0, 0.017, _c("sky2", Palette.SKY_2))
-	_dune_layer(size, at, 0.5, size.y - 40.0, 18.0, 0.023, _c("sky2", Palette.SKY_2).darkened(0.3))
+	# três camadas de dunas, com névoa de cinza entre elas: quanto mais longe,
+	# mais apagado. A última fica escura para o cenário jogável se destacar.
+	_haze(size, size.y - 150.0, glow, 0.22)
+	_dune_layer(size, at, 0.15, size.y - 95.0, 30.0, 0.011, far.lerp(glow, 0.35))
+	_haze(size, size.y - 110.0, glow, 0.16)
+	_dune_layer(size, at, 0.3, size.y - 70.0, 24.0, 0.017, _c("sky2", Palette.SKY_2).lerp(glow, 0.15))
+	_haze(size, size.y - 80.0, top, 0.25)
+	_dune_layer(size, at, 0.5, size.y - 40.0, 18.0, 0.023, _c("sky2", Palette.SKY_2).darkened(0.5))
 	# cinza caindo devagar
 	for i in 40:
 		var px := fposmod(i * 97.0 - _t * (8.0 + i % 5) - at.x * 0.3, size.x)
@@ -69,6 +73,14 @@ func _dunes(size: Vector2, at: Vector2) -> void:
 		var c := sun
 		c.a = 0.18
 		draw_rect(Rect2(px, py, 1, 1), c)
+
+
+func _haze(size: Vector2, from_y: float, color: Color, alpha: float) -> void:
+	var bands := 6
+	for i in bands:
+		var c := color
+		c.a = alpha * (1.0 - float(i) / bands)
+		draw_rect(Rect2(0, from_y + i * 10.0, size.x, size.y - from_y - i * 10.0), c)
 
 
 func _dune_layer(size: Vector2, at: Vector2, parallax: float, base: float, amp: float, freq: float, color: Color) -> void:

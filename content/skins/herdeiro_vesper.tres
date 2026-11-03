@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "herdeiro_vesper"
+title = "Herdeiro Vesper"
+unlock = "essence"
+cost = 90
+cloak = Color(0.478, 0.122, 0.169, 1)
+cloak_dark = Color(0.310, 0.071, 0.098, 1)
+hood = Color(0.114, 0.078, 0.094, 1)
+eye = Color(0.949, 0.757, 0.306, 1)
+scarf = Color(0.851, 0.706, 0.353, 1)
+lore = "As cores da Casa Vesper. A Casa caiu; o orgulho não."

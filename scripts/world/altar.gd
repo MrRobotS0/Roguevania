@@ -7,6 +7,14 @@ extends Interactable
 var used := false
 
 
+var _light: PointLight2D
+
+
+func _ready() -> void:
+	super._ready()
+	_light = Glow.attach(self, Palette.GOLD, 56.0, 0.8, Vector2(0, -22))
+
+
 func can_interact(_p: Player) -> bool:
 	return not used
 
@@ -43,6 +51,7 @@ func _draw() -> void:
 	draw_rect(Rect2(-8, -10, 16, 10), Palette.STONE)
 	draw_rect(Rect2(-9, -11, 18, 2), Palette.STONE_LIGHT)
 	if used:
+		_light.energy = 0.0
 		return
 	var bob := sin(_t * 2.5) * 2.0
 	var i := int(_t * 2.0) % 3

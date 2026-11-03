@@ -5,6 +5,12 @@ extends Interactable
 # o item velho fica no chão.
 
 var gear: Gear
+var _light: PointLight2D
+
+
+func _ready() -> void:
+	super._ready()
+	_light = Glow.attach(self, gear.data.color, 44.0, 0.7, Vector2(0, -16))
 
 
 func prompt() -> String:
@@ -24,6 +30,7 @@ func interact(p: Player) -> void:
 	Fx.burst(global_position + Vector2(0, -10), gear.data.color, 10, 80.0, 0.4, -60.0)
 	if old:
 		gear = old
+		_light.color = gear.data.color
 		_t = 0.0
 	else:
 		queue_free()

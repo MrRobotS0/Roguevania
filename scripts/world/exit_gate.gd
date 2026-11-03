@@ -11,6 +11,14 @@ var dest := ""
 var sealed := false
 
 
+var _light: PointLight2D
+
+
+func _ready() -> void:
+	super._ready()
+	_light = Glow.attach(self, Palette.ESSENCE, 64.0, 0.0, Vector2(0, -18))
+
+
 func prompt() -> String:
 	return ("SELADO: " if sealed else "ENTRAR: ") + title.to_upper()
 
@@ -32,6 +40,7 @@ func _draw() -> void:
 	draw_rect(Rect2(-10, -34, 3, 34), frame)
 	draw_rect(Rect2(7, -34, 3, 34), frame)
 	draw_rect(Rect2(-11, -37, 22, 4), frame)
+	_light.energy = 0.0 if sealed or not visible else 0.8 + 0.15 * sin(_t * 3.0)
 	if sealed:
 		draw_rect(Rect2(-7, -33, 14, 33), Palette.STONE_DEEP)
 		draw_rect(Rect2(-1, -26, 2, 12), Palette.UI_FRAME)

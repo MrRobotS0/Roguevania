@@ -23,7 +23,8 @@ def write(kind, script, cls, item):
     lines = ['[gd_resource type="Resource" script_class="%s" load_steps=2 format=3]' % cls, "",
              '[ext_resource type="Script" path="%s" id="1"]' % script, "", "[resource]", 'script = ExtResource("1")']
     for k, val in item.items():
-        lines.append("%s = %s" % (k, color(val[1:]) if k == "color" else v(val)))
+        is_color = isinstance(val, str) and len(val) == 7 and val.startswith("#")
+        lines.append("%s = %s" % (k, color(val[1:]) if is_color else v(val)))
     open(path, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
 
 def move(startup, active, recover, damage, knock, reach, lunge, stop, shake, shape, **extra):
@@ -74,8 +75,33 @@ SKILLS = [
          lore="Arrancada do corpo de um fulgurante. Ainda vibra quando passa perto da areia."),
 ]
 
+SKINS = [
+    dict(id="andarilho", title="O Andarilho", unlock="starter",
+         cloak="#2e5d8a", cloak_dark="#1f3f60", hood="#1a2a45", eye="#8ff7e8", scarf="#e8a33d",
+         lore="Você acordou com ele. Ninguém lembra de costurar."),
+    dict(id="manto_cinza", title="Manto de Cinza", unlock="essence", cost=60,
+         cloak="#8a8580", cloak_dark="#5e5a57", hood="#3b3836", eye="#ffb36b", scarf="#c8452f",
+         lore="Tecido com a cinza do deus que ardeu. Ainda morno."),
+    dict(id="herdeiro_vesper", title="Herdeiro Vesper", unlock="essence", cost=90,
+         cloak="#7a1f2b", cloak_dark="#4f1219", hood="#1d1418", eye="#f2c14e", scarf="#d9b45a",
+         lore="As cores da Casa Vesper. A Casa caiu; o orgulho não."),
+    dict(id="casca_vidro", title="Casca de Vidro", unlock="essence", cost=140,
+         cloak="#6fb3b8", cloak_dark="#3f7f86", hood="#24474f", eye="#ffffff", scarf="#bfe6ea",
+         lore="Um fulgurante tentou te engolir. Ficou com a forma."),
+    dict(id="olhos_fechados", title="Olhos Fechados", unlock="feat", feat="boss",
+         feat_text="Derrote o Imperador Cego",
+         cloak="#3d2a5c", cloak_dark="#281b3e", hood="#15101f", eye="#6b5b88", scarf="#f2c14e", closed_eyes=True,
+         lore="O futuro se vê de olhos fechados. Ele tinha razão."),
+    dict(id="saco_penitente", title="Saco de Penitente", unlock="feat", feat="deaths10",
+         feat_text="Morra 10 vezes",
+         cloak="#7a6a4f", cloak_dark="#54482f", hood="#3a3122", eye="#ff5a4a", scarf="#9a8a6a",
+         lore="Dez vezes na cinza. Agora você começa a ouvir."),
+]
+
 for w in WEAPONS:
     write("weapons", "res://scripts/combat/weapon_data.gd", "WeaponData", w)
 for s in SKILLS:
     write("skills", "res://scripts/combat/skill_data.gd", "SkillData", s)
-print(len(WEAPONS), "armas,", len(SKILLS), "habilidades")
+for k in SKINS:
+    write("skins", "res://scripts/actors/skin_data.gd", "SkinData", k)
+print(len(WEAPONS), "armas,", len(SKILLS), "habilidades,", len(SKINS), "aparências")

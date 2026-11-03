@@ -25,6 +25,11 @@ func _ready() -> void:
 
 	await _frames(20)
 	await _shot("01_titulo")
+	Meta.unlock("casca_vidro")
+	main.open_skins()
+	await _frames(4)
+	await _shot("01b_aparencia")
+	main.menu.close()
 	main.screen.close()
 	main.start_run(seed_value)
 	var p: Player = main.level.player
@@ -51,6 +56,7 @@ func _ready() -> void:
 	var altar := _first(func(n: Node) -> bool: return n is Altar)
 	if altar:
 		p.global_position = altar.global_position + Vector2(-14, 0)
+		main.level.camera.follow(p, main.level.room.size_px())
 		await _frames(10)
 		await _shot("09_perto_do_altar")
 		altar.interact(p)
@@ -61,6 +67,7 @@ func _ready() -> void:
 	var pick := _first(func(n: Node) -> bool: return n is Pickup)
 	if pick:
 		p.global_position = pick.global_position + Vector2(-12, 0)
+		main.level.camera.follow(p, main.level.room.size_px())
 		await _frames(10)
 		await _shot("11_item_no_chao")
 

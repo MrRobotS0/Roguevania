@@ -1,12 +1,20 @@
 class_name PixelFont
 extends RefCounted
 
-# Fonte 3x5 desenhada pixel a pixel. Fontes vetoriais nessa resolução
-# (480x270) borram; esta fica nítida em qualquer escala inteira.
+# Duas fontes desenhadas pixel a pixel (fontes vetoriais nessa resolução borram):
+#   pequena 3x5  -> números e rótulos do HUD          draw / draw_centered / width
+#   texto   5x7  -> menus, faixas, telas, inscrições  body / body_centered / body_width
+# Os acentos ficam numa tabela à parte e são desenhados por cima da letra-base,
+# então "FÚRIA" e "NÍVEL" saem certos nas duas.
 
 const GLYPH_W := 3
 const GLYPH_H := 5
 const ADVANCE := 4
+
+const BODY_W := 5
+const BODY_H := 7
+const BODY_ADVANCE := 6
+const BODY_LINE := 12      # 7 da letra + espaço para acento em cima e cedilha embaixo
 
 const GLYPHS := {
 	"A": "010101111101101", "B": "110101110101110", "C": "011100100100011",
@@ -29,13 +37,104 @@ const GLYPHS := {
 	"·": "000000010000000", ">": "100010001010100", "<": "001010100010001", "%": "101001010100101",
 	"=": "000111000111000", "*": "000101010101000", "[": "110100100100110", "]": "011001001001011",
 	"\"": "101101000000000", "_": "000000000000111", "|": "010010010010010",
+	";": "000010000010100",
 }
 
+const BODY := {
+	"A": [".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"],
+	"B": ["####.", "#...#", "#...#", "####.", "#...#", "#...#", "####."],
+	"C": [".###.", "#...#", "#....", "#....", "#....", "#...#", ".###."],
+	"D": ["####.", "#...#", "#...#", "#...#", "#...#", "#...#", "####."],
+	"E": ["#####", "#....", "#....", "####.", "#....", "#....", "#####"],
+	"F": ["#####", "#....", "#....", "####.", "#....", "#....", "#...."],
+	"G": [".###.", "#...#", "#....", "#.###", "#...#", "#...#", ".####"],
+	"H": ["#...#", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"],
+	"I": [".###.", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+	"J": ["..###", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
+	"K": ["#...#", "#..#.", "#.#..", "##...", "#.#..", "#..#.", "#...#"],
+	"L": ["#....", "#....", "#....", "#....", "#....", "#....", "#####"],
+	"M": ["#...#", "##.##", "#.#.#", "#.#.#", "#...#", "#...#", "#...#"],
+	"N": ["#...#", "##..#", "#.#.#", "#..##", "#...#", "#...#", "#...#"],
+	"O": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+	"P": ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+	"Q": [".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"],
+	"R": ["####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"],
+	"S": [".####", "#....", "#....", ".###.", "....#", "....#", "####."],
+	"T": ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+	"U": ["#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+	"V": ["#...#", "#...#", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
+	"W": ["#...#", "#...#", "#...#", "#.#.#", "#.#.#", "#.#.#", ".#.#."],
+	"X": ["#...#", "#...#", ".#.#.", "..#..", ".#.#.", "#...#", "#...#"],
+	"Y": ["#...#", "#...#", ".#.#.", "..#..", "..#..", "..#..", "..#.."],
+	"Z": ["#####", "....#", "...#.", "..#..", ".#...", "#....", "#####"],
+	"0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
+	"1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
+	"2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
+	"3": ["####.", "....#", "....#", ".###.", "....#", "....#", "####."],
+	"4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
+	"5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+	"6": [".###.", "#....", "#....", "####.", "#...#", "#...#", ".###."],
+	"7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
+	"8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
+	"9": [".###.", "#...#", "#...#", ".####", "....#", "....#", ".###."],
+	"!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
+	"?": [".###.", "#...#", "....#", "...#.", "..#..", ".....", "..#.."],
+	".": [".....", ".....", ".....", ".....", ".....", ".....", "..#.."],
+	",": [".....", ".....", ".....", ".....", ".....", "..#..", ".#..."],
+	":": [".....", "..#..", ".....", ".....", ".....", "..#..", "....."],
+	";": [".....", "..#..", ".....", ".....", ".....", "..#..", ".#..."],
+	"-": [".....", ".....", ".....", ".###.", ".....", ".....", "....."],
+	"+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
+	"=": [".....", ".....", "#####", ".....", "#####", ".....", "....."],
+	"/": ["....#", "....#", "...#.", "..#..", ".#...", "#....", "#...."],
+	"(": ["...#.", "..#..", ".#...", ".#...", ".#...", "..#..", "...#."],
+	")": [".#...", "..#..", "...#.", "...#.", "...#.", "..#..", ".#..."],
+	"[": [".###.", ".#...", ".#...", ".#...", ".#...", ".#...", ".###."],
+	"]": [".###.", "...#.", "...#.", "...#.", "...#.", "...#.", ".###."],
+	"'": ["..#..", "..#..", ".....", ".....", ".....", ".....", "....."],
+	"\"": [".#.#.", ".#.#.", ".....", ".....", ".....", ".....", "....."],
+	"·": [".....", ".....", ".....", "..#..", ".....", ".....", "....."],
+	">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+	"<": ["...#.", "..#..", ".#...", "#....", ".#...", "..#..", "...#."],
+	"%": ["##..#", "##..#", "...#.", "..#..", ".#...", "#..##", "#..##"],
+	"*": [".....", "#.#.#", ".###.", "#####", ".###.", "#.#.#", "....."],
+	"_": [".....", ".....", ".....", ".....", ".....", ".....", "#####"],
+	"|": ["..#..", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+	" ": [".....", ".....", ".....", ".....", ".....", ".....", "....."],
+	"↑": ["..#..", ".###.", "#.#.#", "..#..", "..#..", "..#..", "....."],
+	"↓": [".....", "..#..", "..#..", "..#..", "#.#.#", ".###.", "..#.."],
+}
+
+# letra acentuada -> [letra-base, marca]
 const ACCENTS := {
-	"Á": "A", "À": "A", "Â": "A", "Ã": "A", "É": "E", "Ê": "E", "Í": "I",
-	"Ó": "O", "Ô": "O", "Õ": "O", "Ú": "U", "Ç": "C",
+	"Á": ["A", "acute"], "À": ["A", "grave"], "Â": ["A", "circ"], "Ã": ["A", "tilde"],
+	"É": ["E", "acute"], "Ê": ["E", "circ"], "Í": ["I", "acute"],
+	"Ó": ["O", "acute"], "Ô": ["O", "circ"], "Õ": ["O", "tilde"],
+	"Ú": ["U", "acute"], "Ü": ["U", "diaeresis"], "Ç": ["C", "cedilla"],
 }
 
+# Pixels de cada marca, relativos ao canto de cima da letra. Linha -1 fica
+# vazia para a marca não grudar na letra.
+const MARKS_SMALL := {
+	"acute": [Vector2i(2, -3), Vector2i(1, -2)],
+	"grave": [Vector2i(0, -3), Vector2i(1, -2)],
+	"circ": [Vector2i(1, -3), Vector2i(0, -2), Vector2i(2, -2)],
+	"tilde": [Vector2i(1, -3), Vector2i(2, -3), Vector2i(0, -2), Vector2i(1, -2)],
+	"diaeresis": [Vector2i(0, -2), Vector2i(2, -2)],
+	"cedilla": [Vector2i(1, 5), Vector2i(0, 6)],
+}
+
+const MARKS_BODY := {
+	"acute": [Vector2i(3, -3), Vector2i(2, -2)],
+	"grave": [Vector2i(1, -3), Vector2i(2, -2)],
+	"circ": [Vector2i(2, -3), Vector2i(1, -2), Vector2i(3, -2)],
+	"tilde": [Vector2i(1, -2), Vector2i(2, -3), Vector2i(3, -2), Vector2i(4, -3)],
+	"diaeresis": [Vector2i(1, -2), Vector2i(3, -2)],
+	"cedilla": [Vector2i(2, 7), Vector2i(3, 8), Vector2i(2, 8)],
+}
+
+
+# --- fonte pequena ---------------------------------------------------------------
 
 static func width(text: String, scale := 1) -> int:
 	return maxi(text.length() * ADVANCE - 1, 0) * scale
@@ -44,8 +143,8 @@ static func width(text: String, scale := 1) -> int:
 static func draw(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
 	# A sombra de 1 px dá contraste sobre qualquer fundo do cenário.
 	if shadow.a > 0.0:
-		_draw_run(ci, text, pos + Vector2(scale, scale), shadow, scale)
-	_draw_run(ci, text, pos, color, scale)
+		_small_run(ci, text, pos + Vector2(scale, scale), shadow, scale)
+	_small_run(ci, text, pos, color, scale)
 
 
 static func draw_centered(ci: CanvasItem, text: String, center: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
@@ -53,16 +152,66 @@ static func draw_centered(ci: CanvasItem, text: String, center: Vector2, color: 
 	draw(ci, text, origin, color, scale, shadow)
 
 
-static func _draw_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale: int) -> void:
+static func _small_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale: int) -> void:
 	var x := pos.x
 	for ch in text.to_upper():
-		var bits: String = GLYPHS.get(ACCENTS.get(ch, ch), GLYPHS["?"])
+		var base := ch
+		var mark := ""
+		if ACCENTS.has(ch):
+			base = ACCENTS[ch][0]
+			mark = ACCENTS[ch][1]
+		var bits: String = GLYPHS.get(base, GLYPHS["?"])
 		for i in bits.length():
 			if bits[i] == "1":
-				var px := x + (i % GLYPH_W) * scale
-				var py := pos.y + (i / GLYPH_W) * scale
-				ci.draw_rect(Rect2(px, py, scale, scale), color)
+				ci.draw_rect(Rect2(x + (i % GLYPH_W) * scale, pos.y + (i / GLYPH_W) * scale, scale, scale), color)
+		if mark != "":
+			for p: Vector2i in MARKS_SMALL[mark]:
+				ci.draw_rect(Rect2(x + p.x * scale, pos.y + p.y * scale, scale, scale), color)
 		x += ADVANCE * scale
+
+
+# --- fonte de texto ----------------------------------------------------------------
+
+static func body_width(text: String, scale := 1) -> int:
+	return maxi(text.length() * BODY_ADVANCE - 1, 0) * scale
+
+
+static func body(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
+	if shadow.a > 0.0:
+		_body_run(ci, text, pos + Vector2(scale, scale), shadow, scale)
+	_body_run(ci, text, pos, color, scale)
+
+
+static func body_centered(ci: CanvasItem, text: String, center: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
+	var origin := Vector2(round(center.x - body_width(text, scale) * 0.5), round(center.y - BODY_H * scale * 0.5))
+	body(ci, text, origin, color, scale, shadow)
+
+
+static func _body_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale: int) -> void:
+	var x := pos.x
+	for ch in text.to_upper():
+		var base := ch
+		var mark := ""
+		if ACCENTS.has(ch):
+			base = ACCENTS[ch][0]
+			mark = ACCENTS[ch][1]
+		var rows: Array = BODY.get(base, BODY["?"])
+		for r in BODY_H:
+			var row: String = rows[r]
+			var c := 0
+			while c < BODY_W:
+				# trechos seguidos viram um retângulo só
+				if row[c] == "#":
+					var start := c
+					while c < BODY_W and row[c] == "#":
+						c += 1
+					ci.draw_rect(Rect2(x + start * scale, pos.y + r * scale, (c - start) * scale, scale), color)
+				else:
+					c += 1
+		if mark != "":
+			for p: Vector2i in MARKS_BODY[mark]:
+				ci.draw_rect(Rect2(x + p.x * scale, pos.y + p.y * scale, scale, scale), color)
+		x += BODY_ADVANCE * scale
 
 
 # Quebra o texto em linhas de até `limit` caracteres, sem cortar palavras.

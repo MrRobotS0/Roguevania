@@ -38,6 +38,15 @@ até a arte final existir.
   (aparo devolve projéteis), Lança de Vidro.
 - **Progressão**: Fragmentos Divinos (Fúria / Astúcia / Vigor) durante a partida;
   Essência gasta com a Vigia em desbloqueios permanentes.
+- **Aparências (skins)**: 6 visuais para o herói, escolhidos em APARÊNCIA no título.
+  Uma vem liberada, três se compram com a Vigia e duas saem de feitos
+  (derrotar o Imperador Cego, morrer 10 vezes). Só mudam o visual.
+- **Visual**: luz de verdade (o mundo fica na penumbra e fogo, Essência, itens e o
+  herói iluminam em volta), brilho nos pontos muito claros, contorno nos personagens,
+  cachecol com física, inimigos que viram cinza ao morrer, cenário com braseiros,
+  árvores mortas, colunas, estandartes, ossos e cacos de vidro, fundo com névoa e
+  silhuetas passando na frente da câmera. Fonte com acentos e as teclas na tela
+  mudam sozinhas entre teclado e controle.
 
 ## Estrutura
 
@@ -45,15 +54,16 @@ até a arte final existir.
 scripts/
   core/       Damage (pacote de dano), Actor (base de quem tem vida), PlayerInput
   combat/     WeaponData, SkillData, Gear, Projectile, Combat (críticos), Catalog
-  actors/     Player
+  actors/     Player, SkinData (aparência), HeroLook (miniatura nos menus)
   enemies/    Enemy (base) + cada inimigo, Hazard, Fulgurant, BlindEmperor
   world/      Room (mapa), RoomTemplate + LevelGen (gerador), Level (monta a fase),
-              objetos de interação, câmera, fundo, clima, partículas
+              objetos de interação, câmera, fundo, primeiro plano, clima,
+              partículas, luzes (Glow), braseiros
   biomes/     BiomeData
   ui/         Hud, Menu, Screen, PixelFont, Palette
   autoload/   Controls, Fx, Sfx, Meta (save permanente), Run (partida atual)
 content/
-  weapons/ skills/          armas e habilidades (.tres)
+  weapons/ skills/ skins/   armas, habilidades e aparências (.tres)
   biomes/mar_de_cinzas/     biome.tres, rooms/*.txt, chefe/trono.txt
 assets/sfx/                 sons gerados por tools/gen_sfx.py
 tests/                      testes automáticos e roteiro de prints
@@ -62,6 +72,8 @@ tools/                      geradores de conteúdo (armas, salas, sons)
 
 ## Como acrescentar coisas
 
+- **Aparência**: acrescente em `SKINS` de `tools/gen_content.py`, rode o script e
+  ponha o caminho em `Catalog.SKINS`.
 - **Arma ou habilidade**: acrescente em `tools/gen_content.py` e rode
   `python tools/gen_content.py` (ou crie o `.tres` direto); ponha o caminho em
   `scripts/combat/catalog.gd`.
@@ -76,8 +88,8 @@ tools/                      geradores de conteúdo (armas, salas, sons)
 ## Testes
 
 `Testar.bat` (ou `Godot_console.exe --headless --fixed-fps 60 --path . res://tests/run_tests.tscn`):
-29 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
+31 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
 escudo, aparo, cada inimigo, chefe, gerador (20 mapas com caminho do início à
-saída), save. Os testes usam `user://teste.save`, nunca o save real.
+saída), save, aparências e se a fonte tem desenho para toda letra dos textos. Os testes usam `user://teste.save`, nunca o save real.
 
 `tests/shots.tscn` abre o jogo, encena situações e salva prints (`-- --out=<pasta>`).

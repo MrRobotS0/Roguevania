@@ -73,6 +73,10 @@ var _climb_to := Vector2.ZERO
 var _was_grounded := true
 var _death_sent := false
 var _squash := 0.0
+var skin: SkinData
+var _scarf: Array[Vector2] = []
+var _ghosts: Array = []          # rastros da rolagem/mergulho: [posição, tempo, quadro]
+var _ghost_clock := 0.0
 
 
 func _init() -> void:
@@ -87,6 +91,9 @@ func _ready() -> void:
 	floor_snap_length = 4.0
 	z_index = 5
 	add_to_group("player")
+	if skin == null:
+		skin = Meta.current_skin()
+	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.8, Vector2(0, -12))
 
 
 func weapon(slot: int) -> Gear:
@@ -179,6 +186,8 @@ func _physics_process(delta: float) -> void:
 		var falling := velocity.y
 		move_and_slide()
 		_after_move(falling)
+	_update_scarf(delta)
+	_update_ghosts(delta)
 	queue_redraw()
 
 
@@ -713,6 +722,11 @@ func _dead_state(delta: float) -> void:
 # final chegar, isto vira um AnimatedSprite2D e o resto do arquivo fica igual.
 
 func _draw() -> void:
+	_draw_ghosts()
+	var stretch := Vector2.ONE
+	if state == State.MOVE and not is_on_floor() and velocity.y < -120.0:
+		stretch = Vector2(0.9, 1.1)
+	draw_set_transform(Vector2.ZERO, 0.0, stretch)
 	begin_tint()
 	var blink := _invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0
 	if not blink:
@@ -721,6 +735,7 @@ func _draw() -> void:
 			State.DEAD: _draw_dead()
 			_: _draw_body()
 	end_tint()
+	draw_set_transform(Vector2.ZERO)
 	if state == State.ATTACK:
 		_draw_slash()
 	draw_statuses(_anim)
@@ -740,16 +755,15 @@ func _draw_body() -> void:
 	var lift := 0.0 if is_on_floor() else -1.0
 	var top := -h + squash
 
-	px(-4 + stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
-	px(1 - stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
-	px(-5, top + 6, 10, 10 - squash, Palette.HERO_CLOAK)
-	px(-5, top + 13, 10, 3 - squash * 0.5, Palette.HERO_CLOAK_DARK)
-	px(-6, top + 8, 1, 7, Palette.HERO_CLOAK_DARK)
-	var trail := clampf(absf(velocity.x) / RUN_SPEED, 0.0, 1.0) * 4.0
-	px(-5 - trail - 2, top + 6 + sin(_anim * 14.0), 3 + trail, 2, Palette.HERO_SCARF)
-	px(-3, top + 5, 7, 2, Palette.HERO_SCARF)
-	px(-4, top, 8, 6, Palette.HERO_HOOD)
-	px(1, top + 2, 2, 1, Palette.HERO_EYE)
+	px(-4 + stride, -7 + lift, 3, 7 + absf(lift), skin.hood)
+	px(1 - stride, -7 + lift, 3, 7 + absf(lift), skin.hood)
+	px(-5, top + 6, 10, 10 - squash, skin.cloak)
+	px(-5, top + 13, 10, 3 - squash * 0.5, skin.cloak_dark)
+	px(-6, top + 8, 1, 7, skin.cloak_dark)
+	_draw_scarf()
+	px(-3, top + 5, 7, 2, skin.scarf)
+	px(-4, top, 8, 6, skin.hood)
+	px(1, top + 2, 2, 1, _eye_color())
 
 	match state:
 		State.ATTACK:
@@ -757,10 +771,10 @@ func _draw_body() -> void:
 			var reach: Vector2 = m["reach"]
 			if _state_time < float(m["startup"]):
 				px(-3, top - 6, 1, 10, _blade_color())
-				px(-4, top + 5, 3, 1, Palette.HERO_SCARF)
+				px(-4, top + 5, 3, 1, skin.scarf)
 			else:
 				px(4, top + 10, reach.x - 8.0, 1, _blade_color())
-				px(3, top + 9, 2, 3, Palette.HERO_SCARF)
+				px(3, top + 9, 2, 3, skin.scarf)
 		State.SHOOT:
 			var pull := clampf(_state_time / 0.25, 0.0, 1.0) * 3.0
 			px(6, top + 4, 1, 12, Palette.WOOD_TOP)
@@ -780,18 +794,18 @@ func _draw_body() -> void:
 
 func _draw_roll() -> void:
 	var frame := int(_state_time / ROLL_TIME * 8.0) % 4
-	px(-6, -12, 12, 12, Palette.HERO_CLOAK)
-	px(-6, -3, 12, 3, Palette.HERO_CLOAK_DARK)
+	px(-6, -12, 12, 12, skin.cloak)
+	px(-6, -3, 12, 3, skin.cloak_dark)
 	var hood := [Vector2(1, -12), Vector2(2, -6), Vector2(-3, -4), Vector2(-5, -11)]
 	var spot: Vector2 = hood[frame]
-	px(spot.x, spot.y, 5, 5, Palette.HERO_HOOD)
-	px(-8 - frame, -6, 3, 2, Palette.HERO_SCARF)
+	px(spot.x, spot.y, 5, 5, skin.hood)
+	px(-8 - frame, -6, 3, 2, skin.scarf)
 
 
 func _draw_dead() -> void:
-	px(-9, -5, 18, 5, Palette.HERO_CLOAK_DARK)
-	px(5, -6, 6, 5, Palette.HERO_HOOD)
-	px(-10, -2, 4, 2, Palette.HERO_SCARF)
+	px(-9, -5, 18, 5, skin.cloak_dark)
+	px(5, -6, 6, 5, skin.hood)
+	px(-10, -2, 4, 2, skin.scarf)
 
 
 func _draw_slash() -> void:
@@ -844,3 +858,65 @@ func _draw_debug() -> void:
 		r.position -= global_position
 		draw_rect(r, Color(1, 0.3, 0.3, 0.8), false)
 	PixelFont.draw(self, State.keys()[state], Vector2(-12, -h - 10), Palette.UI_TEXT)
+
+
+func _eye_color() -> Color:
+	return skin.hood.lightened(0.3) if skin.closed_eyes else skin.eye
+
+
+# --- cachecol (segue o pescoço com atraso; vento e queda balançam) -------------
+
+const SCARF_LINKS := 5
+const SCARF_GAP := 2.5
+
+
+func _neck() -> Vector2:
+	return global_position + Vector2(-2.0 * facing, -h + 6.0 + _squash * 3.0)
+
+
+func _update_scarf(delta: float) -> void:
+	if _scarf.size() != SCARF_LINKS:
+		_scarf.clear()
+		for i in SCARF_LINKS:
+			_scarf.append(_neck() + Vector2(-facing * SCARF_GAP * i, 0))
+	_scarf[0] = _neck()
+	var drift := Vector2(wind * 0.06 - velocity.x * 0.012, 0.6 - velocity.y * 0.006)
+	for i in range(1, SCARF_LINKS):
+		var rest := _scarf[i - 1] + Vector2(-facing * SCARF_GAP, 0.4)
+		var flutter := Vector2(0, sin(_anim * 13.0 + i * 1.3) * 0.5 * clampf(absf(velocity.x) / RUN_SPEED, 0.2, 1.0))
+		_scarf[i] = _scarf[i].lerp(rest + drift + flutter, 1.0 - exp(-14.0 * delta))
+		var link := _scarf[i] - _scarf[i - 1]
+		if link.length() > SCARF_GAP:
+			_scarf[i] = _scarf[i - 1] + link.normalized() * SCARF_GAP
+
+
+func _draw_scarf() -> void:
+	if _scarf.size() != SCARF_LINKS:
+		return
+	for i in range(1, SCARF_LINKS):
+		var at := (_scarf[i] - global_position).round()
+		var size := Vector2(3, 2) if i < SCARF_LINKS - 1 else Vector2(2, 2)
+		raw(Rect2(at - Vector2(1, 1), size), skin.scarf if i % 2 == 1 else skin.scarf.darkened(0.12))
+
+
+# --- rastro (rolagem e mergulho deixam silhuetas que somem) ----------------------
+
+func _update_ghosts(delta: float) -> void:
+	for g in _ghosts:
+		g[1] -= delta
+	_ghosts = _ghosts.filter(func(g: Array) -> bool: return g[1] > 0.0)
+	_ghost_clock -= delta
+	if (state == State.ROLL or state == State.DIVE) and _ghost_clock <= 0.0:
+		_ghost_clock = 0.035
+		_ghosts.append([global_position, 0.18, state])
+
+
+func _draw_ghosts() -> void:
+	for g in _ghosts:
+		var at: Vector2 = g[0] - global_position
+		var c := skin.cloak.lightened(0.15)
+		c.a = 0.45 * g[1] / 0.18
+		if g[2] == State.ROLL:
+			draw_rect(Rect2(at + Vector2(-6, -12), Vector2(12, 12)), c)
+		else:
+			draw_rect(Rect2(at + Vector2(-5, -h), Vector2(10, h)), c)
