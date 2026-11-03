@@ -23,8 +23,38 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 CONTENT = os.path.join(ROOT, "content")
 
 
+def ladder(r, door_x, door_w=3):
+    """Plataformas de 3 em 3 blocos, alternando os lados, do chão até logo
+    abaixo de uma porta no teto (é por ali que se sobe; e quem caiu de cima
+    precisa conseguir voltar)."""
+    # plataforma se atravessa por baixo: dá para empilhar todas do mesmo lado
+    side = -1 if door_x - 6 >= 1 else 1
+    x0 = door_x - 5 if side < 0 else door_x + door_w + 1
+    probe = x0 + 1
+    stand = 1
+    while stand < r.h - 2 and r.g[stand + 1][probe] not in "#=":
+        stand += 1
+    # de cima para baixo: o degrau mais alto deixa a cabeça a 1 bloco do teto
+    for top in range(2, stand, 3):
+        row = top + 1
+        if row > stand:
+            break
+        for x in range(max(1, x0), min(r.w - 2, x0 + 3) + 1):
+            if r.g[row][x] == ".":
+                r.g[row][x] = "="
+    return r
+
+
+def top_ladders(r):
+    xs = [x for x in range(r.w) if r.g[0][x] == "D"]
+    if xs:
+        ladder(r, min(xs), max(xs) - min(xs) + 1)
+    return r
+
+
 def branch_variants(name, kind, w, h, inside, head="", weight=10):
-    """Um desvio em 4 versões: porta embaixo, em cima, à esquerda, à direita."""
+    """Um desvio em 4 versões: porta embaixo, em cima, à esquerda, à direita.
+    `inside` recebe a sala e a coluna livre de cada lado do buraco/porta."""
     out = []
     for side in ("B", "T", "L", "R"):
         r = R("%s_%s" % (name, side.lower()), kind, w, h, weight=weight, head=head)
@@ -32,12 +62,13 @@ def branch_variants(name, kind, w, h, inside, head="", weight=10):
             r.door("B", w // 2 - 1, 3)
         elif side == "T":
             r.door("T", w // 2 - 1, 3)
-            r.fill(w // 2 - 3, w // 2 + 3, 4, 4, "=")
         elif side == "L":
             r.door("L", h - 5, 4)
         else:
             r.door("R", h - 5, 4)
         inside(r)
+        if side == "T":
+            ladder(r, w // 2 - 1)
         out.append(r)
     return out
 
@@ -52,14 +83,14 @@ def common(biome, rune):
     out.append(r)
 
     out += branch_variants("loja", "loja", 22, 11,
-                           lambda r: r.put(9, 9, "$").put(5, 9, "L") if r.g[9][5] == "." else r.put(9, 9, "$"),
+                           lambda r: r.put(15, 9, "$").put(4, 9, "L"),
                            head="Um mercador que ninguém viu chegar")
     out += branch_variants("cofre", "cofre", 16, 10,
-                           lambda r: r.put(5, 8, "c").put(10, 8, "i"),
+                           lambda r: r.put(3, 8, "c").put(12, 8, "i"),
                            head="Cofre emparedado: parede rachada na entrada")
     if rune:
         out += branch_variants("runa", "runa", 22, 12,
-                               lambda r: r.put(11, 10, "U").put(16, 10, "E") if r.g[10][16] == "." else r.put(11, 10, "U"),
+                               lambda r: r.put(5, 10, "U").put(16, 10, "E"),
                                head="Onde a runa espera, há sempre alguém de guarda")
     return out
 
@@ -100,9 +131,9 @@ def floor_rooms(biome, hazard_rooms):
 
     r = R("combate_torre", "combate", 30, 26, head="Torre: entra embaixo, sai lá em cima")
     r.door("L", 20, 4).door("R", 3, 4).fill(22, 28, 7, 7).door("B", 10, 3).door("T", 3, 3)
-    for i, (x0, y) in enumerate(((6, 21), (14, 18), (6, 15), (14, 12), (21, 9))):
+    for x0, y in ((6, 22), (14, 19), (6, 16), (14, 13), (16, 10)):
         r.fill(x0, x0 + 5, y, y, "=")
-    r.put(4, 24, "e").put(24, 24, "e").put(17, 17, "r").put(25, 6, "e")
+    r.put(4, 24, "e").put(24, 24, "e").put(17, 18, "r").put(25, 6, "e")
     out.append(r)
 
     r = R("combate_fosso", "combate", 40, 20, head="Entra pelo alto e cai no fosso")
@@ -130,12 +161,14 @@ def floor_rooms(biome, hazard_rooms):
     out.append(r)
 
     r = R("elite_salao", "elite", 40, 16, head="Salão do guardião do andar")
-    r.door("L", 11, 4).door("R", 11, 4).fill(8, 12, 10, 10, "=").fill(27, 31, 10, 10, "=")
-    r.fill(17, 22, 7, 7, "=").put(20, 14, "E").put(19, 6, "i").door("T", 30, 3)
+    r.door("L", 11, 4).door("R", 11, 4).fill(8, 12, 12, 12, "=").fill(27, 31, 12, 12, "=")
+    r.fill(14, 22, 9, 9, "=").put(20, 14, "E").put(19, 8, "i").door("T", 30, 3)
     out.append(r)
 
-    out += branch_variants("tesouro", "tesouro", 18, 11, lambda r: r.put(6, 9, "i").put(11, 9, "c"))
-    out += branch_variants("fragmento", "fragmento", 18, 11, lambda r: r.put(9, 9, "f"))
+    out += branch_variants("tesouro", "tesouro", 18, 11, lambda r: r.put(4, 9, "i").put(13, 9, "c"))
+    out += branch_variants("fragmento", "fragmento", 18, 11, lambda r: r.put(14, 9, "f"))
+    for r in out:
+        top_ladders(r)
     return out
 
 
