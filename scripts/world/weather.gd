@@ -28,6 +28,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if kind == "":
 		return
+	if kind != "ashstorm":
+		_t += delta
+		Fx.visibility = 1.0
+		queue_redraw()
+		return
 	_t += delta
 	match _phase:
 		"calm":
@@ -68,6 +73,9 @@ func visibility() -> float:
 
 
 func _draw() -> void:
+	if kind == "embers" or kind == "snow":
+		_ambient()
+		return
 	if kind == "" or strength <= 0.01:
 		return
 	var size := get_viewport_rect().size
@@ -80,3 +88,24 @@ func _draw() -> void:
 		var c := Color("d8c4a6")
 		c.a = 0.35 * s.z * strength
 		draw_rect(Rect2(s.x - 20.0, s.y, 6.0 + 10.0 * s.z, 1), c)
+
+
+# Clima só de ambiente (sem efeito no jogo): brasas subindo na Forja, neve
+# caindo nos Salões. Usa a mesma lista de partículas da tempestade.
+func _ambient() -> void:
+	var size := get_viewport_rect().size
+	var cam := get_viewport().get_camera_2d()
+	var at := cam.get_screen_center_position() if cam else Vector2.ZERO
+	for i in 70:
+		var s: Vector3 = _streaks[i]
+		if kind == "snow":
+			var x := fposmod(s.x + sin(_t * 0.8 + i) * 10.0 - at.x * 0.6 * s.z, size.x)
+			var y := fposmod(s.y + _t * (14.0 + 20.0 * s.z) - at.y * 0.6 * s.z, size.y)
+			var c := Color(0.92, 0.96, 1.0, 0.35 + 0.45 * s.z)
+			draw_rect(Rect2(floorf(x), floorf(y), 2 if s.z > 0.8 else 1, 2 if s.z > 0.8 else 1), c)
+		else:
+			var x := fposmod(s.x + sin(_t * 1.3 + i) * 6.0 - at.x * 0.6 * s.z, size.x)
+			var y := fposmod(s.y - _t * (18.0 + 30.0 * s.z) - at.y * 0.6 * s.z, size.y)
+			var c := Palette.BURN if i % 3 else Palette.DANGER
+			c.a = 0.4 + 0.5 * absf(sin(_t * 3.0 + i))
+			draw_rect(Rect2(floorf(x), floorf(y), 1, 1 if i % 4 else 2), c)

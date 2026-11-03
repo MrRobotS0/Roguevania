@@ -26,7 +26,7 @@ sky = {
 "sun": Color(0.95, 0.83, 0.62, 1),
 "accent": Color(0.91, 0.64, 0.24, 1)
 }
-backdrop = "dunes"
+backdrop = "painted"
 weather = "ashstorm"
 rooms_dir = "res://content/biomes/mar_de_cinzas/rooms"
 boss_room = "res://content/biomes/mar_de_cinzas/chefe/trono.txt"
@@ -34,6 +34,10 @@ combat_rooms = 6
 enemies = [{"script": "res://scripts/enemies/grunt.gd", "slot": "e", "weight": 8}, {"script": "res://scripts/enemies/shield_guard.gd", "slot": "e", "weight": 10}, {"script": "res://scripts/enemies/pilgrim.gd", "slot": "e", "weight": 9}, {"script": "res://scripts/enemies/assassin.gd", "slot": "e", "weight": 7}, {"script": "res://scripts/enemies/archer.gd", "slot": "r", "weight": 10}]
 elites = ["res://scripts/enemies/inquisitor.gd"]
 boss_script = "res://scripts/enemies/blind_emperor.gd"
-exits = [{"title": "Seguir para o Trono", "to": "trono", "sealed": false}]
+exits = [{"title": "Seguir em frente", "to": "passagem"}]
 lore = ["Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas.", "Quem respira a Cinza Sagrada ouve a voz que ela guardou. Os sacerdotes chamam de profecia. Os médicos, de febre.", "As Casas Vesper, Oram e Kael lutam pela cinza há trezentos anos. O deserto não cresce. Só as covas.", "O Imperador arrancou os próprios olhos para não ver o presente. Disse que o futuro era mais bonito.", "Os fulgurantes nasceram onde os raios caíram na cinza. Não são animais. São o vidro lembrando de ter sido fogo.", "Os peregrinos não vêm rezar. Vêm arder. Acreditam que quem queima vira parte do deus.", "Na última página do livro profético há uma única frase, escrita em todas as línguas: ELE NÃO VOLTA."]
 tier = 0
+layers = "bd"
+hazard_script = "res://scripts/enemies/fulgurant.gd"
+rune = ""
+ink = Color(0.055, 0.043, 0.051, 1)

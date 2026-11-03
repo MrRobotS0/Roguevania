@@ -50,8 +50,8 @@ func show_victory(p: Player) -> void:
 	lines = [
 		["O IMPERADOR CEGO CAIU EM " + _clock(Run.time), Palette.UI_TEXT],
 		["%d INIMIGOS DERROTADOS" % p.kills, Palette.UI_DIM],
-		["A FORJA RUBRA E OS SALÕES DO ÚLTIMO INVERNO", Palette.GOLD],
-		["AINDA ESTÃO SELADOS.", Palette.GOLD],
+		["CAMINHO: " + " > ".join(PackedStringArray(Run.path.map(func(id: String) -> String: return String(Catalog.STAGE_NAMES.get(id, id)).trim_prefix("O ").trim_prefix("A ").trim_prefix("Os ")))).to_upper(), Palette.GOLD],
+		[("BRASAS DO DEUS LIBERADAS: %d" % mini(Run.heat + 1, Run.MAX_HEAT)) if Run.heat < Run.MAX_HEAT else "VOCÊ VENCEU COM TODAS AS BRASAS.", Palette.BURN],
 		["O QUE ACONTECEU COM OS DEUSES CONTINUA SEM RESPOSTA.", Palette.UI_DIM],
 	]
 	_open()
@@ -123,7 +123,7 @@ func _draw() -> void:
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
 		"victory":
-			PixelFont.body_centered(self, "FIM DA DEMONSTRAÇÃO", Vector2(mid, 70), Palette.GOLD, 2)
+			PixelFont.body_centered(self, "A JORNADA TERMINOU", Vector2(mid, 70), Palette.GOLD, 2)
 	var y := size.y - 34.0 if mode == "title" else 106.0
 	for l in lines:
 		PixelFont.body_centered(self, l[0], Vector2(mid, y), l[1])

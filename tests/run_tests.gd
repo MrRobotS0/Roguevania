@@ -114,6 +114,19 @@ func _ready() -> void:
 	await _case("sala de treino carrega", _training_room)
 	await _case("aparências: trancadas, compradas, feitos e salvas", _skins)
 	await _case("fonte tem toda letra dos textos do jogo", _font_covers_text)
+	await _case("rota: Mar, passagem, escolha de andar, Trono", _route)
+	await _case("gerador: os 3 andares com loja, cofre, runa e relógio", _generator_floors)
+	await _case("passagem tem Vigia, altar e as saídas certas", _passage)
+	await _case("altar de mutação e Sangue Quente", _mutations)
+	await _case("baú maldito: qualquer golpe mata", _cursed_chest)
+	await _case("porta do relógio abre a tempo e fecha atrasada", _timed_door)
+	await _case("planta cai, a Vigia guarda e passa a vender", _blueprints)
+	await _case("Asa de Cinza dá pulo duplo", _double_jump)
+	await _case("parede rachada só cede com o Punho", _cracked_wall)
+	await _case("brasas: inimigo mais forte e bate mais", _heat)
+	await _case("mercador vende e o item aparece", _merchant)
+	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
+	await _case("jato de fogo e estalactite machucam", _hazards)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -561,7 +574,7 @@ func _boss_room() -> void:
 	await _frames(3)
 	_check(level.boss is BlindEmperor, "sem chefe")
 	var gates := level.get_children().filter(func(n: Node) -> bool: return n is ExitGate)
-	_check(gates.size() == 3, "%d saídas" % gates.size())
+	_check(gates.size() == 1, "%d saídas" % gates.size())
 	_check(gates.all(func(g: Node2D) -> bool: return not g.visible), "saída visível antes da vitória")
 	level.boss.set_state("idle")
 	level.boss.hurt(Damage.make(99999, 1, 0))
@@ -621,3 +634,264 @@ func _font_covers_text() -> void:
 			if not PixelFont.BODY.has(base) or not PixelFont.GLYPHS.has(base) and base not in ["↑", "↓"]:
 				missing[ch] = true
 	_check(missing.is_empty(), "sem desenho: %s" % [missing.keys()])
+
+
+# --- andares, passagem e o que se ganha no caminho ---------------------------------
+
+const CRACK_ROOM := """
+######################
+#....................#
+#....................#
+#....................#
+#..........K.........#
+#..........K.........#
+#..P.......K.........#
+######################
+"""
+
+
+func _route() -> void:
+	Run.new_run(5)
+	_check(Run.current()["kind"] == "gerada" and Run.stage_id == "mar_de_cinzas", "não começou no Mar")
+	Run.enter_passage()
+	_check(Run.current()["kind"] == "passagem", "não entrou na passagem")
+	_check(Run.next_options() == ["saloes", "forja_rubra"], "saídas da passagem: %s" % [Run.next_options()])
+	Run.go("forja_rubra")
+	_check(Run.current()["biome"] == "forja_rubra" and Run.current()["kind"] == "gerada", "não foi para a Forja")
+	Run.enter_passage()
+	Run.go(Run.next_options()[0])
+	_check(Run.current()["kind"] == "chefe", "o último andar não é o do chefe")
+	_check(Run.path == ["mar_de_cinzas", "forja_rubra", "trono"], "caminho %s" % [Run.path])
+
+
+func _generator_floors() -> void:
+	for id: String in Catalog.BIOMES:
+		var b := Catalog.biome(id)
+		var pool := LevelGen.load_dir(b.rooms_dir)
+		var vaults := 0
+		for seed_value in 12:
+			var branches: Array = ["runa", ["cofre", "K"], "loja", "fragmento", "tesouro", "tesouro"]
+			var lines := LevelGen.new().generate(pool, seed_value * 13 + 7, b.combat_rooms, branches)
+			if lines.is_empty():
+				_check(false, "%s semente %d não gerou" % [id, seed_value])
+				return
+			var why := _path_problem(lines)
+			if why != "":
+				_check(false, "%s semente %d: %s" % [id, seed_value, why])
+				return
+			var text := "\n".join(lines)
+			_check(text.contains("T"), "%s sem Porta do Relógio" % id)
+			if text.contains("K"):
+				vaults += 1
+		_check(vaults >= 6, "%s: cofre só apareceu %d de 12 vezes" % [id, vaults])
+
+
+func _passage() -> void:
+	Run.new_run(3)
+	Run.enter_passage()
+	if level:
+		remove_child(level)
+		level.queue_free()
+	level = Level.new()
+	add_child(level)
+	level.build_passage(Catalog.biome("mar_de_cinzas"), 1, false)
+	await _frames(3)
+	var gates: Array = level.get_children().filter(func(n: Node) -> bool: return n is ExitGate)
+	var dests: Array = gates.map(func(g: ExitGate) -> String: return g.dest)
+	_check(dests == ["saloes", "forja_rubra"], "saídas %s" % [dests])
+	_check(level.get_children().any(func(n: Node) -> bool: return n is Keeper), "sem Vigia na passagem")
+	_check(level.get_children().any(func(n: Node) -> bool: return n is MutationAltar), "sem altar de mutação")
+
+
+func _mutations() -> void:
+	await _load(FLAT)
+	var p := level.player
+	var menu := Menu.new()
+	add_child(menu)
+	var altar := MutationAltar.new()
+	altar.position = p.global_position
+	level.add_child(altar)
+	var first: String = altar.choices(p)[0]["id"]
+	altar.interact(p)
+	menu.choose(0)
+	_check(p.has_mutation(first), "a mutação escolhida não entrou")
+	p.mutations.assign(["sangue_quente"])
+	p.hp = 50
+	p.on_kill(null)
+	_check(p.hp == 53, "Sangue Quente curou para %d" % p.hp)
+	menu.queue_free()
+
+
+func _cursed_chest() -> void:
+	await _load(FLAT)
+	var p := level.player
+	var menu := Menu.new()
+	add_child(menu)
+	var chest := Chest.new()
+	chest.cursed = true
+	chest.level = level
+	chest.position = p.global_position + Vector2(10, 0)
+	level.add_child(chest)
+	chest.interact(p)
+	menu.choose(0)
+	_check(p.curse == Chest.CURSE_KILLS, "maldição %d" % p.curse)
+	await _frames(2)
+	p.hurt(Damage.make(1, 1, 0))
+	_check(p.hp == 0, "maldito sobreviveu com %d de vida" % p.hp)
+	menu.queue_free()
+
+
+func _timed_door() -> void:
+	await _load(FLAT)
+	var p := level.player
+	Run.stage_time = 0.0
+	var door := TimedDoor.new()
+	door.player = p
+	door.position = p.global_position + Vector2(24, 0)
+	level.add_child(door)
+	await _frames(3)
+	_check(door.is_open, "chegou no tempo e a porta não abriu")
+	var late := TimedDoor.new()
+	late.player = p
+	late.limit = 10.0
+	late.position = p.global_position + Vector2(200, 0)
+	level.add_child(late)
+	Run.stage_time = 20.0
+	await _frames(3)
+	late.position = p.global_position + Vector2(20, 0)
+	await _frames(3)
+	_check(not late.is_open, "a porta abriu depois do tempo")
+
+
+func _blueprints() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(FLAT)
+	var p := level.player
+	_check(level.drop_blueprint(p.center()), "não caiu planta")
+	await _frames(40)
+	_check(p.blueprints.size() == 1, "planta não foi pega (%d)" % p.blueprints.size())
+	var id: String = p.blueprints[0]
+	var menu := Menu.new()
+	add_child(menu)
+	var keeper := Keeper.new()
+	keeper.level = level
+	keeper.position = p.global_position
+	level.add_child(keeper)
+	_check(not keeper._offers().any(func(o: Dictionary) -> bool: return o["id"] == id), "a Vigia vendia sem planta")
+	keeper.interact(p)
+	menu.close()
+	_check(Meta.knows(id) and p.blueprints.is_empty(), "a Vigia não guardou a planta")
+	_check(keeper._offers().any(func(o: Dictionary) -> bool: return o["id"] == id), "a Vigia não passou a vender")
+	menu.queue_free()
+	Meta.use_path("user://teste.save", true)
+
+
+func _double_jump() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(FLAT)
+	var p := level.player
+	var ground := p.global_position.y
+	input.then(["jump"], 14).wait(6).then(["jump"], 12).wait(30)
+	var top := ground
+	for i in 62:
+		await get_tree().physics_frame
+		top = minf(top, p.global_position.y)
+	var single := ground - top
+	Meta.add_rune("asa")
+	await _load(FLAT)
+	p = level.player
+	ground = p.global_position.y
+	input.then(["jump"], 14).wait(6).then(["jump"], 12).wait(30)
+	top = ground
+	for i in 62:
+		await get_tree().physics_frame
+		top = minf(top, p.global_position.y)
+	_check(ground - top > single + 20.0, "com a Asa subiu %.0f, sem subiu %.0f" % [ground - top, single])
+	Meta.use_path("user://teste.save", true)
+
+
+func _cracked_wall() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(CRACK_ROOM)
+	var p := level.player
+	p.global_position.x = 11 * Room.TILE - 14
+	await _frames(3)
+	input.then(["attack1"], 2).wait(30)
+	await _run_until_idle()
+	_check(level.room.cell(11, 5) == "K", "a parede cedeu sem a runa")
+	Meta.add_rune("punho")
+	input.then(["attack1"], 2).wait(30)
+	await _run_until_idle()
+	_check(level.room.cell(11, 5) == ".", "a parede não cedeu com o Punho")
+	Meta.use_path("user://teste.save", true)
+
+
+func _heat() -> void:
+	Run.heat = 2
+	await _load(FLAT)
+	var p := level.player
+	var e := level.spawn("grunt", p.global_position + Vector2(200, 0))
+	await _frames(2)
+	_check(e.max_hp == roundi(60 * 1.8), "vida do penitente %d" % e.max_hp)
+	var before := p.hp
+	p.hurt(Damage.make(10, 1, 0))
+	_check(before - p.hp == 15, "dano recebido %d (esperado 15)" % (before - p.hp))
+	Run.heat = 0
+
+
+func _merchant() -> void:
+	await _load(FLAT)
+	var p := level.player
+	p.gold = 999
+	var menu := Menu.new()
+	add_child(menu)
+	var m := Merchant.new()
+	m.level = level
+	m.position = p.global_position + Vector2(10, 0)
+	level.add_child(m)
+	m.interact(p)
+	var cost: int = m.stock()[0]["cost"]
+	menu.choose(0)
+	await _frames(2)
+	_check(p.gold == 999 - cost, "ouro %d" % p.gold)
+	_check(level.get_children().any(func(n: Node) -> bool: return n is Pickup), "a compra não apareceu no chão")
+	menu.close()
+	menu.queue_free()
+
+
+func _new_enemies() -> void:
+	for path in ["res://scripts/enemies/smith.gd", "res://scripts/enemies/slag.gd",
+			"res://scripts/enemies/wolf.gd", "res://scripts/enemies/ice_sentinel.gd"]:
+		await _load(WIDE)
+		var p := level.player
+		p.max_hp = 9999
+		p.hp = 9999
+		var e := level.spawn_script(path, p.global_position + Vector2(70, 0))
+		e.facing = -1
+		for i in 360:
+			await get_tree().physics_frame
+			if p.hp < p.max_hp:
+				break
+		_check(p.hp < p.max_hp, "%s não acertou o herói" % path.get_file())
+		e.hurt(Damage.make(99999, 1, 0))
+		await _frames(2)
+		_check(not is_instance_valid(e) or not e.alive(), "%s não morreu" % path.get_file())
+
+
+func _hazards() -> void:
+	for path in ["res://scripts/enemies/fire_vent.gd", "res://scripts/enemies/icicle.gd"]:
+		await _load(FLAT)
+		var p := level.player
+		p.max_hp = 9999
+		p.hp = 9999
+		var hz: Node2D = load(path).new()
+		hz.set("room", level.room)
+		hz.set("player", p)
+		hz.position = p.global_position
+		level.add_child(hz)
+		for i in 300:
+			await get_tree().physics_frame
+			p.velocity = Vector2.ZERO
+			if p.hp < p.max_hp:
+				break
+		_check(p.hp < p.max_hp, "%s não machucou quem ficou parado" % path.get_file())

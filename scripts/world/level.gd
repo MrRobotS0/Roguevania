@@ -1,12 +1,18 @@
 class_name Level
 extends Node2D
 
-# Uma fase jogável: mapa, herói, inimigos, objetos, partículas e câmera.
-# Monta a partir de um bioma (gerada ou sala do chefe) ou de um texto solto
-# (testes). Não sabe nada de menus nem de save: só avisa quando termina.
+# Um andar jogável: mapa, herói, inimigos, objetos, partículas e câmera.
+# Monta a partir de um bioma (andar gerado, passagem ou sala do chefe) ou de
+# um texto solto (testes). Não sabe nada de menus nem de save: só avisa
+# quando o herói usa uma saída.
 
 signal exit_used(dest: String)
 signal boss_defeated
+
+const AMBIENT := Color(0.56, 0.52, 0.6)
+const PASSAGE_ROOM := "res://content/passagem.txt"
+const TIMED_LIMIT := 150.0
+const BLUEPRINT_CHANCE := 0.035
 
 var biome: BiomeData
 var room: Room
@@ -15,11 +21,13 @@ var camera: CameraRig
 var boss: Enemy
 var rng := RandomNumberGenerator.new()
 var tier := 0
+var kind := "teste"          # gerada | passagem | chefe | teste
 var is_boss_room := false
+var explored := PackedByteArray()   # 1 = o herói já viu esta célula (mapa)
 var _lore_index := 0
 var _after_boss: Array[Node2D] = []
-
-const AMBIENT := Color(0.56, 0.52, 0.6)
+var _exit_index := 0
+var _explore_clock := 0.0
 
 
 func build(room_text: String, with_camera := true) -> void:
@@ -31,17 +39,34 @@ func build(room_text: String, with_camera := true) -> void:
 func build_generated(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	rng.seed = seed_value
 	tier = b.tier
+	kind = "gerada"
 	var gen := LevelGen.new()
-	var lines := gen.generate(LevelGen.load_dir(b.rooms_dir), seed_value, b.combat_rooms)
+	# em ordem de importância: as portas livres acabam
+	var branches: Array = [["cofre", "K"], "loja", "fragmento", "tesouro", "tesouro"]
+	if b.rune != "" and not Meta.has_rune(b.rune):
+		branches.insert(0, "runa")
+	var lines := gen.generate(LevelGen.load_dir(b.rooms_dir), seed_value, b.combat_rooms, branches)
 	_make_room(b)
 	room.load_grid(lines)
 	_populate(with_camera)
 	Fx.banner(b.title.to_upper(), b.subtitle.to_upper())
 
 
+# Entre um andar e outro: a Vigia, o altar de mutação e as saídas possíveis.
+func build_passage(b: BiomeData, seed_value: int, with_camera := true) -> void:
+	rng.seed = seed_value + 5
+	tier = b.tier
+	kind = "passagem"
+	_make_room(b)
+	room.load_file(PASSAGE_ROOM)
+	_populate(with_camera)
+	Fx.banner("A PASSAGEM", "A VIGIA ESPERA ONDE OS DOMÍNIOS SE TOCAM")
+
+
 func build_boss(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	rng.seed = seed_value + 99
-	tier = b.tier + 1
+	tier = 3
+	kind = "chefe"
 	_make_room(b)
 	is_boss_room = true
 	# Chão extra embaixo: a câmera não cola o chão na borda da tela (o HUD fica ali).
@@ -68,6 +93,8 @@ func _populate(with_camera: bool) -> void:
 	player = Player.new()
 	player.room = room
 	player.position = room.player_spawn
+	explored.resize(room.cols * room.rows)
+	explored.fill(0)
 
 	for m in room.markers:
 		_spawn_marker(m)
@@ -136,39 +163,58 @@ func _spawn_marker(m: Dictionary) -> void:
 		"X":
 			_spawn_exit(at)
 		"w":
-			var f := Fulgurant.new()
-			f.room = room
-			f.position = at
-			f.player = player
-			add_child(f)
+			if biome and biome.hazard_script != "":
+				var hz: Node2D = load(biome.hazard_script).new()
+				hz.set("room", room)
+				hz.set("player", player)
+				hz.position = at
+				add_child(hz)
+		"M":
+			_place(MutationAltar.new(), at)
+		"c":
+			var chest := Chest.new()
+			chest.cursed = rng.randf() < 0.18 and tier > 0
+			_place(chest, at)
+		"$":
+			_place(Merchant.new(), at)
+		"T":
+			var door := TimedDoor.new()
+			door.level = self
+			door.player = player
+			door.limit = TIMED_LIMIT + 30.0 * tier
+			door.position = at
+			add_child(door)
+		"U":
+			var altar := RuneAltar.new()
+			altar.rune = biome.rune if biome and biome.rune != "" else "asa"
+			_place(altar, at)
 
 
 func _spawn_exit(at: Vector2) -> void:
 	var gate := ExitGate.new()
-	var index := 0
-	for other in get_children():
-		if other is ExitGate:
-			index += 1
-	var is_boss_room := room.markers_of("B").size() > 0
-	if is_boss_room:
-		var exits := [
-			{"title": "Fim da demonstração", "to": "fim", "sealed": false},
-			{"title": "A Forja Rubra", "to": "forja_rubra", "sealed": true},
-			{"title": "Os Salões do Último Inverno", "to": "saloes", "sealed": true},
-		]
-		var e: Dictionary = exits[mini(index, exits.size() - 1)]
-		gate.title = e["title"]
-		gate.dest = e["to"]
-		gate.sealed = e["sealed"]
-		_hide_until_victory(gate)
-	elif biome and not biome.exits.is_empty():
-		var e: Dictionary = biome.exits[mini(index, biome.exits.size() - 1)]
-		gate.title = e["title"]
-		gate.dest = e["to"]
-		gate.sealed = e.get("sealed", false)
-	else:
-		gate.title = "Saída"
-		gate.dest = "fim"
+	var index := _exit_index
+	_exit_index += 1
+	match kind:
+		"chefe":
+			if index > 0:
+				return
+			gate.title = "Fim da jornada"
+			gate.dest = "fim"
+			_hide_until_victory(gate)
+		"passagem":
+			var options := Run.next_options()
+			if index >= options.size():
+				return
+			var dest: String = options[index]
+			gate.dest = dest
+			gate.title = Catalog.STAGE_NAMES.get(dest, dest)
+			gate.hint = Catalog.STAGE_HINTS.get(dest, "")
+		"gerada":
+			gate.title = "Seguir em frente"
+			gate.dest = "passagem"
+		_:
+			gate.title = "Saída"
+			gate.dest = "fim"
 	gate.used.connect(func(dest: String) -> void: exit_used.emit(dest))
 	_place(gate, at)
 
@@ -184,8 +230,8 @@ func _hide_until_victory(n: Node2D) -> void:
 	_after_boss.append(n)
 
 
-func spawn(kind: String, at: Vector2) -> Enemy:
-	var path := "res://scripts/enemies/grunt.gd" if kind == "grunt" else "res://scripts/enemies/archer.gd"
+func spawn(what: String, at: Vector2) -> Enemy:
+	var path := "res://scripts/enemies/grunt.gd" if what == "grunt" else "res://scripts/enemies/archer.gd"
 	return spawn_script(path, at)
 
 
@@ -196,6 +242,8 @@ func spawn_script(path: String, at: Vector2, elite := false) -> Enemy:
 	e.position = at
 	e.elite = elite
 	e.facing = -1 if rng.randf() < 0.5 else 1
+	if biome and biome.recolor.has(e.sheet) and e.look == "":
+		e.look = biome.recolor[e.sheet]
 	add_child(e)
 	e.killed.connect(_on_enemy_killed)
 	return e
@@ -205,14 +253,45 @@ func enemies() -> Array[Node]:
 	return get_tree().get_nodes_in_group("enemies")
 
 
-func _on_enemy_killed(e: Enemy) -> void:
-	var n := rng.randi_range(e.essence_drop.x, e.essence_drop.y)
+# --- o que cai ---------------------------------------------------------------------
+
+func _drop_mult() -> float:
+	return 1.5 if is_instance_valid(player) and player.has_mutation("colecionador") else 1.0
+
+
+func drop_orbs(pos: Vector2, n: int, what: String) -> void:
 	for i in n:
 		var orb := EssenceOrb.new()
+		orb.kind = what
 		orb.player = player
 		orb.room = room
-		orb.position = e.center()
+		orb.position = pos
 		add_child.call_deferred(orb)
+
+
+func drop_gold(pos: Vector2, n: int) -> void:
+	drop_orbs(pos, roundi(n * _drop_mult()), "gold")
+
+
+func drop_blueprint(pos: Vector2) -> bool:
+	var carrying: Array = player.blueprints if is_instance_valid(player) else []
+	var options := Catalog.unknown_blueprints(carrying)
+	if options.is_empty():
+		return false
+	var bp := BlueprintDrop.new()
+	bp.item = options[rng.randi_range(0, options.size() - 1)]
+	bp.player = player
+	bp.position = pos
+	add_child.call_deferred(bp)
+	return true
+
+
+func _on_enemy_killed(e: Enemy) -> void:
+	var n := roundi(rng.randi_range(e.essence_drop.x, e.essence_drop.y) * _drop_mult())
+	drop_orbs(e.center(), n, "essence")
+	drop_gold(e.center(), rng.randi_range(1, 3) * (1 + tier))
+	if rng.randf() < BLUEPRINT_CHANCE:
+		drop_blueprint(e.center())
 
 
 func _on_elite_killed(e: Enemy) -> void:
@@ -221,17 +300,41 @@ func _on_elite_killed(e: Enemy) -> void:
 	p.level = self
 	p.position = e.global_position
 	add_child.call_deferred(p)
-	Fx.toast("O INQUISIDOR DEIXOU ALGO PARA TRÁS")
+	drop_blueprint(e.center() + Vector2(0, -8))
+	Fx.toast("O ELITE DEIXOU ALGO PARA TRÁS")
 
 
 func _on_boss_killed(_e: Enemy) -> void:
 	for n in _after_boss:
 		n.visible = true
 		Fx.burst(n.global_position + Vector2(0, -16), Palette.ESSENCE, 16, 100.0, 0.6, -40.0)
+	drop_blueprint(_e.center())
 	Fx.banner("O IMPERADOR CEGO CAIU", "PELA PRIMEIRA VEZ EM MIL ANOS, ELE NÃO SABIA O QUE VINHA")
 	boss_defeated.emit()
 
 
-func _physics_process(_delta: float) -> void:
-	if is_instance_valid(player) and room:
-		room.reveal_near(player.center())
+# --- mapa: o que o herói já viu ----------------------------------------------------
+
+const SIGHT := 11
+
+
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(player) or room == null:
+		return
+	room.reveal_near(player.center())
+	_explore_clock -= delta
+	if _explore_clock <= 0.0:
+		_explore_clock = 0.15
+		_explore(player.center())
+
+
+func _explore(p: Vector2) -> void:
+	var cx := floori(p.x / Room.TILE)
+	var cy := floori(p.y / Room.TILE)
+	for y in range(maxi(cy - SIGHT, 0), mini(cy + SIGHT + 1, room.rows)):
+		for x in range(maxi(cx - SIGHT - 4, 0), mini(cx + SIGHT + 5, room.cols)):
+			explored[y * room.cols + x] = 1
+
+
+func seen(x: int, y: int) -> bool:
+	return x >= 0 and y >= 0 and x < room.cols and y < room.rows and explored[y * room.cols + x] == 1

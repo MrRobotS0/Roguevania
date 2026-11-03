@@ -72,6 +72,14 @@ class Fig:
             c.ellipse(tip, 2.8, 2.8, self.p_wood)
             c.mark(tip[0] - 1, tip[1] - 1, METAL)
             c.mark(tip[0] + 1, tip[1] + 1, METAL)
+        elif kind == "hammer":
+            tip = add(hand, (d[0] * 10, d[1] * 10))
+            c.limb(add(hand, (-d[0] * 2, -d[1] * 2)), tip, 2.0, self.p_wood)
+            side = (-d[1], d[0])
+            a0 = add(tip, (side[0] * 5, side[1] * 5))
+            a1 = add(tip, (-side[0] * 5, -side[1] * 5))
+            fw = (d[0] * 4, d[1] * 4)
+            c.poly([a0, a1, add(a1, fw), add(a0, fw)], self.p_metal)
         elif kind == "spear":
             back = add(hand, (-d[0] * 10, -d[1] * 10))
             tip = add(hand, (d[0] * 16, d[1] * 16))
@@ -416,6 +424,109 @@ def emperor_anims():
     return A
 
 
+# --- Ferreiro Cativo: corpulento, avental de couro, martelo enorme -------------------
+
+def smith(walk=0.0, hammer="idle", bob=0, lean=0.0):
+    f = Fig(56, 52)
+    c, cx, fy = f.c, f.cx, f.fy
+    hip = (cx + lean * 0.3, fy - 9 + bob)
+    sh = (cx + lean, fy - 21 + bob)
+    s = math.sin(walk)
+    for a, part in ((-0.25 - 0.4 * s, f.p_sec_back), (0.25 + 0.4 * s, f.p_sec)):
+        end = f.limb2(hip, a, -0.3, 4.8, 4.6, 4.4, 4.0, part)
+        c.rect(end[0] - 2, end[1] - 1, 5, 2, f.p_main_back)
+    f.limb2((sh[0] - 5, sh[1] + 2), -0.3 + 0.3 * s, 0.4, 5, 4.5, 4, 3.6, f.p_main_back)
+    c.ellipse((sh[0], sh[1] + 5), 8, 8, f.p_main)                    # tronco largo
+    c.poly([(sh[0] - 5, sh[1] + 3), (sh[0] + 6, sh[1] + 3), (hip[0] + 6, hip[1] + 3), (hip[0] - 5, hip[1] + 3)], f.p_sec)
+    c.rect(sh[0] - 6, hip[1] - 2, 13, 2, f.p_acc)
+    head = (sh[0] + 3, sh[1] - 4)
+    c.ellipse(head, 3.6, 3.8, f.p_face)
+    c.rect(head[0] - 3, head[1] - 1, 7, 2, f.p_acc)                  # tira de ferro nos olhos
+    c.mark(head[0] + 2, head[1], EYE)
+    if hammer == "windup":
+        hand = f.limb2((sh[0] + 4, sh[1] + 2), -2.8, 0.1, 5, 5, 4, 3.6, f.p_main)
+        f.weapon(hand, "hammer", -3.0)
+    elif hammer == "slam":
+        hand = f.limb2((sh[0] + 4, sh[1] + 2), 1.2, 0.3, 5.5, 5.5, 4, 3.6, f.p_main)
+        f.weapon(hand, "hammer", 1.8)
+    else:
+        hand = f.limb2((sh[0] + 4, sh[1] + 2), 0.5 - 0.2 * s, -1.6, 5, 4, 4, 3.6, f.p_main)
+        f.weapon(hand, "hammer", -2.3)
+    return f.done()
+
+
+def smith_anims():
+    A = {"idle": (2, [smith(bob=b) for b in (0, 1)])}
+    A["walk"] = (6, [smith(walk=i / 4 * math.tau, bob=-(i % 2)) for i in range(4)])
+    A["windup"] = (1, [smith(hammer="windup", lean=-2)])
+    A["slam"] = (1, [smith(hammer="slam", lean=3, bob=1)])
+    A["stun"] = (1, [smith(lean=-2.5, bob=1)])
+    return A
+
+
+# --- Escória Viva: bolha de metal derretido com crosta -------------------------------
+
+def slag(sx=1.0, sy=1.0, lift=0):
+    f = Fig(32, 24)
+    c, cx, fy = f.c, f.cx, f.fy
+    rx, ry = 7 * sx, 6 * sy
+    center = (cx, fy - ry - lift)
+    c.ellipse(center, rx, ry, f.p_main)
+    for dx, dy, r in ((-3, -2, 2.2), (2, -3, 1.8), (3, 1, 1.6), (-2, 2, 1.4)):
+        c.ellipse((center[0] + dx * sx, center[1] + dy * sy), r, r, f.p_acc)
+    c.mark(center[0] + 2, center[1] - 1, EYE)
+    c.mark(center[0] + 4, center[1] - 1, EYE)
+    if lift == 0:
+        c.rect(center[0] - rx, fy - 1, rx * 2, 1, f.p_acc)            # poça embaixo
+    return f.done()
+
+
+def slag_anims():
+    A = {"idle": (4, [slag(1.0, 1.0), slag(1.08, 0.92)])}
+    A["hop"] = (1, [slag(0.82, 1.2, lift=3)])
+    A["land"] = (1, [slag(1.3, 0.7)])
+    return A
+
+
+# --- Lobo Pálido: quadrúpede magro, investe mordendo ----------------------------------
+
+def wolf(run=0.0, pose="idle", bob=0):
+    f = Fig(48, 32)
+    c, cx, fy = f.c, f.cx, f.fy
+    crouch = 3 if pose == "crouch" else 0
+    stretch = 4 if pose == "lunge" else 0
+    hip = (cx - 7 - stretch * 0.5, fy - 10 + crouch + bob)
+    sh = (cx + 6 + stretch * 0.5, fy - 11 + crouch + bob)
+    s = math.sin(run)
+    legs_back = ((-0.5 * s, 0.6), (0.5 * s, 0.6)) if pose != "lunge" else ((-1.2, 0.2), (-0.9, 0.3))
+    legs_front = ((0.5 * s, -0.5), (-0.5 * s, -0.5)) if pose != "lunge" else ((1.3, -0.1), (1.0, -0.2))
+    for (a, bend), part in zip(legs_back, (f.p_main_back, f.p_main)):
+        f.limb2(hip, a, -bend, 4.5, 4.5, 3.2, 2.2, part)
+    for (a, bend), part in zip(legs_front, (f.p_main_back, f.p_main)):
+        f.limb2(sh, a, -bend, 4.5, 4.5, 3.0, 2.2, part)
+    c.limb(hip, sh, 7.5, f.p_main)                                    # corpo
+    c.limb((hip[0] - 3, hip[1] - 1), (hip[0] - 11, hip[1] - 4 - (2 if pose == "idle" else 0)), 2.6, f.p_sec)
+    head = (sh[0] + 5, sh[1] - 4 + (2 if pose == "crouch" else 0))
+    c.ellipse(head, 4, 3.4, f.p_main)
+    c.poly([(head[0] + 2, head[1] - 1), (head[0] + 8, head[1] + 0.5), (head[0] + 2, head[1] + 2.5)], f.p_main)
+    if pose == "lunge":
+        c.poly([(head[0] + 3, head[1] + 2), (head[0] + 8, head[1] + 4), (head[0] + 3, head[1] + 4)], f.p_main)
+        c.mark(head[0] + 5, head[1] + 2, METAL)
+    c.poly([(head[0] - 2, head[1] - 3), (head[0] - 1, head[1] - 7), (head[0] + 1, head[1] - 3)], f.p_main)
+    c.mark(head[0] + 1, head[1] - 1, EYE)
+    c.rect(sh[0] - 3, sh[1] - 4, 6, 3, f.p_sec)                       # juba de geada
+    return f.done()
+
+
+def wolf_anims():
+    A = {"idle": (2, [wolf(bob=b) for b in (0, 1)])}
+    A["run"] = (12, [wolf(run=i / 4 * math.tau, pose="run", bob=-(i % 2)) for i in range(4)])
+    A["crouch"] = (1, [wolf(pose="crouch")])
+    A["lunge"] = (1, [wolf(pose="lunge")])
+    A["stun"] = (1, [wolf(pose="crouch", bob=1)])
+    return A
+
+
 # paletas: roupa, segunda peça, olho, detalhe, rosto, madeira, metal
 ENEMY_PALETTES = {
     "penitent": ("#6b5a3a", "#8a7752", "#ff5a4a", "#7a3b2b", "#1a1210", "#5b3f2c", "#c9c2b0"),
@@ -425,6 +536,12 @@ ENEMY_PALETTES = {
     "assassin": ("#3a3046", "#c9b38a", "#ff5a4a", "#8a6242", "#0e0b12", "#5b3f2c", "#d9e2ec"),
     "inquisitor": ("#e2d6b8", "#9d3b3b", "#8ff7e8", "#d9a93f", "#1a1410", "#5b3f2c", "#e8e2d0"),
     "emperor": ("#3b2550", "#efe6d2", "#8ff7e8", "#e0b04a", "#2a2028", "#5b3f2c", "#8ff7e8"),
+    "smith": ("#8a5a48", "#4a3428", "#ff8a3a", "#5a5a62", "#1a1210", "#3a2a22", "#c9c2b0"),
+    "slag": ("#3a2a2a", "#2a1e1e", "#ffe08a", "#ff8a3a", "#120c0c", "#3a2a22", "#ffd84a"),
+    "wolf": ("#c8d4e0", "#e8f2fa", "#9fe8ff", "#8aa0b8", "#1a2230", "#5b3f2c", "#ffffff"),
+    "archer_ice": ("#5a7aa0", "#2a3a5a", "#9fe8ff", "#8aa0b8", "#0c1220", "#6a7a8a", "#dff6ff"),
+    "penitent_ice": ("#6a7a8a", "#9aa8b8", "#9fe8ff", "#3a4a6a", "#10161e", "#4a3a30", "#dff6ff"),
+    "guard_forge": ("#3a3a42", "#2a2a30", "#ff8a3a", "#b86a3a", "#0c0c10", "#4a2a1e", "#e8c09a"),
 }
 
 
@@ -474,6 +591,9 @@ SHEETS = {
     "assassin": (assassin_anims, 40, 32),
     "inquisitor": (inquisitor_anims, 48, 40),
     "emperor": (emperor_anims, 72, 64),
+    "smith": (smith_anims, 56, 52),
+    "slag": (slag_anims, 32, 24),
+    "wolf": (wolf_anims, 48, 32),
 }
 
 if __name__ == "__main__":

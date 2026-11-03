@@ -9,6 +9,7 @@ signal used(dest: String)
 var title := ""
 var dest := ""
 var sealed := false
+var hint := ""
 var _frame: Sprite2D
 
 
@@ -26,7 +27,7 @@ func prompt() -> String:
 
 
 func detail() -> String:
-	return "A PASSAGEM AINDA NÃO SE ABRIU" if sealed else ""
+	return "A PASSAGEM AINDA NÃO SE ABRIU" if sealed else hint
 
 
 func interact(_p: Player) -> void:

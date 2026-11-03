@@ -9,12 +9,15 @@ extends Node2D
 #   P início  e inimigo comum  r inimigo à distância  E elite  B chefe
 #   i item  f fragmento divino  L inscrição  X saída  V vigia  w zona de vidro
 #   g/a brutamontes/atirador fixos (salas de teste)
+#   M altar de mutação  c baú  $ mercador  T porta do relógio  U altar de runa
+#   K  parede rachada (só quebra com o Punho do Ferreiro)
 
 const TILE := 16
 const SOLID := "#"
 const PLATFORM := "="
 const FAKE := "F"
-const MARKERS := "PeErBifLXVwga"
+const CRACKED := "K"
+const MARKERS := "PeErBifLXVwgaMc$TU"
 const WORLD_LAYER := 1
 const PLATFORM_LAYER := 8
 const CHUNK := 16
@@ -89,6 +92,7 @@ func load_grid(lines: PackedStringArray) -> void:
 				line = line.substr(0, x) + "." + line.substr(x + 1)
 		grid[y] = line
 	_build_collision()
+	_build_cracked()
 	_build_depth()
 	_build_decor()
 	_build_chunks()
@@ -113,7 +117,8 @@ func cell(x: int, y: int) -> String:
 
 
 func is_solid(x: int, y: int) -> bool:
-	return cell(x, y) == SOLID
+	var c := cell(x, y)
+	return c == SOLID or c == CRACKED
 
 
 func is_solid_at(p: Vector2) -> bool:
@@ -122,7 +127,7 @@ func is_solid_at(p: Vector2) -> bool:
 
 func is_ground_at(p: Vector2) -> bool:
 	var c := cell(floori(p.x / TILE), floori(p.y / TILE))
-	return c == SOLID or c == PLATFORM
+	return c == SOLID or c == PLATFORM or c == CRACKED
 
 
 func is_platform_at(p: Vector2) -> bool:
@@ -160,6 +165,91 @@ func _reveal_from(start: Vector2i) -> void:
 		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 			todo.append(c + d)
 	Sfx.play("secret", -4.0)
+
+
+# --- paredes rachadas --------------------------------------------------------
+# Cada grupo de K é um corpo à parte. Só cede a golpe de quem tem a runa
+# do Punho do Ferreiro.
+
+var _cracked: Array[Dictionary] = []     # {cells: Array[Vector2i], rect: Rect2, body}
+var _warned := false
+
+
+func _build_cracked() -> void:
+	_cracked.clear()
+	var seen := {}
+	for y in rows:
+		for x in cols:
+			if grid[y][x] != CRACKED or seen.has(Vector2i(x, y)):
+				continue
+			var cells: Array[Vector2i] = []
+			var todo: Array[Vector2i] = [Vector2i(x, y)]
+			seen[Vector2i(x, y)] = true
+			var box := Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE))
+			while not todo.is_empty():
+				var c: Vector2i = todo.pop_back()
+				cells.append(c)
+				box = box.merge(Rect2(Vector2(c) * TILE, Vector2(TILE, TILE)))
+				for d: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+					var n := c + d
+					if cell(n.x, n.y) == CRACKED and not seen.has(n):
+						seen[n] = true
+						todo.append(n)
+			var body := StaticBody2D.new()
+			body.collision_layer = WORLD_LAYER
+			body.collision_mask = 0
+			for c in cells:
+				_add_box(body, Rect2(Vector2(c) * TILE, Vector2(TILE, TILE)), false)
+			add_child(body)
+			_cracked.append({"cells": cells, "rect": box, "body": body})
+
+
+func has_cracked() -> bool:
+	return not _cracked.is_empty()
+
+
+# Golpe do herói (retângulo do ataque). true = quebrou alguma parede.
+func strike_cracked(hit: Rect2) -> bool:
+	for w in _cracked:
+		var r: Rect2 = w["rect"]
+		if not r.grow(2.0).intersects(hit):
+			continue
+		if not Meta.has_rune("punho"):
+			Fx.burst(hit.get_center(), Palette.DUST, 4, 40.0, 0.3)
+			if not _warned:
+				_warned = true
+				Fx.toast("A PAREDE RACHADA NÃO CEDE. FALTA FORÇA.")
+			return false
+		for c: Vector2i in w["cells"]:
+			grid[c.y] = grid[c.y].substr(0, c.x) + "." + grid[c.y].substr(c.x + 1)
+			Fx.burst((Vector2(c) + Vector2(0.5, 0.5)) * TILE, colors["stone"], 8, 120.0, 0.6, 400.0, 3.0, 40.0)
+		(w["body"] as Node).queue_free()
+		_cracked.erase(w)
+		_build_depth()
+		for c in _chunks.values():
+			c.queue_redraw()
+		for c in get_children():
+			if c is Chunk:
+				c.queue_redraw()
+		Fx.add_shake(5.0)
+		Sfx.play("slam")
+		return true
+	return false
+
+
+func _draw_crack(ci: CanvasItem, x: int, y: int) -> void:
+	var p := Vector2(x, y) * TILE
+	var ink: Color = Color(colors["shadow"]).darkened(0.4)
+	var h := _hash(x, y)
+	var cx := 4 + h % 8
+	for i in 14:
+		var dx := int(sin(i * 1.7 + h) * 2.0)
+		ci.draw_rect(Rect2(p.x + cx + dx, p.y + 1 + i, 1, 1), ink)
+	ci.draw_rect(Rect2(p.x + 2, p.y + 6 + h % 5, 5, 1), ink)
+	ci.draw_rect(Rect2(p.x + 9, p.y + 3 + h % 7, 5, 1), ink)
+	var glint := Palette.GOLD
+	glint.a = 0.5
+	ci.draw_rect(Rect2(p.x + cx, p.y + 7, 1, 2), glint)
 
 
 # --- colisão --------------------------------------------------------------
@@ -449,6 +539,9 @@ func draw_area(ci: CanvasItem, area: Rect2i) -> void:
 			match grid[y][x]:
 				SOLID:
 					_draw_stone(ci, x, y)
+				CRACKED:
+					_draw_stone(ci, x, y)
+					_draw_crack(ci, x, y)
 				FAKE:
 					if not _revealed.has(Vector2i(x, y)):
 						_draw_stone(ci, x, y)
@@ -466,7 +559,7 @@ func _hash(x: int, y: int) -> int:
 
 func _solidish(x: int, y: int) -> bool:
 	var c := cell(x, y)
-	return c == SOLID or c == FAKE
+	return c == SOLID or c == FAKE or c == CRACKED
 
 
 # Os blocos vêm do atlas de tools/gen_tiles.py (índices de paleta pintados

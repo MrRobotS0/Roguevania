@@ -30,6 +30,7 @@ var _anim := 0.0
 # Corpo em sprite (folhas de tools/gen_enemies.py). Sem `sheet`, o inimigo é
 # desenhado à mão em draw_body(), como antes.
 var sheet := ""
+var look := ""               # paleta (vazio = a da própria folha)
 var body: Sprite2D
 var sink_px := 0.0           # afundado no chão (o assassino emerge da cinza)
 var _tex: ImageTexture
@@ -40,6 +41,8 @@ var _frame_size := Vector2i(32, 32)
 
 func _ready() -> void:
 	setup_body(4)
+	max_hp = roundi(max_hp * Run.enemy_hp_mult())
+	hp = max_hp
 	_shown_hp = hp
 	z_index = 4
 	add_to_group("enemies")
@@ -56,8 +59,10 @@ func _ready() -> void:
 
 
 func _setup_sprite() -> void:
-	var pal := EnemyLooks.palette(sheet)
-	var warn := EnemyLooks.palette(sheet, true)
+	if look == "":
+		look = sheet
+	var pal := EnemyLooks.palette(look)
+	var warn := EnemyLooks.palette(look, true)
 	if elite:
 		# elite: contorno em brasa
 		pal[1] = Color("8a2a10")
@@ -105,7 +110,7 @@ func sprite_parts() -> Array:
 	var out: Array = []
 	if body == null or not body.visible:
 		return out
-	var img := SpriteSheet.image(sheet, EnemyLooks.palette(sheet))
+	var img := SpriteSheet.image(sheet, EnemyLooks.palette(look))
 	var r := body.region_rect
 	for y in range(0, int(r.size.y), 2):
 		for x in range(0, int(r.size.x), 2):
@@ -183,7 +188,7 @@ func _die() -> void:
 	Fx.add_shake(3.0)
 	Sfx.play("enemy_die", -4.0)
 	if player:
-		player.kills += 1
+		player.on_kill(self)
 	killed.emit(self)
 	remove_from_group("enemies")
 	queue_free()

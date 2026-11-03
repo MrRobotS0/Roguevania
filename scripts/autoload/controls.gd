@@ -4,7 +4,7 @@ extends Node
 # legíveis e fáceis de trocar. Teclas físicas: funcionam igual no ABNT.
 
 const ACTIONS := ["left", "right", "up", "down", "jump", "attack1", "attack2", "skill1", "skill2",
-	"roll", "heal", "interact", "pause", "confirm", "cancel", "reset", "debug"]
+	"roll", "heal", "interact", "pause", "confirm", "cancel", "reset", "debug", "map"]
 
 const KEYS := {
 	"left": [KEY_A, KEY_LEFT],
@@ -24,6 +24,7 @@ const KEYS := {
 	"cancel": [KEY_ESCAPE, KEY_BACKSPACE],
 	"reset": [KEY_F5],
 	"debug": [KEY_F1],
+	"map": [KEY_M, KEY_TAB],
 }
 
 const PAD_BUTTONS := {
@@ -41,6 +42,7 @@ const PAD_BUTTONS := {
 	"pause": [JOY_BUTTON_START],
 	"confirm": [JOY_BUTTON_A],
 	"cancel": [JOY_BUTTON_B],
+	"map": [JOY_BUTTON_BACK],
 }
 
 const PAD_AXES := {
@@ -88,11 +90,11 @@ func _ready() -> void:
 
 const KEY_HINTS := {
 	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "Q",
-	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO",
+	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO", "map": "M",
 }
 const PAD_HINTS := {
 	"attack1": "X", "attack2": "Y", "skill1": "LB", "skill2": "RB", "heal": "LT",
-	"interact": "CIMA", "confirm": "A", "cancel": "B", "move": "CIMA/BAIXO", "roll": "B", "jump": "A",
+	"interact": "CIMA", "confirm": "A", "cancel": "B", "move": "CIMA/BAIXO", "roll": "B", "jump": "A", "map": "SELECT",
 }
 
 var pad_mode := false

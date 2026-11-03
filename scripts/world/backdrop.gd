@@ -7,6 +7,7 @@ extends Node2D
 #   "columns": colunas escuras (sala de treino / padrão)
 
 var style := "columns"
+var layers := "bd"
 var sky := {}
 var _t := 0.0
 
@@ -25,7 +26,7 @@ func _draw() -> void:
 	var cam := get_viewport().get_camera_2d()
 	var at := cam.get_screen_center_position() if cam else Vector2.ZERO
 	match style:
-		"dunes":
+		"dunes", "painted":
 			_dunes(size, at)
 		_:
 			_columns_bg(size, at)
@@ -44,9 +45,10 @@ func _layer(name: String) -> ImageTexture:
 	if _painted_for != sky:
 		_painted.clear()
 		_painted_for = sky.duplicate()
-	if not _painted.has(name):
-		_painted[name] = SpriteSheet.texture(name, _palette())
-	return _painted[name]
+	var file := layers + name.trim_prefix("bd")
+	if not _painted.has(file):
+		_painted[file] = SpriteSheet.texture(file, _palette())
+	return _painted[file]
 
 
 func _palette() -> PackedColorArray:
@@ -80,7 +82,7 @@ func _dunes(size: Vector2, at: Vector2) -> void:
 		draw_texture(tex, Vector2(x0 + lw, y0))
 		if y0 < 0.0:
 			# o pé da camada não pode deixar buraco embaixo
-			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), SpriteSheet.image(l[0], _palette()).get_pixel(0, tex.get_height() - 1))
+			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), SpriteSheet.image(layers + String(l[0]).trim_prefix("bd"), _palette()).get_pixel(0, tex.get_height() - 1))
 	# cinza caindo devagar
 	var ash := _c("sun", Color.WHITE)
 	ash.a = 0.18

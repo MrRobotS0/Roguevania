@@ -20,6 +20,11 @@ extends Resource
 @export var exits: Array = []              # [{"title": "...", "to": "id", "sealed": false}]
 @export var lore: Array = []               # textos das inscrições, em ordem
 @export var tier := 0
+@export var layers := "bd"                 # prefixo das camadas pintadas do fundo
+@export var hazard_script := ""            # o que nasce no marcador w
+@export var rune := ""                     # runa guardada neste bioma ("" = nenhuma)
+@export var ink := Color("0e0b0d")         # silhuetas do primeiro plano
+@export var recolor: Dictionary = {}       # folha -> paleta (ex.: "penitent": "penitent_ice")
 
 
 func pick_enemy(slot: String, rng: RandomNumberGenerator) -> String:

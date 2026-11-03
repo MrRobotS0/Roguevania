@@ -151,6 +151,104 @@ PROPS = {
     "brazier": [brazier()],
 }
 
+
+def chest(state):
+    """state: closed | open | cursed"""
+    c = Canvas(S, S)
+    p = parts(c)
+    cx, fy = 24, 46
+    wood = p["wood"] if state != "cursed" else p["cloth"]
+    c.rect(cx - 9, fy - 9, 18, 9, wood)
+    if state == "open":
+        c.poly([(cx - 9, fy - 9), (cx + 9, fy - 9), (cx + 7, fy - 16), (cx - 7, fy - 16)], wood)
+        c.rect(cx - 7, fy - 10, 14, 1, c.new_part(GLOW, GLOW, GLOW))
+    else:
+        c.poly([(cx - 9, fy - 9), (cx - 8, fy - 13), (cx - 4, fy - 15), (cx + 4, fy - 15), (cx + 8, fy - 13), (cx + 9, fy - 9)], wood)
+    band = p["gold"] if state != "cursed" else p["iron"]
+    c.rect(cx - 9, fy - 6, 18, 1, band)
+    c.rect(cx - 6, fy - 15, 2, 15, band)
+    c.rect(cx + 4, fy - 15, 2, 15, band)
+    c.rect(cx - 1.5, fy - 9, 3, 3, p["gold"] if state != "cursed" else c.new_part(GLOW, GLOW, GLOW))
+    c.finish()
+    return c
+
+
+def merchant(bob):
+    c = Canvas(S, S)
+    p = parts(c)
+    cx, fy = 24, 46
+    c.rect(cx - 13, fy - 24 + bob, 9, 16, p["wood"])           # mochila de quinquilharias
+    c.rect(cx - 14, fy - 27 + bob, 11, 3, p["cloth_dk"])
+    c.mark(cx - 10, fy - 20 + bob, GOLD)
+    c.mark(cx - 7, fy - 15 + bob, GOLD)
+    c.poly([(cx - 6, fy - 22 + bob), (cx + 5, fy - 22 + bob), (cx + 7, fy), (cx - 7, fy)], p["cloth"])
+    c.ellipse((cx, fy - 26 + bob), 4.5, 4.5, p["cloth"])
+    c.rect(cx + 0.5, fy - 27 + bob, 3, 3, c.new_part(OUTLINE, OUTLINE, OUTLINE))
+    c.mark(cx + 2, fy - 26 + bob, GOLD)
+    c.limb((cx + 3, fy - 18 + bob), (cx + 9, fy - 14 + bob), 2.4, p["cloth_dk"])
+    c.ellipse((cx + 10, fy - 14 + bob), 2.2, 2.2, p["gold"])    # moeda na mão
+    c.finish()
+    return c
+
+
+def mutation_altar(lit):
+    c = Canvas(S, S)
+    p = parts(c)
+    cx, fy = 24, 46
+    c.poly([(cx - 8, fy), (cx - 5, fy - 10), (cx + 5, fy - 10), (cx + 8, fy)], p["stone"])
+    c.poly([(cx - 9, fy - 10), (cx + 9, fy - 10), (cx + 7, fy - 15), (cx - 7, fy - 15)], p["iron"])
+    if lit:
+        c.rect(cx - 6, fy - 16, 12, 1, c.new_part(INK, INK, INK))
+    for i in range(3):
+        c.mark(cx - 4 + i * 4, fy - 5, INK if lit else STONE_DK)
+    c.finish()
+    return c
+
+
+def rune_altar(lit):
+    c = Canvas(S, S)
+    p = parts(c)
+    cx, fy = 24, 46
+    c.poly([(cx - 6, fy), (cx - 6, fy - 30), (cx, fy - 36), (cx + 6, fy - 30), (cx + 6, fy)], p["stone"])
+    c.rect(cx - 9, fy - 3, 18, 3, p["stone_dk"])
+    glyph = GLOW if lit else STONE_DK
+    for y in range(fy - 29, fy - 12):
+        c.mark(cx, y, glyph)
+    for d in range(1, 5):
+        c.mark(cx - d, fy - 25 + d, glyph)
+        c.mark(cx + d, fy - 25 + d, glyph)
+    c.finish()
+    return c
+
+
+def timed_door(open_):
+    c = Canvas(S, S)
+    p = parts(c)
+    cx, fy = 24, 46
+    c.rect(cx - 9, fy - 44, 3, 44, p["stone"])
+    c.rect(cx + 6, fy - 44, 3, 44, p["stone"])
+    c.rect(cx - 10, fy - 46, 20, 3, p["stone"])
+    c.ellipse((cx, fy - 44), 3, 3, p["gold"])
+    c.mark(cx, fy - 45, INK)
+    c.mark(cx, fy - 43, INK)
+    if not open_:
+        for x in range(cx - 5, cx + 6, 3):
+            c.rect(x, fy - 42, 1.5, 42, p["iron"])
+        for y in range(fy - 38, fy, 8):
+            c.rect(cx - 6, y, 12, 1.5, p["iron"])
+    c.finish()
+    return c
+
+
+PROPS.update({
+    "chest": [chest("closed"), chest("open")],
+    "chest_cursed": [chest("cursed"), chest("open")],
+    "merchant": [merchant(b) for b in (0, 0, 1, 1)],
+    "mutation_altar": [mutation_altar(True), mutation_altar(False)],
+    "rune_altar": [rune_altar(True), rune_altar(False)],
+    "timed_door": [timed_door(False), timed_door(True)],
+})
+
 PALETTE = dict(stone="#6b5f58", iron="#3a3236", gold="#d9a93f", cloth="#2b2f3a", glow="#9fe8ff",
                wood="#5b3f2c", ink="#f2c14e")
 

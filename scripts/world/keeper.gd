@@ -29,6 +29,11 @@ func detail() -> String:
 
 
 func interact(p: Player) -> void:
+	if not p.blueprints.is_empty():
+		var fresh := Meta.learn(p.blueprints)
+		p.blueprints.clear()
+		Sfx.play("unlock", -4.0)
+		Fx.toast("A VIGIA GUARDOU %d PLANTA%s" % [fresh, "S" if fresh != 1 else ""])
 	if not refilled:
 		refilled = true
 		p.flasks = p.max_flasks
@@ -40,7 +45,7 @@ func interact(p: Player) -> void:
 func _offers() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for r in Catalog.all_gear():
-		if r.starter or Meta.is_unlocked(r.id):
+		if r.starter or Meta.is_unlocked(r.id) or not Meta.knows(r.id):
 			continue
 		var kind := "ARMA" if r is WeaponData else "HABILIDADE"
 		out.append({"id": r.id, "title": r.title, "cost": r.unlock_cost,
@@ -76,6 +81,8 @@ func _open_shop(p: Player) -> void:
 			if i >= offers.size():
 				return
 			var o: Dictionary = offers[i]
+			if p.essence < int(o["cost"]):
+				return
 			p.essence -= int(o["cost"])
 			Meta.unlock(o["id"])
 			p.gear_changed.emit()

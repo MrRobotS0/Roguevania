@@ -22,7 +22,8 @@ func use_path(p: String, wipe := false) -> void:
 
 
 func _defaults() -> Dictionary:
-	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho"}
+	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
+		"blueprints": [], "runes": [], "heat": 0}
 
 
 func _load() -> void:
@@ -93,3 +94,36 @@ func current_skin() -> SkinData:
 func wear(id: String) -> void:
 	data["skin"] = id
 	save()
+
+
+# --- runas (poderes que ficam para sempre) e plantas -------------------------------
+
+func has_rune(id: String) -> bool:
+	return data["runes"].has(id)
+
+
+func add_rune(id: String) -> void:
+	if not has_rune(id):
+		data["runes"].append(id)
+		save()
+
+
+func knows(id: String) -> bool:
+	return data["blueprints"].has(id)
+
+
+func learn(ids: Array) -> int:
+	var fresh := 0
+	for id in ids:
+		if not knows(id):
+			data["blueprints"].append(id)
+			fresh += 1
+	save()
+	return fresh
+
+
+# Vitória numa dificuldade libera a próxima.
+func record_heat_win(level: int) -> void:
+	if level + 1 > int(data["heat"]):
+		data["heat"] = mini(level + 1, 4)
+		save()

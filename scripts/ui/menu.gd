@@ -50,6 +50,7 @@ func open_choice(title: String, subtitle: String, options: Array[Dictionary], on
 
 func open_text(title: String, body: String) -> void:
 	_mode = "text"
+	_on_pick = Callable()
 	_title = title
 	_body = PixelFont.wrap(body.to_upper(), int((WIDTH - 24.0) / PixelFont.BODY_ADVANCE))
 	_cancel_ok = true
@@ -125,7 +126,8 @@ func choose(i: int) -> void:
 	_follow()
 	var cb := _on_pick
 	close()
-	cb.call(i)
+	if _mode == "choice" and cb.is_valid():
+		cb.call(i)
 
 
 func _fit(text: String, room_px: float) -> String:

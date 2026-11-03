@@ -122,16 +122,14 @@ def rooms():
     r.door("L", 7, 4).put(14, 10, "f")
     out.append(r)
 
-    r = R("saida_vigia", "saida", 34, 14, head="O posto da Vigia, à beira do Trono")
-    r.door("L", 9, 4).fill(22, 30, 4, 4).put(8, 12, "L").put(15, 12, "V").put(27, 12, "X")
-    out.append(r)
+    # a saída (com a Porta do Relógio) e as peças de loja/cofre vêm de salas_andares.py
     return out
 
 
 def throne():
     b = R("trono", "chefe", 44, 18, head="Sala do Trono do Imperador Cego")
     b.fill(6, 9, 12, 12, "=").fill(34, 37, 12, 12, "=").fill(19, 24, 1, 2)
-    b.put(4, 16, "P").put(30, 16, "B").put(9, 16, "V").put(34, 16, "X").put(37, 16, "X").put(40, 16, "X")
+    b.put(4, 16, "P").put(30, 16, "B").put(9, 16, "V").put(34, 16, "X")
     return b
 
 

@@ -213,6 +213,144 @@ def near():
     return g
 
 
+# --- Forja Rubra --------------------------------------------------------------------
+
+def sky_forja():
+    g = sky()
+    # sem sol: o brilho vem de baixo (o fogo da forja); apaga o disco
+    for y in range(H):
+        for x in range(W):
+            if g[y][x] in (5, 6, 7):
+                t = min(y / 205, 1.0) * 3.0
+                band = int(t)
+                g[y][x] = min(1 + band + (1 if band < 3 and dith(x, y, t - band) else 0), 4)
+    return g
+
+
+def far_forja():
+    g = [[0] * LW for _ in range(H)]
+    base, B = 214, 8
+    # chaminés com fumaça
+    for x0, tall in ((60, 120), (96, 90), (520, 140), (560, 100)):
+        fill_poly(g, [(x0, base), (x0 + 2, base - tall), (x0 + 16, base - tall), (x0 + 18, base)], B, LW)
+        fill_poly(g, [(x0 - 3, base - tall), (x0 + 21, base - tall), (x0 + 21, base - tall - 6), (x0 - 3, base - tall - 6)], B, LW)
+        for k in range(6):
+            ellipse(g, x0 + 9 + k * 5, base - tall - 14 - k * 10, 8 + k, 5 + k * 0.6, 15, LW)
+    # bigorna gigante
+    fill_poly(g, [(250, base), (262, 160), (300, 160), (312, base)], B, LW)
+    fill_poly(g, [(220, 160), (340, 160), (352, 148), (330, 140), (232, 140)], B, LW)
+    # martelo cravado
+    fill_poly(g, [(700, base), (706, 110), (714, 110), (718, base)], B, LW)
+    fill_poly(g, [(684, 110), (736, 110), (736, 86), (684, 86)], B, LW)
+    # engrenagem meio enterrada
+    ellipse(g, 860, base - 10, 34, 34, B, LW)
+    for k in range(10):
+        a = k * math.tau / 10
+        ellipse(g, 860 + math.cos(a) * 38, base - 10 + math.sin(a) * 38, 5, 5, B, LW)
+    ellipse(g, 860, base - 10, 10, 10, 0, LW)
+    for x in range(LW):
+        hh = base + int(3 * math.sin(x * math.tau / LW * 4))
+        for y in range(hh, H):
+            g[y][x] = B
+    return rim(g, LW, H, B, 9)
+
+
+def mid_forja():
+    g, hs = dune_layer(228, (10, 7, 3), (3, 6, 13), 10, 11, 12, 21)
+    # canos e correntes saindo da escória
+    for x0 in (120, 470, 790):
+        top = hs[x0] - 40
+        fill_poly(g, [(x0, hs[x0] + 4), (x0, top), (x0 + 6, top), (x0 + 6, hs[x0] + 4)], 10, LW)
+        fill_poly(g, [(x0, top), (x0 + 30, top), (x0 + 30, top + 5), (x0, top + 5)], 10, LW)
+    return rim(g, LW, H, 10, 11)
+
+
+def near_forja():
+    g, hs = dune_layer(246, (8, 4), (5, 9), 13, 14, 0, 33)
+    for x0 in (300, 820):
+        y0 = hs[x0]
+        fill_poly(g, [(x0 - 10, y0 + 2), (x0 - 6, y0 - 14), (x0 + 8, y0 - 16), (x0 + 12, y0 + 2)], 13, LW)
+    return g
+
+
+# --- Salões do Último Inverno ------------------------------------------------------------
+
+def sky_saloes():
+    g = sky()
+    # aurora: faixas onduladas no alto
+    for band in range(3):
+        for x in range(W):
+            y0 = 30 + band * 14 + int(8 * math.sin(x * 0.02 + band * 1.3))
+            for dy in range(6):
+                if dith(x, y0 + dy, 0.45 * (1 - dy / 6)):
+                    g[y0 + dy][x] = 15
+    return g
+
+
+def far_saloes():
+    g = [[0] * LW for _ in range(H)]
+    base, B = 214, 8
+    # colunata de um salão gigante, metade caída
+    for i, x0 in enumerate(range(30, 330, 60)):
+        tall = 150 if i % 2 == 0 else 110
+        fill_poly(g, [(x0, base), (x0, base - tall), (x0 + 18, base - tall), (x0 + 18, base)], B, LW)
+        fill_poly(g, [(x0 - 4, base - tall), (x0 + 22, base - tall), (x0 + 22, base - tall - 6), (x0 - 4, base - tall - 6)], B, LW)
+    fill_poly(g, [(26, 64), (210, 64), (210, 72), (26, 72)], B, LW)
+    # gigante preso num bloco de gelo: o gelo é pontilhado claro, o gigante escuro
+    block = [[0] * LW for _ in range(H)]
+    fill_poly(block, [(500, base), (506, 96), (540, 66), (660, 62), (700, 100), (694, base)], 1, LW)
+    giant = [[0] * LW for _ in range(H)]
+    ellipse(giant, 566, 104, 13, 14, 1, LW)                                   # cabeça baixa
+    fill_poly(giant, [(560, 116), (600, 100), (650, 118), (660, 170), (600, 182), (556, 150)], 1, LW)  # costas
+    fill_poly(giant, [(560, 140), (548, 176), (560, 180), (578, 150)], 1, LW)  # braço
+    fill_poly(giant, [(600, 176), (660, 168), (676, base), (596, base)], 1, LW)  # perna dobrada
+    for y in range(H):
+        for x in range(LW):
+            if block[y][x]:
+                if giant[y][x]:
+                    g[y][x] = B
+                else:
+                    g[y][x] = 9 if dith(x, y, 0.5) else B
+    for t in range(40):
+        g[min(H - 1, 80 + t * 3)][560 + t * 2] = 9                             # rachadura no gelo
+    # pinheiros congelados
+    for x0 in (760, 800, 850, 900):
+        for k in range(5):
+            w = 4 + k * 4
+            fill_poly(g, [(x0, base - 70 + k * 12), (x0 - w, base - 56 + k * 12), (x0 + w, base - 56 + k * 12)], B, LW)
+        fill_poly(g, [(x0 - 2, base), (x0 - 2, base - 10), (x0 + 2, base - 10), (x0 + 2, base)], B, LW)
+    for x in range(LW):
+        hh = base + int(2 * math.sin(x * math.tau / LW * 5))
+        for y in range(hh, H):
+            g[y][x] = B
+    return rim(g, LW, H, B, 9)
+
+
+def mid_saloes():
+    g, hs = dune_layer(224, (12, 5, 3), (2, 7, 12), 10, 11, 12, 41)
+    for x0 in (180, 420, 700):
+        y0 = hs[x0]
+        fill_poly(g, [(x0, y0 + 4), (x0 + 4, y0 - 26), (x0 + 8, y0 + 4)], 11, LW)
+        fill_poly(g, [(x0 + 10, y0 + 4), (x0 + 13, y0 - 16), (x0 + 16, y0 + 4)], 11, LW)
+    return rim(g, LW, H, 10, 11)
+
+
+def near_saloes():
+    g, hs = dune_layer(244, (9, 4), (4, 8), 13, 14, 0, 51)
+    for x0 in (150, 620):
+        y0 = hs[x0]
+        for k in range(4):
+            w = 3 + k * 3
+            fill_poly(g, [(x0, y0 - 40 + k * 9), (x0 - w, y0 - 28 + k * 9), (x0 + w, y0 - 28 + k * 9)], 13, LW)
+    return g
+
+
+SKIES = {
+    "bd_forja": dict(sky0="#1a0c0c", sky1="#3a1612", glow="#b8401c", sun="#ffb050"),
+    "bd_saloes": dict(sky0="#0c1220", sky1="#1c2a40", glow="#5a7aa0", sun="#dceaf4"),
+}
+
+
 SKY = dict(sky0="#291f21", sky1="#45332f", glow="#9e6b4c", sun="#f2d49e")
 
 
@@ -245,14 +383,23 @@ def paint(img, pal):
     return out
 
 
+SETS = {
+    "bd": (sky, far, mid, near),
+    "bd_forja": (sky_forja, far_forja, mid_forja, near_forja),
+    "bd_saloes": (sky_saloes, far_saloes, mid_saloes, near_saloes),
+}
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(PREV, exist_ok=True)
-    layers = {"bd_sky": (sky(), W), "bd_far": (far(), LW), "bd_mid": (mid(), LW), "bd_near": (near(), LW)}
-    pal = backdrop_palette(SKY)
-    shot = Image.new("RGBA", (W, H))
-    for name, (g, w) in layers.items():
-        img = save(name, g, w, H)
-        shot.alpha_composite(paint(img, pal).crop((420, 0, 420 + W, H)) if w > W else paint(img, pal))
-    shot.convert("RGB").resize((W * 2, H * 2), Image.NEAREST).save(os.path.join(PREV, "backdrop.png"))
+    SKIES["bd"] = SKY
+    for prefix, fns in SETS.items():
+        pal = backdrop_palette(SKIES[prefix])
+        shot = Image.new("RGBA", (W, H))
+        for part, fn in zip(("sky", "far", "mid", "near"), fns):
+            g = fn()
+            w = len(g[0])
+            img = save("%s_%s" % (prefix, part), g, w, H)
+            shot.alpha_composite(paint(img, pal).crop((420, 0, 420 + W, H)) if w > W else paint(img, pal))
+        shot.convert("RGB").resize((W * 2, H * 2), Image.NEAREST).save(os.path.join(PREV, "backdrop_%s.png" % prefix))
     print("ok")

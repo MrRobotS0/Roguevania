@@ -4,6 +4,7 @@ extends Node2D
 # Essência que sai dos inimigos: espirra, cai e é atraída pelo herói.
 
 var player: Player
+var kind := "essence"        # essence | gold
 var room: Room
 var velocity := Vector2.ZERO
 var _t := 0.0
@@ -11,7 +12,7 @@ var _t := 0.0
 
 func _ready() -> void:
 	z_index = 7
-	Glow.attach(self, Palette.ESSENCE, 22.0, 0.7)
+	Glow.attach(self, Palette.GOLD if kind == "gold" else Palette.ESSENCE, 22.0, 0.6)
 	velocity = Vector2(randf_range(-90, 90), randf_range(-200, -110))
 
 
@@ -33,13 +34,22 @@ func _physics_process(delta: float) -> void:
 			position = next
 		velocity.x = move_toward(velocity.x, 0.0, 120.0 * delta)
 	if to.length() < 8.0 and player.alive():
-		player.add_essence(1)
+		if kind == "gold":
+			player.add_gold(1)
+		else:
+			player.add_essence(1)
 		Sfx.play("essence", -14.0, 0.2)
 		queue_free()
 	queue_redraw()
 
 
 func _draw() -> void:
+	if kind == "gold":
+		var spin := absf(sin(_t * 8.0))
+		var w := maxf(1.0, roundf(3.0 * spin))
+		draw_rect(Rect2(-w * 0.5, -1.5, w, 3), Palette.GOLD)
+		draw_rect(Rect2(-w * 0.5, -1.5, w, 1), Palette.GOLD.lightened(0.4))
+		return
 	var c := Palette.ESSENCE
 	c.a = 0.6 + 0.4 * sin(_t * 12.0)
 	draw_rect(Rect2(-1, -1, 3, 3), c)

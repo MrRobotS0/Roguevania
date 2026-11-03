@@ -72,7 +72,7 @@ func _ready() -> void:
 		await _shot("11_item_no_chao")
 
 	Run.save_player(p)
-	Run.advance()
+	Run.go("trono")
 	main._load_stage()
 	p = main.level.player
 	p.max_hp = 99999

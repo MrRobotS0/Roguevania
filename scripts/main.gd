@@ -11,6 +11,7 @@ var backdrop: Backdrop
 var weather: Weather
 var foreground: Foreground
 var curtain: Curtain
+var map_view: MapView
 var _playing := false
 
 
@@ -65,6 +66,8 @@ func _ready() -> void:
 	add_child(front)
 	hud = Hud.new()
 	front.add_child(hud)
+	map_view = MapView.new()
+	front.add_child(map_view)
 	screen = Screen.new()
 	front.add_child(screen)
 	menu = Menu.new()
@@ -84,14 +87,43 @@ func _show_title() -> void:
 
 
 func _load_backdrop_preview() -> void:
-	var b := Catalog.biome("mar_de_cinzas")
+	_use_biome(Catalog.biome("mar_de_cinzas"))
+
+
+func _use_biome(b: BiomeData) -> void:
 	backdrop.style = b.backdrop
 	backdrop.sky = b.sky
+	backdrop.layers = b.layers
+	foreground.style = b.backdrop
+	foreground.ink = b.ink
 
 
 func _on_screen_confirmed() -> void:
-	screen.close()
-	start_run()
+	var unlocked := int(Meta.data["heat"])
+	if screen.mode != "title" or unlocked <= 0:
+		screen.close()
+		start_run()
+		return
+	# Brasas do Deus: quem já venceu escolhe a dificuldade
+	var options: Array[Dictionary] = []
+	for h in unlocked + 1:
+		options.append({"label": HEAT_NAMES[h], "detail": HEAT_DETAILS[h],
+			"color": Palette.UI_TEXT if h == 0 else Palette.BURN.lerp(Palette.HURT, h / 4.0)})
+	menu.open_choice("BRASAS DO DEUS", "QUANTO MAIS BRASA, MAIS O DEUS MORTO RESISTE.", options,
+		func(i: int) -> void:
+			screen.close()
+			start_run(-1, i))
+	menu.select(unlocked)
+
+
+const HEAT_NAMES := ["Sem brasa", "1 brasa", "2 brasas", "3 brasas", "4 brasas"]
+const HEAT_DETAILS := [
+	"COMO DA PRIMEIRA VEZ",
+	"INIMIGOS +40% DE VIDA, +25% DE DANO",
+	"+80% VIDA, +50% DANO, UM FRASCO A MENOS",
+	"+120% VIDA, +75% DANO, UM FRASCO A MENOS",
+	"+160% VIDA, +100% DANO, UM FRASCO A MENOS",
+]
 
 
 func _on_title_option(id: String) -> void:
@@ -122,8 +154,8 @@ func open_skins() -> void:
 	menu.select(list.find(current))
 
 
-func start_run(seed_value := -1) -> void:
-	Run.new_run(seed_value)
+func start_run(seed_value := -1, heat := 0) -> void:
+	Run.new_run(seed_value, heat)
 	_load_stage()
 
 
@@ -134,18 +166,21 @@ func _load_stage() -> void:
 	Fx.visibility = 1.0
 	var stage := Run.current()
 	var b := Catalog.biome(stage["biome"])
-	backdrop.style = b.backdrop
-	backdrop.sky = b.sky
-	foreground.style = b.backdrop if stage["kind"] != "chefe" else ""
+	_use_biome(b)
+	weather.kind = ""
 
 	level = Level.new()
 	add_child(level)
-	if stage["kind"] == "chefe":
-		level.build_boss(b, Run.seed_value)
-		weather.kind = ""
-	else:
-		level.build_generated(b, Run.seed_value)
-		weather.kind = b.weather
+	match stage["kind"]:
+		"chefe":
+			level.build_boss(b, Run.stage_seed())
+			foreground.style = ""
+		"passagem":
+			level.build_passage(b, Run.stage_seed())
+		_:
+			level.build_generated(b, Run.stage_seed())
+			weather.kind = b.weather
+	map_view.level = level
 	weather.player = level.player
 	Run.load_player(level.player)
 	hud.bind(level.player, level.boss)
@@ -171,16 +206,19 @@ func _clear_level() -> void:
 
 func _on_exit(dest: String) -> void:
 	Run.save_player(level.player)
-	if dest == "fim":
-		_playing = false
-		Run.active = false
-		Meta.record_run(true, level.player.kills)
-		screen.show_victory(level.player)
-		return
-	if Run.advance():
-		_load_stage()
-	else:
-		_show_title()
+	match dest:
+		"fim":
+			_playing = false
+			Run.active = false
+			Meta.record_run(true, level.player.kills)
+			Meta.record_heat_win(Run.heat)
+			screen.show_victory(level.player)
+			return
+		"passagem":
+			Run.enter_passage()
+		_:
+			Run.go(dest)
+	_load_stage()
 
 
 func _on_player_died() -> void:
@@ -210,7 +248,11 @@ func _pause() -> void:
 		{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
 		{"label": "DESISTIR DA PARTIDA", "detail": "VOLTA AO TÍTULO; A ESSÊNCIA SE PERDE"},
 	]
-	menu.open_choice("PAUSA", "", options, _on_pause_pick)
+	var names: Array = level.player.mutations.map(func(id: String) -> String: return String(Catalog.mutation(id).get("title", id)))
+	var info := "MUTAÇÕES: " + ", ".join(PackedStringArray(names)) if not names.is_empty() else ""
+	if Run.heat > 0:
+		info += ("   ·   " if info != "" else "") + "BRASAS: %d" % Run.heat
+	menu.open_choice("PAUSA", info, options, _on_pause_pick)
 
 
 func _on_pause_pick(i: int) -> void:
@@ -221,4 +263,5 @@ func _on_pause_pick(i: int) -> void:
 		_show_title()
 
 
-const CONTROLS := "A / D  OU SETAS: ANDAR\nESPAÇO: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nU: HABILIDADE 1   I: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nQ: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"
+const CONTROLS := "M OU TAB (SEGURE): MAPA
+A / D  OU SETAS: ANDAR\nESPAÇO: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nU: HABILIDADE 1   I: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nQ: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"

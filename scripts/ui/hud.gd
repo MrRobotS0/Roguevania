@@ -18,6 +18,9 @@ const ICONS := {
 	"astucia": [".......", "..###..", ".#+++#.", "#++#++#", ".#+++#.", "..###..", "......."],
 	"vigor": ["#######", "#+++++#", "#+++++#", "#+++++#", ".#+++#.", "..#+#..", "...#..."],
 	"essence": ["...#...", "..#+#..", ".#+++#.", "#+++++#", ".#+++#.", "..#+#..", "...#..."],
+	"gold": [".#####.", "#+++++#", "#++#++#", "#+###+#", "#++#++#", "#+++++#", ".#####."],
+	"scroll": ["#######", "#+++++#", "#+###+#", "#+++++#", "#+##++#", "#+++++#", "#######"],
+	"skull": [".#####.", "#######", "#.#.#.#", "#######", ".#####.", ".#.#.#.", "......."],
 }
 
 var player: Player
@@ -80,6 +83,8 @@ func _draw() -> void:
 		_draw_prompt(size)
 		if is_instance_valid(boss) and boss.alive() and boss.state != "intro":
 			_draw_boss(size)
+	if player and is_instance_valid(player):
+		_draw_status(size)
 	_draw_banner(size)
 	_draw_toasts(size)
 
@@ -109,7 +114,7 @@ func _draw_flasks(at: Vector2) -> void:
 
 
 func _icon(kind: String, at: Vector2, color: Color) -> void:
-	var inner := color.lightened(0.45) if kind == "essence" else color.darkened(0.45)
+	var inner := color.lightened(0.45) if kind in ["essence", "scroll"] else color.darkened(0.45)
 	var rows: Array = ICONS[kind]
 	for y in rows.size():
 		var row: String = rows[y]
@@ -130,6 +135,15 @@ func _draw_right(size: Vector2) -> void:
 	var w := PixelFont.body_width(essence)
 	PixelFont.body(self, essence, Vector2(x - w, 8), Palette.ESSENCE)
 	_icon("essence", Vector2(x - w - 11, 8), Palette.ESSENCE)
+	var gold := "%d" % player.gold
+	var gx := x - w - 22 - PixelFont.body_width(gold)
+	PixelFont.body(self, gold, Vector2(gx, 8), Palette.GOLD)
+	_icon("gold", Vector2(gx - 11, 8), Palette.GOLD)
+	if not player.blueprints.is_empty():
+		var n := "%d" % player.blueprints.size()
+		var nx := x - PixelFont.body_width(n)
+		PixelFont.body(self, n, Vector2(nx, 34), Palette.GLASS)
+		_icon("scroll", Vector2(nx - 11, 34), Palette.GLASS)
 	var cx := x
 	for stat in ["vigor", "astucia", "furia"]:
 		var label := "%d" % player.levels[stat]
@@ -265,3 +279,21 @@ func _draw_toasts(size: Vector2) -> void:
 		shadow.a = c.a
 		PixelFont.body_centered(self, t[0], Vector2(size.x * 0.5, y), c, 1, shadow)
 		y += PixelFont.BODY_LINE
+
+
+# Maldição (abaixo dos frascos) e a contagem da Porta do Relógio (no alto).
+func _draw_status(size: Vector2) -> void:
+	if player.curse > 0:
+		var violet := Color("c08fff")
+		_icon("skull", Vector2(8, 33), violet)
+		PixelFont.body(self, "%d" % player.curse, Vector2(19, 33), violet)
+	for door: TimedDoor in get_tree().get_nodes_in_group("timed_doors"):
+		if door.is_open:
+			continue
+		var left := door.time_left()
+		var c := Palette.GOLD if left > 20.0 else Palette.HURT
+		var text := "PORTA DO RELÓGIO  %d:%02d" % [int(left) / 60, int(left) % 60] if left > 0.0 else "PORTA DO RELÓGIO FECHADA"
+		if left <= 0.0:
+			c = Palette.UI_DIM
+		PixelFont.draw_centered(self, text, Vector2(size.x * 0.5, 10), c)
+		break

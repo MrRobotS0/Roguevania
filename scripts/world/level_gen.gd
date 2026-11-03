@@ -4,8 +4,10 @@ extends RefCounted
 # Monta uma fase encaixando salas feitas à mão pelas portas.
 #
 #   caminho principal:  início → combate × N (com 1 elite perto do fim) → saída
-#   desvios:            tesouro, fragmento e sala secreta presos nas portas
-#                       que sobraram (a secreta entra por uma parede falsa)
+#   desvios:            os da lista `branches` (tesouro, fragmento, loja, cofre,
+#                       sala da runa...) presos nas portas que sobraram, e uma
+#                       sala secreta que entra por parede falsa. Desvio pedido
+#                       como [tipo, "K"] entra por parede rachada.
 #
 # O resultado é um único mapa de texto que a Room sabe carregar.
 
@@ -24,7 +26,7 @@ class Placed:
 var rng := RandomNumberGenerator.new()
 var templates: Array[RoomTemplate] = []
 var placed: Array[Placed] = []
-var links: Array[Dictionary] = []     # {a, da, b, db, secret}
+var links: Array[Dictionary] = []     # {a, da, b, db, fill}
 var main_path: Array[Placed] = []
 
 
@@ -38,8 +40,14 @@ static func load_dir(dir: String) -> Array[RoomTemplate]:
 	return out
 
 
-func generate(pool: Array[RoomTemplate], seed_value: int, combat_rooms := 6) -> PackedStringArray:
+const DEFAULT_BRANCHES := ["tesouro", "fragmento", "tesouro"]
+
+var branches: Array = DEFAULT_BRANCHES
+
+
+func generate(pool: Array[RoomTemplate], seed_value: int, combat_rooms := 6, branch_list: Array = DEFAULT_BRANCHES) -> PackedStringArray:
 	templates = pool
+	branches = branch_list
 	for attempt in 60:
 		rng.seed = seed_value + attempt * 7919
 		if _try_build(combat_rooms):
@@ -111,20 +119,24 @@ func _try_build(combat_rooms: int) -> bool:
 
 	# Desvios presos ao caminho principal (se couberem).
 	var hosts := main_path.slice(1, main_path.size() - 1)
-	for kind in ["tesouro", "fragmento", "tesouro"]:
+	for b in branches:
+		var kind: String = b if b is String else b[0]
+		var fill: String = "." if b is String else b[1]
+		if _of_kind(kind).is_empty():
+			continue
 		_shuffle(hosts)
 		for host: Placed in hosts:
-			if _attach(host, [kind], ["T", "B", "R", "L"]) != null:
+			if _attach(host, [kind], ["T", "B", "R", "L"], fill) != null:
 				break
 	_shuffle(hosts)
 	for host: Placed in hosts:
-		if _attach(host, ["tesouro"], ["T", "B", "L", "R"], true) != null:
+		if _attach(host, ["tesouro"], ["T", "B", "L", "R"], "F") != null:
 			break
 	return true
 
 
 # Tenta prender uma sala nova numa porta livre de `host`.
-func _attach(host: Placed, kinds: Array, side_pref: Array, secret := false) -> Placed:
+func _attach(host: Placed, kinds: Array, side_pref: Array, fill := ".") -> Placed:
 	var options: Array[RoomTemplate] = []
 	for k: String in kinds:
 		options.append_array(_of_kind(k))
@@ -153,7 +165,7 @@ func _attach(host: Placed, kinds: Array, side_pref: Array, secret := false) -> P
 				p.used[dj] = true
 				host.used[di] = true
 				placed.append(p)
-				links.append({"a": host, "da": dh, "b": p, "db": dn, "secret": secret})
+				links.append({"a": host, "da": dh, "b": p, "db": dn, "fill": fill})
 				return p
 	return null
 
@@ -205,7 +217,7 @@ func _compose() -> PackedStringArray:
 						rows[p.pos.y - bounds.position.y + y][p.pos.x - bounds.position.x + x] = "."
 
 	for link in links:
-		var fill := "F" if link["secret"] else "."
+		var fill: String = link["fill"]
 		for side in [["a", "da"], ["b", "db"]]:
 			var p: Placed = link[side[0]]
 			for c in p.t.door_cells(link[side[1]]):

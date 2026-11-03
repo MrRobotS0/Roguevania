@@ -29,13 +29,42 @@ const SKINS := [
 
 const BIOMES := {
 	"mar_de_cinzas": "res://content/biomes/mar_de_cinzas/biome.tres",
+	"saloes": "res://content/biomes/saloes/biome.tres",
+	"forja_rubra": "res://content/biomes/forja_rubra/biome.tres",
 }
+
+const STAGE_NAMES := {
+	"mar_de_cinzas": "O Mar de Cinzas",
+	"saloes": "Os Salões do Último Inverno",
+	"forja_rubra": "A Forja Rubra",
+	"trono": "O Trono do Imperador Cego",
+}
+
+const STAGE_HINTS := {
+	"saloes": "GELO E LOBOS · MAIS CALMO",
+	"forja_rubra": "FOGO E FERRO · MAIS PERIGOSO, PAGA MELHOR",
+	"trono": "O FIM DA JORNADA",
+}
+
+# Mutações: bônus de uma partida só, escolhidos nas passagens (até 3).
+const MUTATIONS := [
+	{"id": "sangue_quente", "title": "Sangue Quente", "detail": "CADA ABATE CURA 3% DA VIDA"},
+	{"id": "pes_leves", "title": "Pés Leves", "detail": "ROLA DE NOVO SEM ESPERAR"},
+	{"id": "polvora", "title": "Pólvora Seca", "detail": "HABILIDADES RECARREGAM 35% MAIS RÁPIDO"},
+	{"id": "vinganca", "title": "Vingança", "detail": "+40% DE DANO POR 3 S DEPOIS DE APANHAR"},
+	{"id": "frieza", "title": "Frieza", "detail": "CRÍTICOS CAUSAM +25% DE DANO"},
+	{"id": "lamina_plena", "title": "Lâmina Plena", "detail": "+20% DE DANO COM A VIDA ACIMA DE 80%"},
+	{"id": "colecionador", "title": "Colecionador", "detail": "+50% DE ESSÊNCIA E OURO DOS INIMIGOS"},
+	{"id": "folego", "title": "Fôlego", "detail": "+1 FRASCO DE CURA NESTA PARTIDA"},
+]
+const MAX_MUTATIONS := 3
 
 # Melhorias permanentes compradas com Essência na Vigia (além das armas).
 const BLESSINGS := [
 	{"id": "calice_1", "title": "Cálice Extra", "cost": 50, "detail": "+1 FRASCO DE CURA EM TODA PARTIDA"},
 	{"id": "bencao_vigia", "title": "Bênção da Vigia", "cost": 40, "detail": "COMEÇA COM +1 NUM ATRIBUTO AO ACASO"},
 	{"id": "calice_2", "title": "Segundo Cálice", "cost": 110, "detail": "+1 FRASCO DE CURA (REQUER O PRIMEIRO)", "needs": "calice_1"},
+	{"id": "bolsa_inicial", "title": "Bolsa de Viagem", "cost": 45, "detail": "COMEÇA A PARTIDA COM 60 DE OURO"},
 ]
 
 
@@ -90,3 +119,20 @@ static func skin(id: String) -> SkinData:
 		if s.id == id:
 			return s
 	return load(SKINS[0])
+
+
+# Itens trancados cuja planta ainda não foi achada (o que pode cair dos inimigos).
+static func unknown_blueprints(carrying: Array = []) -> Array[Resource]:
+	var out: Array[Resource] = []
+	for r in all_gear():
+		if r.starter or Meta.is_unlocked(r.id) or Meta.knows(r.id) or carrying.has(r.id):
+			continue
+		out.append(r)
+	return out
+
+
+static func mutation(id: String) -> Dictionary:
+	for m: Dictionary in MUTATIONS:
+		if m["id"] == id:
+			return m
+	return {}

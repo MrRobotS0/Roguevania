@@ -48,6 +48,12 @@ var flasks := BASE_FLASKS
 var essence := 0
 var kills := 0
 var wind := 0.0             # empurrão da tempestade (px/s)
+var gold := 0               # ouro: gasto na partida (mercador); some ao morrer
+var mutations: Array[String] = []
+var blueprints: Array[String] = []   # plantas achadas, entregues na próxima Vigia
+var curse := 0              # baú maldito: qualquer golpe mata até matar `curse` inimigos
+var _air_jumps := 0
+var _rage := 0.0
 
 var _state_time := 0.0
 var _coyote := 0.0
@@ -206,6 +212,7 @@ func _tick(delta: float) -> void:
 	_combo_grace -= delta
 	for i in skill_cd.size():
 		skill_cd[i] = maxf(skill_cd[i] - delta, 0.0)
+	_rage -= delta
 	_squash = move_toward(_squash, 0.0, delta * 6.0)
 	collision_mask = Room.WORLD_LAYER if _drop > 0.0 else Room.WORLD_LAYER | Room.PLATFORM_LAYER
 
@@ -219,6 +226,7 @@ func _after_move(falling: float) -> void:
 	var grounded := is_on_floor()
 	if grounded:
 		_coyote = COYOTE_TIME
+		_air_jumps = 1 if Meta.has_rune("asa") else 0
 		if not _was_grounded and falling > 200.0:
 			Fx.dust(global_position, 4 if falling < 380.0 else 8)
 			Sfx.play("land", -8.0)
@@ -269,6 +277,11 @@ func _move_state(delta: float) -> void:
 			_jump_buffer = 0.0
 		elif is_on_floor() or _coyote > 0.0:
 			_jump()
+		elif _air_jumps > 0 and pad.just("jump"):
+			_air_jumps -= 1
+			_jump()
+			Fx.burst(global_position, Palette.ESSENCE, 10, 70.0, 0.35, 60.0)
+			_ghosts.append([global_position, 0.18, body.frame if body else 0, facing])
 
 	for slot in 2:
 		if pad.just("attack%d" % (slot + 1)) and _use_weapon(slot):
@@ -440,8 +453,11 @@ func _check_swing(g: Gear, m: Dictionary) -> void:
 			d.knock *= 1.3
 			d.lift = 90.0
 		crit_any = crit_any or d.crit
+		boost(d)
 		if e.hurt(d):
 			landed = true
+	if room and room.has_cracked() and room.strike_cracked(box):
+		landed = true
 	if landed:
 		Fx.hitstop(float(m["stop"]) * (1.4 if crit_any else 1.0))
 		Fx.add_shake(float(m["shake"]))
@@ -474,6 +490,7 @@ func _shoot_state(delta: float) -> void:
 		p.crit_mult = data.crit_mult
 		p.color = data.color
 		p.damage = Damage.make(float(s["damage"]) * g.power() * stat_mult(data.stat), facing, 40.0)
+		boost(p.damage)
 		p.damage.source = self
 		p.damage.status = s.get("status", {}).duplicate()
 		p.damage.stop = 0.03
@@ -514,7 +531,7 @@ func _use_skill(slot: int) -> bool:
 			p.damage.knock = 120.0
 			p.damage.status = {"stun": 0.4}
 			p.damage.stop = 0.04
-	skill_cd[slot] = data.cooldown
+	skill_cd[slot] = data.cooldown * (0.65 if has_mutation("polvora") else 1.0)
 	Sfx.play("throw", -6.0)
 	return true
 
@@ -590,7 +607,7 @@ func _roll_state(delta: float) -> void:
 	if pad.just("jump"):
 		_jump_buffer = JUMP_BUFFER
 	if _state_time >= ROLL_TIME:
-		_roll_cd = ROLL_COOLDOWN
+		_roll_cd = 0.0 if has_mutation("pes_leves") else ROLL_COOLDOWN
 		_enter(State.MOVE)
 
 
@@ -671,20 +688,65 @@ func add_essence(n: int) -> void:
 	gear_changed.emit()
 
 
+func add_gold(n: int) -> void:
+	gold += n
+	gear_changed.emit()
+
+
+func has_mutation(id: String) -> bool:
+	return mutations.has(id)
+
+
+func add_mutation(id: String) -> void:
+	if mutations.has(id):
+		return
+	mutations.append(id)
+	if id == "folego":
+		max_flasks += 1
+		flasks += 1
+	gear_changed.emit()
+
+
+# Mutações que mexem no dano que o herói causa.
+func boost(d: Damage) -> void:
+	if has_mutation("vinganca") and _rage > 0.0:
+		d.amount *= 1.4
+	if has_mutation("frieza") and d.crit:
+		d.amount *= 1.25
+	if has_mutation("lamina_plena") and hp >= max_hp * 0.8:
+		d.amount *= 1.2
+
+
+func on_kill(_e: Node) -> void:
+	kills += 1
+	if has_mutation("sangue_quente") and alive():
+		heal(maxi(2, roundi(max_hp * 0.03)))
+	if curse > 0:
+		curse -= 1
+		if curse == 0:
+			Fx.toast("A MALDIÇÃO SE DESFEZ")
+			Sfx.play("unlock", -6.0)
+		gear_changed.emit()
+
+
 # --- dano recebido --------------------------------------------------------------
 
 func hurt(d: Damage) -> bool:
 	if state == State.DEAD:
 		return false
 	if d.over_time:
-		hp = maxi(hp - d.value(), 1)
+		hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 1)
 		health_changed.emit(hp, max_hp)
 		return true
 	if _invuln > 0.0 or _dodge > 0.0:
 		return false
 	if _guard(d):
 		return false
-	hp = maxi(hp - d.value(), 0)
+	hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 0)
+	if curse > 0:
+		hp = 0
+		Fx.toast("A MALDIÇÃO COBROU")
+	_rage = 3.0
 	apply_statuses(d)
 	_invuln = HURT_IFRAMES
 	flash = 0.1
@@ -719,10 +781,6 @@ func _dead_state(delta: float) -> void:
 		_death_sent = true
 		died.emit()
 
-
-# --- desenho provisório --------------------------------------------------------
-# Tudo em retângulos, espelhado pelo lado em que o herói olha. Quando a arte
-# final chegar, isto vira um AnimatedSprite2D e o resto do arquivo fica igual.
 
 # --- desenho --------------------------------------------------------------------
 # O corpo é um sprite (folha "hero", pintada com a aparência). Atrás dele:
