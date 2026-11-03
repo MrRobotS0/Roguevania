@@ -145,6 +145,7 @@ func hurt(d: Damage) -> bool:
 			velocity.y = -d.lift / weight
 		Fx.burst(center(), Palette.HIT, 12 if d.crit else 6, 180.0 if d.crit else 120.0)
 		Fx.streak(center(), d.dir, Palette.UI_CRIT if d.crit else Palette.SLASH)
+		Fx.impact(center() + Vector2(-d.dir * 3.0, 0), Palette.UI_CRIT if d.crit else Palette.FLASH, d.crit)
 	if hp <= 0:
 		_die()
 		return true

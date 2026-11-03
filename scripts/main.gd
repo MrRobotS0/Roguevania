@@ -10,6 +10,7 @@ var screen: Screen
 var backdrop: Backdrop
 var weather: Weather
 var foreground: Foreground
+var curtain: Curtain
 var _playing := false
 
 
@@ -48,6 +49,16 @@ func _ready() -> void:
 	add_child(air)
 	weather = Weather.new()
 	air.add_child(weather)
+
+	var lens := CanvasLayer.new()
+	lens.layer = 7
+	add_child(lens)
+	lens.add_child(Vignette.new())
+	curtain = Curtain.new()
+	var cover := CanvasLayer.new()
+	cover.layer = 9
+	add_child(cover)
+	cover.add_child(curtain)
 
 	var front := CanvasLayer.new()
 	front.layer = 10
@@ -142,6 +153,7 @@ func _load_stage() -> void:
 	level.exit_used.connect(_on_exit)
 	_playing = true
 	Run.active = true
+	curtain.reveal()
 
 
 func _clear_level() -> void:

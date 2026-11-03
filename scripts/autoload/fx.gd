@@ -46,6 +46,11 @@ func streak(pos: Vector2, dir: float, color: Color) -> void:
 		sparks.streak(pos, dir, color)
 
 
+func impact(pos: Vector2, color: Color, big := false) -> void:
+	if is_instance_valid(sparks):
+		sparks.impact(pos, color, big)
+
+
 func number(pos: Vector2, value: int, crit := false) -> void:
 	if is_instance_valid(sparks):
 		sparks.number(pos, value, crit)

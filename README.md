@@ -1,8 +1,9 @@
 # O Legado dos Deuses (nome provisório)
 
 Ação roguelite / metroidvania 2D em pixel art. Godot 4.7.2, GDScript.
-Arte, nome e sons são **provisórios**: tudo é desenhado e sintetizado em código
-até a arte final existir.
+Nome e sons são **provisórios**. A arte é pixel art gerada por scripts Python
+(`tools/`): o herói, os inimigos, os blocos, o fundo e os objetos saem como
+folhas de sprite, e dá para trocar por arte desenhada à mão sem mexer no jogo.
 
 ## Jogar
 
@@ -69,6 +70,25 @@ assets/sfx/                 sons gerados por tools/gen_sfx.py
 tests/                      testes automáticos e roteiro de prints
 tools/                      geradores de conteúdo (armas, salas, sons)
 ```
+
+## Arte (tools/)
+
+Cada script desenha a partir de poses e formas, com luz e contorno automáticos,
+e salva **índices de paleta** em vez de cores: o jogo pinta com a paleta certa
+(aparência do herói, cores do bioma). Também sai uma prévia colorida em
+`tools/previews/` para conferir sem abrir o jogo.
+
+| Script | Gera |
+|---|---|
+| `gen_sprites.py` | herói (parado, corrida, pulo, queda, rolagem, golpe, arco, escudo, cura...) |
+| `gen_enemies.py` | os 6 inimigos do Mar de Cinzas e o Imperador Cego |
+| `gen_tiles.py` | blocos de pedra (16 encaixes x 4 variações), rocha funda e prancha |
+| `gen_backdrop.py` | fundo em camadas: céu, colossos, dunas |
+| `gen_props.py` | Vigia, altar, pedestal, estela, portal e braseiro |
+| `mock_frame.py` | um quadro de mentira montado com tudo isso, com a mesma luz do jogo |
+
+Depois de gerar, rode o Godot uma vez com `--headless --import` para ele
+reimportar as imagens.
 
 ## Como acrescentar coisas
 

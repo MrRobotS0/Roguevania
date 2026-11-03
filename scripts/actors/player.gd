@@ -694,6 +694,7 @@ func hurt(d: Damage) -> bool:
 	Fx.hitstop(0.08)
 	Fx.add_shake(5.0)
 	Fx.burst(center(), Palette.HURT, 10, 140.0)
+	Fx.impact(center(), Palette.HURT, false)
 	Sfx.play("hurt")
 	if hp <= 0:
 		Fx.burst(center(), Palette.HURT, 26, 200.0, 0.7)
@@ -901,6 +902,10 @@ func _draw_slash() -> void:
 		for i in points.size():
 			points[i] = Vector2(-points[i].x, points[i].y)
 	pen.draw_colored_polygon(points, color)
+	var edge := Palette.FLASH
+	edge.a = 0.9 * fade
+	var outer := points.slice(0, 9) if shape != "thrust" else points.slice(0, 3)
+	pen.draw_polyline(outer, edge, 1.0)
 
 
 func _draw_debug() -> void:

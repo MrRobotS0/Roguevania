@@ -29,6 +29,14 @@ class Streak:
 	var life: float
 
 
+class Impact:
+	var pos: Vector2
+	var color: Color
+	var big: bool
+	var life: float
+
+
+const IMPACT_LIFE := 0.12
 const NUMBER_LIFE := 0.7
 const STREAK_LIFE := 0.12
 const ASH := Color("4a4038")
@@ -36,6 +44,7 @@ const ASH := Color("4a4038")
 var _bits: Array = []
 var _numbers: Array = []
 var _streaks: Array = []
+var _impacts: Array = []
 
 
 func _ready() -> void:
@@ -78,6 +87,15 @@ func ash(parts: Array) -> void:
 			_bits.append(b)
 
 
+func impact(pos: Vector2, color: Color, big: bool) -> void:
+	var i := Impact.new()
+	i.pos = pos.round()
+	i.color = color
+	i.big = big
+	i.life = IMPACT_LIFE * (1.5 if big else 1.0)
+	_impacts.append(i)
+
+
 func streak(pos: Vector2, dir: float, color: Color) -> void:
 	var s := Streak.new()
 	s.pos = pos
@@ -106,6 +124,9 @@ func _process(delta: float) -> void:
 		n.pos.y -= 28.0 * delta * (n.life / NUMBER_LIFE + 0.2)
 		n.life -= delta
 	_numbers = _numbers.filter(func(n: Number) -> bool: return n.life > 0.0)
+	for i: Impact in _impacts:
+		i.life -= delta
+	_impacts = _impacts.filter(func(i: Impact) -> bool: return i.life > 0.0)
 	for s: Streak in _streaks:
 		s.life -= delta
 	_streaks = _streaks.filter(func(s: Streak) -> bool: return s.life > 0.0)
@@ -113,6 +134,25 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	for i: Impact in _impacts:
+		# estrela de quatro pontas que abre e some em poucos quadros
+		var full := IMPACT_LIFE * (1.5 if i.big else 1.0)
+		var t := 1.0 - i.life / full
+		var reach := (6.0 if not i.big else 11.0) * (0.4 + t)
+		var c := i.color
+		c.a = 1.0 - t * 0.6
+		draw_rect(Rect2(i.pos.x - reach, i.pos.y, reach * 2.0 + 1.0, 1), c)
+		draw_rect(Rect2(i.pos.x, i.pos.y - reach, 1, reach * 2.0 + 1.0), c)
+		var d := reach * 0.45
+		for k in range(1, int(d) + 1):
+			draw_rect(Rect2(i.pos + Vector2(k, k), Vector2.ONE), c)
+			draw_rect(Rect2(i.pos + Vector2(-k, k), Vector2.ONE), c)
+			draw_rect(Rect2(i.pos + Vector2(k, -k), Vector2.ONE), c)
+			draw_rect(Rect2(i.pos + Vector2(-k, -k), Vector2.ONE), c)
+		if t < 0.4:
+			var core := Palette.FLASH
+			core.a = 1.0
+			draw_rect(Rect2(i.pos - Vector2(1, 1), Vector2(3, 3)), core)
 	for s: Streak in _streaks:
 		var k := s.life / STREAK_LIFE
 		var length := 26.0 * k
