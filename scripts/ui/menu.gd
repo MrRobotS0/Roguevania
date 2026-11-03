@@ -19,6 +19,8 @@ var _on_pick: Callable
 var _cancel_ok := true
 var _index := 0
 var _body: PackedStringArray = []
+var _text_top := 0
+const TEXT_ROWS := 15        # linhas de texto visíveis; o resto rola
 var _opened_at := 0
 var _t := 0.0
 var _scroll := 0
@@ -51,6 +53,7 @@ func open_choice(title: String, subtitle: String, options: Array[Dictionary], on
 func open_text(title: String, body: String) -> void:
 	_mode = "text"
 	_on_pick = Callable()
+	_text_top = 0
 	_title = title
 	_body = PixelFont.wrap(body.to_upper(), int((WIDTH - 24.0) / PixelFont.BODY_ADVANCE))
 	_cancel_ok = true
@@ -80,7 +83,14 @@ func _process(delta: float) -> void:
 	if Engine.get_process_frames() - _opened_at < 2:
 		return
 	if _mode == "text":
-		if Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("cancel") \
+		var last := maxi(_body.size() - TEXT_ROWS, 0)
+		if Input.is_action_just_pressed("down") and _text_top < last:
+			_text_top = mini(_text_top + 3, last)
+			Sfx.play("ui_move", -12.0)
+		elif Input.is_action_just_pressed("up") and _text_top > 0:
+			_text_top = maxi(_text_top - 3, 0)
+			Sfx.play("ui_move", -12.0)
+		elif Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("cancel") \
 				or Input.is_action_just_pressed("interact"):
 			close()
 		return
@@ -151,7 +161,7 @@ func _draw() -> void:
 	var rows := mini(_options.size(), MAX_ROWS)
 	var box_h := 0.0
 	if _mode == "text":
-		box_h = 34.0 + (_body.size() + 2) * LINE
+		box_h = 34.0 + (mini(_body.size(), TEXT_ROWS) + 2) * LINE
 	else:
 		box_h = 34.0 + sub_lines.size() * LINE + 6.0 + rows * ROW + LINE + 4.0
 	var box := Rect2(roundf((size.x - WIDTH) * 0.5), roundf((size.y - box_h) * 0.5), WIDTH, roundf(box_h))
@@ -165,11 +175,14 @@ func _draw() -> void:
 	y += 23.0
 
 	if _mode == "text":
-		for line in _body:
+		for line in _body.slice(_text_top, _text_top + TEXT_ROWS):
 			PixelFont.body(self, line, Vector2(x, y), Palette.UI_TEXT)
 			y += LINE
 		y += LINE * 0.5
-		PixelFont.body(self, "%s  CONTINUAR" % Controls.hint("confirm"), Vector2(x, y), Palette.UI_DIM)
+		var hint := "%s  CONTINUAR" % Controls.hint("confirm")
+		if _body.size() > TEXT_ROWS:
+			hint += "   %s  ROLAR (%d/%d)" % [Controls.hint("move"), mini(_text_top + TEXT_ROWS, _body.size()), _body.size()]
+		PixelFont.body(self, hint, Vector2(x, y), Palette.UI_DIM)
 		return
 
 	for line in sub_lines:

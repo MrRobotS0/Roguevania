@@ -24,7 +24,7 @@ func use_path(p: String, wipe := false) -> void:
 func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
 		"blueprints": [], "runes": [], "heat": 0,
-		"stats": {}, "daily": {}, "best_time": 0.0}
+		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false}
 
 
 func _load() -> void:
@@ -195,3 +195,17 @@ func stats_text() -> String:
 		lines.append("DESAFIO DE HOJE: %d TENTATIVAS · MAIS FUNDO %d%s" % [today["tries"], today["best_depth"],
 			(" · VENCEU EM " + clock.call(float(today["best_time"]))) if float(today["best_time"]) > 0.0 else ""])
 	return "\n".join(lines)
+
+
+# --- Códice -----------------------------------------------------------------------
+
+func note_lore(text: String) -> bool:
+	if text == "" or data["lore"].has(text):
+		return false
+	data["lore"].append(text)
+	save()
+	return true
+
+
+func known_creatures() -> Array:
+	return data["stats"].get("kills_by", {}).keys()

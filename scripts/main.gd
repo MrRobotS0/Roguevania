@@ -13,6 +13,7 @@ var foreground: Foreground
 var curtain: Curtain
 var map_view: MapView
 var options_screen: OptionsScreen
+var cutscene: Cutscene
 var _playing := false
 
 
@@ -75,6 +76,8 @@ func _ready() -> void:
 	front.add_child(menu)
 	options_screen = OptionsScreen.new()
 	front.add_child(options_screen)
+	cutscene = Cutscene.new()
+	front.add_child(cutscene)
 	screen.confirmed.connect(_on_screen_confirmed)
 	screen.title_option.connect(_on_title_option)
 
@@ -106,7 +109,7 @@ func _on_screen_confirmed() -> void:
 	var unlocked := int(Meta.data["heat"])
 	if screen.mode != "title" or unlocked <= 0:
 		screen.close()
-		start_run()
+		_begin(-1, 0)
 		return
 	# Brasas do Deus: quem já venceu escolhe a dificuldade
 	var options: Array[Dictionary] = []
@@ -116,7 +119,7 @@ func _on_screen_confirmed() -> void:
 	menu.open_choice("BRASAS DO DEUS", "QUANTO MAIS BRASA, MAIS O DEUS MORTO RESISTE.", options,
 		func(i: int) -> void:
 			screen.close()
-			start_run(-1, i))
+			_begin(-1, i))
 	menu.select(unlocked)
 
 
@@ -140,6 +143,8 @@ func _on_title_option(id: String) -> void:
 			options_screen.open()
 		"stats":
 			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
+		"codex":
+			open_codex()
 		"daily":
 			screen.close()
 			Run.new_daily()
@@ -165,6 +170,58 @@ func open_skins() -> void:
 			Meta.wear(list[i].id)
 			open_skins.call_deferred())
 	menu.select(list.find(current))
+
+
+# Na primeira partida, antes de tudo, a abertura.
+func _begin(seed_value: int, heat: int) -> void:
+	if Meta.data.get("intro_seen", false):
+		start_run(seed_value, heat)
+		return
+	Music.play("passagem")
+	cutscene.play(PackedStringArray(Story.INTRO), func() -> void:
+		Meta.data["intro_seen"] = true
+		Meta.save()
+		start_run(seed_value, heat))
+
+
+func open_codex() -> void:
+	var lore: Array = Meta.data["lore"]
+	var known := Meta.known_creatures()
+	var options: Array[Dictionary] = [
+		{"label": "INSCRIÇÕES  ·  %d LIDAS" % lore.size(), "detail": "O QUE AS PEDRAS CONTAM"},
+		{"label": "BESTIÁRIO  ·  %d DE %d" % [known.size(), Story.BESTIARY.size()], "detail": "O QUE VOCÊ JÁ DERROTOU"},
+		{"label": "REVER A ABERTURA", "detail": ""},
+	]
+	menu.open_choice("CÓDICE", "", options, _on_codex_pick)
+
+
+func _on_codex_pick(i: int) -> void:
+	match i:
+		0:
+			_codex_lore.call_deferred()
+		1:
+			_codex_bestiary.call_deferred()
+		2:
+			cutscene.play.call_deferred(PackedStringArray(Story.INTRO), Callable())
+
+
+func _codex_lore() -> void:
+	var lore: Array = Meta.data["lore"]
+	if lore.is_empty():
+		menu.open_text("INSCRIÇÕES", "NENHUMA AINDA. AS PEDRAS COM LETRAS DOURADAS TÊM ALGO A DIZER.")
+		return
+	menu.open_text("INSCRIÇÕES", "\n\n".join(PackedStringArray(lore.map(func(t: String) -> String: return "· " + t))))
+
+
+func _codex_bestiary() -> void:
+	var known := Meta.known_creatures()
+	var lines := PackedStringArray()
+	for title: String in Story.BESTIARY:
+		if known.has(title):
+			lines.append("%s: %s" % [title, Story.BESTIARY[title]])
+		else:
+			lines.append("??? ")
+	menu.open_text("BESTIÁRIO", "\n".join(lines))
 
 
 func start_run(seed_value := -1, heat := 0) -> void:
@@ -230,8 +287,11 @@ func _on_exit(dest: String) -> void:
 			Meta.record_run(true, level.player.kills)
 			Meta.record_heat_win(Run.heat)
 			Run.set_meta("record", Meta.record_stats(true))
-			screen.show_victory(level.player)
-			Music.play("titulo")
+			var hero := level.player
+			Music.play("passagem")
+			cutscene.play(Story.ending_pages(Run.heat), func() -> void:
+				screen.show_victory(hero)
+				Music.play("titulo"))
 			return
 		"passagem":
 			Run.enter_passage()

@@ -134,6 +134,7 @@ func _ready() -> void:
 	await _case("inimigos dos domínios novos acertam", _domain_enemies)
 	await _case("desafio do dia, estatísticas e recorde", _extras)
 	await _case("os 6 elites dos domínios atacam e acertam", _elites)
+	await _case("história: abertura, final, códice", _story)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1059,3 +1060,34 @@ func _elites() -> void:
 			if p.hp < p.max_hp:
 				break
 		_check(p.hp < p.max_hp, "elite_%s não acertou em 15 s" % name)
+
+
+func _story() -> void:
+	Meta.use_path("user://teste.save", true)
+	var scene := Cutscene.new()
+	add_child(scene)
+	var done := [false]
+	scene.play(PackedStringArray(Story.INTRO), func() -> void: done[0] = true)
+	for i in Story.INTRO.size() * 2:
+		scene.advance()
+	_check(done[0] and not scene.is_open(), "a abertura não terminou")
+	_check(Story.ending_pages(4).size() > Story.ending_pages(0).size(), "o final das 4 brasas não tem páginas a mais")
+	_check(Meta.note_lore("teste de inscrição") and not Meta.note_lore("teste de inscrição"), "inscrição repetida no códice")
+	Run.note_kill("LOBO PÁLIDO", "")
+	Meta.record_stats(false)
+	_check(Meta.known_creatures().has("LOBO PÁLIDO"), "bestiário não registrou")
+	var missing: Array = []
+	for path in DirAccess.get_files_at("res://scripts/enemies"):
+		if not path.ends_with(".gd"):
+			continue
+		var script: GDScript = load("res://scripts/enemies/" + path)
+		if not script.can_instantiate():
+			continue
+		var e = script.new()
+		if e is Enemy and e.title != "INIMIGO" and not Story.BESTIARY.has(e.title):
+			missing.append(e.title)
+		if e is Node:
+			e.free()
+	_check(missing.is_empty(), "sem verbete no bestiário: %s" % [missing])
+	scene.queue_free()
+	Meta.use_path("user://teste.save", true)

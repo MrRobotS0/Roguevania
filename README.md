@@ -85,12 +85,12 @@ itens que caem, melhores. Cada um tem música, fundo, clima e perigo próprios.
 | Mar de Cinzas | Penitente, Guarda da Casa, Peregrino Cinzento, Assassino da Duna, Atirador de Vidro, fulgurantes |
 | Salões do Último Inverno | Lobo Pálido, Sentinela de Gelo, estalactites; o Penitente e a Guarda aparecem com cores do gelo |
 | Forja Rubra | Ferreiro Cativo, Escória Viva, jatos de fogo; a Guarda aparece com cores da forja |
-| Todos | Inquisidor Profeta (elite) |
+| Elites | Inquisidor Profeta (Mar), Caçador do Inverno (Salões), Mestre-Ferreiro (Forja), Bibliotecário Cego (Torre), Guardiã de Espinhos (Jardim), Duelista Amarelo (Carcosa), Sentinela de Latão (Observatório) |
 | Torre de Babel | Gárgula (voa e mergulha), Escriba Mudo (glifo que persegue), pedras que caem |
 | Jardim Primordial | Fera-Musgo (investida), Espinheiro (espinhos em arco), casulos de esporos |
 | Carcosa | Mascarado (some e aparece atrás), Arauto Pálido (chama almas que explodem), tentáculos do chão |
 | Observatório Celeste | Autômato Astral (raio na horizontal), Estrela Caída (explode perto), meteoros |
-| Todos | Inquisidor Profeta (elite) |
+| Elites | Inquisidor Profeta (Mar), Caçador do Inverno (Salões), Mestre-Ferreiro (Forja), Bibliotecário Cego (Torre), Guardiã de Espinhos (Jardim), Duelista Amarelo (Carcosa), Sentinela de Latão (Observatório) |
 | Fim | O Imperador Cego |
 
 **Armas:** espada, lança, machado, adagas gêmeas, martelo da forja, e os arcos das
@@ -102,6 +102,13 @@ duas vezes).
 **Habilidades:** granada, escudo (o aparo devolve projéteis), lança de vidro,
 armadilha de lâminas, torreta de vidro, espírito de cinza e corrente do ferreiro
 (puxa e atordoa).
+
+### História
+
+Na primeira partida, uma abertura curta conta o que aconteceu com os deuses.
+Vencer o Imperador mostra o final, e quem vence com as 4 brasas vê um final a
+mais. O **Códice** (no título) guarda as inscrições lidas e um bestiário de tudo
+que você já derrotou.
 
 ### No título
 
@@ -151,6 +158,8 @@ e salva **índices de paleta** em vez de cores: o jogo pinta com a paleta certa
 | `gen_tiles.py` | blocos de pedra (16 encaixes x 4 variações), rocha funda e prancha |
 | `gen_backdrop.py` | fundo em camadas de cada andar (céu, ruínas ao longe, dunas ou neve) |
 | `gen_props.py` | Vigia, altares, pedestal, estela, portal, braseiro, baús, mercador, Porta do Relógio |
+| `salas_dominios.py` | 7 salas com a cara de cada domínio, geradas por plantas e aprovadas pelo verificador |
+| `validar_salas.py` | confere TODAS as salas com o alcance real do pulo (roda no `Testar.bat`) |
 | `salas_andares.py` | salas dos andares novos, a passagem e as peças comuns (saída com relógio, loja, cofre, runa) |
 | `mock_frame.py` | um quadro de mentira montado com tudo isso, com a mesma luz do jogo |
 
@@ -175,7 +184,7 @@ reimportar as imagens.
 ## Testes
 
 `Testar.bat` (ou `Godot_console.exe --headless --fixed-fps 60 --path . res://tests/run_tests.tscn`):
-50 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
+52 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
 escudo, aparo, cada inimigo, chefe, gerador (20 mapas com caminho do início à
 saída), save, aparências e se a fonte tem desenho para toda letra dos textos. Os testes usam `user://teste.save`, nunca o save real.
 

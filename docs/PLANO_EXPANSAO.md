@@ -30,4 +30,4 @@ Regra: não abrir o jogo com janela. Arte conferida em PNG gerado (tools/preview
       com o alcance real do pulo (`tools/validar_salas.py`), aplicado em TODAS as salas.
 - [x] **7. Elite próprio por domínio** — um elite novo em cada um dos 6 domínios.
 - [x] **8. Sons novos** — chefes, habilidades novas, inimigos novos.
-- [ ] **10. História** — abertura curta, final de verdade, códice (inscrições lidas + bestiário).
+- [x] **10. História** — abertura curta, final de verdade, códice (inscrições lidas + bestiário).

@@ -12,6 +12,7 @@ const TITLE_OPTIONS := [
 	["daily", "DESAFIO DO DIA"],
 	["skins", "APARÊNCIA"],
 	["options", "OPÇÕES"],
+	["codex", "CÓDICE"],
 	["stats", "ESTATÍSTICAS"],
 	["controls", "COMANDOS"],
 	["quit", "SAIR"],
@@ -127,7 +128,7 @@ func _draw() -> void:
 			PixelFont.body_centered(self, "O LEGADO", Vector2(mid, 46), Palette.UI_TEXT, 3)
 			PixelFont.body_centered(self, "DOS DEUSES", Vector2(mid, 74), Palette.GOLD, 3)
 			PixelFont.body_centered(self, "OS DEUSES SUMIRAM. SEUS DOMÍNIOS FICARAM.", Vector2(mid, 100), Palette.UI_DIM)
-			_title_menu(Vector2(mid, 128))
+			_title_menu(Vector2(mid, 118))
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
 		"victory":
@@ -145,7 +146,7 @@ func _draw() -> void:
 func _title_menu(top: Vector2) -> void:
 	for i in TITLE_OPTIONS.size():
 		var label: String = TITLE_OPTIONS[i][1]
-		var y := top.y + i * 13.0
+		var y := top.y + i * 12.0
 		var selected := i == _index
 		if selected:
 			var w := PixelFont.body_width(label) + 24.0
