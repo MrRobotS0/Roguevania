@@ -31,13 +31,21 @@ folhas de sprite, e dá para trocar por arte desenhada à mão sem mexer no jogo
 Cada partida monta mapas novos. Morreu, recomeça do zero, mas o que foi
 desbloqueado fica para sempre.
 
+8 andares por partida. Cada domínio termina no guardião dele, e depois do
+guardião você escolhe o próximo domínio:
+
 ```
-Mar de Cinzas ─┬─ Salões do Último Inverno (mais calmo) ─┬─ Trono do Imperador Cego
-               └─ Forja Rubra (mais perigosa, paga mais) ┘
+Mar de Cinzas ─┬─ Salões ─ Lobo da Longa Noite ─┬─ Torre de Babel ─ Arquiteto Mudo ─┬─ Carcosa ───── Rei sem Rosto ───┬─ Trono do
+               └─ Forja ── Colosso da Bigorna ──┘  Jardim Primordial ─ Mãe-Raiz ────┘  Observatório ─ Último Astrônomo ┘  Imperador Cego
 ```
 
-- **Entre um andar e outro há uma passagem**, com a Vigia (gasta Essência e
-  guarda as plantas), um altar de mutação e as saídas para os próximos andares.
+Cada domínio é mais fundo que o anterior: os inimigos ficam mais fortes e os
+itens que caem, melhores. Cada um tem música, fundo, clima e perigo próprios.
+
+- **Depois de cada guardião há uma passagem**, com a Vigia (gasta Essência e
+  guarda as plantas), um altar de mutação e as saídas para os próximos domínios.
+- **Guardiões:** golpes avisados, fase 2 com metade da vida (mais rápido, golpes
+  novos) e, depois de alguns golpes, uma pausa exausto em que apanham 50% a mais.
 - **Dentro do andar:**
   - salas feitas à mão encaixadas a cada partida, com desvios:
     - tesouro e fragmento divino;
@@ -78,9 +86,31 @@ Mar de Cinzas ─┬─ Salões do Último Inverno (mais calmo) ─┬─ Trono 
 | Salões do Último Inverno | Lobo Pálido, Sentinela de Gelo, estalactites; o Penitente e a Guarda aparecem com cores do gelo |
 | Forja Rubra | Ferreiro Cativo, Escória Viva, jatos de fogo; a Guarda aparece com cores da forja |
 | Todos | Inquisidor Profeta (elite) |
+| Torre de Babel | Gárgula (voa e mergulha), Escriba Mudo (glifo que persegue), pedras que caem |
+| Jardim Primordial | Fera-Musgo (investida), Espinheiro (espinhos em arco), casulos de esporos |
+| Carcosa | Mascarado (some e aparece atrás), Arauto Pálido (chama almas que explodem), tentáculos do chão |
+| Observatório Celeste | Autômato Astral (raio na horizontal), Estrela Caída (explode perto), meteoros |
+| Todos | Inquisidor Profeta (elite) |
 | Fim | O Imperador Cego |
 
-**Armas:** espada, lança, machado, 2 adagas gêmeas, martelo da forja, e os arcos das dunas, de brasa e do inverno. **Habilidades:** granada, escudo (o aparo devolve projéteis) e lança de vidro.
+**Armas:** espada, lança, machado, adagas gêmeas, martelo da forja, e os arcos das
+dunas, de brasa e do inverno. Armas que caem podem vir com **afixos**: de Brasa
+(queima), da Geada (atordoa), Vampira (cura), Explosiva (crítico explode),
+Afiada, Ligeira, Carrasca (mais dano em quem está quase morto) e do Eco (acerta
+duas vezes).
+
+**Habilidades:** granada, escudo (o aparo devolve projéteis), lança de vidro,
+armadilha de lâminas, torreta de vidro, espírito de cinza e corrente do ferreiro
+(puxa e atordoa).
+
+### No título
+
+- **Desafio do dia:** a mesma semente para todo mundo no mesmo dia.
+- **Estatísticas:** quem mais te matou, quem você mais matou, armas favoritas,
+  andar mais fundo e melhor tempo.
+- **Opções:** volume geral, da música e dos efeitos, tela cheia, intensidade do
+  tremor, piscadas fortes, vibração do controle, cronômetro de speedrun e troca
+  de teclas.
 
 ## Estrutura
 
@@ -113,6 +143,9 @@ e salva **índices de paleta** em vez de cores: o jogo pinta com a paleta certa
 
 | Script | Gera |
 |---|---|
+| `gen_bestiary.py` | inimigos e chefes dos domínios novos (humanoide com escala para os chefes) |
+| `gen_music.py` | as 11 trilhas: título, passagem, cada domínio, chefe e chefe final |
+| `biomas.py` | os `biome.tres` dos domínios novos |
 | `gen_sprites.py` | herói (parado, corrida, pulo, queda, rolagem, golpe, arco, escudo, cura...) |
 | `gen_enemies.py` | os inimigos dos 3 andares e o Imperador Cego |
 | `gen_tiles.py` | blocos de pedra (16 encaixes x 4 variações), rocha funda e prancha |
@@ -142,7 +175,7 @@ reimportar as imagens.
 ## Testes
 
 `Testar.bat` (ou `Godot_console.exe --headless --fixed-fps 60 --path . res://tests/run_tests.tscn`):
-44 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
+50 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
 escudo, aparo, cada inimigo, chefe, gerador (20 mapas com caminho do início à
 saída), save, aparências e se a fonte tem desenho para toda letra dos textos. Os testes usam `user://teste.save`, nunca o save real.
 

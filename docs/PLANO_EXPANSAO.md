@@ -19,6 +19,6 @@ Ordem de execução (cada etapa termina com testes passando e commit):
       Mar → [Salões | Forja] → chefe → [Torre | Jardim] → chefe → [Carcosa | Observatório] → chefe → Trono
 - [x] **F. Extras** — desafio do dia (semente da data), tela de estatísticas,
       cronômetro de speedrun com melhor tempo, vibração.
-- [ ] **G.** README, MegaBrain Pessoal, memória.
+- [x] **G.** README, MegaBrain Pessoal, memória.
 
 Regra: não abrir o jogo com janela. Arte conferida em PNG gerado (tools/previews).
