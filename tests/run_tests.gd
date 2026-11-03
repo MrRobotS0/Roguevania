@@ -568,7 +568,7 @@ func _boss_room() -> void:
 
 
 func _training_room() -> void:
-	await _load(FileAccess.get_file_as_string("res://rooms/treino.txt"))
+	await _load(FileAccess.get_file_as_string("res://tests/salas/treino.txt"))
 	_check(level.room.cols == 80 and level.room.rows == 22, "tamanho %dx%d" % [level.room.cols, level.room.rows])
 	_check(level.enemies().size() == 5, "%d inimigos" % level.enemies().size())
 	await _frames(30)

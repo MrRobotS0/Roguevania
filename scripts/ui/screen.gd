@@ -28,7 +28,7 @@ func show_title() -> void:
 func show_death(p: Player, place: String) -> void:
 	mode = "death"
 	lines = [
-		["CAÍDO EM " + place.to_upper(), Palette.UI_DIM],
+		[place.to_upper(), Palette.UI_DIM],
 		["%d INIMIGOS DERROTADOS   ·   %s" % [p.kills, _clock(Run.time)], Palette.UI_TEXT],
 		["%d DE ESSÊNCIA SE PERDEU NA CINZA" % p.essence, Palette.ESSENCE],
 	]

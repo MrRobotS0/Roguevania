@@ -15,6 +15,7 @@ var camera: CameraRig
 var boss: Enemy
 var rng := RandomNumberGenerator.new()
 var tier := 0
+var is_boss_room := false
 var _lore_index := 0
 var _after_boss: Array[Node2D] = []
 
@@ -40,7 +41,16 @@ func build_boss(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	rng.seed = seed_value + 99
 	tier = b.tier + 1
 	_make_room(b)
-	room.load_file(b.boss_room)
+	is_boss_room = true
+	# Chão extra embaixo: a câmera não cola o chão na borda da tela (o HUD fica ali).
+	var lines := PackedStringArray()
+	for line in FileAccess.get_file_as_string(b.boss_room).split("\n"):
+		line = line.strip_edges(false, true)
+		if line != "" and not line.begins_with(";"):
+			lines.append(line)
+	for i in 4:
+		lines.append("#".repeat(lines[0].length()))
+	room.load_grid(lines)
 	_populate(with_camera)
 
 

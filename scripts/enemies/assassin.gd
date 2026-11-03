@@ -116,11 +116,19 @@ func draw_body() -> void:
 		_:
 			_rise_k = 1.0
 	var sink := (1.0 - _rise_k) * h
-	px(-4, -7 + sink, 3, 7 - sink * 0.3, CLOTH)
-	px(1, -7 + sink, 3, 7 - sink * 0.3, CLOTH)
-	px(-5, -17 + sink, 10, 11, CLOTH)
-	px(-4, -22 + sink, 8, 6, WRAP)
-	px(1, -20 + sink, 3, 1, Palette.ENEMY_EYE)
+	_part(-4, -7 + sink, 3, 7, CLOTH)
+	_part(1, -7 + sink, 3, 7, CLOTH)
+	_part(-5, -17 + sink, 10, 11, CLOTH)
+	_part(-4, -22 + sink, 8, 6, WRAP)
+	_part(1, -20 + sink, 3, 1, Palette.ENEMY_EYE)
 	var blade_x := 12.0 if state == "slash" else 5.0
-	px(blade_x - 6, -13 + sink, 9, 1, Palette.BLADE)
-	draw_rect(Rect2(-7, -1, 14, 1), Palette.DUST)
+	_part(blade_x - 6, -13 + sink, 9, 1, Palette.BLADE)
+	if _rise_k < 1.0:
+		draw_rect(Rect2(-7, -2, 14, 2), Palette.DUST)
+
+
+# Desenha só o que está acima do chão (emergindo da cinza).
+func _part(x: float, y: float, rw: float, rh: float, c: Color) -> void:
+	var bottom := minf(y + rh, 0.0)
+	if bottom > y:
+		px(x, y, rw, bottom - y, c)

@@ -122,8 +122,8 @@ func _on_player_died() -> void:
 	Run.active = false
 	Meta.record_run(false, level.player.kills)
 	var place := level.biome.title if level.biome else "TREINO"
-	if level.boss:
-		place = "TRONO DO IMPERADOR CEGO"
+	if level.is_boss_room:
+		place = "O Trono do Imperador Cego"
 	screen.show_death(level.player, place)
 
 
