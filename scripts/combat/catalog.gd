@@ -10,6 +10,9 @@ const WEAPONS := [
 	"res://content/weapons/lanca_peregrino.tres",
 	"res://content/weapons/machado_carrasco.tres",
 	"res://content/weapons/arco_brasa.tres",
+	"res://content/weapons/adagas_gemeas.tres",
+	"res://content/weapons/martelo_forja.tres",
+	"res://content/weapons/arco_inverno.tres",
 ]
 
 const SKILLS := [

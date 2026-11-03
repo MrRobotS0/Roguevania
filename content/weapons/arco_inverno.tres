@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arco_inverno"
+title = "Arco do Último Inverno"
+category = "bow"
+stat = "astucia"
+crit_rule = "stunned"
+crit_mult = 2.0
+starter = false
+unlock_cost = 50
+color = Color(0.624, 0.910, 1.000, 1)
+moves = []
+shot = {"draw": 0.3, "recover": 0.22, "speed": 360.0, "damage": 11.0, "pierce": 0, "status": {"stun": 0.5}}
+lore = "A corda é um fio de gelo que nunca derrete. A flecha chega antes do frio."

@@ -21,33 +21,66 @@ folhas de sprite, e dá para trocar por arte desenhada à mão sem mexer no jogo
 | Descer da plataforma | S + Espaço | baixo + A |
 | Frasco de cura | Q | LT |
 | Usar / pegar / ler | E | cima |
+| Mapa (segure) | M ou Tab | Select |
 | Pausa | Esc | Start |
 | Debug (caixas de colisão e estados) | F1 | — |
 | Nova partida | F5 | — |
 
-## O que tem na demonstração
+## Como é uma partida
 
-- **Mar de Cinzas**: fase gerada a cada partida a partir de 18 salas feitas à mão,
-  com desvios (tesouro, fragmento, sala secreta atrás de parede falsa) e
-  tempestades de cinzas que empurram e cegam.
-- **Inimigos**: Penitente, Guarda da Casa (escudo frontal), Peregrino Cinzento
-  (se incendeia), Assassino da Duna (nada sob a cinza), Atirador de Vidro,
-  Inquisidor Profeta (elite) e os fulgurantes (espinhos de vidro do chão).
-- **Chefe**: O Imperador Cego — as colunas de luz caem onde você *vai estar*.
-- **Armas**: Espada Cerimonial, Arco das Dunas, Lança do Peregrino, Machado do
-  Carrasco, Arco de Brasa. **Habilidades**: Granada de Cinzas, Égide de Bronze
-  (aparo devolve projéteis), Lança de Vidro.
-- **Progressão**: Fragmentos Divinos (Fúria / Astúcia / Vigor) durante a partida;
-  Essência gasta com a Vigia em desbloqueios permanentes.
-- **Aparências (skins)**: 6 visuais para o herói, escolhidos em APARÊNCIA no título.
-  Uma vem liberada, três se compram com a Vigia e duas saem de feitos
-  (derrotar o Imperador Cego, morrer 10 vezes). Só mudam o visual.
-- **Visual**: luz de verdade (o mundo fica na penumbra e fogo, Essência, itens e o
-  herói iluminam em volta), brilho nos pontos muito claros, contorno nos personagens,
-  cachecol com física, inimigos que viram cinza ao morrer, cenário com braseiros,
-  árvores mortas, colunas, estandartes, ossos e cacos de vidro, fundo com névoa e
-  silhuetas passando na frente da câmera. Fonte com acentos e as teclas na tela
-  mudam sozinhas entre teclado e controle.
+Cada partida monta mapas novos. Morreu, recomeça do zero, mas o que foi
+desbloqueado fica para sempre.
+
+```
+Mar de Cinzas ─┬─ Salões do Último Inverno (mais calmo) ─┬─ Trono do Imperador Cego
+               └─ Forja Rubra (mais perigosa, paga mais) ┘
+```
+
+- **Entre um andar e outro há uma passagem**, com a Vigia (gasta Essência e
+  guarda as plantas), um altar de mutação e as saídas para os próximos andares.
+- **Dentro do andar:**
+  - salas feitas à mão encaixadas a cada partida, com desvios:
+    - tesouro e fragmento divino;
+    - mercador;
+    - cofre atrás de parede rachada;
+    - sala da runa;
+    - sala secreta atrás de parede falsa;
+  - a Porta do Relógio, perto da saída, fica aberta só para quem chega a tempo;
+  - baús, e às vezes um baú maldito: paga melhor, mas qualquer golpe mata até
+    você derrotar 10 inimigos;
+  - ouro (gasto na partida) e Essência (gasta com a Vigia);
+  - mapa: segure **M** ou **Tab**.
+
+### O que dura uma partida
+
+| Coisa | Como funciona |
+|---|---|
+| Armas e habilidades que você pega | trocam no chão |
+| Fragmentos Divinos | sobem Fúria, Astúcia ou Vigor |
+| Mutações | até 3, nas passagens |
+| Ouro | gasto com o mercador |
+
+### O que dura para sempre
+
+| Coisa | Como funciona |
+|---|---|
+| Plantas | caem dos inimigos e só valem se você levar até a Vigia viva; aí ela vende o item |
+| Desbloqueios e bênçãos | comprados com Essência |
+| Aparências | 6 visuais para o herói |
+| Runas | **Asa de Cinza** (pulo duplo, nos Salões) e **Punho do Ferreiro** (quebra parede rachada, na Forja). Abrem caminhos que antes estavam fechados |
+| Brasas do Deus | dificuldade: cada vitória libera mais uma, até 4 (inimigos mais fortes, menos frascos) |
+
+### Inimigos
+
+| Andar | Inimigos |
+|---|---|
+| Mar de Cinzas | Penitente, Guarda da Casa, Peregrino Cinzento, Assassino da Duna, Atirador de Vidro, fulgurantes |
+| Salões do Último Inverno | Lobo Pálido, Sentinela de Gelo, estalactites; o Penitente e a Guarda aparecem com cores do gelo |
+| Forja Rubra | Ferreiro Cativo, Escória Viva, jatos de fogo; a Guarda aparece com cores da forja |
+| Todos | Inquisidor Profeta (elite) |
+| Fim | O Imperador Cego |
+
+**Armas:** espada, lança, machado, 2 adagas gêmeas, martelo da forja, e os arcos das dunas, de brasa e do inverno. **Habilidades:** granada, escudo (o aparo devolve projéteis) e lança de vidro.
 
 ## Estrutura
 
@@ -81,10 +114,11 @@ e salva **índices de paleta** em vez de cores: o jogo pinta com a paleta certa
 | Script | Gera |
 |---|---|
 | `gen_sprites.py` | herói (parado, corrida, pulo, queda, rolagem, golpe, arco, escudo, cura...) |
-| `gen_enemies.py` | os 6 inimigos do Mar de Cinzas e o Imperador Cego |
+| `gen_enemies.py` | os inimigos dos 3 andares e o Imperador Cego |
 | `gen_tiles.py` | blocos de pedra (16 encaixes x 4 variações), rocha funda e prancha |
-| `gen_backdrop.py` | fundo em camadas: céu, colossos, dunas |
-| `gen_props.py` | Vigia, altar, pedestal, estela, portal e braseiro |
+| `gen_backdrop.py` | fundo em camadas de cada andar (céu, ruínas ao longe, dunas ou neve) |
+| `gen_props.py` | Vigia, altares, pedestal, estela, portal, braseiro, baús, mercador, Porta do Relógio |
+| `salas_andares.py` | salas dos andares novos, a passagem e as peças comuns (saída com relógio, loja, cofre, runa) |
 | `mock_frame.py` | um quadro de mentira montado com tudo isso, com a mesma luz do jogo |
 
 Depois de gerar, rode o Godot uma vez com `--headless --import` para ele
@@ -108,7 +142,7 @@ reimportar as imagens.
 ## Testes
 
 `Testar.bat` (ou `Godot_console.exe --headless --fixed-fps 60 --path . res://tests/run_tests.tscn`):
-31 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
+44 testes que rodam a física de verdade — pulo, tolerâncias, rolagem, combo,
 escudo, aparo, cada inimigo, chefe, gerador (20 mapas com caminho do início à
 saída), save, aparências e se a fonte tem desenho para toda letra dos textos. Os testes usam `user://teste.save`, nunca o save real.
 

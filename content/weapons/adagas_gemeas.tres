@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "adagas_gemeas"
+title = "Adagas Gêmeas"
+category = "melee"
+stat = "astucia"
+crit_rule = "behind"
+crit_mult = 2.1
+starter = false
+unlock_cost = 45
+color = Color(0.851, 0.886, 0.925, 1)
+moves = [{"startup": 0.03, "active": 0.06, "recover": 0.08, "damage": 6, "knock": 50, "reach": Vector2(22, 14), "lunge": 60, "stop": 0.03, "shake": 1.0, "shape": "down"}, {"startup": 0.03, "active": 0.06, "recover": 0.08, "damage": 6, "knock": 50, "reach": Vector2(22, 14), "lunge": 60, "stop": 0.03, "shake": 1.0, "shape": "up"}, {"startup": 0.03, "active": 0.06, "recover": 0.1, "damage": 7, "knock": 60, "reach": Vector2(22, 14), "lunge": 70, "stop": 0.03, "shake": 1.0, "shape": "down"}, {"startup": 0.05, "active": 0.08, "recover": 0.16, "damage": 10, "knock": 120, "reach": Vector2(26, 16), "lunge": 110, "stop": 0.05, "shake": 2.0, "shape": "thrust"}]
+shot = {}
+lore = "Um par de assassinos da duna usava uma cada. Quando um morreu, o outro passou a usar as duas."
