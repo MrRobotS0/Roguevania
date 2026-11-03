@@ -87,6 +87,7 @@ func _show_title() -> void:
 	_clear_level()
 	_load_backdrop_preview()
 	screen.show_title()
+	Music.play("titulo")
 
 
 func _load_backdrop_preview() -> void:
@@ -180,11 +181,14 @@ func _load_stage() -> void:
 		"chefe":
 			level.build_boss(b, Run.stage_seed())
 			foreground.style = ""
+			Music.play("chefe_final" if Run.stage_id == "trono" else "chefe")
 		"passagem":
 			level.build_passage(b, Run.stage_seed())
+			Music.play("passagem")
 		_:
 			level.build_generated(b, Run.stage_seed())
 			weather.kind = b.weather
+			Music.play(b.id)
 	map_view.level = level
 	weather.player = level.player
 	Run.load_player(level.player)
@@ -218,6 +222,7 @@ func _on_exit(dest: String) -> void:
 			Meta.record_run(true, level.player.kills)
 			Meta.record_heat_win(Run.heat)
 			screen.show_victory(level.player)
+			Music.play("titulo")
 			return
 		"passagem":
 			Run.enter_passage()
@@ -236,6 +241,7 @@ func _on_player_died() -> void:
 	if level.is_boss_room:
 		place = "O Trono do Imperador Cego"
 	screen.show_death(level.player, place)
+	Music.stop()
 
 
 func _unhandled_input(event: InputEvent) -> void:

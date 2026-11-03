@@ -5,7 +5,7 @@ Ordem de execução (cada etapa termina com testes passando e commit):
 - [x] **A. Opções** — volume geral/música/efeitos (barramentos de áudio), tela cheia,
       intensidade do tremor, reduzir piscadas, trocar teclas, vibração do controle,
       cronômetro na tela. Acessível pelo título e pela pausa. Salvo no Meta.
-- [ ] **B. Música** — `tools/gen_music.py` sintetiza uma trilha em loop por andar,
+- [x] **B. Música** — `tools/gen_music.py` sintetiza uma trilha em loop por andar,
       chefe e título; autoload `Music` com troca suave.
 - [ ] **C. Equipamento** — 4 habilidades novas (armadilha, torreta, espírito, corrente)
       e afixos aleatórios nas armas (brasa, geada, vampira, explosiva, afiada,
