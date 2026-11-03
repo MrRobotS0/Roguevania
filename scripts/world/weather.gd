@@ -73,7 +73,7 @@ func visibility() -> float:
 
 
 func _draw() -> void:
-	if kind == "embers" or kind == "snow":
+	if kind in ["embers", "snow", "dust", "spores", "shadow", "stars"]:
 		_ambient()
 		return
 	if kind == "" or strength <= 0.01:
@@ -98,6 +98,26 @@ func _ambient() -> void:
 	var at := cam.get_screen_center_position() if cam else Vector2.ZERO
 	for i in 70:
 		var s: Vector3 = _streaks[i]
+		if kind == "stars":
+			var x := fposmod(s.x - at.x * 0.2 * s.z, size.x)
+			var y := fposmod(s.y - at.y * 0.2 * s.z, size.y * 0.7)
+			var c := Color(0.85, 0.92, 1.0, (0.3 + 0.7 * absf(sin(_t * (1.0 + s.z * 2.0) + i))) * s.z)
+			draw_rect(Rect2(floorf(x), floorf(y), 1, 1), c)
+			continue
+		if kind == "dust" or kind == "spores":
+			var up := -1.0 if kind == "spores" else 0.3
+			var x := fposmod(s.x + sin(_t * 0.5 + i) * 14.0 - at.x * 0.5 * s.z, size.x)
+			var y := fposmod(s.y + up * _t * (6.0 + 8.0 * s.z) - at.y * 0.5 * s.z, size.y)
+			var c := Color("e8d070") if kind == "dust" else Color("c8e07a")
+			c.a = 0.25 + 0.4 * absf(sin(_t + i))
+			draw_rect(Rect2(floorf(x), floorf(y), 1, 1), c)
+			continue
+		if kind == "shadow":
+			var x := fposmod(s.x + sin(_t * 0.6 + i) * 8.0 - at.x * 0.6 * s.z, size.x)
+			var y := fposmod(s.y + _t * (10.0 + 14.0 * s.z) - at.y * 0.6 * s.z, size.y)
+			var c := Color(0.25, 0.12, 0.35, 0.5 + 0.4 * s.z)
+			draw_rect(Rect2(floorf(x), floorf(y), 2, 1), c)
+			continue
 		if kind == "snow":
 			var x := fposmod(s.x + sin(_t * 0.8 + i) * 10.0 - at.x * 0.6 * s.z, size.x)
 			var y := fposmod(s.y + _t * (14.0 + 20.0 * s.z) - at.y * 0.6 * s.z, size.y)

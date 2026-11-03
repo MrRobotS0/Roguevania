@@ -10,10 +10,10 @@ Ordem de execução (cada etapa termina com testes passando e commit):
 - [x] **C. Equipamento** — 4 habilidades novas (armadilha, torreta, espírito, corrente)
       e afixos aleatórios nas armas (brasa, geada, vampira, explosiva, afiada,
       ligeira, carrasca, eco).
-- [ ] **D. Chefes por andar** — base de chefe reaproveitável; Lobo da Longa Noite
+- [x] **D. Chefes por andar** — base de chefe reaproveitável; Lobo da Longa Noite
       (Salões) e Colosso da Bigorna (Forja). A rota passa a ter arena de chefe depois
       de cada andar escolhido.
-- [ ] **E. 4 domínios novos** — Torre de Babel, Jardim Primordial, Carcosa,
+- [x] **E. 4 domínios novos** — Torre de Babel, Jardim Primordial, Carcosa,
       Observatório Celeste: cores, salas, fundo, clima, perigo, 2 inimigos e chefe cada.
       Rota final:
       Mar → [Salões | Forja] → chefe → [Torre | Jardim] → chefe → [Carcosa | Observatório] → chefe → Trono

@@ -59,19 +59,32 @@ func _fire() -> void:
 		if style in ["fire", "molten"]:
 			d.status = {"burn": 3.0}
 		player.hurt(d)
-	var color: Color = {"glass": Palette.GLASS, "light": Palette.SLASH, "fire": Palette.BURN, "molten": Palette.BURN}[style]
+	var color := _tint()
 	Fx.burst(global_position + Vector2(0, -height * 0.5), color, 12, 150.0, 0.4, 300.0, 2.0, 60.0)
 	Fx.add_shake(2.0)
 	Sfx.play("spike" if style == "glass" else "pillar", -4.0)
 
 
+const TINTS := {
+	"glass": Color("bfe6ea"), "light": Color("fff3c4"), "fire": Color("ff9a3c"), "molten": Color("ff9a3c"),
+	"vine": Color("6a9a3a"), "tendril": Color("5a2a7a"), "spore": Color("b8d05a"),
+}
+
+
+func _tint() -> Color:
+	return TINTS.get(style, Palette.GLASS)
+
+
 func _draw() -> void:
+	if style == "spore":
+		_draw_spore()
+		return
 	if style == "fire" or style == "molten":
 		_draw_fire()
 		return
 	if not _fired:
 		var k := clampf(_t / delay, 0.0, 1.0)
-		var warn := Palette.DANGER if style == "light" else Palette.GLASS
+		var warn := Palette.DANGER if style == "light" else _tint()
 		warn.a = 0.35 + 0.5 * k
 		var half := width * 0.5
 		if style == "light":
@@ -98,7 +111,7 @@ func _draw() -> void:
 			draw_rect(Rect2(width * 0.5, -height, 2, height), edge)
 		else:
 			var rise := minf((_t - delay) / 0.06, 1.0)
-			var glass := Palette.GLASS
+			var glass := _tint()
 			glass.a = 0.4 + 0.6 * fade
 			draw_colored_polygon(PackedVector2Array([
 				Vector2(-width * 0.5, 0), Vector2(-2, -height * rise), Vector2(1, -height * 0.8 * rise),
@@ -133,3 +146,20 @@ func _draw_fire() -> void:
 	var core := Palette.FLASH
 	core.a = fade
 	draw_rect(Rect2(-2, -height * 0.7 * fade, 4, height * 0.7 * fade), core)
+
+
+func _draw_spore() -> void:
+	var half := width * 0.5
+	if not _fired:
+		var k := clampf(_t / maxf(delay, 0.01), 0.0, 1.0)
+		var pod := _tint()
+		pod.a = 0.4 + 0.5 * k
+		draw_rect(Rect2(-3, -4 - k * 2.0, 6, 4 + k * 2.0), pod)
+		return
+	var fade := 1.0 - clampf((_t - delay) / linger, 0.0, 1.0)
+	for i in 10:
+		var a := i * 0.63 + _t * 2.0
+		var r := half * (0.3 + 0.7 * fposmod(i * 0.37 + _t, 1.0))
+		var c := _tint()
+		c.a = 0.6 * fade
+		draw_rect(Rect2(Vector2(cos(a) * r, -height * 0.5 + sin(a) * r * 0.6) - Vector2(2, 2), Vector2(4, 4)), c)

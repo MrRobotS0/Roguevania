@@ -50,18 +50,36 @@ const BIOMES := {
 	"mar_de_cinzas": "res://content/biomes/mar_de_cinzas/biome.tres",
 	"saloes": "res://content/biomes/saloes/biome.tres",
 	"forja_rubra": "res://content/biomes/forja_rubra/biome.tres",
+	"torre_babel": "res://content/biomes/torre_babel/biome.tres",
+	"jardim_primordial": "res://content/biomes/jardim_primordial/biome.tres",
+	"carcosa": "res://content/biomes/carcosa/biome.tres",
+	"observatorio": "res://content/biomes/observatorio/biome.tres",
 }
 
 const STAGE_NAMES := {
 	"mar_de_cinzas": "O Mar de Cinzas",
 	"saloes": "Os Salões do Último Inverno",
 	"forja_rubra": "A Forja Rubra",
+	"lobo": "A Toca do Lobo da Longa Noite",
+	"colosso": "A Bigorna do Colosso",
+	"torre_babel": "A Torre de Babel",
+	"jardim_primordial": "O Jardim Primordial",
+	"arquiteto": "O Topo da Torre",
+	"mae_raiz": "O Coração do Jardim",
+	"carcosa": "Carcosa",
+	"observatorio": "O Observatório Celeste",
+	"rei_sem_rosto": "O Salão do Rei sem Rosto",
+	"astronomo": "A Cúpula do Último Astrônomo",
 	"trono": "O Trono do Imperador Cego",
 }
 
 const STAGE_HINTS := {
 	"saloes": "GELO E LOBOS · MAIS CALMO",
 	"forja_rubra": "FOGO E FERRO · MAIS PERIGOSO, PAGA MELHOR",
+	"torre_babel": "GÁRGULAS E ESCRIBAS · VERTICAL",
+	"jardim_primordial": "FERAS E ESPINHOS · TUDO CRESCE",
+	"carcosa": "MÁSCARAS QUE SOMEM · O MAIS ESTRANHO",
+	"observatorio": "AUTÔMATOS E ESTRELAS · O MAIS ABERTO",
 	"trono": "O FIM DA JORNADA",
 }
 

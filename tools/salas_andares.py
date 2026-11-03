@@ -163,7 +163,14 @@ if __name__ == "__main__":
     mar = os.path.join(CONTENT, "biomes", "mar_de_cinzas", "rooms")
     save(common("mar_de_cinzas", False), mar, ("saida_", "loja_", "cofre_", "runa_"))
 
-    for biome, rune, hazard in (("forja_rubra", "punho", True), ("saloes", "asa", True)):
+    arena = R("arena", "chefe", 46, 18, head="Arena do guardião do andar")
+    arena.fill(6, 11, 12, 12, "=").fill(34, 39, 12, 12, "=").fill(19, 26, 8, 8, "=")
+    arena.put(4, 16, "P").put(30, 16, "B").put(40, 16, "X")
+    arena.save(CONTENT)
+
+    for biome, rune, hazard in (("forja_rubra", "punho", True), ("saloes", "asa", True),
+                                ("torre_babel", "", True), ("jardim_primordial", "", True),
+                                ("carcosa", "", True), ("observatorio", "", True)):
         folder = os.path.join(CONTENT, "biomes", biome, "rooms")
         save(floor_rooms(biome, hazard) + common(biome, rune), folder, ("",))
     print("ok")

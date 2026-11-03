@@ -130,6 +130,8 @@ func _ready() -> void:
 	await _case("opções: volume, tremor e troca de tecla", _options)
 	await _case("armadilha, torreta, espírito e corrente acertam", _new_skills)
 	await _case("afixos: afiada dá mais dano, vampira cura", _affixes)
+	await _case("os 7 guardiões lutam e acertam o herói", _bosses)
+	await _case("inimigos dos domínios novos acertam", _domain_enemies)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -661,10 +663,19 @@ func _route() -> void:
 	_check(Run.next_options() == ["saloes", "forja_rubra"], "saídas da passagem: %s" % [Run.next_options()])
 	Run.go("forja_rubra")
 	_check(Run.current()["biome"] == "forja_rubra" and Run.current()["kind"] == "gerada", "não foi para a Forja")
+	Run.go(Run.boss_of("forja_rubra"))
+	_check(Run.current()["kind"] == "chefe", "depois da Forja não veio o guardião")
+	Run.enter_passage()
+	_check(Run.next_options() == ["torre_babel", "jardim_primordial"], "depois do Colosso: %s" % [Run.next_options()])
+	Run.go("jardim_primordial")
+	Run.go(Run.boss_of("jardim_primordial"))
+	Run.enter_passage()
+	Run.go("carcosa")
+	Run.go(Run.boss_of("carcosa"))
 	Run.enter_passage()
 	Run.go(Run.next_options()[0])
-	_check(Run.current()["kind"] == "chefe", "o último andar não é o do chefe")
-	_check(Run.path == ["mar_de_cinzas", "forja_rubra", "trono"], "caminho %s" % [Run.path])
+	_check(Run.stage_id == "trono" and Run.current()["kind"] == "chefe", "a rota não termina no Trono")
+	_check(Run.path.size() == 8, "caminho %s" % [Run.path])
 
 
 func _generator_floors() -> void:
@@ -960,3 +971,52 @@ func _affixes() -> void:
 	p.hp = 50
 	p._affix_after(sharp, b, dummy)
 	_check(p.hp == 51, "vampira não curou (%d)" % p.hp)
+
+
+func _bosses() -> void:
+	for path in ["boss_wolf_king", "boss_colossus", "boss_architect", "boss_mother_root",
+			"boss_faceless_king", "boss_astronomer", "blind_emperor"]:
+		if level:
+			remove_child(level)
+			level.queue_free()
+		level = Level.new()
+		level.rng.seed = 1
+		add_child(level)
+		level.build(FileAccess.get_file_as_string("res://content/arena.txt").replace("B", "."), false)
+		var p := level.player
+		p.max_hp = 99999
+		p.hp = 99999
+		p.pad = ScriptedInput.new()
+		var boss: Enemy = level.spawn_script("res://scripts/enemies/%s.gd" % path, p.global_position + Vector2(130, 0))
+		boss.set("arena", Rect2(Vector2(16, 0), level.room.size_px() - Vector2(32, 0)))
+		var hit_at := -1
+		for i in 900:
+			await get_tree().physics_frame
+			if p.hp < p.max_hp:
+				hit_at = i
+				break
+		_check(hit_at >= 0, "%s ficou 15 s sem acertar o herói" % path)
+		var hp0: int = boss.hp
+		boss.hurt(Damage.make(boss.max_hp * 0.55, 1, 0))
+		await _frames(60)
+		_check(boss.hp < hp0, "%s não apanhou" % path)
+		if boss.get("phase") != null:
+			_check(boss.get("phase") == 2, "%s não entrou na fase 2" % path)
+		for e in level.enemies():
+			e.queue_free()
+		await _frames(2)
+
+
+func _domain_enemies() -> void:
+	for name in ["scribe", "gargoyle", "thorn_plant", "moss_beast", "masked", "herald", "automaton", "fallen_star"]:
+		await _load(WIDE)
+		var p := level.player
+		p.max_hp = 9999
+		p.hp = 9999
+		var e := level.spawn_script("res://scripts/enemies/%s.gd" % name, p.global_position + Vector2(90, 0))
+		e.facing = -1
+		for i in 480:
+			await get_tree().physics_frame
+			if p.hp < p.max_hp:
+				break
+		_check(p.hp < p.max_hp, "%s não acertou o herói" % name)

@@ -65,7 +65,7 @@ func build_passage(b: BiomeData, seed_value: int, with_camera := true) -> void:
 
 func build_boss(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	rng.seed = seed_value + 99
-	tier = 3
+	tier = b.tier + 1 if Run.stage_id != "trono" else 6
 	kind = "chefe"
 	_make_room(b)
 	is_boss_room = true
@@ -142,7 +142,8 @@ func _spawn_marker(m: Dictionary) -> void:
 				boss = spawn_script(biome.boss_script, at)
 				boss.set("arena", Rect2(Vector2(16, 0), room.size_px() - Vector2(32, 0)))
 				boss.killed.connect(_on_boss_killed, CONNECT_DEFERRED)
-				Fx.banner(boss.title, "O QUE VIU O FIM DE TUDO")
+				var sub: String = boss.get("subtitle") if boss.get("subtitle") else "O QUE VIU O FIM DE TUDO"
+				Fx.banner(boss.title, sub)
 		"i":
 			var p := Pickup.new()
 			p.gear = Catalog.random_gear(rng, tier)
@@ -198,8 +199,9 @@ func _spawn_exit(at: Vector2) -> void:
 		"chefe":
 			if index > 0:
 				return
-			gate.title = "Fim da jornada"
-			gate.dest = "fim"
+			var last := Run.stage_id == "trono"
+			gate.title = "Fim da jornada" if last else "Seguir em frente"
+			gate.dest = "fim" if last else "passagem"
 			_hide_until_victory(gate)
 		"passagem":
 			var options := Run.next_options()
@@ -210,8 +212,9 @@ func _spawn_exit(at: Vector2) -> void:
 			gate.title = Catalog.STAGE_NAMES.get(dest, dest)
 			gate.hint = Catalog.STAGE_HINTS.get(dest, "")
 		"gerada":
-			gate.title = "Seguir em frente"
-			gate.dest = "passagem"
+			var guardian := Run.boss_of(Run.stage_id)
+			gate.title = "Enfrentar o guardião" if guardian != "" else "Seguir em frente"
+			gate.dest = "boss" if guardian != "" else "passagem"
 		_:
 			gate.title = "Saída"
 			gate.dest = "fim"
@@ -309,7 +312,8 @@ func _on_boss_killed(_e: Enemy) -> void:
 		n.visible = true
 		Fx.burst(n.global_position + Vector2(0, -16), Palette.ESSENCE, 16, 100.0, 0.6, -40.0)
 	drop_blueprint(_e.center())
-	Fx.banner("O IMPERADOR CEGO CAIU", "PELA PRIMEIRA VEZ EM MIL ANOS, ELE NÃO SABIA O QUE VINHA")
+	var after: String = _e.get("defeat_text") if _e.get("defeat_text") else "PELA PRIMEIRA VEZ EM MIL ANOS, ELE NÃO SABIA O QUE VINHA"
+	Fx.banner(_e.title + " CAIU", after)
 	boss_defeated.emit()
 
 

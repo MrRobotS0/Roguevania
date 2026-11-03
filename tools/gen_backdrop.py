@@ -390,6 +390,9 @@ SETS = {
 }
 
 if __name__ == "__main__":
+    import backdrop_dominios
+    SKIES.update(backdrop_dominios.SKIES)
+    SETS.update(backdrop_dominios.SETS)
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(PREV, exist_ok=True)
     SKIES["bd"] = SKY

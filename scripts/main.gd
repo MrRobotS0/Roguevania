@@ -190,6 +190,7 @@ func _load_stage() -> void:
 			weather.kind = b.weather
 			Music.play(b.id)
 	map_view.level = level
+	Run.stage_tier = level.tier
 	weather.player = level.player
 	Run.load_player(level.player)
 	hud.bind(level.player, level.boss)
@@ -226,6 +227,8 @@ func _on_exit(dest: String) -> void:
 			return
 		"passagem":
 			Run.enter_passage()
+		"boss":
+			Run.go(Run.boss_of(Run.stage_id))
 		_:
 			Run.go(dest)
 	_load_stage()

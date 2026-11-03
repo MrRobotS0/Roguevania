@@ -4,16 +4,26 @@ extends Node
 # carrega de um andar para o outro. Morreu, acabou: tudo daqui é perdido
 # (o que fica para sempre está no Meta).
 #
-# Rota: cada andar termina numa passagem (Vigia + altar de mutação), e a
-# passagem mostra as saídas para os próximos andares possíveis.
+# Rota: cada domínio termina no guardião dele (arena de chefe); vencido o
+# guardião, a passagem (Vigia + altar de mutação) mostra os próximos domínios.
 #
-#   Mar de Cinzas ─┬─ Salões do Último Inverno ─┬─ Trono do Imperador Cego
-#                  └─ Forja Rubra (mais difícil) ┘
+#   Mar de Cinzas ─┬─ Salões ── Lobo da Longa Noite ─┬─ Torre de Babel ─── Arquiteto Mudo ─┬─ Carcosa ────── Rei sem Rosto ─┬─ Trono
+#                  └─ Forja ─── Colosso da Bigorna ──┘  Jardim Primordial ─ Mãe-Raiz ───────┘  Observatório ── Último Astrônomo ┘
 
 const STAGES := {
 	"mar_de_cinzas": {"biome": "mar_de_cinzas", "kind": "gerada", "next": ["saloes", "forja_rubra"]},
-	"saloes": {"biome": "saloes", "kind": "gerada", "next": ["trono"]},
-	"forja_rubra": {"biome": "forja_rubra", "kind": "gerada", "next": ["trono"]},
+	"saloes": {"biome": "saloes", "kind": "gerada", "boss": "lobo"},
+	"forja_rubra": {"biome": "forja_rubra", "kind": "gerada", "boss": "colosso"},
+	"lobo": {"biome": "saloes", "kind": "chefe", "next": ["torre_babel", "jardim_primordial"]},
+	"colosso": {"biome": "forja_rubra", "kind": "chefe", "next": ["torre_babel", "jardim_primordial"]},
+	"torre_babel": {"biome": "torre_babel", "kind": "gerada", "boss": "arquiteto"},
+	"jardim_primordial": {"biome": "jardim_primordial", "kind": "gerada", "boss": "mae_raiz"},
+	"arquiteto": {"biome": "torre_babel", "kind": "chefe", "next": ["carcosa", "observatorio"]},
+	"mae_raiz": {"biome": "jardim_primordial", "kind": "chefe", "next": ["carcosa", "observatorio"]},
+	"carcosa": {"biome": "carcosa", "kind": "gerada", "boss": "rei_sem_rosto"},
+	"observatorio": {"biome": "observatorio", "kind": "gerada", "boss": "astronomo"},
+	"rei_sem_rosto": {"biome": "carcosa", "kind": "chefe", "next": ["trono"]},
+	"astronomo": {"biome": "observatorio", "kind": "chefe", "next": ["trono"]},
 	"trono": {"biome": "mar_de_cinzas", "kind": "chefe", "next": []},
 }
 const FIRST := "mar_de_cinzas"
@@ -27,6 +37,7 @@ var carry := {}
 var time := 0.0
 var stage_time := 0.0
 var heat := 0              # Brasas do Deus: dificuldade escolhida no título
+var stage_tier := 0        # profundidade do andar atual (inimigos ficam mais fortes)
 var active := false
 
 
@@ -39,6 +50,7 @@ func new_run(seed_override := -1, heat_level := 0) -> void:
 	time = 0.0
 	stage_time = 0.0
 	heat = clampi(heat_level, 0, MAX_HEAT)
+	stage_tier = 0
 	active = true
 
 
@@ -51,7 +63,11 @@ func current() -> Dictionary:
 
 
 func next_options() -> Array:
-	return STAGES[stage_id]["next"]
+	return STAGES[stage_id].get("next", [])
+
+
+func boss_of(id: String) -> String:
+	return STAGES[id].get("boss", "")
 
 
 func stage_seed() -> int:
@@ -78,11 +94,11 @@ func _process(delta: float) -> void:
 # --- dificuldade ------------------------------------------------------------------
 
 func enemy_hp_mult() -> float:
-	return 1.0 + 0.4 * heat
+	return (1.0 + 0.4 * heat) * (1.0 + 0.2 * stage_tier)
 
 
 func enemy_damage_mult() -> float:
-	return 1.0 + 0.25 * heat
+	return (1.0 + 0.25 * heat) * (1.0 + 0.1 * stage_tier)
 
 
 # --- o que passa de um andar para o outro ------------------------------------------

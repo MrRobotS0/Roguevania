@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/biome_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "observatorio"
+title = "O Observatório Celeste"
+subtitle = "Domínio do deus que contava as estrelas"
+colors = {
+"stone": Color(0.227, 0.251, 0.376, 1),
+"deep": Color(0.078, 0.094, 0.157, 1),
+"top": Color(0.416, 0.439, 0.565, 1),
+"light": Color(0.784, 0.816, 0.941, 1),
+"shadow": Color(0.031, 0.039, 0.078, 1),
+"moss": Color(0.604, 0.659, 0.847, 1),
+"wood": Color(0.290, 0.227, 0.165, 1),
+"wood_top": Color(0.541, 0.416, 0.251, 1),
+"wood_dark": Color(0.165, 0.125, 0.078, 1),
+"vein": Color(0.624, 0.910, 1.000, 1),
+"cloth": Color(0.165, 0.227, 0.416, 1)
+}
+sky = {
+"sky0": Color(0.024, 0.031, 0.078, 1),
+"sky1": Color(0.063, 0.102, 0.212, 1),
+"sky2": Color(0.094, 0.141, 0.290, 1),
+"glow": Color(0.227, 0.290, 0.541, 1),
+"sun": Color(0.910, 0.941, 1.000, 1),
+"accent": Color(0.624, 0.910, 1.000, 1),
+"ambient": Color(0.478, 0.502, 0.659, 1)
+}
+backdrop = "painted"
+layers = "bd_observatorio"
+weather = "stars"
+rooms_dir = "res://content/biomes/observatorio/rooms"
+boss_room = "res://content/arena.txt"
+combat_rooms = 7
+enemies = [{"script": "res://scripts/enemies/automaton.gd", "slot": "e", "weight": 10}, {"script": "res://scripts/enemies/fallen_star.gd", "slot": "e", "weight": 8}, {"script": "res://scripts/enemies/ice_sentinel.gd", "slot": "r", "weight": 6}, {"script": "res://scripts/enemies/shield_guard.gd", "slot": "e", "weight": 4}]
+elites = ["res://scripts/enemies/inquisitor.gd"]
+boss_script = "res://scripts/enemies/boss_astronomer.gd"
+exits = [{"title": "Seguir em frente", "to": "passagem"}]
+lore = ["O último astrônomo contou as estrelas até elas acabarem. Depois contou de novo.", "Os autômatos medem o céu. Não sabem mais para quem.", "Cada estrela caída é um nome que o deus esqueceu.", "A luneta aponta para um ponto vazio. Lá estava o deus.", "No caderno de bordo, a última linha: ELE OLHOU DE VOLTA."]
+tier = 4
+hazard_script = "res://scripts/enemies/meteor_mark.gd"
+rune = ""
+ink = Color(0.016, 0.024, 0.047, 1)
+recolor = {}

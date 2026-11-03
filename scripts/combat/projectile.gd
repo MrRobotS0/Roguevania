@@ -20,6 +20,7 @@ var crit_mult := 1.75
 var source: Actor
 var color := Palette.ARROW
 var pull := false             # corrente: puxa quem acertar para perto de quem lançou
+var homing := 0.0             # > 0: vira na direção do alvo (radianos por segundo)
 
 var _traveled := 0.0
 var _hit: Array = []
@@ -43,6 +44,12 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	life -= delta
 	velocity.y += gravity * delta
+	if homing > 0.0:
+		var target := _homing_target()
+		if target:
+			var want := (target.center() - global_position).angle()
+			var turn := clampf(angle_difference(velocity.angle(), want), -homing * delta, homing * delta)
+			velocity = velocity.rotated(turn)
 	var step := velocity * delta
 	position += step
 	_traveled += step.length()
@@ -53,7 +60,12 @@ func _physics_process(delta: float) -> void:
 		if fuse <= 0.0:
 			explode()
 			return
-	if room.is_solid_at(global_position):
+	if style == "wave":
+		# a onda corre rente ao chão e só some na parede
+		if room.is_solid_at(global_position + Vector2(signf(velocity.x) * 4.0, -2.0)):
+			queue_free()
+			return
+	elif room.is_solid_at(global_position):
 		if radius > 0.0:
 			explode()
 			return
@@ -103,6 +115,17 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+func _homing_target() -> Actor:
+	var group := "enemies" if team == "player" else "player"
+	var best: Actor = null
+	var best_d := 400.0
+	for t: Actor in get_tree().get_nodes_in_group(group):
+		if t.alive() and t.center().distance_to(global_position) < best_d:
+			best = t
+			best_d = t.center().distance_to(global_position)
+	return best
+
+
 func _reflect() -> void:
 	team = "player" if team == "enemy" else "enemy"
 	velocity = -velocity * 1.3
@@ -136,6 +159,27 @@ func _draw() -> void:
 		"shard":
 			var side := dir.orthogonal() * 2.0
 			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), Palette.GLASS)
+		"glyph":
+			var c := color
+			var turn := _spin * 0.5
+			for i in 4:
+				var a := turn + i * TAU / 4.0
+				draw_rect(Rect2(Vector2(cos(a), sin(a)) * 4.0 - Vector2(1, 1), Vector2(2, 2)), c)
+			draw_rect(Rect2(-1, -1, 3, 3), Palette.FLASH)
+		"thorn":
+			var side := dir.orthogonal() * 1.5
+			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 3.0, -side]), Color("c8e07a"))
+			draw_line(-dir * 3.0, -dir * 6.0, Color("4a7a3a"), 1.0)
+		"star":
+			var c := color
+			draw_rect(Rect2(-1, -3, 3, 7), c)
+			draw_rect(Rect2(-3, -1, 7, 3), c)
+			draw_rect(Rect2(0, 0, 1, 1), Palette.FLASH)
+		"wave":
+			var k := absf(sin(_spin * 0.6))
+			for i in 4:
+				draw_rect(Rect2(-6 + i * 3, -4 - k * 4.0 + i % 2 * 2, 3, 4 + k * 4.0), Palette.DUST.lightened(0.2))
+			draw_rect(Rect2(-7, 2, 14, 2), Palette.BURN)
 		"chain":
 			if is_instance_valid(source):
 				var back := source.center() - global_position

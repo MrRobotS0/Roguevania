@@ -36,9 +36,10 @@ var _crown: PointLight2D
 
 func _init() -> void:
 	title = "O IMPERADOR CEGO"
+	tier_scaling = false
 	sheet = "emperor"
-	max_hp = 900
-	hp = 900
+	max_hp = 2200
+	hp = 2200
 	w = 22
 	h = 40
 	weight = 4.0

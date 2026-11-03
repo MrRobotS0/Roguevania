@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/biome_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "torre_babel"
+title = "A Torre de Babel"
+subtitle = "Domínio do deus que falava todas as línguas"
+colors = {
+"stone": Color(0.478, 0.416, 0.314, 1),
+"deep": Color(0.180, 0.149, 0.125, 1),
+"top": Color(0.690, 0.604, 0.439, 1),
+"light": Color(0.878, 0.792, 0.627, 1),
+"shadow": Color(0.102, 0.078, 0.063, 1),
+"moss": Color(0.847, 0.784, 0.627, 1),
+"wood": Color(0.290, 0.227, 0.157, 1),
+"wood_top": Color(0.478, 0.376, 0.251, 1),
+"wood_dark": Color(0.165, 0.125, 0.078, 1),
+"vein": Color(0.910, 0.816, 0.439, 1),
+"cloth": Color(0.227, 0.227, 0.416, 1)
+}
+sky = {
+"sky0": Color(0.102, 0.086, 0.188, 1),
+"sky1": Color(0.227, 0.180, 0.290, 1),
+"sky2": Color(0.290, 0.227, 0.329, 1),
+"glow": Color(0.753, 0.604, 0.353, 1),
+"sun": Color(0.949, 0.863, 0.627, 1),
+"accent": Color(0.910, 0.816, 0.439, 1),
+"ambient": Color(0.549, 0.541, 0.627, 1)
+}
+backdrop = "painted"
+layers = "bd_torre"
+weather = "dust"
+rooms_dir = "res://content/biomes/torre_babel/rooms"
+boss_room = "res://content/arena.txt"
+combat_rooms = 7
+enemies = [{"script": "res://scripts/enemies/gargoyle.gd", "slot": "e", "weight": 10}, {"script": "res://scripts/enemies/scribe.gd", "slot": "r", "weight": 10}, {"script": "res://scripts/enemies/shield_guard.gd", "slot": "e", "weight": 5}, {"script": "res://scripts/enemies/grunt.gd", "slot": "e", "weight": 4}]
+elites = ["res://scripts/enemies/inquisitor.gd"]
+boss_script = "res://scripts/enemies/boss_architect.gd"
+exits = [{"title": "Seguir em frente", "to": "passagem"}]
+lore = ["A Torre foi feita para chegar ao deus. Chegou. Ele já tinha ido embora.", "Cada andar fala uma língua. Quem sobe esquece a de baixo.", "Os escribas copiam o mesmo livro há mil anos. Ninguém sabe ler o original.", "As gárgulas eram guardas. Ficaram de pedra esperando a ordem de parar.", "No topo há uma porta. Do lado de dentro, só céu."]
+tier = 3
+hazard_script = "res://scripts/enemies/falling_stone.gd"
+rune = ""
+ink = Color(0.047, 0.039, 0.078, 1)
+recolor = {}

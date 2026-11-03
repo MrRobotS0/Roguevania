@@ -18,6 +18,21 @@ const TABLE := {
 	"archer_ice": ["5a7aa0", "2a3a5a", "9fe8ff", "8aa0b8", "0c1220", "6a7a8a", "dff6ff"],
 	"penitent_ice": ["6a7a8a", "9aa8b8", "9fe8ff", "3a4a6a", "10161e", "4a3a30", "dff6ff"],
 	"guard_forge": ["3a3a42", "2a2a30", "ff8a3a", "b86a3a", "0c0c10", "4a2a1e", "e8c09a"],
+	"scribe": ["c8b48a", "3a3a6a", "ffd84a", "d9a93f", "14101a", "5b3f2c", "e8e2d0"],
+	"gargoyle": ["7a7468", "5a544a", "ff5a4a", "9a9488", "1a1612", "4a3a30", "c9c2b0"],
+	"thorn": ["7a3a5a", "3a6a3a", "ffd84a", "c8e07a", "140c10", "4a3a20", "e8f0c0"],
+	"moss_beast": ["4a5a3a", "6a8a4a", "ffd84a", "8aa05a", "141810", "4a3a20", "d9e2c0"],
+	"masked": ["2a2232", "14101a", "ffd84a", "e8d070", "100c14", "4a3a30", "d9e2ec"],
+	"herald": ["d8d0a0", "4a3a5a", "ffd84a", "c8a040", "14101a", "4a3a30", "e8e2d0"],
+	"automaton": ["8a6a3a", "4a3a2a", "9fe8ff", "c8a050", "0c1018", "3a2a1a", "dff6ff"],
+	"star": ["e8f0ff", "9ab0d8", "ffffff", "ffd84a", "1a2030", "3a2a1a", "ffffff"],
+	"wolf_king": ["dfe8f0", "f4fbff", "9fe8ff", "6a8ab0", "1a2230", "5b3f2c", "bfe6ea"],
+	"colossus": ["7a4a38", "4a2a20", "ff8a3a", "4a4a52", "140c0c", "3a2a22", "ffb050"],
+	"architect": ["d8c890", "3a3a7a", "ffd84a", "e0b04a", "1a1420", "5b3f2c", "e8e2d0"],
+	"mother_root": ["5a3a4a", "4a7a3a", "ffd84a", "c84a6a", "140810", "3a2a18", "e8f0c0"],
+	"faceless_king": ["3a2a1a", "d8c050", "ffd84a", "f0e8c0", "0c0a08", "4a3a20", "e8e2d0"],
+	"wisp": ["c08fff", "6a4a9a", "ffffff", "e8d070", "1a1020", "3a2a1a", "ffffff"],
+	"astronomer": ["2a3a6a", "14203a", "9fe8ff", "d8b060", "0a0e18", "5b3f2c", "ffffff"],
 }
 
 

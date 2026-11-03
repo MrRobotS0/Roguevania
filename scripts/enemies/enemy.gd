@@ -21,6 +21,7 @@ var elite := false
 var ghost := false        # true = o herói atravessa (ex.: assassino enterrado)
 var uses_gravity := true
 var unstoppable := false   # chefes: golpe comum não interrompe
+var tier_scaling := true   # vida cresce com a profundidade do andar (chefes já vêm prontos)
 
 var _stun := 0.0
 var _shown_hp := 0.0
@@ -41,7 +42,7 @@ var _frame_size := Vector2i(32, 32)
 
 func _ready() -> void:
 	setup_body(4)
-	max_hp = roundi(max_hp * Run.enemy_hp_mult())
+	max_hp = roundi(max_hp * (Run.enemy_hp_mult() if tier_scaling else 1.0 + 0.4 * Run.heat))
 	hp = max_hp
 	_shown_hp = hp
 	z_index = 4
