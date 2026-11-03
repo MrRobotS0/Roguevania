@@ -33,6 +33,12 @@ const TABLE := {
 	"faceless_king": ["3a2a1a", "d8c050", "ffd84a", "f0e8c0", "0c0a08", "4a3a20", "e8e2d0"],
 	"wisp": ["c08fff", "6a4a9a", "ffffff", "e8d070", "1a1020", "3a2a1a", "ffffff"],
 	"astronomer": ["2a3a6a", "14203a", "9fe8ff", "d8b060", "0a0e18", "5b3f2c", "ffffff"],
+	"elite_hunter": ["9ab0c8", "e8f2fa", "9fe8ff", "5a6a8a", "141a24", "4a3a30", "dff6ff"],
+	"elite_forgemaster": ["3a2a2a", "7a3a20", "ff8a3a", "5a5a62", "0c0808", "3a2a22", "ffb050"],
+	"elite_librarian": ["4a3a7a", "d8c890", "ffd84a", "c09a4a", "100c18", "4a3a28", "e8e2d0"],
+	"elite_thornkeeper": ["3a5a2a", "7a2a4a", "ffd84a", "c84a6a", "0c1008", "4a3a20", "e8f0c0"],
+	"elite_duelist": ["c8a830", "2a2010", "ffffff", "f0e070", "0c0a06", "3a2a1a", "ffffff"],
+	"elite_brass": ["b88a3a", "5a4020", "9fe8ff", "e0b860", "100c08", "3a2a1a", "dff6ff"],
 }
 
 

@@ -35,14 +35,15 @@ var _shots := 0
 var _clock := 0.0
 var _alpha := 1.0
 var _last := -1
+var aggro_range := 0.0       # > 0: modo elite (só age quando vê o herói, sem apresentação)
 
 
 func _ready() -> void:
-	tier_scaling = false
+	tier_scaling = aggro_range > 0.0
 	super._ready()
 	unstoppable = true
 	poise = 1.0
-	set_state("intro")
+	set_state("idle" if aggro_range > 0.0 else "intro")
 	if arena.size == Vector2.ZERO:
 		arena = Rect2(global_position.x - 240.0, global_position.y - 200.0, 480.0, 200.0)
 
@@ -123,6 +124,11 @@ func think(delta: float) -> void:
 			if state_time >= 1.6:
 				set_state("idle")
 		"idle", "chase":
+			if aggro_range > 0.0 and state == "idle" and not sees_player(aggro_range, 90.0):
+				velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
+				return
+			if state == "idle" and aggro_range > 0.0:
+				set_state("chase")
 			face_player()
 			var want := 0.0
 			if keep_distance > 0.0 and absf(d.x) < keep_distance:
@@ -132,7 +138,7 @@ func think(delta: float) -> void:
 			if want != 0.0 and blocked(int(signf(want))):
 				want = 0.0
 			velocity.x = move_toward(velocity.x, want, 600.0 * delta)
-			if state_time >= 0.8 * _tm():
+			if state_time >= (0.8 if aggro_range <= 0.0 else 1.0) * _tm():
 				_choose()
 		"windup":
 			velocity.x = move_toward(velocity.x, 0.0, 800.0 * delta)
@@ -147,11 +153,11 @@ func think(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, 700.0 * delta)
 			if state_time >= float(_move.get("recover", 0.5)) * _tm():
 				_done_moves += 1
-				set_state("rest" if _done_moves % rest_every == 0 else "idle")
+				set_state("rest" if _done_moves % rest_every == 0 else ("chase" if aggro_range > 0.0 else "idle"))
 		"rest":
 			velocity.x = move_toward(velocity.x, 0.0, 800.0 * delta)
 			if state_time >= 1.6:
-				set_state("idle")
+				set_state("chase" if aggro_range > 0.0 else "idle")
 		"vanish":
 			_alpha = 1.0 - clampf(state_time / 0.3, 0.0, 1.0)
 			if state_time >= 0.3:

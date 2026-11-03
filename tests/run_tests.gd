@@ -133,6 +133,7 @@ func _ready() -> void:
 	await _case("os 7 guardiões lutam e acertam o herói", _bosses)
 	await _case("inimigos dos domínios novos acertam", _domain_enemies)
 	await _case("desafio do dia, estatísticas e recorde", _extras)
+	await _case("os 6 elites dos domínios atacam e acertam", _elites)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1043,3 +1044,18 @@ func _extras() -> void:
 	_check(not Meta.record_stats(true), "vitória mais lenta virou recorde")
 	_check(Meta.stats_text().contains("QUEM MAIS TE MATOU"), "tela de estatísticas incompleta")
 	Meta.use_path("user://teste.save", true)
+
+
+func _elites() -> void:
+	for name in ["hunter", "forgemaster", "librarian", "thornkeeper", "duelist", "brass"]:
+		await _load(WIDE)
+		var p := level.player
+		p.max_hp = 99999
+		p.hp = 99999
+		var e := level.spawn_script("res://scripts/enemies/elite_%s.gd" % name, p.global_position + Vector2(100, 0), true)
+		_check(e.max_hp > 200, "elite_%s com pouca vida (%d)" % [name, e.max_hp])
+		for i in 900:
+			await get_tree().physics_frame
+			if p.hp < p.max_hp:
+				break
+		_check(p.hp < p.max_hp, "elite_%s não acertou em 15 s" % name)

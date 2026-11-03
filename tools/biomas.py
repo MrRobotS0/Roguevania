@@ -49,7 +49,7 @@ def biome(bid, title, subtitle, colors, sky, layers, weather, enemy_list, boss, 
         backdrop=s("painted"), layers=s(layers), weather=s(weather),
         rooms_dir=s("res://content/biomes/%s/rooms" % bid), boss_room=s("res://content/arena.txt"),
         combat_rooms=str(combat), enemies=enemies(enemy_list),
-        elites=arr([s("res://scripts/enemies/inquisitor.gd")]),
+        elites=arr([s("res://scripts/enemies/%s.gd" % ELITES[bid])]),
         boss_script=s("res://scripts/enemies/%s.gd" % boss),
         exits=arr(['{"title": "Seguir em frente", "to": "passagem"}']),
         lore=arr([s(x) for x in lore]), tier=str(tier),
@@ -57,6 +57,9 @@ def biome(bid, title, subtitle, colors, sky, layers, weather, enemy_list, boss, 
         recolor=dct({k: s(v) for k, v in (recolor or {}).items()}) if recolor else "{}",
     ))
 
+
+ELITES = {"torre_babel": "elite_librarian", "jardim_primordial": "elite_thornkeeper",
+          "carcosa": "elite_duelist", "observatorio": "elite_brass"}
 
 SALOES_FORJA_BOSS = {"saloes": "boss_wolf_king", "forja_rubra": "boss_colossus"}
 

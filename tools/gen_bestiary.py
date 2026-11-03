@@ -300,6 +300,13 @@ SHEETS = {
     "mother_root": (mother_anims, 96, 80),
     "faceless_king": (lambda: human_anims(72, 72, 1.6, robe=False, head="mask", weapon="sword", cape=True), 72, 72),
     "astronomer": (lambda: human_anims(80, 80, 1.8, head="hood", weapon="staff", orrery=True), 80, 80),
+    # elites (um por domínio)
+    "elite_hunter": (lambda: human_anims(48, 48, 1.25, robe=False, head="helm", weapon="sword", cape=True), 48, 48),
+    "elite_forgemaster": (lambda: human_anims(56, 56, 1.4, robe=False, head="helm", weapon="hammer"), 56, 56),
+    "elite_librarian": (lambda: human_anims(52, 52, 1.3, head="hood", book=True, float_=True), 52, 52),
+    "elite_thornkeeper": (lambda: human_anims(48, 48, 1.3, head="crown", weapon="staff", cape=True), 48, 48),
+    "elite_duelist": (lambda: human_anims(48, 48, 1.25, robe=False, head="mask", weapon="sword", cape=True), 48, 48),
+    "elite_brass": (lambda: human_anims(52, 52, 1.4, robe=False, head="lens", orrery=True), 52, 52),
 }
 
 PALETTES = {
@@ -317,6 +324,12 @@ PALETTES = {
     "mother_root": ("#5a3a4a", "#4a7a3a", "#ffd84a", "#c84a6a", "#140810", "#3a2a18", "#e8f0c0"),
     "faceless_king": ("#3a2a1a", "#d8c050", "#ffd84a", "#f0e8c0", "#0c0a08", "#4a3a20", "#e8e2d0"),
     "astronomer": ("#2a3a6a", "#14203a", "#9fe8ff", "#d8b060", "#0a0e18", "#5b3f2c", "#ffffff"),
+    "elite_hunter": ("#9ab0c8", "#e8f2fa", "#9fe8ff", "#5a6a8a", "#141a24", "#4a3a30", "#dff6ff"),
+    "elite_forgemaster": ("#3a2a2a", "#7a3a20", "#ff8a3a", "#5a5a62", "#0c0808", "#3a2a22", "#ffb050"),
+    "elite_librarian": ("#4a3a7a", "#d8c890", "#ffd84a", "#c09a4a", "#100c18", "#4a3a28", "#e8e2d0"),
+    "elite_thornkeeper": ("#3a5a2a", "#7a2a4a", "#ffd84a", "#c84a6a", "#0c1008", "#4a3a20", "#e8f0c0"),
+    "elite_duelist": ("#c8a830", "#2a2010", "#ffffff", "#f0e070", "#0c0a06", "#3a2a1a", "#ffffff"),
+    "elite_brass": ("#b88a3a", "#5a4020", "#9fe8ff", "#e0b860", "#100c08", "#3a2a1a", "#dff6ff"),
 }
 
 if __name__ == "__main__":
