@@ -10,6 +10,7 @@ signal title_option(id: String)
 const TITLE_OPTIONS := [
 	["start", "COMEÇAR"],
 	["skins", "APARÊNCIA"],
+	["options", "OPÇÕES"],
 	["controls", "COMANDOS"],
 	["quit", "SAIR"],
 ]
@@ -74,7 +75,12 @@ func close() -> void:
 
 func _menu_open() -> bool:
 	var m := get_tree().get_first_node_in_group("menu")
-	return m != null and m.is_open()
+	if m != null and m.is_open():
+		return true
+	for n in get_parent().get_children():
+		if n is OptionsScreen and n.is_open():
+			return true
+	return false
 
 
 func _process(delta: float) -> void:

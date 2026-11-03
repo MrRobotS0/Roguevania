@@ -149,7 +149,7 @@ func _draw() -> void:
 			draw_rect(Rect2(i.pos + Vector2(-k, k), Vector2.ONE), c)
 			draw_rect(Rect2(i.pos + Vector2(k, -k), Vector2.ONE), c)
 			draw_rect(Rect2(i.pos + Vector2(-k, -k), Vector2.ONE), c)
-		if t < 0.4:
+		if t < 0.4 and Options.flashes():
 			var core := Palette.FLASH
 			core.a = 1.0
 			draw_rect(Rect2(i.pos - Vector2(1, 1), Vector2(3, 3)), core)

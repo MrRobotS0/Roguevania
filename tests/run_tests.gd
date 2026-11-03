@@ -127,6 +127,7 @@ func _ready() -> void:
 	await _case("mercador vende e o item aparece", _merchant)
 	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
 	await _case("jato de fogo e estalactite machucam", _hazards)
+	await _case("opções: volume, tremor e troca de tecla", _options)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -895,3 +896,23 @@ func _hazards() -> void:
 			if p.hp < p.max_hp:
 				break
 		_check(p.hp < p.max_hp, "%s não machucou quem ficou parado" % path.get_file())
+
+
+func _options() -> void:
+	Meta.use_path("user://teste.save", true)
+	Options.reload()
+	var screen := OptionsScreen.new()
+	add_child(screen)
+	screen.change("music", -10)
+	_check(AudioServer.is_bus_mute(AudioServer.get_bus_index("Music")), "música não ficou muda no 0%")
+	screen.change("shake", -10)
+	Fx.shake = 0.0
+	Fx.add_shake(8.0)
+	_check(Fx.shake == 0.0, "tremor com 0%%: %.1f" % Fx.shake)
+	Options.set_value("keys", {"jump": [KEY_W]})
+	var keys: Array = InputMap.action_get_events("jump").filter(func(e: InputEvent) -> bool: return e is InputEventKey)
+	_check(keys.size() == 1 and keys[0].physical_keycode == KEY_W, "pular não virou W")
+	Meta.use_path("user://teste.save", true)
+	Options.reload()
+	_check(Controls.key_name("jump") == "SPACE", "a tecla padrão não voltou (%s)" % Controls.key_name("jump"))
+	screen.queue_free()

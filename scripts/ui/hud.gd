@@ -283,6 +283,12 @@ func _draw_toasts(size: Vector2) -> void:
 
 # Maldição (abaixo dos frascos) e a contagem da Porta do Relógio (no alto).
 func _draw_status(size: Vector2) -> void:
+	if Options.get_value("timer"):
+		var t := Run.time
+		var clock := "%d:%02d.%d" % [int(t) / 60, int(t) % 60, int(t * 10.0) % 10]
+		PixelFont.body(self, clock, Vector2(size.x - 8 - PixelFont.body_width(clock), size.y - 22), Palette.UI_TEXT)
+		var split := "ANDAR %d:%02d" % [int(Run.stage_time) / 60, int(Run.stage_time) % 60]
+		PixelFont.draw(self, split, Vector2(size.x - 8 - PixelFont.width(split), size.y - 11), Palette.UI_DIM)
 	if player.curse > 0:
 		var violet := Color("c08fff")
 		_icon("skull", Vector2(8, 33), violet)

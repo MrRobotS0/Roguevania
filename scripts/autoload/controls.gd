@@ -110,5 +110,40 @@ func _input(event: InputEvent) -> void:
 
 
 func hint(action: String) -> String:
+	if not pad_mode and _custom_hints.has(action):
+		return _custom_hints[action]
 	var table := PAD_HINTS if pad_mode else KEY_HINTS
 	return table.get(action, "?")
+
+
+# --- teclas trocadas pelo jogador (Opções) -------------------------------------------
+
+func apply_bindings(custom: Dictionary) -> void:
+	for action: String in KEYS:
+		if not InputMap.has_action(action):
+			continue
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventKey:
+				InputMap.action_erase_event(action, ev)
+		var codes: Array = custom.get(action, KEYS[action])
+		for code in codes:
+			var key := InputEventKey.new()
+			key.physical_keycode = int(code) as Key
+			InputMap.action_add_event(action, key)
+	_refresh_hints(custom)
+
+
+func key_name(action: String) -> String:
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			return OS.get_keycode_string(ev.physical_keycode).to_upper()
+	return "-"
+
+
+var _custom_hints := {}
+
+
+func _refresh_hints(custom: Dictionary) -> void:
+	_custom_hints.clear()
+	for action in custom:
+		_custom_hints[action] = key_name(action)

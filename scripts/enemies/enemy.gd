@@ -97,7 +97,7 @@ func _update_sprite() -> void:
 	body.offset = Vector2(-fw * 0.5, -fh + 2 + cut)
 	body.flip_h = facing < 0
 	body.scale = _pose()
-	if flash > 0.0:
+	if flash > 0.0 and Options.flashes():
 		body.texture = _white
 	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
 		body.texture = _warn

@@ -755,6 +755,7 @@ func hurt(d: Damage) -> bool:
 	velocity = Vector2(dir * 170.0, -140.0)
 	Fx.hitstop(0.08)
 	Fx.add_shake(5.0)
+	Options.rumble(0.6, 0.4, 0.18)
 	Fx.burst(center(), Palette.HURT, 10, 140.0)
 	Fx.impact(center(), Palette.HURT, false)
 	Sfx.play("hurt")
@@ -858,7 +859,7 @@ func _update_body() -> void:
 		stretch = Vector2(1.0 + _squash * 0.2, 1.0 - _squash * 0.18)
 	body.scale = stretch
 	body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0)
-	body.texture = _white if flash > 0.0 else _tex
+	body.texture = _white if flash > 0.0 and Options.flashes() else _tex
 	_front.queue_redraw()
 
 

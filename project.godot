@@ -15,6 +15,7 @@ Fx="*res://scripts/autoload/fx.gd"
 Sfx="*res://scripts/autoload/sfx.gd"
 Meta="*res://scripts/autoload/meta.gd"
 Run="*res://scripts/autoload/run.gd"
+Options="*res://scripts/autoload/options.gd"
 
 [display]
 

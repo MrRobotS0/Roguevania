@@ -24,7 +24,9 @@ func hitstop(seconds: float) -> void:
 
 
 func add_shake(amount: float) -> void:
-	shake = maxf(shake, amount)
+	shake = maxf(shake, amount * Options.shake_scale())
+	if amount >= 4.0:
+		Options.rumble(0.3, 0.5 * minf(amount / 8.0, 1.0), 0.15)
 
 
 func burst(pos: Vector2, color: Color, count: int, speed: float, life := 0.35, gravity := 500.0, size := 2.0, lift := 0.0) -> void:

@@ -12,6 +12,7 @@ var weather: Weather
 var foreground: Foreground
 var curtain: Curtain
 var map_view: MapView
+var options_screen: OptionsScreen
 var _playing := false
 
 
@@ -72,6 +73,8 @@ func _ready() -> void:
 	front.add_child(screen)
 	menu = Menu.new()
 	front.add_child(menu)
+	options_screen = OptionsScreen.new()
+	front.add_child(options_screen)
 	screen.confirmed.connect(_on_screen_confirmed)
 	screen.title_option.connect(_on_title_option)
 
@@ -132,6 +135,8 @@ func _on_title_option(id: String) -> void:
 			open_skins()
 		"controls":
 			menu.open_text("COMANDOS", CONTROLS)
+		"options":
+			options_screen.open()
 		"quit":
 			get_tree().quit()
 
@@ -238,13 +243,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		Fx.debug = not Fx.debug
 	elif event.is_action_pressed("reset") and _playing:
 		start_run()
-	elif event.is_action_pressed("pause") and _playing and not menu.is_open():
+	elif event.is_action_pressed("pause") and _playing and not menu.is_open() and not options_screen.is_open():
 		_pause()
 
 
 func _pause() -> void:
 	var options: Array[Dictionary] = [
 		{"label": "CONTINUAR", "detail": ""},
+		{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},
 		{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
 		{"label": "DESISTIR DA PARTIDA", "detail": "VOLTA AO TÍTULO; A ESSÊNCIA SE PERDE"},
 	]
@@ -257,8 +263,10 @@ func _pause() -> void:
 
 func _on_pause_pick(i: int) -> void:
 	if i == 1:
-		menu.open_text.call_deferred("COMANDOS", CONTROLS)
+		options_screen.open.call_deferred()
 	elif i == 2:
+		menu.open_text.call_deferred("COMANDOS", CONTROLS)
+	elif i == 3:
 		Meta.record_run(false, level.player.kills)
 		_show_title()
 
