@@ -82,7 +82,7 @@ func _buy(p: Player, o: Dictionary) -> void:
 		"flask":
 			p.max_flasks += 1
 			p.flasks += 1
-	Sfx.play("unlock", -4.0)
+	Sfx.play("merchant_buy", -4.0)
 	p.gear_changed.emit()
 
 

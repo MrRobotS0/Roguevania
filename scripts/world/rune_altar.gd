@@ -39,7 +39,7 @@ func detail() -> String:
 
 func interact(p: Player) -> void:
 	Meta.add_rune(rune)
-	Sfx.play("fragment")
+	Sfx.play("rune")
 	Fx.add_shake(4.0)
 	Fx.burst(global_position + Vector2(0, -20), Palette.ESSENCE, 30, 160.0, 0.8, -30.0)
 	Fx.banner(String(RUNES[rune]["title"]).to_upper(), RUNES[rune]["detail"])

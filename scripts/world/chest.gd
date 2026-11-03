@@ -41,6 +41,7 @@ func interact(p: Player) -> void:
 	menu().open_choice("BAÚ MALDITO", "UMA VOZ PROMETE MUITO. NÃO DIZ O PREÇO.", options, func(i: int) -> void:
 		if i == 0:
 			p.curse = CURSE_KILLS
+			Sfx.play("curse")
 			_open(p))
 
 

@@ -37,6 +37,8 @@ func think(delta: float) -> void:
 				set_state("vanish")
 		"vanish":
 			velocity.x = 0.0
+			if state_time == 0.0 or state_time < get_physics_process_delta_time():
+				Sfx.play("teleport", -8.0)
 			_alpha = 1.0 - clampf(state_time / 0.25, 0.0, 1.0)
 			if state_time >= 0.25:
 				var side := 1 if player.facing > 0 else -1

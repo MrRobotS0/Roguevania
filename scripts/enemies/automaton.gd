@@ -32,6 +32,7 @@ func think(delta: float) -> void:
 			velocity.x = 0.0 if blocked(facing) or absf(d.x) < 60.0 else facing * 30.0
 			if _cd <= 0.0 and sees_player(260.0, 40.0):
 				set_state("aim")
+				Sfx.play("laser_charge", -8.0)
 		"aim":
 			velocity.x = 0.0
 			if state_time >= 0.8:
@@ -47,6 +48,7 @@ func think(delta: float) -> void:
 				beam.damage = 18.0
 				beam.position = global_position + Vector2(facing * 134.0, -12.0)
 				get_parent().add_child(beam)
+				Sfx.play("laser_fire", -4.0)
 				set_state("idle")
 
 

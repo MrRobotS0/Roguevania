@@ -38,7 +38,7 @@ func _physics_process(delta: float) -> void:
 			player.add_gold(1)
 		else:
 			player.add_essence(1)
-		Sfx.play("essence", -14.0, 0.2)
+		Sfx.play("coin" if kind == "gold" else "essence", -14.0, 0.2)
 		queue_free()
 	queue_redraw()
 

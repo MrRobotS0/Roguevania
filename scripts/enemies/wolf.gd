@@ -53,7 +53,7 @@ func think(delta: float) -> void:
 				_hit = false
 				velocity = Vector2(facing * LUNGE, -110.0)
 				set_state("lunge")
-				Sfx.play("swing", -6.0)
+				Sfx.play("wolf_bite", -4.0)
 		"lunge":
 			if not _hit:
 				_hit = strike(front_rect(16.0, 14.0, 0.0), BITE, 180.0)

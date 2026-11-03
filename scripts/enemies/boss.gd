@@ -36,6 +36,7 @@ var _clock := 0.0
 var _alpha := 1.0
 var _last := -1
 var aggro_range := 0.0       # > 0: modo elite (só age quando vê o herói, sem apresentação)
+var sounds := {}             # tipo de golpe -> som (o padrão está em _sound)
 
 
 func _ready() -> void:
@@ -44,6 +45,8 @@ func _ready() -> void:
 	unstoppable = true
 	poise = 1.0
 	set_state("idle" if aggro_range > 0.0 else "intro")
+	if aggro_range <= 0.0:
+		Sfx.play("boss_intro", -2.0)
 	if arena.size == Vector2.ZERO:
 		arena = Rect2(global_position.x - 240.0, global_position.y - 200.0, 480.0, 200.0)
 
@@ -64,7 +67,7 @@ func hurt(d: Damage) -> bool:
 		phase_changed.emit(2)
 		Fx.add_shake(6.0)
 		Fx.toast(title + " SE ENFURECE")
-		Sfx.play("roar")
+		Sfx.play("boss_phase")
 		set_state("idle")
 	return hit
 
@@ -159,6 +162,8 @@ func think(delta: float) -> void:
 			if state_time >= 1.6:
 				set_state("chase" if aggro_range > 0.0 else "idle")
 		"vanish":
+			if state_time < get_physics_process_delta_time() * 1.5:
+				Sfx.play("teleport", -6.0)
 			_alpha = 1.0 - clampf(state_time / 0.3, 0.0, 1.0)
 			if state_time >= 0.3:
 				var side := -1 if d.x > 0.0 else 1
@@ -174,17 +179,24 @@ func think(delta: float) -> void:
 				set_state("windup")
 
 
+func _sound(kind: String) -> String:
+	if sounds.has(kind):
+		return sounds[kind]
+	return {"melee": "swing_heavy", "leap": "swing", "charge": "swing", "volley": "bow", "rain": "omen",
+		"summon": "omen", "beam": "laser_charge", "wave": "hammer_slam", "teleport": "teleport"}.get(kind, "swing")
+
+
 func _act_start() -> void:
 	var m := _move
+	Sfx.play(_sound(m["type"]), -4.0)
 	match m["type"]:
 		"melee":
-			Sfx.play("swing_heavy", -4.0)
+			pass
 		"leap":
 			var dx := clampf(player.global_position.x - global_position.x, -260.0, 260.0)
 			velocity = Vector2(dx / 0.7, -360.0)
 		"charge":
 			velocity.x = facing * float(m.get("speed", 300.0))
-			Sfx.play("swing", -4.0)
 		"summon":
 			for i in int(m.get("count", 2)):
 				var side := -1 if i % 2 == 0 else 1
@@ -226,7 +238,6 @@ func _act_start() -> void:
 				p.damage.unblockable = true
 				get_parent().add_child(p)
 			Fx.add_shake(5.0)
-			Sfx.play("slam")
 
 
 func _act_update(delta: float) -> void:
@@ -302,7 +313,6 @@ func _volley(m: Dictionary) -> void:
 		p.damage = Damage.make(float(m.get("damage", 14.0)), facing, 100.0)
 		p.damage.source = self
 		get_parent().add_child(p)
-	Sfx.play("bow", -8.0)
 
 
 func _rain(m: Dictionary) -> void:

@@ -16,6 +16,7 @@ func _init() -> void:
 	weight = 5.0
 	walk_speed = 90.0
 	keep_distance = 0.0
+	sounds = {"summon": "howl", "charge": "wolf_bite", "melee": "wolf_bite", "volley": "turret_shot"}
 	essence_drop = Vector2i(70, 70)
 
 	moves = [

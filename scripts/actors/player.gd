@@ -548,6 +548,7 @@ func _use_skill(slot: int) -> bool:
 			get_parent().add_child(thing)
 		"hook":
 			var p := _skill_projectile("chain", Vector2(facing * 520.0, 0), power)
+			Sfx.play("chain_throw", -6.0)
 			p.life = float(data.params.get("range", 150.0)) / 520.0
 			p.pull = true
 			p.damage.status = {"stun": 0.6}

@@ -16,6 +16,7 @@ func _init() -> void:
 	keep_distance = 0.0
 	aggro_range = 220.0
 	rest_every = 4
+	sounds = {"melee": "hammer_slam"}
 	essence_drop = Vector2i(3, 5)
 	moves = [
 		{"type": "melee", "windup": 0.7, "reach": 52.0, "height": 34.0, "damage": 24.0, "status": {"burn": 2.5}, "max_range": 80.0},

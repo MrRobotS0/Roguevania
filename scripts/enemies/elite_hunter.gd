@@ -16,6 +16,7 @@ func _init() -> void:
 	keep_distance = 0.0
 	aggro_range = 220.0
 	rest_every = 4
+	sounds = {"volley": "turret_shot", "charge": "wolf_bite"}
 	essence_drop = Vector2i(3, 5)
 	moves = [
 		{"type": "volley", "windup": 0.55, "style": "shard", "count": 3, "spread": 0.12, "speed": 300.0, "damage": 14.0},

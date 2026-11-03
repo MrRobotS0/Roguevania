@@ -16,6 +16,7 @@ func _init() -> void:
 	keep_distance = 0.0
 	aggro_range = 220.0
 	rest_every = 4
+	sounds = {"volley": "thorn_shoot", "rain": "moss_charge"}
 	essence_drop = Vector2i(3, 5)
 	moves = [
 		{"type": "rain", "windup": 0.6, "style": "vine", "count": 3, "width": 18.0, "height": 46.0, "predict": true, "damage": 16.0},

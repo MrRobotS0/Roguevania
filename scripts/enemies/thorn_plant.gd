@@ -50,7 +50,7 @@ func think(delta: float) -> void:
 					p.damage = Damage.make(11, facing, 80.0)
 					p.damage.source = self
 					get_parent().add_child(p)
-				Sfx.play("bow", -8.0)
+				Sfx.play("thorn_shoot", -6.0)
 				set_state("attack")
 		"attack":
 			if state_time >= 0.3:

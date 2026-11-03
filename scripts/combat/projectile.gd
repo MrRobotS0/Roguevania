@@ -99,7 +99,7 @@ func _physics_process(delta: float) -> void:
 		if landed and pull and is_instance_valid(source):
 			var toward := source.global_position - t.global_position
 			t.velocity = Vector2(signf(toward.x) * minf(absf(toward.x) * 6.0, 340.0), -90.0)
-			Sfx.play("block", -6.0)
+			Sfx.play("chain_pull", -4.0)
 			queue_free()
 			return
 		if landed:

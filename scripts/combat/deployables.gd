@@ -24,6 +24,7 @@ func _ready() -> void:
 		"spirit":
 			_light = Glow.attach(self, Color("ffb36b"), 44.0, 0.9)
 	Fx.burst(global_position + Vector2(0, -6), Palette.DUST, 6, 60.0, 0.3)
+	Sfx.play({"trap": "trap_set", "turret": "trap_set", "spirit": "spirit_call"}.get(kind, "trap_set"), -6.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -44,7 +45,8 @@ func _physics_process(delta: float) -> void:
 						var d := Damage.make(damage, 1 if e.global_position.x >= global_position.x else -1, 20.0)
 						d.source = owner_player
 						d.status = {"stun": 0.15}
-						e.hurt(d)
+						if e.hurt(d):
+							Sfx.play("trap_cut", -10.0)
 		"turret":
 			if _clock <= 0.0:
 				var target := _nearest(float(params.get("range", 170.0)), true)
@@ -60,7 +62,7 @@ func _physics_process(delta: float) -> void:
 					p.damage = Damage.make(damage, 1, 40.0)
 					p.damage.source = owner_player
 					get_parent().add_child(p)
-					Sfx.play("bow", -12.0)
+					Sfx.play("turret_shot", -10.0)
 		"spirit":
 			var target := _nearest(260.0, false)
 			var goal := target.center() if target else owner_player.center() + Vector2(-owner_player.facing * 16, -18)

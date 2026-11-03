@@ -232,7 +232,7 @@ func strike_cracked(hit: Rect2) -> bool:
 			if c is Chunk:
 				c.queue_redraw()
 		Fx.add_shake(5.0)
-		Sfx.play("slam")
+		Sfx.play("wall_break")
 		return true
 	return false
 

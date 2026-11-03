@@ -122,6 +122,39 @@ SOUNDS = {
     "ui_open": lambda: tone(0.06, 440, 660, "pulse", 0.15),
     "ui_ok": lambda: seq(tone(0.05, 660, 660, "pulse", 0.2), tone(0.08, 990, 990, "pulse", 0.2)),
     "ui_move": lambda: tone(0.03, 880, 880, "pulse", 0.12),
+    # habilidades
+    "trap_set": lambda: seq(tone(0.04, 1800, 1700, "pulse", 0.2), tone(0.05, 1400, 1300, "pulse", 0.2), noise(0.06, 0.2, smooth=0.1)),
+    "trap_cut": lambda: mix(tone(0.06, 2400, 1200, "saw", 0.18), noise(0.05, 0.2, smooth=0.05)),
+    "turret_shot": lambda: mix(tone(0.08, 2200, 1600, "sine", 0.3), tone(0.05, 3300, 2400, "tri", 0.15)),
+    "spirit_call": lambda: mix(tone(0.5, 300, 900, "sine", 0.3, attack=0.1, vibrato=0.03), noise(0.4, 0.15, smooth=0.95, decay=0.8)),
+    "chain_throw": lambda: seq(*[tone(0.025, 1500 + 200 * (i % 2), 1400, "pulse", 0.15) for i in range(6)]),
+    "chain_pull": lambda: mix(tone(0.15, 300, 120, "square", 0.3), noise(0.12, 0.35, smooth=0.3)),
+    # inimigos novos
+    "wolf_bite": lambda: mix(tone(0.12, 180, 90, "saw", 0.35, vibrato=0.08), noise(0.06, 0.5, smooth=0.2)),
+    "howl": lambda: tone(1.2, 300, 520, "sine", 0.4, attack=0.2, curve=0.5, vibrato=0.04),
+    "hammer_slam": lambda: mix(tone(0.5, 1180, 1150, "sine", 0.25), tone(0.5, 1730, 1700, "sine", 0.15), noise(0.4, 0.8, smooth=0.85), tone(0.3, 90, 35, "tri", 0.5)),
+    "slag_hop": lambda: mix(tone(0.12, 120, 220, "sine", 0.35), noise(0.1, 0.25, smooth=0.9)),
+    "glyph": lambda: seq(tone(0.07, 1320, 1320, "tri", 0.2), tone(0.07, 1760, 1760, "tri", 0.2), tone(0.12, 1480, 1480, "sine", 0.2)),
+    "gargoyle_screech": lambda: tone(0.35, 1400, 700, "saw", 0.25, vibrato=0.06),
+    "thorn_shoot": lambda: mix(noise(0.08, 0.35, smooth=0.3, decay=2.0), tone(0.08, 700, 300, "tri", 0.2)),
+    "moss_charge": lambda: mix(noise(0.6, 0.5, smooth=0.95, decay=0.8), tone(0.5, 70, 50, "saw", 0.3)),
+    "teleport": lambda: tone(0.25, 1800, 200, "sine", 0.3, curve=0.4, vibrato=0.05),
+    "bell": lambda: mix(tone(1.4, 330, 330, "sine", 0.35), tone(1.2, 830, 830, "sine", 0.15), tone(0.8, 1650, 1650, "sine", 0.06)),
+    "laser_charge": lambda: tone(0.7, 200, 1600, "pulse", 0.2, attack=0.2, curve=1.6),
+    "laser_fire": lambda: mix(tone(0.35, 1600, 1500, "saw", 0.3), noise(0.35, 0.4, smooth=0.4)),
+    "star_pop": lambda: mix(tone(0.2, 2000, 400, "sine", 0.35), noise(0.25, 0.5, smooth=0.5)),
+    # chefes
+    "boss_intro": lambda: seq(tone(0.3, 110, 110, "saw", 0.4), tone(0.3, 104, 104, "saw", 0.4), tone(0.9, 82, 70, "saw", 0.5, vibrato=0.02)),
+    "boss_phase": lambda: mix(tone(0.9, 140, 60, "saw", 0.5, vibrato=0.06), noise(0.9, 0.5, smooth=0.9, decay=1.0), tone(0.6, 600, 1200, "sine", 0.15)),
+    # mundo
+    "coin": lambda: seq(tone(0.04, 1568, 1568, "pulse", 0.18), tone(0.08, 2093, 2093, "pulse", 0.18)),
+    "blueprint": lambda: seq(noise(0.08, 0.2, smooth=0.3), tone(0.1, 660, 660, "tri", 0.3), tone(0.18, 990, 990, "tri", 0.3)),
+    "rune": lambda: mix(tone(1.4, 220, 220, "sine", 0.3), tone(1.4, 330, 332, "sine", 0.25), tone(1.4, 440, 444, "sine", 0.2), tone(1.0, 880, 1760, "sine", 0.1, curve=0.5)),
+    "mutation": lambda: mix(tone(0.5, 200, 400, "saw", 0.2, vibrato=0.05), tone(0.5, 300, 600, "sine", 0.2)),
+    "merchant_buy": lambda: seq(tone(0.04, 1318, 1318, "pulse", 0.15), tone(0.04, 1568, 1568, "pulse", 0.15), tone(0.04, 1760, 1760, "pulse", 0.15), noise(0.08, 0.2, smooth=0.1)),
+    "curse": lambda: mix(tone(0.9, 220, 110, "saw", 0.3, vibrato=0.04), tone(0.9, 233, 117, "saw", 0.25)),
+    "door_close": lambda: seq(tone(0.1, 200, 180, "square", 0.3), noise(0.3, 0.5, smooth=0.9)),
+    "wall_break": lambda: mix(noise(0.5, 0.9, smooth=0.7, decay=1.4), tone(0.3, 160, 50, "square", 0.4)),
 }
 
 if __name__ == "__main__":

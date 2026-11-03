@@ -28,7 +28,7 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(player) and player.alive() and player.center().distance_to(global_position) < 14.0:
 		player.blueprints.append(item.id)
 		player.gear_changed.emit()
-		Sfx.play("fragment", -4.0)
+		Sfx.play("blueprint", -4.0)
 		Fx.burst(global_position, Palette.GLASS, 14, 90.0, 0.5, -40.0)
 		Fx.toast("PLANTA: %s · LEVE ATÉ A VIGIA" % String(item.title).to_upper())
 		queue_free()

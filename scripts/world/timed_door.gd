@@ -42,6 +42,7 @@ func _process(delta: float) -> void:
 	if time_left() <= 0.0:
 		_shut = true
 		Fx.toast("A PORTA DO RELÓGIO SE FECHOU")
+		Sfx.play("door_close", -4.0)
 		return
 	if is_instance_valid(player) and player.global_position.distance_to(global_position) < 40.0:
 		is_open = true

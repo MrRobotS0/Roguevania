@@ -48,7 +48,7 @@ func think(delta: float) -> void:
 			if state_time >= 0.5:
 				_dive_dir = (player.center() - center()).normalized()
 				set_state("dive")
-				Sfx.play("swing", -6.0)
+				Sfx.play("gargoyle_screech", -8.0)
 		"dive":
 			velocity = _dive_dir * DIVE
 			strike(hurt_rect().grow(3.0), 15, 160.0)

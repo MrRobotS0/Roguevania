@@ -50,7 +50,7 @@ func think(delta: float) -> void:
 					_hop_clock = HOP_EVERY
 					face_player()
 					velocity = Vector2(facing * HOP.x * clampf(absf(d.x) / 80.0, 0.4, 1.0), HOP.y)
-					Sfx.play("land", -12.0)
+					Sfx.play("slag_hop", -12.0)
 
 
 func _die() -> void:

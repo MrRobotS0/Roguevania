@@ -51,7 +51,7 @@ func _boom() -> void:
 		d.unblockable = true
 		player.hurt(d)
 	Fx.burst(center(), Color("c08fff") if look == "wisp" else Palette.GLASS, 18, 150.0, 0.4, 100.0)
-	Sfx.play("boom", -6.0)
+	Sfx.play("star_pop", -4.0)
 	hp = 0
 	super._die()
 

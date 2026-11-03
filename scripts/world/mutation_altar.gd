@@ -51,7 +51,7 @@ func interact(p: Player) -> void:
 		func(i: int) -> void:
 			p.add_mutation(picks[i]["id"])
 			used = true
-			Sfx.play("fragment")
+			Sfx.play("mutation")
 			Fx.burst(global_position + Vector2(0, -16), Color("b8f06a"), 18, 100.0, 0.6, -40.0)
 			Fx.toast(String(picks[i]["title"]).to_upper()), false)
 

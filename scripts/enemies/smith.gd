@@ -62,7 +62,7 @@ func think(delta: float) -> void:
 				strike(splash, SLAM_DAMAGE * 0.5, 160.0, {"status": {"burn": 2.5}})
 				Fx.burst(global_position + Vector2(facing * 24, -2), Palette.BURN, 20, 170.0, 0.5, 300.0, 2.0, 60.0)
 				Fx.add_shake(5.0)
-				Sfx.play("slam")
+				Sfx.play("hammer_slam", -2.0)
 			if state_time >= 0.6:
 				set_state("chase")
 

@@ -40,7 +40,7 @@ func think(delta: float) -> void:
 			velocity.x = 0.0
 			if state_time >= 0.6:
 				set_state("charge")
-				Sfx.play("swing_heavy", -6.0)
+				Sfx.play("moss_charge", -4.0)
 		"charge":
 			velocity.x = facing * CHARGE
 			strike(front_rect(14.0, h, 0.0), 20, 240.0)

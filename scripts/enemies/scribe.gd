@@ -54,7 +54,7 @@ func think(delta: float) -> void:
 				p.damage = Damage.make(13, facing, 90.0)
 				p.damage.source = self
 				get_parent().add_child(p)
-				Sfx.play("omen", -10.0)
+				Sfx.play("glyph", -8.0)
 				set_state("idle")
 
 

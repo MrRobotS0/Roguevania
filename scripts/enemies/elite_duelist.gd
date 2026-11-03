@@ -16,6 +16,7 @@ func _init() -> void:
 	keep_distance = 0.0
 	aggro_range = 220.0
 	rest_every = 4
+	sounds = {}
 	essence_drop = Vector2i(3, 5)
 	moves = [
 		{"type": "teleport", "reach": 44.0, "damage": 18.0},

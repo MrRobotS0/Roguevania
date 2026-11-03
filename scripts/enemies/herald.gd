@@ -40,7 +40,7 @@ func think(delta: float) -> void:
 					w2.essence_drop = Vector2i(0, 0)
 					w2.position = global_position + Vector2((i * 2 - 1) * 18.0, -22.0)
 					get_parent().add_child(w2)
-				Sfx.play("omen", -6.0)
+				Sfx.play("bell", -4.0)
 				set_state("idle")
 
 
