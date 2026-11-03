@@ -9,8 +9,10 @@ signal title_option(id: String)
 
 const TITLE_OPTIONS := [
 	["start", "COMEÇAR"],
+	["daily", "DESAFIO DO DIA"],
 	["skins", "APARÊNCIA"],
 	["options", "OPÇÕES"],
+	["stats", "ESTATÍSTICAS"],
 	["controls", "COMANDOS"],
 	["quit", "SAIR"],
 ]
@@ -49,7 +51,7 @@ func show_death(p: Player, place: String) -> void:
 func show_victory(p: Player) -> void:
 	mode = "victory"
 	lines = [
-		["O IMPERADOR CEGO CAIU EM " + _clock(Run.time), Palette.UI_TEXT],
+		["O IMPERADOR CEGO CAIU EM " + _clock(Run.time) + ("   ·   NOVO RECORDE!" if Run.get_meta("record", false) else ""), Palette.UI_TEXT],
 		["%d INIMIGOS DERROTADOS" % p.kills, Palette.UI_DIM],
 		["CAMINHO: " + " > ".join(PackedStringArray(Run.path.map(func(id: String) -> String: return String(Catalog.STAGE_NAMES.get(id, id)).trim_prefix("O ").trim_prefix("A ").trim_prefix("Os ")))).to_upper(), Palette.GOLD],
 		[("BRASAS DO DEUS LIBERADAS: %d" % mini(Run.heat + 1, Run.MAX_HEAT)) if Run.heat < Run.MAX_HEAT else "VOCÊ VENCEU COM TODAS AS BRASAS.", Palette.BURN],
@@ -122,15 +124,15 @@ func _draw() -> void:
 	match mode:
 		"title":
 			_embers(size)
-			PixelFont.body_centered(self, "O LEGADO", Vector2(mid, 58), Palette.UI_TEXT, 3)
-			PixelFont.body_centered(self, "DOS DEUSES", Vector2(mid, 86), Palette.GOLD, 3)
-			PixelFont.body_centered(self, "OS DEUSES SUMIRAM. SEUS DOMÍNIOS FICARAM.", Vector2(mid, 112), Palette.UI_DIM)
-			_title_menu(Vector2(mid, 140))
+			PixelFont.body_centered(self, "O LEGADO", Vector2(mid, 46), Palette.UI_TEXT, 3)
+			PixelFont.body_centered(self, "DOS DEUSES", Vector2(mid, 74), Palette.GOLD, 3)
+			PixelFont.body_centered(self, "OS DEUSES SUMIRAM. SEUS DOMÍNIOS FICARAM.", Vector2(mid, 100), Palette.UI_DIM)
+			_title_menu(Vector2(mid, 128))
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
 		"victory":
 			PixelFont.body_centered(self, "A JORNADA TERMINOU", Vector2(mid, 70), Palette.GOLD, 2)
-	var y := size.y - 34.0 if mode == "title" else 106.0
+	var y := size.y - 28.0 if mode == "title" else 106.0
 	for l in lines:
 		PixelFont.body_centered(self, l[0], Vector2(mid, y), l[1])
 		y += PixelFont.BODY_LINE
@@ -143,7 +145,7 @@ func _draw() -> void:
 func _title_menu(top: Vector2) -> void:
 	for i in TITLE_OPTIONS.size():
 		var label: String = TITLE_OPTIONS[i][1]
-		var y := top.y + i * 14.0
+		var y := top.y + i * 13.0
 		var selected := i == _index
 		if selected:
 			var w := PixelFont.body_width(label) + 24.0

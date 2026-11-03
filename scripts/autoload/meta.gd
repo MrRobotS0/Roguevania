@@ -23,7 +23,8 @@ func use_path(p: String, wipe := false) -> void:
 
 func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
-		"blueprints": [], "runes": [], "heat": 0}
+		"blueprints": [], "runes": [], "heat": 0,
+		"stats": {}, "daily": {}, "best_time": 0.0}
 
 
 func _load() -> void:
@@ -127,3 +128,70 @@ func record_heat_win(level: int) -> void:
 	if level + 1 > int(data["heat"]):
 		data["heat"] = mini(level + 1, 4)
 		save()
+
+
+# --- estatísticas, recorde e desafio do dia -------------------------------------------
+
+func _add(table: String, key: String, n: int) -> void:
+	var st: Dictionary = data["stats"]
+	if not st.has(table):
+		st[table] = {}
+	st[table][key] = int(st[table].get(key, 0)) + n
+
+
+# Chamado no fim de toda partida (morte, vitória ou desistência).
+func record_stats(won: bool) -> bool:
+	for k in Run.kills_by:
+		_add("kills_by", k, Run.kills_by[k])
+	for k in Run.weapon_kills:
+		_add("weapon_kills", k, Run.weapon_kills[k])
+	if not won and Run.killer != "":
+		_add("deaths_by", Run.killer, 1)
+	_add("reached", Run.stage_id, 1)
+	var st: Dictionary = data["stats"]
+	st["deepest"] = maxi(int(st.get("deepest", 0)), Run.path.size())
+	st["time"] = float(st.get("time", 0.0)) + Run.time
+	var record := false
+	if won and (float(data["best_time"]) <= 0.0 or Run.time < float(data["best_time"])):
+		data["best_time"] = Run.time
+		record = true
+	if Run.daily != "":
+		var day: Dictionary = data["daily"].get(Run.daily, {"tries": 0, "best_depth": 0, "best_time": 0.0})
+		day["tries"] = int(day["tries"]) + 1
+		day["best_depth"] = maxi(int(day["best_depth"]), Run.path.size())
+		if won and (float(day["best_time"]) <= 0.0 or Run.time < float(day["best_time"])):
+			day["best_time"] = Run.time
+		data["daily"][Run.daily] = day
+	save()
+	return record
+
+
+func stats_text() -> String:
+	var st: Dictionary = data["stats"]
+	var lines := PackedStringArray()
+	var clock := func(t: float) -> String: return "%d:%02d" % [int(t) / 60, int(t) % 60]
+	lines.append("PARTIDAS %d · VITÓRIAS %d · MORTES %d" % [data["runs"], data["wins"], data["deaths"]])
+	lines.append("ANDAR MAIS FUNDO: %d DE 8 · TEMPO JOGADO: %s" % [int(st.get("deepest", 0)), clock.call(float(st.get("time", 0.0)))])
+	if float(data["best_time"]) > 0.0:
+		lines.append("MELHOR VITÓRIA: %s" % clock.call(float(data["best_time"])))
+	lines.append("")
+	for pair in [["deaths_by", "QUEM MAIS TE MATOU"], ["kills_by", "QUEM VOCÊ MAIS MATOU"], ["weapon_kills", "SUAS ARMAS FAVORITAS"]]:
+		var table: Dictionary = st.get(pair[0], {})
+		if table.is_empty():
+			continue
+		var keys := table.keys()
+		keys.sort_custom(func(a, b) -> bool: return int(table[a]) > int(table[b]))
+		var top := PackedStringArray()
+		for k in keys.slice(0, 3):
+			var name := String(k)
+			if pair[0] == "weapon_kills":
+				var r := Catalog.find(name)
+				name = r.title if r else name
+			top.append("%s (%d)" % [name.to_upper(), int(table[k])])
+		lines.append("%s: %s" % [pair[1], ", ".join(top)])
+	var today: Dictionary = data["daily"].get(Run.today(), {})
+	if not today.is_empty():
+		lines.append("")
+		lines.append("DESAFIO DE HOJE: %d TENTATIVAS · MAIS FUNDO %d%s" % [today["tries"], today["best_depth"],
+			(" · VENCEU EM " + clock.call(float(today["best_time"]))) if float(today["best_time"]) > 0.0 else ""])
+	return "\n".join(lines)

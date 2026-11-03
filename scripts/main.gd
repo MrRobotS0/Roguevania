@@ -138,6 +138,13 @@ func _on_title_option(id: String) -> void:
 			menu.open_text("COMANDOS", CONTROLS)
 		"options":
 			options_screen.open()
+		"stats":
+			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
+		"daily":
+			screen.close()
+			Run.new_daily()
+			_load_stage()
+			Fx.toast("DESAFIO DO DIA " + Run.daily + " · MESMA SEMENTE PARA TODOS")
 		"quit":
 			get_tree().quit()
 
@@ -222,6 +229,7 @@ func _on_exit(dest: String) -> void:
 			Run.active = false
 			Meta.record_run(true, level.player.kills)
 			Meta.record_heat_win(Run.heat)
+			Run.set_meta("record", Meta.record_stats(true))
 			screen.show_victory(level.player)
 			Music.play("titulo")
 			return
@@ -240,6 +248,7 @@ func _on_player_died() -> void:
 	_playing = false
 	Run.active = false
 	Meta.record_run(false, level.player.kills)
+	Meta.record_stats(false)
 	var place := level.biome.title if level.biome else "TREINO"
 	if level.is_boss_room:
 		place = "O Trono do Imperador Cego"
@@ -277,8 +286,8 @@ func _on_pause_pick(i: int) -> void:
 		menu.open_text.call_deferred("COMANDOS", CONTROLS)
 	elif i == 3:
 		Meta.record_run(false, level.player.kills)
+		Meta.record_stats(false)
 		_show_title()
 
 
-const CONTROLS := "M OU TAB (SEGURE): MAPA
-A / D  OU SETAS: ANDAR\nESPAÇO: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nU: HABILIDADE 1   I: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nQ: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"
+const CONTROLS := "M OU TAB (SEGURE): MAPA\nA / D  OU SETAS: ANDAR\nESPAÇO: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nU: HABILIDADE 1   I: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nQ: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"

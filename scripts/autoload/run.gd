@@ -38,6 +38,10 @@ var time := 0.0
 var stage_time := 0.0
 var heat := 0              # Brasas do Deus: dificuldade escolhida no título
 var stage_tier := 0        # profundidade do andar atual (inimigos ficam mais fortes)
+var daily := ""            # data do desafio do dia ("" = partida normal)
+var kills_by := {}         # título do inimigo -> abates nesta partida
+var weapon_kills := {}     # id da arma/habilidade -> abates nesta partida
+var killer := ""           # quem deu o último golpe no herói
 var active := false
 
 
@@ -51,6 +55,10 @@ func new_run(seed_override := -1, heat_level := 0) -> void:
 	stage_time = 0.0
 	heat = clampi(heat_level, 0, MAX_HEAT)
 	stage_tier = 0
+	daily = ""
+	kills_by = {}
+	weapon_kills = {}
+	killer = ""
 	active = true
 
 
@@ -152,3 +160,27 @@ func load_player(p: Player) -> void:
 	p.blueprints.assign(carry.get("blueprints", []))
 	p.recompute_max_hp()
 	p.hp = clampi(carry["hp"], 1, p.max_hp)
+
+
+# --- desafio do dia ------------------------------------------------------------------
+# Mesma semente para qualquer um no mesmo dia: dá para comparar com os amigos.
+
+static func today() -> String:
+	var d := Time.get_date_dict_from_system()
+	return "%04d-%02d-%02d" % [d["year"], d["month"], d["day"]]
+
+
+static func daily_seed(date: String) -> int:
+	return absi(hash("legado-" + date)) % 2147483647
+
+
+func new_daily() -> void:
+	var date := today()
+	new_run(daily_seed(date), 0)
+	daily = date
+
+
+func note_kill(enemy_title: String, weapon_id: String) -> void:
+	kills_by[enemy_title] = int(kills_by.get(enemy_title, 0)) + 1
+	if weapon_id != "":
+		weapon_kills[weapon_id] = int(weapon_kills.get(weapon_id, 0)) + 1

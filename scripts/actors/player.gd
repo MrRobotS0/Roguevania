@@ -52,6 +52,7 @@ var gold := 0               # ouro: gasto na partida (mercador); some ao morrer
 var mutations: Array[String] = []
 var blueprints: Array[String] = []   # plantas achadas, entregues na próxima Vigia
 var curse := 0              # baú maldito: qualquer golpe mata até matar `curse` inimigos
+var last_used := ""         # id da última arma/habilidade usada (estatísticas)
 var _air_jumps := 0
 var _rage := 0.0
 
@@ -355,6 +356,8 @@ func _climb_state() -> void:
 # --- armas --------------------------------------------------------------------
 
 func _use_weapon(slot: int) -> bool:
+	if weapon(slot):
+		last_used = weapon(slot).data.id
 	var g := weapon(slot)
 	if g == null:
 		return false
@@ -514,6 +517,7 @@ func _use_skill(slot: int) -> bool:
 	var g := skill(slot)
 	if g == null or skill_cd[slot] > 0.0:
 		return false
+	last_used = g.data.id
 	var data: SkillData = g.data
 	var power := data.damage * g.power() * stat_mult(data.stat)
 	match data.kind:
@@ -741,8 +745,10 @@ func boost(d: Damage) -> void:
 		d.amount *= 1.2
 
 
-func on_kill(_e: Node) -> void:
+func on_kill(e: Node) -> void:
 	kills += 1
+	if e is Enemy:
+		Run.note_kill(e.title, last_used)
 	if has_mutation("sangue_quente") and alive():
 		heal(maxi(2, roundi(max_hp * 0.03)))
 	if curse > 0:
@@ -767,6 +773,8 @@ func hurt(d: Damage) -> bool:
 	if _guard(d):
 		return false
 	hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 0)
+	if is_instance_valid(d.source) and d.source is Enemy:
+		Run.killer = d.source.title
 	if curse > 0:
 		hp = 0
 		Fx.toast("A MALDIÇÃO COBROU")

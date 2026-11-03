@@ -17,7 +17,7 @@ Ordem de execução (cada etapa termina com testes passando e commit):
       Observatório Celeste: cores, salas, fundo, clima, perigo, 2 inimigos e chefe cada.
       Rota final:
       Mar → [Salões | Forja] → chefe → [Torre | Jardim] → chefe → [Carcosa | Observatório] → chefe → Trono
-- [ ] **F. Extras** — desafio do dia (semente da data), tela de estatísticas,
+- [x] **F. Extras** — desafio do dia (semente da data), tela de estatísticas,
       cronômetro de speedrun com melhor tempo, vibração.
 - [ ] **G.** README, MegaBrain Pessoal, memória.
 

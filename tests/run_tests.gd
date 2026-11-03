@@ -132,6 +132,7 @@ func _ready() -> void:
 	await _case("afixos: afiada dá mais dano, vampira cura", _affixes)
 	await _case("os 7 guardiões lutam e acertam o herói", _bosses)
 	await _case("inimigos dos domínios novos acertam", _domain_enemies)
+	await _case("desafio do dia, estatísticas e recorde", _extras)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1020,3 +1021,25 @@ func _domain_enemies() -> void:
 			if p.hp < p.max_hp:
 				break
 		_check(p.hp < p.max_hp, "%s não acertou o herói" % name)
+
+
+func _extras() -> void:
+	Meta.use_path("user://teste.save", true)
+	_check(Run.daily_seed("2026-11-03") == Run.daily_seed("2026-11-03"), "semente do dia muda")
+	_check(Run.daily_seed("2026-11-03") != Run.daily_seed("2026-11-04"), "dias diferentes, mesma semente")
+	Run.new_daily()
+	_check(Run.daily == Run.today() and Run.seed_value == Run.daily_seed(Run.today()), "desafio não usou a semente do dia")
+	Run.note_kill("PENITENTE", "espada_cerimonial")
+	Run.note_kill("PENITENTE", "espada_cerimonial")
+	Run.killer = "LOBO PÁLIDO"
+	Run.time = 300.0
+	Meta.record_stats(false)
+	var st: Dictionary = Meta.data["stats"]
+	_check(int(st["kills_by"]["PENITENTE"]) == 2, "abates não somaram")
+	_check(int(st["deaths_by"]["LOBO PÁLIDO"]) == 1, "quem matou não ficou salvo")
+	_check(int(Meta.data["daily"][Run.today()]["tries"]) == 1, "tentativa do dia não contou")
+	_check(Meta.record_stats(true), "a primeira vitória não virou recorde")
+	Run.time = 400.0
+	_check(not Meta.record_stats(true), "vitória mais lenta virou recorde")
+	_check(Meta.stats_text().contains("QUEM MAIS TE MATOU"), "tela de estatísticas incompleta")
+	Meta.use_path("user://teste.save", true)
