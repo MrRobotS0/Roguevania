@@ -4,7 +4,7 @@ extends RefCounted
 # O herói lê o controle por aqui, nunca direto do Input. Assim os testes e
 # as demonstrações trocam o controle por um roteiro (ScriptedInput).
 
-const ACTIONS := ["left", "right", "up", "down", "jump", "attack", "roll", "heal"]
+const ACTIONS := ["left", "right", "up", "down", "jump", "attack1", "attack2", "skill1", "skill2", "roll", "heal", "interact"]
 
 var _held := {}
 var _prev := {}
@@ -34,3 +34,10 @@ func released(action: String) -> bool:
 
 func axis() -> float:
 	return float(held("right")) - float(held("left"))
+
+
+# Depois de um menu: o que ainda estiver apertado não conta como "apertou agora".
+func sync() -> void:
+	for action: String in ACTIONS:
+		_held[action] = _read(action)
+	_prev = _held.duplicate()

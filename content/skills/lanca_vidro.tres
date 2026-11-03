@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lanca_vidro"
+title = "Lança de Vidro"
+kind = "javelin"
+stat = "furia"
+cooldown = 5.0
+damage = 24.0
+params = {"pierce": 4}
+color = Color(0.749, 0.902, 0.918, 1)
+starter = false
+unlock_cost = 35
+lore = "Arrancada do corpo de um fulgurante. Ainda vibra quando passa perto da areia."

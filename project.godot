@@ -12,6 +12,9 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 Controls="*res://scripts/autoload/controls.gd"
 Fx="*res://scripts/autoload/fx.gd"
+Sfx="*res://scripts/autoload/sfx.gd"
+Meta="*res://scripts/autoload/meta.gd"
+Run="*res://scripts/autoload/run.gd"
 
 [display]
 

@@ -26,6 +26,9 @@ const GLYPHS := {
 	":": "000010000010000", "-": "000000111000000", "+": "000010111010000",
 	"/": "001001010100100", "(": "010100100100010", ")": "010001001001010",
 	",": "000000000010100", "'": "010010000000000", " ": "000000000000000",
+	"·": "000000010000000", ">": "100010001010100", "<": "001010100010001", "%": "101001010100101",
+	"=": "000111000111000", "*": "000101010101000", "[": "110100100100110", "]": "011001001001011",
+	"\"": "101101000000000", "_": "000000000000111", "|": "010010010010010",
 }
 
 const ACCENTS := {
@@ -60,3 +63,20 @@ static func _draw_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, 
 				var py := pos.y + (i / GLYPH_W) * scale
 				ci.draw_rect(Rect2(px, py, scale, scale), color)
 		x += ADVANCE * scale
+
+
+# Quebra o texto em linhas de até `limit` caracteres, sem cortar palavras.
+static func wrap(text: String, limit: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	for paragraph in text.split("\n"):
+		var line := ""
+		for word in paragraph.split(" ", false):
+			if line == "":
+				line = word
+			elif line.length() + 1 + word.length() <= limit:
+				line += " " + word
+			else:
+				out.append(line)
+				line = word
+		out.append(line)
+	return out

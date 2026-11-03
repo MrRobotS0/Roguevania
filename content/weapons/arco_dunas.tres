@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arco_dunas"
+title = "Arco das Dunas"
+category = "bow"
+stat = "astucia"
+crit_rule = "far"
+crit_mult = 1.8
+starter = true
+unlock_cost = 0
+color = Color(0.788, 0.702, 0.541, 1)
+moves = []
+shot = {"draw": 0.22, "recover": 0.18, "speed": 380.0, "damage": 12.0, "pierce": 0}
+lore = "Corda de tendão de besta-de-areia. Acerta melhor quem tem paciência para esperar a distância certa."

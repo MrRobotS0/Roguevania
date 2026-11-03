@@ -1,23 +1,54 @@
 class_name Room
 extends Node2D
 
-# Uma sala é um arquivo de texto (rooms/*.txt), um caractere por bloco:
-#   #  pedra sólida        =  plataforma (atravessa por baixo, S+pulo desce)
-#   P  início do herói     g  brutamontes     a  arqueiro
-#   .  vazio               ;  linha de comentário
-# É assim que as salas vão ser escritas e sorteadas pelo gerador depois.
+# O mapa de uma fase inteira, um caractere por bloco:
+#   #  pedra sólida        =  plataforma (atravessa por baixo; S+pulo desce)
+#   F  parede falsa (parece pedra, mas dá para atravessar: salas secretas)
+#   .  vazio               ;  linha de comentário (só nos arquivos de sala)
+# Marcadores (viram vazio e são entregues à fase para criar objetos):
+#   P início  e inimigo comum  r inimigo à distância  E elite  B chefe
+#   i item  f fragmento divino  L inscrição  X saída  V vigia  w zona de vidro
+#   g/a brutamontes/atirador fixos (salas de teste)
 
 const TILE := 16
 const SOLID := "#"
 const PLATFORM := "="
+const FAKE := "F"
+const MARKERS := "PeErBifLXVwga"
 const WORLD_LAYER := 1
 const PLATFORM_LAYER := 8
+const CHUNK := 16
 
 var cols := 0
 var rows := 0
 var grid: PackedStringArray = []
-var spawns: Array[Dictionary] = []
+var markers: Array[Dictionary] = []
 var player_spawn := Vector2.ZERO
+var colors := {}
+var spawns: Array[Dictionary]:
+	get:
+		var out: Array[Dictionary] = []
+		for m in markers:
+			if m["ch"] == "g":
+				out.append({"kind": "grunt", "pos": m["pos"]})
+			elif m["ch"] == "a":
+				out.append({"kind": "archer", "pos": m["pos"]})
+		return out
+
+var _chunks := {}
+var _revealed := {}
+
+
+func _init() -> void:
+	colors = default_colors()
+
+
+static func default_colors() -> Dictionary:
+	return {
+		"stone": Palette.STONE, "deep": Palette.STONE_DEEP, "top": Palette.STONE_TOP,
+		"light": Palette.STONE_LIGHT, "shadow": Palette.STONE_SHADOW, "moss": Palette.MOSS,
+		"wood": Palette.WOOD, "wood_top": Palette.WOOD_TOP, "wood_dark": Palette.WOOD_DARK,
+	}
 
 
 func load_file(path: String) -> void:
@@ -25,36 +56,47 @@ func load_file(path: String) -> void:
 
 
 func load_text(text: String) -> void:
-	grid.clear()
-	spawns.clear()
+	var lines := PackedStringArray()
 	for line in text.split("\n"):
 		line = line.strip_edges(false, true)
 		if line.is_empty() or line.begins_with(";"):
 			continue
-		grid.append(line)
+		lines.append(line)
+	load_grid(lines)
+
+
+func load_grid(lines: PackedStringArray) -> void:
+	grid = lines.duplicate()
+	markers.clear()
 	rows = grid.size()
 	cols = 0
 	for line in grid:
 		cols = maxi(cols, line.length())
-
 	for y in rows:
-		grid[y] = grid[y].rpad(cols, ".")
+		var line := grid[y].rpad(cols, ".")
 		for x in cols:
-			var feet := Vector2((x + 0.5) * TILE, (y + 1) * TILE)
-			match grid[y][x]:
-				"P":
+			var c := line[x]
+			if MARKERS.contains(c):
+				var feet := Vector2((x + 0.5) * TILE, (y + 1) * TILE)
+				markers.append({"ch": c, "pos": feet, "cell": Vector2i(x, y)})
+				if c == "P":
 					player_spawn = feet
-				"g":
-					spawns.append({"kind": "grunt", "pos": feet})
-				"a":
-					spawns.append({"kind": "archer", "pos": feet})
-
+				line = line.substr(0, x) + "." + line.substr(x + 1)
+		grid[y] = line
 	_build_collision()
-	queue_redraw()
+	_build_chunks()
 
 
 func size_px() -> Vector2:
 	return Vector2(cols, rows) * TILE
+
+
+func markers_of(ch: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for m in markers:
+		if m["ch"] == ch:
+			out.append(m)
+	return out
 
 
 func cell(x: int, y: int) -> String:
@@ -86,6 +128,31 @@ func clear_line(a: Vector2, b: Vector2) -> bool:
 		if is_solid_at(a.lerp(b, float(i) / steps)):
 			return false
 	return true
+
+
+# Paredes falsas somem quando o herói chega perto.
+func reveal_near(p: Vector2) -> void:
+	var cx := floori(p.x / TILE)
+	var cy := floori(p.y / TILE)
+	for y in range(cy - 3, cy + 2):
+		for x in range(cx - 2, cx + 3):
+			if cell(x, y) == FAKE and not _revealed.has(Vector2i(x, y)):
+				_reveal_from(Vector2i(x, y))
+
+
+func _reveal_from(start: Vector2i) -> void:
+	var todo: Array[Vector2i] = [start]
+	while not todo.is_empty():
+		var c: Vector2i = todo.pop_back()
+		if _revealed.has(c) or cell(c.x, c.y) != FAKE:
+			continue
+		_revealed[c] = true
+		var key := Vector2i(c.x / CHUNK, c.y / CHUNK)
+		if _chunks.has(key):
+			_chunks[key].queue_redraw()
+		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			todo.append(c + d)
+	Sfx.play("secret", -4.0)
 
 
 # --- colisão --------------------------------------------------------------
@@ -152,68 +219,104 @@ func _merged_rects(ch: String, vertical: bool) -> Array[Rect2i]:
 
 
 # --- desenho (arte provisória) ---------------------------------------------
+# O mapa é dividido em pedaços de 16x16 blocos; o Godot só desenha os
+# pedaços que aparecem na tela.
 
-func _draw() -> void:
-	for y in rows:
-		for x in cols:
+class Chunk:
+	extends Node2D
+	var room: Room
+	var area: Rect2i
+
+	func _draw() -> void:
+		room.draw_area(self, area)
+
+
+func _build_chunks() -> void:
+	for c in _chunks.values():
+		c.queue_free()
+	_chunks.clear()
+	for cy in range(0, rows, CHUNK):
+		for cx in range(0, cols, CHUNK):
+			var chunk := Chunk.new()
+			chunk.room = self
+			chunk.area = Rect2i(cx, cy, mini(CHUNK, cols - cx), mini(CHUNK, rows - cy))
+			add_child(chunk)
+			_chunks[Vector2i(cx / CHUNK, cy / CHUNK)] = chunk
+
+
+func draw_area(ci: CanvasItem, area: Rect2i) -> void:
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
 			match grid[y][x]:
 				SOLID:
-					_draw_stone(x, y)
+					_draw_stone(ci, x, y)
+				FAKE:
+					if not _revealed.has(Vector2i(x, y)):
+						_draw_stone(ci, x, y)
+					else:
+						var ghost: Color = colors["top"]
+						ghost.a = 0.18
+						ci.draw_rect(Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE)), ghost)
 				PLATFORM:
-					_draw_plank(x, y)
+					_draw_plank(ci, x, y)
 
 
 func _hash(x: int, y: int) -> int:
 	return ((x * 73856093) ^ (y * 19349663)) & 0xff
 
 
-func _draw_stone(x: int, y: int) -> void:
+func _solidish(x: int, y: int) -> bool:
+	var c := cell(x, y)
+	return c == SOLID or c == FAKE
+
+
+func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 	var p := Vector2(x, y) * TILE
-	var open_up := not is_solid(x, y - 1)
-	var open_down := not is_solid(x, y + 1)
-	var open_left := not is_solid(x - 1, y)
-	var open_right := not is_solid(x + 1, y)
+	var open_up := not _solidish(x, y - 1)
+	var open_down := not _solidish(x, y + 1)
+	var open_left := not _solidish(x - 1, y)
+	var open_right := not _solidish(x + 1, y)
 	var buried := not (open_up or open_down or open_left or open_right) \
-		and is_solid(x - 1, y - 1) and is_solid(x + 1, y - 1) \
-		and is_solid(x - 1, y + 1) and is_solid(x + 1, y + 1)
+		and _solidish(x - 1, y - 1) and _solidish(x + 1, y - 1) \
+		and _solidish(x - 1, y + 1) and _solidish(x + 1, y + 1)
 
 	if buried:
-		draw_rect(Rect2(p, Vector2(TILE, TILE)), Palette.STONE_DEEP)
+		ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), colors["deep"])
 		if _hash(x, y) < 40:
-			draw_rect(Rect2(p + Vector2(_hash(y, x) % 12 + 2, _hash(x, y) % 12 + 2), Vector2(2, 1)), Palette.STONE_SHADOW)
+			ci.draw_rect(Rect2(p + Vector2(_hash(y, x) % 12 + 2, _hash(x, y) % 12 + 2), Vector2(2, 1)), colors["shadow"])
 		return
 
-	draw_rect(Rect2(p, Vector2(TILE, TILE)), Palette.STONE)
+	ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), colors["stone"])
 	for half in 2:
 		var row := y * 2 + half
 		var top := p.y + half * 8
-		draw_rect(Rect2(p.x, top + 7, TILE, 1), Palette.STONE_SHADOW)
+		ci.draw_rect(Rect2(p.x, top + 7, TILE, 1), colors["shadow"])
 		var joint := 2 if row % 2 == 0 else 6
-		draw_rect(Rect2(p.x + joint, top, 1, 7), Palette.STONE_SHADOW)
-		draw_rect(Rect2(p.x + joint + 8, top, 1, 7), Palette.STONE_SHADOW)
-		draw_rect(Rect2(p.x + joint + 1, top, 6, 1), Palette.STONE_TOP.darkened(0.35))
+		ci.draw_rect(Rect2(p.x + joint, top, 1, 7), colors["shadow"])
+		ci.draw_rect(Rect2(p.x + joint + 8, top, 1, 7), colors["shadow"])
+		ci.draw_rect(Rect2(p.x + joint + 1, top, 6, 1), Color(colors["top"]).darkened(0.35))
 
 	if open_left:
-		draw_rect(Rect2(p, Vector2(1, TILE)), Palette.STONE_TOP)
+		ci.draw_rect(Rect2(p, Vector2(1, TILE)), colors["top"])
 	if open_right:
-		draw_rect(Rect2(p + Vector2(TILE - 1, 0), Vector2(1, TILE)), Palette.STONE_SHADOW)
+		ci.draw_rect(Rect2(p + Vector2(TILE - 1, 0), Vector2(1, TILE)), colors["shadow"])
 	if open_down:
-		draw_rect(Rect2(p + Vector2(0, TILE - 2), Vector2(TILE, 2)), Palette.STONE_SHADOW)
+		ci.draw_rect(Rect2(p + Vector2(0, TILE - 2), Vector2(TILE, 2)), colors["shadow"])
 	if open_up:
-		draw_rect(Rect2(p, Vector2(TILE, 3)), Palette.STONE_TOP)
-		draw_rect(Rect2(p, Vector2(TILE, 1)), Palette.STONE_LIGHT)
-		var h := _hash(x, y)
-		if h < 110:
-			draw_rect(Rect2(p + Vector2(h % 11, -1), Vector2(3 + h % 3, 1)), Palette.MOSS)
-			draw_rect(Rect2(p + Vector2(h % 11 + 1, 1), Vector2(1, 1 + h % 3)), Palette.MOSS.darkened(0.3))
+		ci.draw_rect(Rect2(p, Vector2(TILE, 3)), colors["top"])
+		ci.draw_rect(Rect2(p, Vector2(TILE, 1)), colors["light"])
+		var hv := _hash(x, y)
+		if hv < 110:
+			ci.draw_rect(Rect2(p + Vector2(hv % 11, -1), Vector2(3 + hv % 3, 1)), colors["moss"])
+			ci.draw_rect(Rect2(p + Vector2(hv % 11 + 1, 1), Vector2(1, 1 + hv % 3)), Color(colors["moss"]).darkened(0.3))
 
 
-func _draw_plank(x: int, y: int) -> void:
+func _draw_plank(ci: CanvasItem, x: int, y: int) -> void:
 	var p := Vector2(x, y) * TILE
-	draw_rect(Rect2(p, Vector2(TILE, 5)), Palette.WOOD)
-	draw_rect(Rect2(p, Vector2(TILE, 1)), Palette.WOOD_TOP)
-	draw_rect(Rect2(p + Vector2(0, 5), Vector2(TILE, 1)), Palette.WOOD_DARK)
+	ci.draw_rect(Rect2(p, Vector2(TILE, 5)), colors["wood"])
+	ci.draw_rect(Rect2(p, Vector2(TILE, 1)), colors["wood_top"])
+	ci.draw_rect(Rect2(p + Vector2(0, 5), Vector2(TILE, 1)), colors["wood_dark"])
 	if cell(x - 1, y) != PLATFORM or x % 3 == 0:
-		draw_rect(Rect2(p + Vector2(3, 6), Vector2(2, 5)), Palette.WOOD_DARK)
+		ci.draw_rect(Rect2(p + Vector2(3, 6), Vector2(2, 5)), colors["wood_dark"])
 	if (x + y) % 2 == 0:
-		draw_rect(Rect2(p + Vector2(9, 2), Vector2(1, 2)), Palette.WOOD_DARK)
+		ci.draw_rect(Rect2(p + Vector2(9, 2), Vector2(1, 2)), colors["wood_dark"])

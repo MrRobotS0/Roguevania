@@ -14,7 +14,11 @@ const DAMAGE := 12
 var _target := Vector2.ZERO
 
 
+var shard := true   # true = atira estilhaço de vidro (Mar de Cinzas)
+
+
 func _init() -> void:
+	title = "ATIRADOR DE VIDRO"
 	max_hp = 34
 	hp = 34
 	w = 10
@@ -62,16 +66,21 @@ func think(delta: float) -> void:
 
 
 func _shoot() -> void:
-	var arrow := Arrow.new()
-	arrow.room = room
-	arrow.damage = DAMAGE
-	arrow.position = bow()
-	arrow.velocity = (_target - bow()).normalized() * ARROW_SPEED
-	get_parent().add_child(arrow)
+	var p := Projectile.new()
+	p.room = room
+	p.team = "enemy"
+	p.style = "shard" if shard else "arrow"
+	p.source = self
+	p.position = bow()
+	p.velocity = (_target - bow()).normalized() * ARROW_SPEED
+	p.damage = Damage.make(DAMAGE, facing, 120.0)
+	p.damage.source = self
+	get_parent().add_child(p)
+	Sfx.play("bow", -8.0)
 
 
 func _draw() -> void:
-	if state == "aim":
+	if state == "aim" and alive():
 		var locked := state_time >= AIM - LOCK
 		var c := Palette.DANGER if locked else Palette.TELEGRAPH
 		c.a = 0.9 if locked else 0.25 + 0.3 * (state_time / AIM)

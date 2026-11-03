@@ -3,8 +3,12 @@ extends Node
 # "Suco" do combate: congelamento no impacto, tremor de tela e partículas.
 # Os atores só pedem o efeito; quem desenha é o nó Sparks da fase atual.
 
+signal toasted(text: String)
+signal bannered(title: String, subtitle: String)
+
 var shake := 0.0
 var debug := false
+var visibility := 1.0      # a tempestade encurta a visão dos inimigos
 var sparks: Node2D
 
 var _stop_token := 0
@@ -35,3 +39,11 @@ func dust(pos: Vector2, count := 5) -> void:
 func number(pos: Vector2, value: int, crit := false) -> void:
 	if is_instance_valid(sparks):
 		sparks.number(pos, value, crit)
+
+
+func toast(text: String) -> void:
+	toasted.emit(text)
+
+
+func banner(title: String, subtitle := "") -> void:
+	bannered.emit(title, subtitle)

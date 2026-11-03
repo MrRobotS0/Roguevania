@@ -1,14 +1,11 @@
 class_name Player
-extends CharacterBody2D
+extends Actor
 
 signal died
 signal health_changed(hp: int, max_hp: int)
-signal flasks_changed(count: int)
+signal gear_changed
 
-enum State { MOVE, ATTACK, ROLL, DIVE, CLIMB, HEAL, HURT, DEAD }
-
-const W := 10
-const H := 22
+enum State { MOVE, ATTACK, SHOOT, BLOCK, ROLL, DIVE, CLIMB, HEAL, HURT, DEAD }
 
 # Movimento. Em pixels/segundo; 1 bloco = 16 px.
 const RUN_SPEED := 150.0
@@ -30,30 +27,27 @@ const ROLL_DODGE := 0.27           # invencível durante quase toda a rolagem
 const ROLL_COOLDOWN := 0.12
 
 const DIVE_SPEED := 620.0
-const DIVE_DAMAGE := 18
+const DIVE_DAMAGE := 18.0
 const HURT_IFRAMES := 0.8
-const FLASK_HEAL := 45
+const FLASK_HEAL_RATIO := 0.5
 const FLASK_TIME := 0.55
-const MAX_FLASKS := 2
-const COMBO_GRACE := 0.3           # janela para continuar o combo depois de um golpe
-
-# Espada provisória: 3 golpes; o terceiro é sempre crítico.
-const COMBO := [
-	{"startup": 0.06, "active": 0.08, "recover": 0.16, "damage": 10, "knock": 90.0,
-		"reach": Vector2(28, 18), "lunge": 70.0, "stop": 0.045, "shake": 1.5, "crit": false},
-	{"startup": 0.06, "active": 0.08, "recover": 0.18, "damage": 12, "knock": 110.0,
-		"reach": Vector2(28, 20), "lunge": 80.0, "stop": 0.05, "shake": 2.0, "crit": false},
-	{"startup": 0.12, "active": 0.10, "recover": 0.30, "damage": 26, "knock": 240.0,
-		"reach": Vector2(34, 22), "lunge": 150.0, "stop": 0.09, "shake": 4.0, "crit": true},
-]
+const BASE_FLASKS := 2
+const BASE_HP := 100
+const COMBO_GRACE := 0.3
+const PARRY_WINDOW := 0.18
+const INTERACT_RANGE := 22.0
 
 var pad: PlayerInput = PlayerInput.new()
-var room: Room
 var state := State.MOVE
-var facing := 1
-var max_hp := 100
-var hp := 100
-var flasks := MAX_FLASKS
+var weapons: Array = [null, null]
+var skills: Array = [null, null]
+var skill_cd: Array[float] = [0.0, 0.0]
+var levels := {"furia": 0, "astucia": 0, "vigor": 0}
+var max_flasks := BASE_FLASKS
+var flasks := BASE_FLASKS
+var essence := 0
+var kills := 0
+var wind := 0.0             # empurrão da tempestade (px/s)
 
 var _state_time := 0.0
 var _coyote := 0.0
@@ -61,16 +55,19 @@ var _jump_buffer := 0.0
 var _roll_cd := 0.0
 var _dodge := 0.0
 var _invuln := 0.0
-var _flash := 0.0
 var _drop := 0.0
 var _anim := 0.0
-var _combo_index := 0
+var _slot := 0
+var _move_index := 0
+var _combo_slot := -1
 var _combo_next := 0
 var _combo_grace := 0.0
 var _combo_queued := false
 var _swing_started := false
+var _shot_fired := false
 var _swing_hits: Array = []
 var _dive_landed := false
+var _block_slot := 0
 var _climb_from := Vector2.ZERO
 var _climb_to := Vector2.ZERO
 var _was_grounded := true
@@ -78,39 +75,87 @@ var _death_sent := false
 var _squash := 0.0
 
 
+func _init() -> void:
+	w = 10
+	h = 22
+	max_hp = BASE_HP
+	hp = BASE_HP
+
+
 func _ready() -> void:
-	var shape := RectangleShape2D.new()
-	shape.size = Vector2(W, H)
-	var holder := CollisionShape2D.new()
-	holder.shape = shape
-	holder.position = Vector2(0, -H * 0.5)
-	add_child(holder)
-	collision_layer = 2
-	collision_mask = Room.WORLD_LAYER | Room.PLATFORM_LAYER
+	setup_body(2)
 	floor_snap_length = 4.0
 	z_index = 5
 	add_to_group("player")
 
 
-func alive() -> bool:
-	return state != State.DEAD
+func weapon(slot: int) -> Gear:
+	return weapons[slot]
 
 
-func center() -> Vector2:
-	return global_position + Vector2(0, -H * 0.5)
+func skill(slot: int) -> Gear:
+	return skills[slot]
 
 
-func hurt_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-W * 0.5, -H), Vector2(W, H))
+func stat_mult(stat: String) -> float:
+	return Combat.stat_mult(levels, stat)
 
 
-func attack_rect(reach: Vector2) -> Rect2:
-	var x := global_position.x + 2.0 if facing > 0 else global_position.x - 2.0 - reach.x
-	return Rect2(x, global_position.y - H * 0.5 - reach.y * 0.5 - 1.0, reach.x, reach.y)
+func recompute_max_hp() -> void:
+	var before := max_hp
+	max_hp = BASE_HP + 10 * (levels["furia"] + levels["astucia"]) + 20 * levels["vigor"]
+	hp = clampi(hp + max_hp - before, 1, max_hp)
+	health_changed.emit(hp, max_hp)
+
+
+func add_level(stat: String) -> void:
+	levels[stat] += 1
+	recompute_max_hp()
+	gear_changed.emit()
+
+
+func equip(g: Gear) -> Gear:
+	# Troca pelo slot do mesmo tipo: primeiro um vazio, senão o que está em uso.
+	var list: Array = weapons if g.is_weapon() else skills
+	var slot := list.find(null)
+	if slot < 0:
+		slot = _slot if g.is_weapon() else 0
+	var old: Gear = list[slot]
+	list[slot] = g
+	if not g.is_weapon():
+		skill_cd[slot] = 0.0
+	gear_changed.emit()
+	return old
+
+
+func absorb_input() -> void:
+	pad.sync()
 
 
 func is_dodging() -> bool:
 	return _dodge > 0.0
+
+
+func blocking() -> bool:
+	return state == State.BLOCK
+
+
+func attack_rect(reach: Vector2) -> Rect2:
+	var x := global_position.x + 2.0 if facing > 0 else global_position.x - 2.0 - reach.x
+	return Rect2(x, global_position.y - h * 0.5 - reach.y * 0.5 - 1.0, reach.x, reach.y)
+
+
+func nearest_interactable() -> Node2D:
+	var best: Node2D = null
+	var best_d := INTERACT_RANGE
+	for it: Node2D in get_tree().get_nodes_in_group("interactables"):
+		if not it.call("can_interact", self):
+			continue
+		var d := it.global_position.distance_to(global_position)
+		if d < best_d:
+			best = it
+			best_d = d
+	return best
 
 
 # --- laço principal ----------------------------------------------------------
@@ -118,9 +163,12 @@ func is_dodging() -> bool:
 func _physics_process(delta: float) -> void:
 	pad.poll()
 	_tick(delta)
+	tick_statuses(delta)
 	match state:
 		State.MOVE: _move_state(delta)
 		State.ATTACK: _attack_state(delta)
+		State.SHOOT: _shoot_state(delta)
+		State.BLOCK: _block_state(delta)
 		State.ROLL: _roll_state(delta)
 		State.DIVE: _dive_state(delta)
 		State.CLIMB: _climb_state()
@@ -142,9 +190,11 @@ func _tick(delta: float) -> void:
 	_roll_cd -= delta
 	_dodge -= delta
 	_invuln -= delta
-	_flash -= delta
+	flash -= delta
 	_drop -= delta
 	_combo_grace -= delta
+	for i in skill_cd.size():
+		skill_cd[i] = maxf(skill_cd[i] - delta, 0.0)
 	_squash = move_toward(_squash, 0.0, delta * 6.0)
 	collision_mask = Room.WORLD_LAYER if _drop > 0.0 else Room.WORLD_LAYER | Room.PLATFORM_LAYER
 
@@ -160,6 +210,7 @@ func _after_move(falling: float) -> void:
 		_coyote = COYOTE_TIME
 		if not _was_grounded and falling > 200.0:
 			Fx.dust(global_position, 4 if falling < 380.0 else 8)
+			Sfx.play("land", -8.0)
 			_squash = clampf(falling / 430.0, 0.3, 1.0)
 	_was_grounded = grounded
 	if state != State.ROLL and state != State.DEAD and grounded:
@@ -170,12 +221,12 @@ func _after_move(falling: float) -> void:
 # o herói é empurrado para fora devagar. Rolando, passa direto.
 func _separate_from_enemies() -> void:
 	var me := hurt_rect()
-	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
-		if not e.alive() or not me.intersects(e.hurt_rect()):
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
+		if not e.alive() or not me.intersects(e.hurt_rect()) or e.get("ghost"):
 			continue
 		var dx := global_position.x - e.global_position.x
 		var side := signf(dx) if absf(dx) > 0.5 else float(-facing)
-		var overlap := (W + e.w) * 0.5 - absf(dx)
+		var overlap := (w + e.w) * 0.5 - absf(dx)
 		if overlap > 0.0:
 			move_and_collide(Vector2(side * minf(overlap, 2.0), 0))
 
@@ -194,7 +245,7 @@ func _move_state(delta: float) -> void:
 	var accel := AIR_ACCEL
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
-	velocity.x = move_toward(velocity.x, dir * RUN_SPEED, accel * delta)
+	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind, accel * delta)
 	_gravity(delta)
 
 	if pad.just("jump"):
@@ -208,18 +259,22 @@ func _move_state(delta: float) -> void:
 		elif is_on_floor() or _coyote > 0.0:
 			_jump()
 
-	if pad.just("attack"):
-		if not is_on_floor() and pad.held("down"):
-			_start_dive()
-		else:
-			_start_attack(_combo_next if _combo_grace > 0.0 else 0)
-		return
+	for slot in 2:
+		if pad.just("attack%d" % (slot + 1)) and _use_weapon(slot):
+			return
+		if pad.just("skill%d" % (slot + 1)) and _use_skill(slot):
+			return
 	if pad.just("roll") and _can_roll():
 		_start_roll()
 		return
 	if pad.just("heal") and flasks > 0 and is_on_floor() and hp < max_hp:
 		_start_heal()
 		return
+	if pad.just("interact"):
+		var it := nearest_interactable()
+		if it:
+			it.call("interact", self)
+			return
 	if not is_on_floor() and velocity.y > -60.0 and dir != 0.0 and is_on_wall():
 		_try_ledge(int(signf(dir)))
 
@@ -229,6 +284,7 @@ func _jump() -> void:
 	_jump_buffer = 0.0
 	_coyote = 0.0
 	Fx.dust(global_position, 3)
+	Sfx.play("jump", -10.0)
 
 
 func _on_platform() -> bool:
@@ -239,9 +295,9 @@ func _try_ledge(dir: int) -> bool:
 	if room == null:
 		return false
 	var t := Room.TILE
-	var front := floori((global_position.x + dir * (W * 0.5 + 3.0)) / t)
+	var front := floori((global_position.x + dir * (w * 0.5 + 3.0)) / t)
 	var own := floori(global_position.x / t)
-	var head := global_position.y - H
+	var head := global_position.y - h
 	var first := floori((head - 4.0) / t)
 	for row: int in [first, first + 1]:
 		var top := float(row * t)
@@ -251,7 +307,7 @@ func _try_ledge(dir: int) -> bool:
 				and not room.is_solid(front, row - 2) and not room.is_solid(own, row - 2):
 			var edge := float(front * t) if dir > 0 else float((front + 1) * t)
 			_climb_from = global_position
-			_climb_to = Vector2(edge + dir * (W * 0.5 + 1.0), top)
+			_climb_to = Vector2(edge + dir * (w * 0.5 + 1.0), top)
 			velocity = Vector2.ZERO
 			facing = dir
 			_enter(State.CLIMB)
@@ -272,25 +328,60 @@ func _climb_state() -> void:
 		_enter(State.MOVE)
 
 
-func _start_attack(index: int) -> void:
-	_combo_index = index
-	_combo_queued = false
-	_swing_started = false
-	_swing_hits.clear()
+# --- armas --------------------------------------------------------------------
+
+func _use_weapon(slot: int) -> bool:
+	var g := weapon(slot)
+	if g == null:
+		return false
+	var data: WeaponData = g.data
 	var dir := pad.axis()
 	if dir != 0.0:
 		facing = int(signf(dir))
+	_slot = slot
+	if data.category == "bow":
+		_shot_fired = false
+		_enter(State.SHOOT)
+		return true
+	if not is_on_floor() and pad.held("down"):
+		_start_dive()
+		return true
+	var index := _combo_next if (_combo_grace > 0.0 and _combo_slot == slot) else 0
+	_start_move(slot, index)
+	return true
+
+
+func _start_move(slot: int, index: int) -> void:
+	_slot = slot
+	_combo_slot = slot
+	_move_index = index
+	_combo_queued = false
+	_swing_started = false
+	_swing_hits.clear()
 	_enter(State.ATTACK)
 
 
+func current_move() -> Dictionary:
+	var g := weapon(_slot)
+	if g == null:
+		return {}
+	var data: WeaponData = g.data
+	return data.moves[_move_index]
+
+
 func _attack_state(delta: float) -> void:
-	var a: Dictionary = COMBO[_combo_index]
-	var startup: float = a["startup"]
-	var active_end: float = startup + float(a["active"])
-	var total: float = active_end + float(a["recover"])
+	var g := weapon(_slot)
+	if g == null:
+		_enter(State.MOVE)
+		return
+	var data: WeaponData = g.data
+	var m := current_move()
+	var startup: float = m["startup"]
+	var active_end: float = startup + float(m["active"])
+	var total: float = active_end + float(m["recover"])
 
 	_gravity(delta)
-	if pad.just("attack"):
+	if pad.just("attack%d" % (_slot + 1)):
 		_combo_queued = true
 	if pad.just("roll") and _can_roll():
 		_start_roll()
@@ -303,13 +394,14 @@ func _attack_state(delta: float) -> void:
 	if _state_time >= startup and not _swing_started:
 		_swing_started = true
 		if is_on_floor():
-			velocity.x = facing * float(a["lunge"])
+			velocity.x = facing * float(m.get("lunge", 0.0))
+		Sfx.play("swing_heavy" if m.get("shape", "") == "smash" else "swing", -6.0)
 	if _state_time >= startup and _state_time < active_end:
-		_check_swing(a)
+		_check_swing(g, m)
 
-	var next := (_combo_index + 1) % COMBO.size()
+	var next := (_move_index + 1) % data.moves.size()
 	if _combo_queued and _state_time >= active_end + 0.03:
-		_start_attack(next)
+		_start_move(_slot, next)
 		return
 	if _state_time >= total:
 		_combo_next = next
@@ -317,20 +409,153 @@ func _attack_state(delta: float) -> void:
 		_enter(State.MOVE)
 
 
-func _check_swing(a: Dictionary) -> void:
-	var box := attack_rect(a["reach"])
+func _check_swing(g: Gear, m: Dictionary) -> void:
+	var data: WeaponData = g.data
+	var box := attack_rect(m["reach"])
 	var landed := false
-	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
+	var crit_any := false
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
 		if not e.alive() or _swing_hits.has(e):
 			continue
-		if box.intersects(e.hurt_rect()):
-			_swing_hits.append(e)
-			e.take_hit(int(a["damage"]), facing, float(a["knock"]), bool(a["crit"]))
+		if not box.intersects(e.hurt_rect()):
+			continue
+		_swing_hits.append(e)
+		var d := Damage.make(float(m["damage"]) * g.power() * stat_mult(data.stat), facing, float(m["knock"]))
+		d.source = self
+		d.status = m.get("status", {}).duplicate()
+		d.crit = bool(m.get("crit", false)) or Combat.situational_crit(data.crit_rule, self, e)
+		if d.crit:
+			d.amount *= data.crit_mult
+			d.knock *= 1.3
+			d.lift = 90.0
+		crit_any = crit_any or d.crit
+		if e.hurt(d):
 			landed = true
 	if landed:
-		Fx.hitstop(a["stop"])
-		Fx.add_shake(a["shake"])
+		Fx.hitstop(float(m["stop"]) * (1.4 if crit_any else 1.0))
+		Fx.add_shake(float(m["shake"]))
+		Sfx.play("crit" if crit_any else "hit", -4.0)
 
+
+func _shoot_state(delta: float) -> void:
+	var g := weapon(_slot)
+	if g == null:
+		_enter(State.MOVE)
+		return
+	var data: WeaponData = g.data
+	var s := data.shot
+	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
+	_gravity(delta, 0.5 if velocity.y > 0.0 else 1.0)
+	if pad.just("roll") and _can_roll():
+		_start_roll()
+		return
+	if not _shot_fired and _state_time >= float(s["draw"]):
+		_shot_fired = true
+		var p := Projectile.new()
+		p.room = room
+		p.team = "player"
+		p.style = "arrow"
+		p.source = self
+		p.position = center() + Vector2(facing * 8, -1)
+		p.velocity = Vector2(facing * float(s["speed"]), 0)
+		p.pierce = int(s.get("pierce", 0))
+		p.crit_rule = data.crit_rule
+		p.crit_mult = data.crit_mult
+		p.color = data.color
+		p.damage = Damage.make(float(s["damage"]) * g.power() * stat_mult(data.stat), facing, 40.0)
+		p.damage.source = self
+		p.damage.status = s.get("status", {}).duplicate()
+		p.damage.stop = 0.03
+		get_parent().add_child(p)
+		Sfx.play("bow", -6.0)
+	if _state_time >= float(s["draw"]) + float(s["recover"]):
+		_enter(State.MOVE)
+
+
+# --- habilidades --------------------------------------------------------------
+
+func _use_skill(slot: int) -> bool:
+	var g := skill(slot)
+	if g == null or skill_cd[slot] > 0.0:
+		return false
+	var data: SkillData = g.data
+	var power := data.damage * g.power() * stat_mult(data.stat)
+	match data.kind:
+		"shield":
+			if not is_on_floor():
+				return false
+			_block_slot = slot
+			_enter(State.BLOCK)
+			Sfx.play("shield_up", -8.0)
+			return true
+		"bomb":
+			var p := _skill_projectile("bomb", Vector2(facing * 150.0, -130.0), power)
+			p.gravity = 700.0
+			p.radius = float(data.params.get("radius", 34.0))
+			p.fuse = 1.5
+			p.damage.status = {"burn": float(data.params.get("burn", 3.0))}
+			p.damage.knock = 150.0
+			p.damage.stop = 0.05
+		"javelin":
+			var p := _skill_projectile("javelin", Vector2(facing * 460.0, 0), power)
+			p.pierce = int(data.params.get("pierce", 4))
+			p.crit_rule = "stunned"
+			p.damage.knock = 120.0
+			p.damage.status = {"stun": 0.4}
+			p.damage.stop = 0.04
+	skill_cd[slot] = data.cooldown
+	Sfx.play("throw", -6.0)
+	return true
+
+
+func _skill_projectile(style: String, vel: Vector2, power: float) -> Projectile:
+	var p := Projectile.new()
+	p.room = room
+	p.team = "player"
+	p.style = style
+	p.source = self
+	p.position = center() + Vector2(facing * 6, -4)
+	p.velocity = vel
+	p.damage = Damage.make(power, facing, 80.0)
+	p.damage.source = self
+	get_parent().add_child(p)
+	return p
+
+
+func _block_state(delta: float) -> void:
+	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
+	_gravity(delta)
+	var dir := pad.axis()
+	if dir != 0.0 and _state_time < 0.05:
+		facing = int(signf(dir))
+	if not pad.held("skill%d" % (_block_slot + 1)) and _state_time > 0.12:
+		_enter(State.MOVE)
+	elif pad.just("roll") and _can_roll():
+		_start_roll()
+
+
+func _guard(d: Damage) -> bool:
+	# Defende só o que vem pela frente.
+	if state != State.BLOCK or d.unblockable or d.over_time or d.dir == facing:
+		return false
+	d.blocked = true
+	if _state_time <= PARRY_WINDOW:
+		d.parried = true
+		Fx.hitstop(0.12)
+		Fx.add_shake(3.0)
+		Fx.burst(center() + Vector2(facing * 8, 0), Palette.DANGER, 14, 160.0, 0.3)
+		Sfx.play("parry")
+		var foe := d.source as Actor
+		if foe and foe.has_method("stagger"):
+			foe.call("stagger", 1.2)
+	else:
+		Fx.burst(center() + Vector2(facing * 8, 0), Palette.BLADE, 6, 90.0, 0.2)
+		Sfx.play("block", -4.0)
+		velocity.x = -facing * 60.0
+	return true
+
+
+# --- esquiva, mergulho, cura ----------------------------------------------------
 
 func _can_roll() -> bool:
 	return _roll_cd <= 0.0 and is_on_floor()
@@ -342,6 +567,7 @@ func _start_roll() -> void:
 		facing = int(signf(dir))
 	_dodge = ROLL_DODGE
 	Fx.dust(global_position, 4)
+	Sfx.play("roll", -10.0)
 	_enter(State.ROLL)
 
 
@@ -375,12 +601,13 @@ func _dive_state(delta: float) -> void:
 	velocity.y = -70.0 if _state_time < windup else DIVE_SPEED
 	if _state_time < windup:
 		return
-
 	var feet := Rect2(global_position.x - 7.0, global_position.y - 8.0, 14.0, 12.0)
-	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
 		if e.alive() and not _swing_hits.has(e) and feet.intersects(e.hurt_rect()):
 			_swing_hits.append(e)
-			e.take_hit(DIVE_DAMAGE, facing, 60.0, false)
+			var d := Damage.make(DIVE_DAMAGE * stat_mult("furia"), facing, 60.0)
+			d.source = self
+			e.hurt(d)
 			Fx.hitstop(0.05)
 	if is_on_floor():
 		_land_dive()
@@ -392,21 +619,25 @@ func _land_dive() -> void:
 	velocity.y = 0.0
 	var wave := Rect2(global_position.x - 28.0, global_position.y - 16.0, 56.0, 16.0)
 	var landed := false
-	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
 		if e.alive() and not _swing_hits.has(e) and wave.intersects(e.hurt_rect()):
 			var side := 1 if e.global_position.x >= global_position.x else -1
-			e.take_hit(DIVE_DAMAGE, side, 160.0, false)
+			var d := Damage.make(DIVE_DAMAGE * stat_mult("furia"), side, 160.0)
+			d.source = self
+			e.hurt(d)
 			landed = true
 	Fx.add_shake(4.0 if landed else 2.5)
 	if landed:
 		Fx.hitstop(0.06)
 	Fx.burst(global_position, Palette.DUST, 10, 110.0, 0.35, 150.0, 2.0, 30.0)
+	Sfx.play("slam", -4.0)
 	_squash = 1.0
 
 
 func _start_heal() -> void:
 	flasks -= 1
-	flasks_changed.emit(flasks)
+	gear_changed.emit()
+	Sfx.play("drink", -6.0)
 	_enter(State.HEAL)
 
 
@@ -414,26 +645,48 @@ func _heal_state(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
 	_gravity(delta)
 	if _state_time >= FLASK_TIME:
-		hp = mini(max_hp, hp + FLASK_HEAL)
-		health_changed.emit(hp, max_hp)
-		Fx.burst(center(), Palette.HEAL, 12, 70.0, 0.6, -80.0, 2.0)
+		heal(roundi(max_hp * FLASK_HEAL_RATIO))
 		_enter(State.MOVE)
 
 
-func take_damage(amount: int, from_dir: int) -> bool:
-	if state == State.DEAD or _invuln > 0.0 or _dodge > 0.0:
-		return false
-	hp = maxi(hp - amount, 0)
-	_invuln = HURT_IFRAMES
-	_flash = 0.1
+func heal(amount: int) -> void:
+	hp = mini(max_hp, hp + amount)
 	health_changed.emit(hp, max_hp)
-	var dir := from_dir if from_dir != 0 else -facing
+	Fx.burst(center(), Palette.HEAL, 12, 70.0, 0.6, -80.0, 2.0)
+
+
+func add_essence(n: int) -> void:
+	essence += n
+	gear_changed.emit()
+
+
+# --- dano recebido --------------------------------------------------------------
+
+func hurt(d: Damage) -> bool:
+	if state == State.DEAD:
+		return false
+	if d.over_time:
+		hp = maxi(hp - d.value(), 1)
+		health_changed.emit(hp, max_hp)
+		return true
+	if _invuln > 0.0 or _dodge > 0.0:
+		return false
+	if _guard(d):
+		return false
+	hp = maxi(hp - d.value(), 0)
+	apply_statuses(d)
+	_invuln = HURT_IFRAMES
+	flash = 0.1
+	health_changed.emit(hp, max_hp)
+	var dir := d.dir if d.dir != 0 else -facing
 	velocity = Vector2(dir * 170.0, -140.0)
 	Fx.hitstop(0.08)
 	Fx.add_shake(5.0)
 	Fx.burst(center(), Palette.HURT, 10, 140.0)
+	Sfx.play("hurt")
 	if hp <= 0:
 		Fx.burst(center(), Palette.HURT, 26, 200.0, 0.7)
+		Sfx.play("death")
 		_enter(State.DEAD)
 	else:
 		_enter(State.HURT)
@@ -459,27 +712,25 @@ func _dead_state(delta: float) -> void:
 # Tudo em retângulos, espelhado pelo lado em que o herói olha. Quando a arte
 # final chegar, isto vira um AnimatedSprite2D e o resto do arquivo fica igual.
 
-var _tint := Color(0, 0, 0, 0)
-
-
-func _px(x: float, y: float, w: float, h: float, c: Color) -> void:
-	if facing < 0:
-		x = -x - w
-	draw_rect(Rect2(x, y, w, h), _tint if _tint.a > 0.0 else c)
-
-
 func _draw() -> void:
-	_tint = Palette.FLASH if _flash > 0.0 else Color(0, 0, 0, 0)
+	begin_tint()
 	var blink := _invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0
 	if not blink:
 		match state:
 			State.ROLL: _draw_roll()
 			State.DEAD: _draw_dead()
 			_: _draw_body()
+	end_tint()
 	if state == State.ATTACK:
 		_draw_slash()
+	draw_statuses(_anim)
 	if Fx.debug:
 		_draw_debug()
+
+
+func _blade_color() -> Color:
+	var g := weapon(_slot)
+	return g.data.color if g else Palette.BLADE
 
 
 func _draw_body() -> void:
@@ -487,85 +738,99 @@ func _draw_body() -> void:
 	var stride := sin(_anim * 18.0) * 2.0 if running else 0.0
 	var squash := _squash * 3.0
 	var lift := 0.0 if is_on_floor() else -1.0
-	var top := -H + squash
+	var top := -h + squash
 
-	# pernas
-	_px(-4 + stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
-	_px(1 - stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
-	# capa e tronco
-	_px(-5, top + 6, 10, 10 - squash, Palette.HERO_CLOAK)
-	_px(-5, top + 13, 10, 3 - squash * 0.5, Palette.HERO_CLOAK_DARK)
-	_px(-6, top + 8, 1, 7, Palette.HERO_CLOAK_DARK)
-	# cachecol, que voa mais quanto mais rápido ele anda
+	px(-4 + stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
+	px(1 - stride, -7 + lift, 3, 7 + absf(lift), Palette.HERO_HOOD)
+	px(-5, top + 6, 10, 10 - squash, Palette.HERO_CLOAK)
+	px(-5, top + 13, 10, 3 - squash * 0.5, Palette.HERO_CLOAK_DARK)
+	px(-6, top + 8, 1, 7, Palette.HERO_CLOAK_DARK)
 	var trail := clampf(absf(velocity.x) / RUN_SPEED, 0.0, 1.0) * 4.0
-	_px(-5 - trail - 2, top + 6 + sin(_anim * 14.0), 3 + trail, 2, Palette.HERO_SCARF)
-	_px(-3, top + 5, 7, 2, Palette.HERO_SCARF)
-	# capuz e olho
-	_px(-4, top, 8, 6, Palette.HERO_HOOD)
-	_px(1, top + 2, 2, 1, Palette.HERO_EYE)
+	px(-5 - trail - 2, top + 6 + sin(_anim * 14.0), 3 + trail, 2, Palette.HERO_SCARF)
+	px(-3, top + 5, 7, 2, Palette.HERO_SCARF)
+	px(-4, top, 8, 6, Palette.HERO_HOOD)
+	px(1, top + 2, 2, 1, Palette.HERO_EYE)
 
 	match state:
 		State.ATTACK:
-			var a: Dictionary = COMBO[_combo_index]
-			if _state_time < float(a["startup"]):
-				_px(-3, top - 6, 1, 10, Palette.BLADE)
-				_px(-4, top + 5, 3, 1, Palette.HERO_SCARF)
+			var m := current_move()
+			var reach: Vector2 = m["reach"]
+			if _state_time < float(m["startup"]):
+				px(-3, top - 6, 1, 10, _blade_color())
+				px(-4, top + 5, 3, 1, Palette.HERO_SCARF)
 			else:
-				_px(4, top + 10, float(a["reach"].x) - 8.0, 1, Palette.BLADE)
-				_px(3, top + 9, 2, 3, Palette.HERO_SCARF)
+				px(4, top + 10, reach.x - 8.0, 1, _blade_color())
+				px(3, top + 9, 2, 3, Palette.HERO_SCARF)
+		State.SHOOT:
+			var pull := clampf(_state_time / 0.25, 0.0, 1.0) * 3.0
+			px(6, top + 4, 1, 12, Palette.WOOD_TOP)
+			px(6 - pull, top + 5, 1, 10, Palette.UI_DIM)
+			px(0, top + 9, 7, 1, Palette.ARROW)
+		State.BLOCK:
+			var parry := _state_time <= PARRY_WINDOW
+			px(5, top + 3, 3, 15, Palette.DANGER if parry else Palette.GOLD)
+			px(6, top + 5, 1, 11, Palette.STONE_TOP)
 		State.DIVE:
-			_px(-1, -2, 1, 9, Palette.BLADE)
+			px(-1, -2, 1, 9, _blade_color())
 		State.HEAL:
-			_px(2, top + 3, 3, 4, Palette.HEAL)
+			px(2, top + 3, 3, 4, Palette.HEAL)
 		_:
-			_px(-6, top + 3, 1, 10, Palette.BLADE)
+			px(-6, top + 3, 1, 10, _blade_color())
 
 
 func _draw_roll() -> void:
 	var frame := int(_state_time / ROLL_TIME * 8.0) % 4
-	_px(-6, -12, 12, 12, Palette.HERO_CLOAK)
-	_px(-6, -3, 12, 3, Palette.HERO_CLOAK_DARK)
+	px(-6, -12, 12, 12, Palette.HERO_CLOAK)
+	px(-6, -3, 12, 3, Palette.HERO_CLOAK_DARK)
 	var hood := [Vector2(1, -12), Vector2(2, -6), Vector2(-3, -4), Vector2(-5, -11)]
 	var spot: Vector2 = hood[frame]
-	_px(spot.x, spot.y, 5, 5, Palette.HERO_HOOD)
-	_px(-8 - frame, -6, 3, 2, Palette.HERO_SCARF)
+	px(spot.x, spot.y, 5, 5, Palette.HERO_HOOD)
+	px(-8 - frame, -6, 3, 2, Palette.HERO_SCARF)
 
 
 func _draw_dead() -> void:
-	_px(-9, -5, 18, 5, Palette.HERO_CLOAK_DARK)
-	_px(5, -6, 6, 5, Palette.HERO_HOOD)
-	_px(-10, -2, 4, 2, Palette.HERO_SCARF)
+	px(-9, -5, 18, 5, Palette.HERO_CLOAK_DARK)
+	px(5, -6, 6, 5, Palette.HERO_HOOD)
+	px(-10, -2, 4, 2, Palette.HERO_SCARF)
 
 
 func _draw_slash() -> void:
-	var a: Dictionary = COMBO[_combo_index]
-	var startup: float = a["startup"]
-	var shown := _state_time - startup
-	var span := float(a["active"]) + 0.06
+	var m := current_move()
+	if m.is_empty():
+		return
+	var shown := _state_time - float(m["startup"])
+	var span := float(m["active"]) + 0.06
 	if shown < 0.0 or shown > span:
 		return
 	var fade := 1.0 - shown / span
-	var reach: Vector2 = a["reach"]
-	var color := Palette.SLASH
+	var reach: Vector2 = m["reach"]
+	var color := Palette.SLASH.lerp(_blade_color(), 0.3)
 	color.a = 0.35 + 0.6 * fade
 
 	var points := PackedVector2Array()
-	var origin := Vector2(0, -H * 0.5)
-	if _combo_index == 2:
-		# estocada: cunha longa e reta
-		points = PackedVector2Array([origin + Vector2(2, -3), origin + Vector2(reach.x + 4, -1),
-			origin + Vector2(reach.x + 6, 0), origin + Vector2(reach.x + 4, 1), origin + Vector2(2, 3)])
-	else:
-		var from := -1.2 if _combo_index == 0 else 0.9
-		var to := 0.9 if _combo_index == 0 else -1.2
-		var outer := reach.x + 2.0
-		var inner := outer - 7.0
-		for i in 9:
-			var ang := lerpf(from, to, i / 8.0)
-			points.append(origin + Vector2(cos(ang) * outer, sin(ang) * outer * 0.55))
-		for i in range(8, -1, -1):
-			var ang := lerpf(from, to, i / 8.0)
-			points.append(origin + Vector2(cos(ang) * inner, sin(ang) * inner * 0.55))
+	var origin := Vector2(0, -h * 0.5)
+	var shape: String = m.get("shape", "down")
+	match shape:
+		"thrust":
+			points = PackedVector2Array([origin + Vector2(2, -3), origin + Vector2(reach.x + 4, -1),
+				origin + Vector2(reach.x + 6, 0), origin + Vector2(reach.x + 4, 1), origin + Vector2(2, 3)])
+		"smash":
+			var r := reach.x
+			for i in 9:
+				var ang := lerpf(-1.6, 0.6, i / 8.0)
+				points.append(origin + Vector2(cos(ang) * r, sin(ang) * r * 0.8))
+			points.append(origin + Vector2(4, 4))
+		_:
+			var from := -1.2 if shape == "down" else 0.9
+			var to := 0.9 if shape == "down" else -1.2
+			var outer := reach.x + 2.0
+			var inner := outer - 7.0
+			for i in 9:
+				var ang := lerpf(from, to, i / 8.0)
+				points.append(origin + Vector2(cos(ang) * outer, sin(ang) * outer * 0.55))
+			for i in range(8, -1, -1):
+				var ang := lerpf(from, to, i / 8.0)
+				points.append(origin + Vector2(cos(ang) * inner, sin(ang) * inner * 0.55))
 	if facing < 0:
 		for i in points.size():
 			points[i] = Vector2(-points[i].x, points[i].y)
@@ -573,10 +838,9 @@ func _draw_slash() -> void:
 
 
 func _draw_debug() -> void:
-	draw_rect(Rect2(-W * 0.5, -H, W, H), Color(0.3, 1, 0.5, 0.8), false)
+	draw_rect(Rect2(-w * 0.5, -h, w, h), Color(0.3, 1, 0.5, 0.8), false)
 	if state == State.ATTACK:
-		var a: Dictionary = COMBO[_combo_index]
-		var r := attack_rect(a["reach"])
+		var r := attack_rect(current_move()["reach"])
 		r.position -= global_position
 		draw_rect(r, Color(1, 0.3, 0.3, 0.8), false)
-	PixelFont.draw(self, State.keys()[state], Vector2(-12, -H - 10), Palette.UI_TEXT)
+	PixelFont.draw(self, State.keys()[state], Vector2(-12, -h - 10), Palette.UI_TEXT)

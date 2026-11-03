@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/biome_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mar_de_cinzas"
+title = "O Mar de Cinzas"
+subtitle = "Domínio do deus que ardeu"
+colors = {
+"stone": Color(0.42, 0.34, 0.29, 1),
+"deep": Color(0.2, 0.15, 0.14, 1),
+"top": Color(0.62, 0.52, 0.42, 1),
+"light": Color(0.82, 0.73, 0.6, 1),
+"shadow": Color(0.16, 0.12, 0.11, 1),
+"moss": Color(0.75, 0.72, 0.68, 1),
+"wood": Color(0.36, 0.25, 0.18, 1),
+"wood_top": Color(0.55, 0.4, 0.28, 1),
+"wood_dark": Color(0.22, 0.15, 0.1, 1)
+}
+sky = {
+"sky0": Color(0.16, 0.12, 0.13, 1),
+"sky1": Color(0.27, 0.2, 0.19, 1),
+"sky2": Color(0.34, 0.25, 0.22, 1),
+"glow": Color(0.62, 0.42, 0.3, 1),
+"sun": Color(0.95, 0.83, 0.62, 1),
+"accent": Color(0.91, 0.64, 0.24, 1)
+}
+backdrop = "dunes"
+weather = "ashstorm"
+rooms_dir = "res://content/biomes/mar_de_cinzas/rooms"
+boss_room = "res://content/biomes/mar_de_cinzas/chefe/trono.txt"
+combat_rooms = 6
+enemies = [{"script": "res://scripts/enemies/grunt.gd", "slot": "e", "weight": 8}, {"script": "res://scripts/enemies/shield_guard.gd", "slot": "e", "weight": 10}, {"script": "res://scripts/enemies/pilgrim.gd", "slot": "e", "weight": 9}, {"script": "res://scripts/enemies/assassin.gd", "slot": "e", "weight": 7}, {"script": "res://scripts/enemies/archer.gd", "slot": "r", "weight": 10}]
+elites = ["res://scripts/enemies/inquisitor.gd"]
+boss_script = "res://scripts/enemies/blind_emperor.gd"
+exits = [{"title": "Seguir para o Trono", "to": "trono", "sealed": false}]
+lore = ["Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas.", "Quem respira a Cinza Sagrada ouve a voz que ela guardou. Os sacerdotes chamam de profecia. Os médicos, de febre.", "As Casas Vesper, Oram e Kael lutam pela cinza há trezentos anos. O deserto não cresce. Só as covas.", "O Imperador arrancou os próprios olhos para não ver o presente. Disse que o futuro era mais bonito.", "Os fulgurantes nasceram onde os raios caíram na cinza. Não são animais. São o vidro lembrando de ter sido fogo.", "Os peregrinos não vêm rezar. Vêm arder. Acreditam que quem queima vira parte do deus.", "Na última página do livro profético há uma única frase, escrita em todas as línguas: ELE NÃO VOLTA."]
+tier = 0

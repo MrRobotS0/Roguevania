@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "granada_cinzas"
+title = "Granada de Cinzas"
+kind = "bomb"
+stat = "astucia"
+cooldown = 6.0
+damage = 22.0
+params = {"radius": 34.0, "burn": 3.0}
+color = Color(1.000, 0.604, 0.235, 1)
+starter = true
+unlock_cost = 0
+lore = "Um punhado de Cinza Sagrada num jarro de barro. Os sacerdotes chamam de heresia. Os soldados, de munição."

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "espada_cerimonial"
+title = "Espada Cerimonial"
+category = "melee"
+stat = "furia"
+crit_rule = ""
+crit_mult = 1.75
+starter = true
+unlock_cost = 0
+color = Color(0.851, 0.886, 0.925, 1)
+moves = [{"startup": 0.06, "active": 0.08, "recover": 0.16, "damage": 10, "knock": 90, "reach": Vector2(28, 18), "lunge": 70, "stop": 0.045, "shake": 1.5, "shape": "down"}, {"startup": 0.06, "active": 0.08, "recover": 0.18, "damage": 12, "knock": 110, "reach": Vector2(28, 20), "lunge": 80, "stop": 0.05, "shake": 2.0, "shape": "up"}, {"startup": 0.12, "active": 0.1, "recover": 0.3, "damage": 15, "knock": 240, "reach": Vector2(34, 22), "lunge": 150, "stop": 0.09, "shake": 4.0, "shape": "thrust", "crit": true}]
+shot = {}
+lore = "Forjada para os desfiles das Casas do Mar de Cinzas. Nunca devia ter visto sangue. Viu."

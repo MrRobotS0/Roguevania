@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "egide_bronze"
+title = "Égide de Bronze"
+kind = "shield"
+stat = "vigor"
+cooldown = 0.0
+damage = 0.0
+params = {}
+color = Color(0.949, 0.757, 0.306, 1)
+starter = false
+unlock_cost = 35
+lore = "Escudo da guarda pessoal do Imperador. O polimento é um espelho: quem ataca vê a si mesmo antes do golpe."

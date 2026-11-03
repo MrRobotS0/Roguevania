@@ -16,6 +16,7 @@ var _hit_done := false
 
 
 func _init() -> void:
+	title = "PENITENTE"
 	max_hp = 60
 	hp = 60
 	w = 14
@@ -28,11 +29,6 @@ func body_color() -> Color:
 
 func telegraphing() -> bool:
 	return state == "windup"
-
-
-func attack_rect() -> Rect2:
-	var x := global_position.x if facing > 0 else global_position.x - 30.0
-	return Rect2(x, global_position.y - 20.0, 30.0, 18.0)
 
 
 func think(delta: float) -> void:
@@ -63,8 +59,8 @@ func think(delta: float) -> void:
 				set_state("attack")
 		"attack":
 			velocity.x = 0.0 if blocked(facing) else move_toward(velocity.x, 0.0, 900.0 * delta)
-			if not _hit_done and attack_rect().intersects(player.hurt_rect()):
-				_hit_done = player.take_damage(DAMAGE, facing)
+			if not _hit_done:
+				_hit_done = strike(front_rect(30.0, 18.0), DAMAGE)
 			if state_time >= ACTIVE:
 				set_state("recover")
 		"recover":
