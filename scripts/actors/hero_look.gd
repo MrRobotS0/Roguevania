@@ -1,25 +1,31 @@
 class_name HeroLook
 extends RefCounted
 
-# Miniatura do herói parado, para menus (escolha de aparência, loja da Vigia).
-# Usa as mesmas proporções do desenho do Player.
+# Paleta do herói a partir de uma aparência, na mesma ordem de índices que
+# tools/gen_sprites.py usa para desenhar a folha "hero".
 
+const OUTLINE := Color("0b0910")
+
+
+static func palette(look: Dictionary) -> PackedColorArray:
+	var cloak: Color = look["cloak"]
+	var hood: Color = look["hood"]
+	var scarf: Color = look["scarf"]
+	var eye: Color = hood.lightened(0.3) if look["closed_eyes"] else look["eye"]
+	return PackedColorArray([
+		Color(0, 0, 0, 0), OUTLINE,
+		cloak.lightened(0.22), cloak, look["cloak_dark"],
+		hood.lightened(0.3), hood, hood.darkened(0.4),
+		eye,
+		scarf.lightened(0.25), scarf, scarf.darkened(0.3),
+		Color("0e0b12"), Color("2a2230"), Color("3d3346"), Color("c9a24a"),
+	])
+
+
+# Miniatura do herói parado (escolha de aparência, loja da Vigia).
 static func draw_figure(ci: CanvasItem, feet: Vector2, look: Dictionary, dim := false) -> void:
-	var f := func(c: Color) -> Color: return c.darkened(0.55) if dim else c
-	var parts := [
-		[Rect2(-4, -7, 3, 7), look["hood"]],
-		[Rect2(1, -7, 3, 7), look["hood"]],
-		[Rect2(-5, -16, 10, 10), look["cloak"]],
-		[Rect2(-5, -9, 10, 3), look["cloak_dark"]],
-		[Rect2(-8, -16, 4, 2), look["scarf"]],
-		[Rect2(-3, -17, 7, 2), look["scarf"]],
-		[Rect2(-4, -22, 8, 6), look["hood"]],
-	]
-	for p in parts:
-		var r: Rect2 = p[0]
-		ci.draw_rect(Rect2(feet + r.position - Vector2(1, 1), r.size + Vector2(2, 2)), Color("0b0910"))
-	for p in parts:
-		var r: Rect2 = p[0]
-		ci.draw_rect(Rect2(feet + r.position, r.size), f.call(p[1]))
-	var eye: Color = look["hood"].lightened(0.25) if look["closed_eyes"] else look["eye"]
-	ci.draw_rect(Rect2(feet + Vector2(1, -20), Vector2(2, 1)), f.call(eye))
+	var tex := SpriteSheet.texture("hero", palette(look))
+	var a: Dictionary = SpriteSheet.meta("hero")["anims"]["idle"]
+	var src := Rect2(0, int(a["row"]) * 32, 32, 32)
+	ci.draw_texture_rect_region(tex, Rect2(feet + Vector2(-16, -30), Vector2(32, 32)), src,
+		Color(0.45, 0.45, 0.5) if dim else Color.WHITE)

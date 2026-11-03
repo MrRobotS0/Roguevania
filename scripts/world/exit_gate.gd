@@ -9,6 +9,7 @@ signal used(dest: String)
 var title := ""
 var dest := ""
 var sealed := false
+var _frame: Sprite2D
 
 
 var _light: PointLight2D
@@ -17,6 +18,7 @@ var _light: PointLight2D
 func _ready() -> void:
 	super._ready()
 	_light = Glow.attach(self, Palette.ESSENCE, 64.0, 0.0, Vector2(0, -18))
+	_frame = prop("gate")
 
 
 func prompt() -> String:
@@ -36,18 +38,13 @@ func interact(_p: Player) -> void:
 
 
 func _draw() -> void:
-	var frame := Palette.STONE_TOP if not sealed else Palette.STONE
-	draw_rect(Rect2(-10, -34, 3, 34), frame)
-	draw_rect(Rect2(7, -34, 3, 34), frame)
-	draw_rect(Rect2(-11, -37, 22, 4), frame)
 	_light.energy = 0.0 if sealed or not visible else 0.8 + 0.15 * sin(_t * 3.0)
+	SpriteSheet.set_region(_frame, "props", "gate", 1 if sealed else 0)
 	if sealed:
-		draw_rect(Rect2(-7, -33, 14, 33), Palette.STONE_DEEP)
-		draw_rect(Rect2(-1, -26, 2, 12), Palette.UI_FRAME)
 		return
 	var core := Palette.ESSENCE
-	core.a = 0.45 + 0.2 * sin(_t * 3.0)
-	draw_rect(Rect2(-7, -33, 14, 33), core)
-	for i in 4:
-		var y := -fmod(_t * 18.0 + i * 8.0, 33.0)
-		draw_rect(Rect2(-4 + i * 2, y, 1, 3), Palette.FLASH)
+	core.a = 0.4 + 0.2 * sin(_t * 3.0)
+	draw_rect(Rect2(-8, -36, 16, 36), core)
+	for i in 5:
+		var y := -fmod(_t * 18.0 + i * 7.0, 36.0)
+		draw_rect(Rect2(-6 + i * 3, y, 1, 3), Palette.FLASH)

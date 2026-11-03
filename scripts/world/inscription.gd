@@ -5,6 +5,7 @@ extends Interactable
 
 var text := ""
 var read := false
+var _stone: Sprite2D
 
 
 var _light: PointLight2D
@@ -12,7 +13,8 @@ var _light: PointLight2D
 
 func _ready() -> void:
 	super._ready()
-	_light = Glow.attach(self, Palette.GOLD, 26.0, 0.5, Vector2(0, -10))
+	_light = Glow.attach(self, Palette.GOLD, 26.0, 0.5, Vector2(0, -12))
+	_stone = prop("stele")
 
 
 func prompt() -> String:
@@ -26,10 +28,5 @@ func interact(_p: Player) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-6, -18, 12, 18), Palette.STONE)
-	draw_rect(Rect2(-6, -18, 12, 1), Palette.STONE_LIGHT)
 	_light.energy = 0.0 if read else 0.4 + 0.15 * sin(_t * 2.0)
-	var ink := Palette.GOLD if not read else Palette.UI_DIM
-	ink.a = 0.6 + 0.3 * sin(_t * 2.0) if not read else 0.5
-	for i in 4:
-		draw_rect(Rect2(-4, -15 + i * 4, 3 + (i * 5) % 6, 1), ink)
+	SpriteSheet.set_region(_stone, "props", "stele", 1 if read else 0)

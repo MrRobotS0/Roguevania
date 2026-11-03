@@ -469,6 +469,37 @@ func _solidish(x: int, y: int) -> bool:
 	return c == SOLID or c == FAKE
 
 
+# Os blocos vêm do atlas de tools/gen_tiles.py (índices de paleta pintados
+# com as cores do bioma). A linha do atlas é a máscara dos lados abertos.
+const ATLAS_BURIED := 16
+const ATLAS_PLANK := 17
+
+var _atlas: ImageTexture
+
+
+func tile_palette() -> PackedColorArray:
+	var stone: Color = colors["stone"]
+	var deep: Color = colors["deep"]
+	var ash: Color = colors["moss"]
+	var shadow: Color = colors["shadow"]
+	var bone: Color = colors["bone"]
+	return PackedColorArray([
+		Color(0, 0, 0, 0), shadow.darkened(0.3),
+		colors["light"], colors["top"], stone, stone.darkened(0.18), shadow,
+		deep, deep.darkened(0.3),
+		ash, ash.darkened(0.3),
+		colors["vein"], bone.darkened(0.35),
+		colors["wood_top"], colors["wood"], colors["wood_dark"],
+	])
+
+
+func _tile(ci: CanvasItem, x: int, y: int, row: int, col: int, tint := Color.WHITE) -> void:
+	if _atlas == null:
+		_atlas = SpriteSheet.texture("tiles", tile_palette())
+	ci.draw_texture_rect_region(_atlas, Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE)),
+		Rect2(col * TILE, row * TILE, TILE, TILE), tint)
+
+
 func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 	var p := Vector2(x, y) * TILE
 	var open_up := not _solidish(x, y - 1)
@@ -478,36 +509,23 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 	var buried := not (open_up or open_down or open_left or open_right) \
 		and _solidish(x - 1, y - 1) and _solidish(x + 1, y - 1) \
 		and _solidish(x - 1, y + 1) and _solidish(x + 1, y + 1)
+	var hv := _hash(x, y)
 
 	if buried:
-		_draw_buried(ci, x, y, p)
+		# quanto mais fundo na rocha, mais escuro
+		var k := clampf((depth(x, y) - 2) / 4.0, 0.0, 1.0)
+		# osso (variação 1) e veio de vidro (2) são raros; o resto é rocha
+		var col: int = [0, 3, 4, 5, 6, 7][hv % 6]
+		if hv < 14:
+			col = 1 + hv % 2
+		_tile(ci, x, y, ATLAS_BURIED, col, Color.WHITE.lerp(Color(0.45, 0.42, 0.45), k))
 		return
 
-	ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), colors["stone"])
-	for half in 2:
-		var row := y * 2 + half
-		var top := p.y + half * 8
-		ci.draw_rect(Rect2(p.x, top + 7, TILE, 1), colors["shadow"])
-		var joint := 2 if row % 2 == 0 else 6
-		ci.draw_rect(Rect2(p.x + joint, top, 1, 7), colors["shadow"])
-		ci.draw_rect(Rect2(p.x + joint + 8, top, 1, 7), colors["shadow"])
-		ci.draw_rect(Rect2(p.x + joint + 1, top, 6, 1), Color(colors["top"]).darkened(0.35))
-
-	if open_left:
-		ci.draw_rect(Rect2(p, Vector2(1, TILE)), colors["top"])
-	if open_right:
-		ci.draw_rect(Rect2(p + Vector2(TILE - 1, 0), Vector2(1, TILE)), colors["shadow"])
-	if open_down:
-		ci.draw_rect(Rect2(p + Vector2(0, TILE - 2), Vector2(TILE, 2)), colors["shadow"])
+	var mask := (1 if open_up else 0) | (2 if open_right else 0) | (4 if open_down else 0) | (8 if open_left else 0)
+	_tile(ci, x, y, mask, hv % 4)
 	if open_up:
-		ci.draw_rect(Rect2(p, Vector2(TILE, 3)), colors["top"])
-		ci.draw_rect(Rect2(p, Vector2(TILE, 1)), colors["light"])
-		var hv := _hash(x, y)
 		if hv < 110:
 			ci.draw_rect(Rect2(p + Vector2(hv % 11, -1), Vector2(3 + hv % 3, 1)), colors["moss"])
-			ci.draw_rect(Rect2(p + Vector2(hv % 11 + 1, 1), Vector2(1, 1 + hv % 3)), Color(colors["moss"]).darkened(0.3))
-		elif hv < 150:
-			ci.draw_rect(Rect2(p + Vector2(hv % 13, -1), Vector2(2, 1)), Color(colors["top"]).darkened(0.2))
 		# a cinza se acumula no pé das paredes
 		var drift: Color = Color(colors["moss"]).darkened(0.12)
 		if _solidish(x - 1, y - 1):
@@ -518,43 +536,5 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 				ci.draw_rect(Rect2(p.x + TILE - 2 - i * 2, p.y - 5 + i, 2, 5 - i), drift)
 
 
-# Dentro da rocha: escurece com a profundidade e tem pedras, ossos
-# enterrados e veios de vidro (onde os fulgurantes vivem).
-func _draw_buried(ci: CanvasItem, x: int, y: int, p: Vector2) -> void:
-	var k := clampf((depth(x, y) - 2) / 4.0, 0.0, 1.0)
-	var base: Color = Color(colors["deep"]).lerp(colors["shadow"], k * 0.85)
-	ci.draw_rect(Rect2(p, Vector2(TILE, TILE)), base)
-	var hv := _hash(x, y)
-	var hv2 := _hash(y + 17, x + 5)
-	if hv < 64:
-		var rock: Color = Color(colors["deep"]).lerp(colors["stone"], 0.3).lerp(colors["shadow"], k * 0.75)
-		var at := p + Vector2(hv % 8 + 1, hv2 % 9 + 2)
-		var size := Vector2(5 + hv % 4, 3 + hv2 % 2)
-		ci.draw_rect(Rect2(at, size), rock)
-		ci.draw_rect(Rect2(at, Vector2(size.x, 1)), rock.lightened(0.12))
-		ci.draw_rect(Rect2(at + Vector2(0, size.y), Vector2(size.x, 1)), base.darkened(0.25))
-	elif hv < 70 and k < 0.6:
-		var bone: Color = Color(colors["bone"]).lerp(base, 0.45 + k * 0.4)
-		var at := p + Vector2(3 + hv2 % 4, 5 + hv2 % 6)
-		ci.draw_rect(Rect2(at, Vector2(7, 1)), bone)
-		ci.draw_rect(Rect2(at + Vector2(-1, -1), Vector2(2, 3)), bone)
-		ci.draw_rect(Rect2(at + Vector2(6, -1), Vector2(2, 3)), bone)
-	elif hv < 84:
-		var vein: Color = colors["vein"]
-		vein.a = 0.4 * (1.0 - k * 0.6)
-		var at := p + Vector2(2 + hv2 % 6, 3 + hv2 % 5)
-		for i in 5:
-			ci.draw_rect(Rect2(at + Vector2(i * 2, i if hv2 % 2 == 0 else -i), Vector2(2, 1)), vein)
-	if hv2 < 90:
-		ci.draw_rect(Rect2(p + Vector2(hv2 % 14 + 1, hv % 13 + 1), Vector2(1, 1)), base.lightened(0.1))
-
-
 func _draw_plank(ci: CanvasItem, x: int, y: int) -> void:
-	var p := Vector2(x, y) * TILE
-	ci.draw_rect(Rect2(p, Vector2(TILE, 5)), colors["wood"])
-	ci.draw_rect(Rect2(p, Vector2(TILE, 1)), colors["wood_top"])
-	ci.draw_rect(Rect2(p + Vector2(0, 5), Vector2(TILE, 1)), colors["wood_dark"])
-	if cell(x - 1, y) != PLATFORM or x % 3 == 0:
-		ci.draw_rect(Rect2(p + Vector2(3, 6), Vector2(2, 5)), colors["wood_dark"])
-	if (x + y) % 2 == 0:
-		ci.draw_rect(Rect2(p + Vector2(9, 2), Vector2(1, 2)), colors["wood_dark"])
+	_tile(ci, x, y, ATLAS_PLANK, _hash(x, y) % 4)

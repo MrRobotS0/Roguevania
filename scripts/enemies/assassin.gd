@@ -19,6 +19,7 @@ var _rise_k := 0.0
 
 func _init() -> void:
 	title = "ASSASSINO DA DUNA"
+	sheet = "assassin"
 	max_hp = 40
 	hp = 40
 	w = 10
@@ -102,33 +103,38 @@ func _surface() -> void:
 	Sfx.play("burrow", -6.0)
 
 
-func draw_body() -> void:
+func sprite_anim() -> Array:
 	match state:
 		"hidden", "idle":
-			var wob := sin(_anim * 12.0)
-			draw_rect(Rect2(-6, -2 + wob * 0.5, 12, 2), Palette.DUST)
-			draw_rect(Rect2(-3, -3, 6, 1), Palette.DUST.lightened(0.2))
-			return
+			_rise_k = 0.0
 		"rise":
 			_rise_k = clampf(state_time / RISE, 0.0, 1.0)
 		"sink":
 			_rise_k = 1.0 - clampf(state_time / 0.3, 0.0, 1.0)
 		_:
 			_rise_k = 1.0
-	var sink := (1.0 - _rise_k) * h
-	_part(-4, -7 + sink, 3, 7, CLOTH)
-	_part(1, -7 + sink, 3, 7, CLOTH)
-	_part(-5, -17 + sink, 10, 11, CLOTH)
-	_part(-4, -22 + sink, 8, 6, WRAP)
-	_part(1, -20 + sink, 3, 1, Palette.ENEMY_EYE)
-	var blade_x := 12.0 if state == "slash" else 5.0
-	_part(blade_x - 6, -13 + sink, 9, 1, Palette.BLADE)
-	if _rise_k < 1.0:
-		draw_rect(Rect2(-7, -2, 14, 2), Palette.DUST)
+	body.visible = _rise_k > 0.0
+	sink_px = (1.0 - _rise_k) * 26.0
+	match state:
+		"rise":
+			return ["crouch" if _rise_k < 0.7 else "windup", 0]
+		"slash":
+			return ["slash", 0]
+		"recover":
+			return ["slash" if state_time < 0.1 else "idle", 0]
+		"sink":
+			return ["crouch", 0]
+	if absf(velocity.x) > 5.0:
+		return ["walk", int(_anim * 10.0)]
+	return ["idle", int(_anim * 3.0)]
 
 
-# Desenha só o que está acima do chão (emergindo da cinza).
-func _part(x: float, y: float, rw: float, rh: float, c: Color) -> void:
-	var bottom := minf(y + rh, 0.0)
-	if bottom > y:
-		px(x, y, rw, bottom - y, c)
+func draw_body() -> void:
+	if state in ["hidden", "idle"]:
+		# só um volume se mexendo na cinza
+		var wob := sin(_anim * 12.0)
+		draw_rect(Rect2(-6, -2 + wob * 0.5, 12, 2), Palette.DUST)
+		draw_rect(Rect2(-3, -3, 6, 1), Palette.DUST.lightened(0.2))
+	elif _rise_k < 1.0:
+		draw_rect(Rect2(-8, -2, 16, 2), Palette.DUST)
+		draw_rect(Rect2(-5, -3, 10, 1), Palette.DUST.lightened(0.15))

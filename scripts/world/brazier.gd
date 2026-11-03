@@ -13,6 +13,9 @@ func _ready() -> void:
 	z_index = -1
 	_seed = fposmod(position.x * 0.137, TAU)
 	_light = Glow.attach(self, Color(1.0, 0.62, 0.3), 96.0, 0.9, Vector2(0, -14))
+	var s := SpriteSheet.region_sprite("props", Interactable.props_palette(), "brazier")
+	s.show_behind_parent = true
+	add_child(s)
 
 
 func _process(delta: float) -> void:
@@ -22,12 +25,6 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var iron := Color("2a2220")
-	draw_rect(Rect2(-1, -9, 2, 9), iron)
-	draw_rect(Rect2(-4, -1, 8, 1), iron)
-	draw_rect(Rect2(-6, -13, 12, 4), iron)
-	draw_rect(Rect2(-5, -13, 10, 1), Color("4a3a32"))
-	draw_rect(Rect2(-4, -14, 8, 1), Palette.BURN.darkened(0.3))
 	for i in 4:
 		var k := fposmod(_t * 2.2 + i * 0.27 + _seed, 1.0)
 		var x := -3.0 + i * 2.0 + sin(_t * 7.0 + i) * 1.0

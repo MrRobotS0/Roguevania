@@ -17,6 +17,7 @@ var _exploded := false
 
 func _init() -> void:
 	title = "PEREGRINO CINZENTO"
+	sheet = "pilgrim"
 	max_hp = 26
 	hp = 26
 	w = 10
@@ -80,6 +81,13 @@ func _explode(scale: float) -> void:
 	super._die()
 
 
+func sprite_anim() -> Array:
+	if state == "ignite":
+		return ["ignite", int(state_time / FUSE * 4.0)]
+	var pace := 5.0 if absf(velocity.x) > 5.0 else 2.0
+	return ["walk", int(_anim * pace)]
+
+
 var _fire: PointLight2D
 
 
@@ -87,14 +95,3 @@ func draw_body() -> void:
 	if _fire == null:
 		_fire = Glow.attach(self, Palette.BURN, 70.0, 0.0, Vector2(0, -12))
 	_fire.energy = 1.4 * clampf(state_time / FUSE, 0.0, 1.0) if state == "ignite" else 0.15
-	var sway := sin(_anim * 5.0) * 1.0
-	px(-5 + sway, -16, 10, 16, ROBE)
-	px(-5 + sway, -4, 10, 4, ROBE_DARK)
-	px(-3 + sway, -20, 7, 5, ROBE_DARK)
-	px(1 + sway, -18, 2, 1, Palette.BURN.darkened(0.3))
-	px(5 + sway, -14, 1, 14, Palette.WOOD)
-	if state == "ignite":
-		var k := state_time / FUSE
-		var ember := Palette.BURN.lerp(Palette.FLASH, k)
-		var size := 3.0 + k * 6.0
-		px(-size * 0.5 + sway, -12 - size * 0.5, size, size, ember)

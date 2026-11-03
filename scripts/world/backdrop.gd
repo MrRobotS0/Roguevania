@@ -31,68 +31,63 @@ func _draw() -> void:
 			_columns_bg(size, at)
 
 
-func _gradient(size: Vector2, top: Color, bottom: Color, bands := 12) -> void:
-	var bh := ceilf(size.y / bands)
-	for i in bands:
-		draw_rect(Rect2(0, i * bh, size.x, bh), top.lerp(bottom, float(i) / (bands - 1)))
+# Camadas pintadas por tools/gen_backdrop.py (índices de paleta), pintadas
+# aqui com as cores do bioma. Céu parado; as outras andam em paralaxe e
+# repetem na horizontal.
+const LAYERS := [["bd_far", 0.08, 0.04], ["bd_mid", 0.22, 0.1], ["bd_near", 0.45, 0.18]]
+
+var _painted := {}
+var _painted_for := {}
+
+
+func _layer(name: String) -> ImageTexture:
+	if _painted_for != sky:
+		_painted.clear()
+		_painted_for = sky.duplicate()
+	if not _painted.has(name):
+		_painted[name] = SpriteSheet.texture(name, _palette())
+	return _painted[name]
+
+
+func _palette() -> PackedColorArray:
+	var s0 := _c("sky0", Palette.SKY_0)
+	var s1 := _c("sky1", Palette.SKY_1)
+	var glow := _c("glow", Palette.SKY_GLOW)
+	var sun := _c("sun", Color.WHITE)
+	var far_body := s1.lerp(glow, 0.35)
+	var mid_body := s1.lerp(s0, 0.15)
+	var near_body := s0.darkened(0.35)
+	return PackedColorArray([
+		Color(0, 0, 0, 0), s0, s0.lerp(s1, 0.6), s1.lerp(glow, 0.45), glow,
+		sun, sun.lerp(glow, 0.45), glow.lerp(sun, 0.25),
+		far_body, far_body.lerp(sun, 0.25),
+		mid_body, mid_body.lerp(glow, 0.5), mid_body.darkened(0.25),
+		near_body, near_body.lerp(glow, 0.35),
+		glow.lerp(sun, 0.15),
+	])
 
 
 func _dunes(size: Vector2, at: Vector2) -> void:
-	var top := _c("sky0", Palette.SKY_0)
-	var glow := _c("glow", Palette.SKY_GLOW)
-	_gradient(size, top, glow)
-	# sol pálido atrás da cinza
-	var sun := _c("sun", Color.WHITE)
-	var sp := Vector2(size.x * 0.72 - at.x * 0.02, 70.0 - at.y * 0.02)
-	for r in [26, 20, 15]:
-		var c := sun
-		c.a = 0.08 if r == 26 else (0.15 if r == 20 else 0.75)
-		draw_circle(sp, r, c)
-	# colossos: estátuas quebradas e meio enterradas, bem ao fundo
-	var far := _c("sky1", Palette.SKY_1)
-	var scroll := at.x * 0.08
-	for i in range(-1, 4):
-		var x := floorf(i * 260.0 - fposmod(scroll, 260.0))
-		var base := size.y - 70.0 - at.y * 0.05
-		draw_rect(Rect2(x + 40, base - 110, 34, 110), far)
-		draw_rect(Rect2(x + 34, base - 128, 46, 22), far)
-		draw_rect(Rect2(x + 44, base - 140, 8, 14), far)
-		draw_rect(Rect2(x + 74, base - 90, 30, 10), far)
-	# três camadas de dunas, com névoa de cinza entre elas: quanto mais longe,
-	# mais apagado. A última fica escura para o cenário jogável se destacar.
-	_haze(size, size.y - 150.0, glow, 0.22)
-	_dune_layer(size, at, 0.15, size.y - 95.0, 30.0, 0.011, far.lerp(glow, 0.35))
-	_haze(size, size.y - 110.0, glow, 0.16)
-	_dune_layer(size, at, 0.3, size.y - 70.0, 24.0, 0.017, _c("sky2", Palette.SKY_2).lerp(glow, 0.15))
-	_haze(size, size.y - 80.0, top, 0.25)
-	_dune_layer(size, at, 0.5, size.y - 40.0, 18.0, 0.023, _c("sky2", Palette.SKY_2).darkened(0.5))
+	draw_texture(_layer("bd_sky"), Vector2.ZERO)
+	for l in LAYERS:
+		var tex := _layer(l[0])
+		var lw := float(tex.get_width())
+		var x0 := -fposmod(at.x * float(l[1]), lw)
+		var y0 := clampf(-(at.y - 400.0) * float(l[2]), -30.0, 30.0)
+		x0 = floorf(x0)
+		y0 = floorf(y0)
+		draw_texture(tex, Vector2(x0, y0))
+		draw_texture(tex, Vector2(x0 + lw, y0))
+		if y0 < 0.0:
+			# o pé da camada não pode deixar buraco embaixo
+			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), SpriteSheet.image(l[0], _palette()).get_pixel(0, tex.get_height() - 1))
 	# cinza caindo devagar
+	var ash := _c("sun", Color.WHITE)
+	ash.a = 0.18
 	for i in 40:
 		var px := fposmod(i * 97.0 - _t * (8.0 + i % 5) - at.x * 0.3, size.x)
 		var py := fposmod(i * 53.0 + _t * (12.0 + i % 7), size.y)
-		var c := sun
-		c.a = 0.18
-		draw_rect(Rect2(px, py, 1, 1), c)
-
-
-func _haze(size: Vector2, from_y: float, color: Color, alpha: float) -> void:
-	var bands := 6
-	for i in bands:
-		var c := color
-		c.a = alpha * (1.0 - float(i) / bands)
-		draw_rect(Rect2(0, from_y + i * 10.0, size.x, size.y - from_y - i * 10.0), c)
-
-
-func _dune_layer(size: Vector2, at: Vector2, parallax: float, base: float, amp: float, freq: float, color: Color) -> void:
-	var off := at.x * parallax
-	var y0 := base - at.y * parallax * 0.25
-	var step := 4.0
-	var x := 0.0
-	while x < size.x:
-		var wx := x + off
-		var hgt := sin(wx * freq) * amp + sin(wx * freq * 2.3 + 1.7) * amp * 0.35
-		draw_rect(Rect2(x, y0 - hgt, step, size.y - y0 + hgt), color)
-		x += step
+		draw_rect(Rect2(px, py, 1, 1), ash)
 
 
 func _columns_bg(size: Vector2, at: Vector2) -> void:

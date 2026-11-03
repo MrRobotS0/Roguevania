@@ -94,6 +94,7 @@ func _ready() -> void:
 	if skin == null:
 		skin = Meta.current_skin()
 	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.8, Vector2(0, -12))
+	_setup_look()
 
 
 func weapon(slot: int) -> Gear:
@@ -188,6 +189,7 @@ func _physics_process(delta: float) -> void:
 		_after_move(falling)
 	_update_scarf(delta)
 	_update_ghosts(delta)
+	_update_body()
 	queue_redraw()
 
 
@@ -721,91 +723,141 @@ func _dead_state(delta: float) -> void:
 # Tudo em retângulos, espelhado pelo lado em que o herói olha. Quando a arte
 # final chegar, isto vira um AnimatedSprite2D e o resto do arquivo fica igual.
 
-func _draw() -> void:
-	_draw_ghosts()
+# --- desenho --------------------------------------------------------------------
+# O corpo é um sprite (folha "hero", pintada com a aparência). Atrás dele:
+# rastro, cachecol e a arma guardada nas costas. Na frente (nó _front): a arma
+# na mão, o arco do golpe e os efeitos de status.
+
+const SHEET := "hero"
+
+var body: Sprite2D
+var _front: Node2D
+var _tex: ImageTexture
+var _white: ImageTexture
+var _hand := Vector2(4, -12)
+
+
+func _setup_look() -> void:
+	var pal := HeroLook.palette(skin.colors())
+	_tex = SpriteSheet.texture(SHEET, pal)
+	_white = SpriteSheet.texture(SHEET, pal, true)
+	body = SpriteSheet.make_sprite(SHEET)
+	body.texture = _tex
+	add_child(body)
+	_front = Node2D.new()
+	add_child(_front)
+	_front.draw.connect(_draw_front)
+	_update_body()
+
+
+func _body_anim() -> Array:
+	match state:
+		State.MOVE:
+			if is_on_floor():
+				if absf(velocity.x) > 20.0:
+					return ["run", int(_anim * SpriteSheet.fps(SHEET, "run"))]
+				return ["idle", int(_anim * SpriteSheet.fps(SHEET, "idle"))]
+			if velocity.y < 0.0:
+				return ["jump", 0 if velocity.y < -150.0 else 1]
+			return ["fall", int(_anim * SpriteSheet.fps(SHEET, "fall"))]
+		State.ATTACK:
+			var m := current_move()
+			if m.is_empty() or _state_time < float(m["startup"]):
+				return ["windup", 0]
+			if _state_time < float(m["startup"]) + float(m["active"]):
+				return ["strike", 0]
+			return ["recover", 0]
+		State.SHOOT:
+			return ["shoot", 0]
+		State.BLOCK:
+			return ["block", 0]
+		State.ROLL:
+			return ["roll", int(_state_time / ROLL_TIME * 6.0)]
+		State.DIVE:
+			return ["dive", 0]
+		State.CLIMB:
+			return ["climb", int(_state_time / CLIMB_TIME * 2.0)]
+		State.HEAL:
+			return ["heal", int(_anim * SpriteSheet.fps(SHEET, "heal"))]
+		State.HURT:
+			return ["hurt", 0]
+		State.DEAD:
+			return ["dead", 0]
+	return ["idle", 0]
+
+
+func _update_body() -> void:
+	if body == null:
+		return
+	var pick := _body_anim()
+	_hand = SpriteSheet.set_frame(body, SHEET, pick[0], pick[1])
+	body.flip_h = facing < 0
 	var stretch := Vector2.ONE
 	if state == State.MOVE and not is_on_floor() and velocity.y < -120.0:
-		stretch = Vector2(0.9, 1.1)
-	draw_set_transform(Vector2.ZERO, 0.0, stretch)
+		stretch = Vector2(0.92, 1.08)
+	elif _squash > 0.0:
+		stretch = Vector2(1.0 + _squash * 0.2, 1.0 - _squash * 0.18)
+	body.scale = stretch
+	body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0)
+	body.texture = _white if flash > 0.0 else _tex
+	_front.queue_redraw()
+
+
+func _draw() -> void:
+	_draw_ghosts()
+	if state == State.DEAD:
+		return
 	begin_tint()
-	var blink := _invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0
-	if not blink:
-		match state:
-			State.ROLL: _draw_roll()
-			State.DEAD: _draw_dead()
-			_: _draw_body()
-	end_tint()
-	draw_set_transform(Vector2.ZERO)
-	if state == State.ATTACK:
-		_draw_slash()
-	draw_statuses(_anim)
-	if Fx.debug:
-		_draw_debug()
-
-
-func _blade_color() -> Color:
-	var g := weapon(_slot)
-	return g.data.color if g else Palette.BLADE
-
-
-func _draw_body() -> void:
-	var running := is_on_floor() and absf(velocity.x) > 20.0 and state == State.MOVE
-	var stride := sin(_anim * 18.0) * 2.0 if running else 0.0
-	var squash := _squash * 3.0
-	var lift := 0.0 if is_on_floor() else -1.0
-	var top := -h + squash
-
-	px(-4 + stride, -7 + lift, 3, 7 + absf(lift), skin.hood)
-	px(1 - stride, -7 + lift, 3, 7 + absf(lift), skin.hood)
-	px(-5, top + 6, 10, 10 - squash, skin.cloak)
-	px(-5, top + 13, 10, 3 - squash * 0.5, skin.cloak_dark)
-	px(-6, top + 8, 1, 7, skin.cloak_dark)
 	_draw_scarf()
-	px(-3, top + 5, 7, 2, skin.scarf)
-	px(-4, top, 8, 6, skin.hood)
-	px(1, top + 2, 2, 1, _eye_color())
+	if state in [State.MOVE, State.ROLL, State.CLIMB, State.HURT]:
+		# arma guardada nas costas, na diagonal
+		var g := weapon(_slot)
+		if g and g.is_weapon() and (g.data as WeaponData).category != "bow":
+			for i in 9:
+				raw(Rect2(Vector2(-facing * (5 - i * 0.6), -21 + i), Vector2(1, 1)), _blade_color())
+	end_tint()
 
+
+func _draw_front() -> void:
+	pen = _front
+	begin_tint()
+	var hx := _hand.x
+	var hy := _hand.y
 	match state:
 		State.ATTACK:
 			var m := current_move()
 			var reach: Vector2 = m["reach"]
 			if _state_time < float(m["startup"]):
-				px(-3, top - 6, 1, 10, _blade_color())
-				px(-4, top + 5, 3, 1, skin.scarf)
+				px(hx, hy - 10, 1, 10, _blade_color())
+				px(hx - 1, hy - 1, 3, 1, Palette.GOLD)
 			else:
-				px(4, top + 10, reach.x - 8.0, 1, _blade_color())
-				px(3, top + 9, 2, 3, skin.scarf)
+				px(hx + 1, hy, maxf(reach.x - hx - 6.0, 6.0), 1, _blade_color())
+				px(hx, hy - 1, 1, 3, Palette.GOLD)
 		State.SHOOT:
 			var pull := clampf(_state_time / 0.25, 0.0, 1.0) * 3.0
-			px(6, top + 4, 1, 12, Palette.WOOD_TOP)
-			px(6 - pull, top + 5, 1, 10, Palette.UI_DIM)
-			px(0, top + 9, 7, 1, Palette.ARROW)
+			px(hx + 2, hy - 6, 1, 13, Palette.WOOD_TOP)
+			px(hx + 2 - pull, hy - 5, 1, 11, Palette.UI_DIM)
+			px(hx - 5 + pull, hy, 8, 1, Palette.ARROW)
 		State.BLOCK:
 			var parry := _state_time <= PARRY_WINDOW
-			px(5, top + 3, 3, 15, Palette.DANGER if parry else Palette.GOLD)
-			px(6, top + 5, 1, 11, Palette.STONE_TOP)
+			px(hx + 1, hy - 8, 3, 15, Palette.DANGER if parry else Palette.GOLD)
+			px(hx + 2, hy - 6, 1, 11, Palette.STONE_TOP)
 		State.DIVE:
-			px(-1, -2, 1, 9, _blade_color())
+			px(hx, hy, 1, 10, _blade_color())
 		State.HEAL:
-			px(2, top + 3, 3, 4, Palette.HEAL)
-		_:
-			px(-6, top + 3, 1, 10, _blade_color())
+			px(hx, hy - 3, 3, 4, Palette.HEAL)
+	end_tint()
+	if state == State.ATTACK:
+		_draw_slash()
+	draw_statuses(_anim)
+	if Fx.debug:
+		_draw_debug()
+	pen = self
 
 
-func _draw_roll() -> void:
-	var frame := int(_state_time / ROLL_TIME * 8.0) % 4
-	px(-6, -12, 12, 12, skin.cloak)
-	px(-6, -3, 12, 3, skin.cloak_dark)
-	var hood := [Vector2(1, -12), Vector2(2, -6), Vector2(-3, -4), Vector2(-5, -11)]
-	var spot: Vector2 = hood[frame]
-	px(spot.x, spot.y, 5, 5, skin.hood)
-	px(-8 - frame, -6, 3, 2, skin.scarf)
-
-
-func _draw_dead() -> void:
-	px(-9, -5, 18, 5, skin.cloak_dark)
-	px(5, -6, 6, 5, skin.hood)
-	px(-10, -2, 4, 2, skin.scarf)
+func _blade_color() -> Color:
+	var g := weapon(_slot)
+	return g.data.color if g else Palette.BLADE
 
 
 func _draw_slash() -> void:
@@ -848,16 +900,16 @@ func _draw_slash() -> void:
 	if facing < 0:
 		for i in points.size():
 			points[i] = Vector2(-points[i].x, points[i].y)
-	draw_colored_polygon(points, color)
+	pen.draw_colored_polygon(points, color)
 
 
 func _draw_debug() -> void:
-	draw_rect(Rect2(-w * 0.5, -h, w, h), Color(0.3, 1, 0.5, 0.8), false)
+	pen.draw_rect(Rect2(-w * 0.5, -h, w, h), Color(0.3, 1, 0.5, 0.8), false)
 	if state == State.ATTACK:
 		var r := attack_rect(current_move()["reach"])
 		r.position -= global_position
-		draw_rect(r, Color(1, 0.3, 0.3, 0.8), false)
-	PixelFont.draw(self, State.keys()[state], Vector2(-12, -h - 10), Palette.UI_TEXT)
+		pen.draw_rect(r, Color(1, 0.3, 0.3, 0.8), false)
+	PixelFont.draw(pen, State.keys()[state], Vector2(-12, -h - 10), Palette.UI_TEXT)
 
 
 func _eye_color() -> Color:
@@ -871,7 +923,7 @@ const SCARF_GAP := 2.5
 
 
 func _neck() -> Vector2:
-	return global_position + Vector2(-2.0 * facing, -h + 6.0 + _squash * 3.0)
+	return global_position + Vector2(-4.0 * facing, -16.0 + _squash * 3.0)
 
 
 func _update_scarf(delta: float) -> void:
@@ -906,17 +958,20 @@ func _update_ghosts(delta: float) -> void:
 		g[1] -= delta
 	_ghosts = _ghosts.filter(func(g: Array) -> bool: return g[1] > 0.0)
 	_ghost_clock -= delta
-	if (state == State.ROLL or state == State.DIVE) and _ghost_clock <= 0.0:
+	if body and (state == State.ROLL or state == State.DIVE) and _ghost_clock <= 0.0:
 		_ghost_clock = 0.035
-		_ghosts.append([global_position, 0.18, state])
+		_ghosts.append([global_position, 0.18, body.frame, facing])
 
 
 func _draw_ghosts() -> void:
+	if body == null:
+		return
+	var cols: int = body.hframes
 	for g in _ghosts:
 		var at: Vector2 = g[0] - global_position
-		var c := skin.cloak.lightened(0.15)
-		c.a = 0.45 * g[1] / 0.18
-		if g[2] == State.ROLL:
-			draw_rect(Rect2(at + Vector2(-6, -12), Vector2(12, 12)), c)
-		else:
-			draw_rect(Rect2(at + Vector2(-5, -h), Vector2(10, h)), c)
+		var tint := skin.cloak.lightened(0.35)
+		tint.a = 0.5 * g[1] / 0.18
+		var f: int = g[2]
+		draw_set_transform(at, 0.0, Vector2(g[3], 1))
+		draw_texture_rect_region(_white, Rect2(-16, -30, 32, 32), Rect2((f % cols) * 32, (f / cols) * 32, 32, 32), tint)
+	draw_set_transform(Vector2.ZERO)

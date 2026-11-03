@@ -11,11 +11,13 @@ const LINES := [
 ]
 
 var refilled := false
+var _body: Sprite2D
 
 
 func _ready() -> void:
 	super._ready()
-	Glow.attach(self, Palette.ESSENCE, 50.0, 0.7, Vector2(10, -20))
+	Glow.attach(self, Palette.ESSENCE, 50.0, 0.7, Vector2(13, -29))
+	_body = prop("keeper")
 
 
 func prompt() -> String:
@@ -83,12 +85,4 @@ func _open_shop(p: Player) -> void:
 
 
 func _draw() -> void:
-	var sway := sin(_t * 1.5)
-	draw_rect(Rect2(-6, -30, 12, 30), Color("2b2f3a"))
-	draw_rect(Rect2(-7, -34, 14, 6), Color("1c1f27"))
-	draw_rect(Rect2(-3, -31, 6, 3), Color("0b0c10"))
-	var lamp := Palette.ESSENCE
-	lamp.a = 0.7 + 0.3 * sin(_t * 3.0)
-	draw_rect(Rect2(8, -22 + sway, 4, 5), lamp)
-	draw_rect(Rect2(9, -26 + sway, 1, 4), Palette.STONE_TOP)
-	draw_rect(Rect2(6, -28, 1, 28), Palette.WOOD)
+	SpriteSheet.set_region(_body, "props", "keeper", int(_t * 2.0))

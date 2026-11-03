@@ -11,6 +11,7 @@ var _light: PointLight2D
 func _ready() -> void:
 	super._ready()
 	_light = Glow.attach(self, gear.data.color, 44.0, 0.7, Vector2(0, -16))
+	prop("pedestal")
 
 
 func prompt() -> String:
@@ -38,11 +39,9 @@ func interact(p: Player) -> void:
 
 func _draw() -> void:
 	var bob := sin(_t * 3.0) * 2.0
-	draw_rect(Rect2(-7, -4, 14, 4), Palette.STONE_TOP)
-	draw_rect(Rect2(-6, -5, 12, 1), Palette.STONE_LIGHT)
 	var glow: Color = gear.data.color
 	glow.a = 0.25 + 0.15 * sin(_t * 4.0)
-	draw_rect(Rect2(-7, -24 + bob, 14, 16), glow)
+	draw_rect(Rect2(-6, -24 + bob, 12, 14), glow)
 	var c: Color = gear.data.color
 	if gear.is_weapon():
 		var data: WeaponData = gear.data

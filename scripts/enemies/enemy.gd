@@ -27,6 +27,16 @@ var _shown_hp := 0.0
 var _hp_visible := 0.0
 var _anim := 0.0
 
+# Corpo em sprite (folhas de tools/gen_enemies.py). Sem `sheet`, o inimigo é
+# desenhado à mão em draw_body(), como antes.
+var sheet := ""
+var body: Sprite2D
+var sink_px := 0.0           # afundado no chão (o assassino emerge da cinza)
+var _tex: ImageTexture
+var _white: ImageTexture
+var _warn: ImageTexture
+var _frame_size := Vector2i(32, 32)
+
 
 func _ready() -> void:
 	setup_body(4)
@@ -41,6 +51,72 @@ func _ready() -> void:
 		essence_drop *= 4
 		outline_color = Color("5a1a10")
 		Glow.attach(self, Palette.DANGER, 46.0, 0.45, Vector2(0, -h * 0.5))
+	if sheet != "":
+		_setup_sprite()
+
+
+func _setup_sprite() -> void:
+	var pal := EnemyLooks.palette(sheet)
+	var warn := EnemyLooks.palette(sheet, true)
+	if elite:
+		# elite: contorno em brasa
+		pal[1] = Color("8a2a10")
+		warn[1] = Color("8a2a10")
+	_tex = SpriteSheet.texture(sheet, pal)
+	_warn = SpriteSheet.texture(sheet, warn)
+	_white = SpriteSheet.texture(sheet, pal, true)
+	var m := SpriteSheet.meta(sheet)
+	_frame_size = Vector2i(int(m.get("w", 32)), int(m.get("h", 32)))
+	body = Sprite2D.new()
+	body.centered = false
+	body.region_enabled = true
+	body.texture = _tex
+	add_child(body)
+	_update_sprite()
+
+
+# Qual animação e quadro mostrar agora: [nome, índice]. Cada inimigo responde.
+func sprite_anim() -> Array:
+	return ["idle", int(_anim * 3.0)]
+
+
+func _update_sprite() -> void:
+	var pick := sprite_anim()
+	var anims: Dictionary = SpriteSheet.meta(sheet)["anims"]
+	var a: Dictionary = anims.get(pick[0], anims.values()[0])
+	var i := posmod(int(pick[1]), int(a["frames"]))
+	var fw := _frame_size.x
+	var fh := _frame_size.y
+	var cut := clampf(sink_px, 0.0, fh - 1.0)
+	body.region_rect = Rect2(i * fw, int(a["row"]) * fh, fw, fh - cut)
+	body.offset = Vector2(-fw * 0.5, -fh + 2 + cut)
+	body.flip_h = facing < 0
+	body.scale = _pose()
+	if flash > 0.0:
+		body.texture = _white
+	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
+		body.texture = _warn
+	else:
+		body.texture = _tex
+
+
+# Pixels do quadro atual, em coordenadas do mundo (a morte vira cinza com eles).
+func sprite_parts() -> Array:
+	var out: Array = []
+	if body == null or not body.visible:
+		return out
+	var img := SpriteSheet.image(sheet, EnemyLooks.palette(sheet))
+	var r := body.region_rect
+	for y in range(0, int(r.size.y), 2):
+		for x in range(0, int(r.size.x), 2):
+			var c := img.get_pixel(int(r.position.x) + x, int(r.position.y) + y)
+			if c.a < 0.5:
+				continue
+			var lx := body.offset.x + x
+			if body.flip_h:
+				lx = -lx - 2.0
+			out.append([Rect2(global_position + Vector2(lx, body.offset.y + y), Vector2(2, 2)), c])
+	return out
 
 
 func set_state(next: String) -> void:
@@ -95,7 +171,7 @@ func on_interrupted() -> void:
 
 func _die() -> void:
 	# o corpo se desfaz em cinza, parte por parte, com as cores que tinha
-	var parts: Array = []
+	var parts: Array = sprite_parts()
 	for p in last_parts:
 		var r: Rect2 = p[0]
 		parts.append([Rect2(r.position + global_position, r.size), p[1]])
@@ -132,6 +208,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		think(delta)
 	move_and_slide()
+	if body:
+		_update_sprite()
 	queue_redraw()
 
 
@@ -209,7 +287,8 @@ func _pose() -> Vector2:
 
 
 func _draw() -> void:
-	draw_set_transform(Vector2.ZERO, 0.0, _pose())
+	if body == null:
+		draw_set_transform(Vector2.ZERO, 0.0, _pose())
 	begin_tint()
 	draw_body()
 	end_tint()

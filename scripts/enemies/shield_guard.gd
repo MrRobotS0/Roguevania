@@ -23,6 +23,7 @@ var _hit_done := false
 
 func _init() -> void:
 	title = "GUARDA DA CASA"
+	sheet = "guard"
 	max_hp = 70
 	hp = 70
 	w = 14
@@ -95,27 +96,20 @@ func think(delta: float) -> void:
 				set_state("chase")
 
 
+func sprite_anim() -> Array:
+	match state:
+		"windup":
+			return ["windup", 0]
+		"attack":
+			return ["attack", 0]
+		"recover":
+			return ["recover", 0]
+		"stun":
+			return ["stun", 0]
+	if absf(velocity.x) > 5.0:
+		return ["walk", int(_anim * 8.0)]
+	return ["idle", int(_anim * 3.0)]
+
+
 func draw_body() -> void:
-	var step := sin(_anim * 9.0) * 1.5 if absf(velocity.x) > 5.0 else 0.0
-	var body := ARMOR
-	var spear_x := 0.0
-	if state == "windup":
-		body = ARMOR.lerp(Palette.TELEGRAPH, 0.3 + 0.3 * sin(state_time * 30.0))
-		spear_x = -6.0
-	elif state == "attack":
-		spear_x = 10.0
-	px(-6 + step, -7, 4, 7, ARMOR_DARK)
-	px(2 - step, -7, 4, 7, ARMOR_DARK)
-	px(-7, -19, 13, 13, body)
-	px(-7, -12, 13, 2, BRONZE)
-	px(-5, -24, 9, 6, BRONZE)
-	px(-4, -27, 3, 3, ARMOR)
-	px(1, -22, 3, 1, Palette.UI_SHADOW)
-	# lança por cima, escudo na frente
-	px(-8 + spear_x, -16, 30, 1, Palette.WOOD_TOP)
-	px(22 + spear_x, -17, 4, 3, Palette.BLADE)
-	if state not in ["attack", "recover"]:
-		px(6, -21, 4, 17, BRONZE)
-		px(7, -19, 2, 13, BRONZE.lightened(0.25))
-	else:
-		px(-9, -20, 3, 15, BRONZE.darkened(0.2))
+	pass

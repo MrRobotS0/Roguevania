@@ -17,6 +17,7 @@ var _hit_done := false
 
 func _init() -> void:
 	title = "PENITENTE"
+	sheet = "penitent"
 	max_hp = 60
 	hp = 60
 	w = 14
@@ -69,36 +70,24 @@ func think(delta: float) -> void:
 				set_state("chase")
 
 
-func draw_body() -> void:
-	var lean := 0.0
-	var body := Palette.GRUNT
-	if state == "windup":
-		lean = -2.0
-		body = Palette.GRUNT.lerp(Palette.TELEGRAPH, 0.35 + 0.35 * sin(state_time * 30.0))
-	elif state == "attack":
-		lean = 2.0
-	var step := sin(_anim * 10.0) * 1.5 if absf(velocity.x) > 5.0 else 0.0
-
-	px(-6 + step, -6, 4, 6, Palette.GRUNT_DARK)
-	px(2 - step, -6, 4, 6, Palette.GRUNT_DARK)
-	px(-7 + lean, -18, 14, 13, body)
-	px(-7 + lean, -9, 14, 2, Palette.GRUNT_DARK)
-	px(-5 + lean, -22, 9, 5, body.darkened(0.15))
-	px(1 + lean, -20, 2, 1, Palette.ENEMY_EYE)
-
-	# clava: erguida atrás no aviso, à frente no golpe
+func sprite_anim() -> Array:
 	match state:
 		"windup":
-			px(-9 + lean, -30, 3, 14, Palette.WOOD)
-			px(-10 + lean, -32, 5, 5, Palette.WOOD_TOP)
+			return ["windup", 0]
 		"attack":
-			px(6, -14, 18, 3, Palette.WOOD)
-			px(22, -16, 5, 6, Palette.WOOD_TOP)
-			if state_time < ACTIVE:
-				var swoosh := Palette.SLASH
-				swoosh.a = 0.6
-				px(6, -20, 22, 1, swoosh)
-				px(10, -6, 18, 1, swoosh)
-		_:
-			px(5 + lean, -16, 3, 12, Palette.WOOD)
-			px(4 + lean, -6, 5, 4, Palette.WOOD_TOP)
+			return ["attack", 0]
+		"recover":
+			return ["attack" if state_time < 0.12 else "idle", 0]
+		"stun":
+			return ["stun", 0]
+	if absf(velocity.x) > 5.0:
+		return ["walk", int(_anim * 8.0)]
+	return ["idle", int(_anim * 3.0)]
+
+
+func draw_body() -> void:
+	if state == "attack" and state_time < ACTIVE:
+		var swoosh := Palette.SLASH
+		swoosh.a = 0.6
+		px(6, -20, 22, 1, swoosh)
+		px(10, -6, 18, 1, swoosh)

@@ -21,6 +21,7 @@ var _target_x := 0.0
 
 func _init() -> void:
 	title = "INQUISIDOR PROFETA"
+	sheet = "inquisitor"
 	max_hp = 90
 	hp = 90
 	w = 16
@@ -97,24 +98,22 @@ func _slam() -> void:
 	set_state("recover")
 
 
-func draw_body() -> void:
-	var crouch := 4.0 if state == "leap_windup" else 0.0
-	var body := ROBE
-	if telegraphing():
-		body = ROBE.lerp(Palette.TELEGRAPH, 0.3 + 0.3 * sin(state_time * 30.0))
-	px(-8, -22 + crouch, 16, 22 - crouch, body)
-	px(-8, -6, 16, 6, ROBE_DARK)
-	px(-2, -18 + crouch, 4, 10, GOLD)
-	px(-5, -28 + crouch, 10, 7, ROBE_DARK)
-	px(-3, -32 + crouch, 6, 4, GOLD)
-	px(1, -25 + crouch, 3, 1, Palette.HERO_EYE)
-	# incensário
-	var swing := 0.0
+func sprite_anim() -> Array:
 	match state:
-		"slash_windup": swing = -10.0
-		"slash": swing = 14.0
-	px(8 + swing * 0.5, -18 + crouch, 1, 10, GOLD)
-	px(6 + swing, -9 + crouch, 5, 5, GOLD.darkened(0.2))
+		"slash_windup":
+			return ["windup", 0]
+		"slash":
+			return ["slash", 0]
+		"leap_windup":
+			return ["crouch", 0]
+		"leap":
+			return ["leap", 0]
+	if absf(velocity.x) > 5.0:
+		return ["walk", int(_anim * 6.0)]
+	return ["idle", int(_anim * 3.0)]
+
+
+func draw_body() -> void:
 	if state == "slash":
 		var trail := Palette.SLASH
 		trail.a = 0.5

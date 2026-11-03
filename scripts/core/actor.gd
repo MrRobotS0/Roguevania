@@ -91,6 +91,7 @@ func tick_statuses(delta: float) -> void:
 const OUTLINE := Color("0b0910")
 
 var outline_color := OUTLINE
+var pen: CanvasItem = self      # onde px/raw desenham (o herói desenha a arma num nó da frente)
 var _collect := false
 var _parts: Array = []
 var last_parts: Array = []     # o último corpo desenhado (vira cinza ao morrer)
@@ -108,7 +109,7 @@ func raw(r: Rect2, c: Color) -> void:
 	if _collect:
 		_parts.append([r, color])
 	else:
-		draw_rect(r, color)
+		pen.draw_rect(r, color)
 
 
 func begin_tint() -> void:
@@ -122,14 +123,14 @@ func end_tint() -> void:
 	for p in _parts:
 		var c: Color = p[1]
 		if c.a >= 0.99:
-			draw_rect((p[0] as Rect2).grow(1.0), outline_color)
+			pen.draw_rect((p[0] as Rect2).grow(1.0), outline_color)
 	var lit := _tint.a <= 0.0
 	for p in _parts:
 		var r: Rect2 = p[0]
 		var c: Color = p[1]
-		draw_rect(r, c)
+		pen.draw_rect(r, c)
 		if lit and c.a >= 0.99 and r.size.y >= 3.0 and r.size.x >= 2.0:
-			draw_rect(Rect2(r.position, Vector2(r.size.x, 1)), c.lightened(0.2))
+			pen.draw_rect(Rect2(r.position, Vector2(r.size.x, 1)), c.lightened(0.2))
 	last_parts = _parts.duplicate()
 	_tint = Color(0, 0, 0, 0)
 
@@ -139,8 +140,8 @@ func draw_statuses(t: float) -> void:
 		for i in 3:
 			var fx := -w * 0.5 + 2 + i * (w - 4) * 0.5
 			var fh := 3.0 + fmod(t * 9.0 + i * 1.7, 3.0)
-			draw_rect(Rect2(fx - 1, -h - fh + 4, 2, fh), Palette.BURN)
+			pen.draw_rect(Rect2(fx - 1, -h - fh + 4, 2, fh), Palette.BURN)
 	if has_status("stun"):
 		for i in 3:
 			var a := t * 6.0 + i * TAU / 3.0
-			draw_rect(Rect2(cos(a) * 6 - 1, -h - 5 + sin(a) * 2, 2, 2), Palette.DANGER)
+			pen.draw_rect(Rect2(cos(a) * 6 - 1, -h - 5 + sin(a) * 2, 2, 2), Palette.DANGER)

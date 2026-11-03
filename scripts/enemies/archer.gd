@@ -19,6 +19,7 @@ var shard := true   # true = atira estilhaço de vidro (Mar de Cinzas)
 
 func _init() -> void:
 	title = "ATIRADOR DE VIDRO"
+	sheet = "archer"
 	max_hp = 34
 	hp = 34
 	w = 10
@@ -89,21 +90,13 @@ func _draw() -> void:
 	super._draw()
 
 
-func draw_body() -> void:
-	var body := Palette.ARCHER
-	if telegraphing():
-		body = Palette.ARCHER.lerp(Palette.TELEGRAPH, 0.4)
-	px(-4, -6, 3, 6, Palette.ARCHER_DARK)
-	px(1, -6, 3, 6, Palette.ARCHER_DARK)
-	px(-5, -17, 10, 12, body)
-	px(-5, -10, 10, 1, Palette.ARCHER_DARK)
-	px(-4, -22, 8, 6, Palette.ARCHER_DARK)
-	px(1, -20, 2, 1, Palette.ENEMY_EYE)
-	# arco
-	var drawn := 2.0 if state == "aim" else 0.0
-	px(6, -20, 1, 14, Palette.WOOD_TOP)
-	px(5, -21, 1, 2, Palette.WOOD_TOP)
-	px(5, -7, 1, 2, Palette.WOOD_TOP)
-	px(6 - drawn - 1, -19, 1, 12, Palette.UI_DIM)
+func sprite_anim() -> Array:
 	if state == "aim":
-		px(0, -14, 7, 1, Palette.ARROW)
+		return ["aim_lock" if state_time >= AIM - LOCK else "aim", 0]
+	if absf(velocity.x) > 5.0:
+		return ["walk", int(_anim * 8.0)]
+	return ["idle", int(_anim * 2.0)]
+
+
+func draw_body() -> void:
+	pass

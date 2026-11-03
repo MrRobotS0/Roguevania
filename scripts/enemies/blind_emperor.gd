@@ -36,6 +36,7 @@ var _crown: PointLight2D
 
 func _init() -> void:
 	title = "O IMPERADOR CEGO"
+	sheet = "emperor"
 	max_hp = 900
 	hp = 900
 	w = 22
@@ -203,52 +204,33 @@ func _die() -> void:
 	super._die()
 
 
+func sprite_anim() -> Array:
+	body.modulate.a = _alpha
+	body.visible = _alpha > 0.02
+	match state:
+		"intro", "cast":
+			return ["cast", int(state_time * 6.0)]
+		"sweep_windup":
+			return ["windup", 0]
+		"sweep":
+			return ["sweep", 0]
+		"kneel":
+			return ["kneel", 0]
+		"summon":
+			return ["summon", 0]
+		"walk":
+			return ["walk", int(_anim * 5.0)]
+	return ["idle", int(_anim * 2.0)]
+
+
 func draw_body() -> void:
 	_crown.energy = (1.1 if state in ["cast", "intro"] else 0.35) * _alpha
 	if _alpha <= 0.02:
 		return
-	var a := _alpha
-	var kneel := 10.0 if state == "kneel" else 0.0
-	var robe := ROBE
-	if state == "sweep_windup":
-		robe = ROBE.lerp(Palette.TELEGRAPH, 0.25 + 0.25 * sin(state_time * 30.0))
-	robe.a = a
-	var dark := ROBE_DARK
-	dark.a = a
-	var gold := GOLD
-	gold.a = a
-	var band := BAND
-	band.a = a
-	px(-11, -30 + kneel, 22, 30 - kneel, robe)
-	px(-11, -8, 22, 8, dark)
-	px(-2, -28 + kneel, 4, 20, gold)
-	px(-7, -40 + kneel, 14, 11, dark)
-	px(-7, -36 + kneel, 14, 3, band)
-	# coroa de três pontas
-	px(-7, -43 + kneel, 2, 3, gold)
-	px(-1, -45 + kneel, 2, 5, gold)
-	px(5, -43 + kneel, 2, 3, gold)
-	px(-7, -41 + kneel, 14, 1, gold)
-	# o terceiro olho acende quando ele vê o futuro
-	var eye := EYE
-	eye.a = a * (1.0 if state in ["cast", "intro"] else 0.45)
-	px(-1, -39 + kneel, 2, 2, eye)
-	# cetro
-	var sx := 12.0
-	var sy := -34.0
-	match state:
-		"sweep_windup":
-			sx = -14.0
-			sy = -50.0
-		"sweep":
-			sx = 30.0
-			sy = -20.0
-	px(sx * 0.5 + 6, sy * 0.5 - 6 + kneel, 2, 26, gold)
-	px(sx * 0.5 + 4, sy * 0.5 - 10 + kneel, 6, 5, eye)
 	if state == "sweep" and state_time < 0.18:
 		var arc := Palette.SLASH
 		arc.a = 0.6
 		px(10, -36, SWEEP_REACH - 8.0, 2, arc)
 		px(10, -6, SWEEP_REACH - 8.0, 2, arc)
 	if state == "kneel":
-		PixelFont.draw_centered(self, "EXAUSTO", Vector2(0, -h - 12 + kneel), Palette.DANGER)
+		PixelFont.draw_centered(self, "EXAUSTO", Vector2(0, -h - 4), Palette.DANGER)
