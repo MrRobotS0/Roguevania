@@ -3,7 +3,9 @@ extends Resource
 
 # Habilidade dos slots de habilidade.
 # kind: "bomb" (arremesso que explode), "javelin" (projétil que atravessa),
-#       "shield" (segurar para defender; apertar na hora certa = aparo)
+#       "shield" (segurar para defender; apertar na hora certa = aparo),
+#       "trap" (lâminas no chão), "turret" (atira sozinha), "spirit" (aliado
+#       que persegue), "hook" (corrente que puxa)
 
 @export var id := ""
 @export var title := ""
@@ -23,4 +25,8 @@ func describe() -> String:
 		"bomb": return "EXPLODE E QUEIMA · RECARGA %ds" % cooldown
 		"javelin": return "ATRAVESSA INIMIGOS · CRÍTICO EM ATORDOADO"
 		"shield": return "SEGURE PARA DEFENDER · NA HORA CERTA, APARA"
+		"trap": return "LÂMINAS NO CHÃO POR %ds" % int(params.get("life", 8))
+		"turret": return "ATIRA SOZINHA POR %ds" % int(params.get("life", 12))
+		"spirit": return "UM ALIADO DE CINZA POR %ds" % int(params.get("life", 10))
+		"hook": return "PUXA O INIMIGO E ATORDOA"
 	return ""

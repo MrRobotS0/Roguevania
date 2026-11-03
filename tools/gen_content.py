@@ -91,6 +91,18 @@ SKILLS = [
     dict(id="lanca_vidro", title="Lança de Vidro", kind="javelin", stat="furia", cooldown=5.0,
          damage=24.0, params=dict(pierce=4), color="#bfe6ea", starter=False, unlock_cost=35,
          lore="Arrancada do corpo de um fulgurante. Ainda vibra quando passa perto da areia."),
+    dict(id="armadilha_laminas", title="Armadilha de Lâminas", kind="trap", stat="astucia", cooldown=9.0,
+         damage=7.0, params=dict(life=8.0, tick=0.35, width=30.0), color="#d9e2ec", starter=False, unlock_cost=40,
+         lore="Os caçadores da duna enterram isto na cinza e esperam. A cinza é paciente; eles também."),
+    dict(id="torreta_vidro", title="Torreta de Vidro", kind="turret", stat="astucia", cooldown=14.0,
+         damage=7.0, params=dict(life=12.0, rate=0.7, range=170.0), color="#bfe6ea", starter=False, unlock_cost=50,
+         lore="Um olho de fulgurante preso num tripé. Atira em tudo que se mexe, menos em quem o montou."),
+    dict(id="espirito_cinza", title="Espírito de Cinza", kind="spirit", stat="furia", cooldown=16.0,
+         damage=10.0, params=dict(life=10.0, speed=150.0), color="#ffb36b", starter=False, unlock_cost=55,
+         lore="O que sobra de um peregrino que ardeu acreditando. Ainda quer lutar."),
+    dict(id="corrente_ferreiro", title="Corrente do Ferreiro", kind="hook", stat="vigor", cooldown=6.0,
+         damage=12.0, params=dict(range=150.0), color="#8a8a96", starter=False, unlock_cost=45,
+         lore="Prendia os cativos à bigorna. Agora puxa quem estiver longe demais."),
 ]
 
 SKINS = [

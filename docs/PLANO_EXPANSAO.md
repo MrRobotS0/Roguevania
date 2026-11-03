@@ -7,7 +7,7 @@ Ordem de execução (cada etapa termina com testes passando e commit):
       cronômetro na tela. Acessível pelo título e pela pausa. Salvo no Meta.
 - [x] **B. Música** — `tools/gen_music.py` sintetiza uma trilha em loop por andar,
       chefe e título; autoload `Music` com troca suave.
-- [ ] **C. Equipamento** — 4 habilidades novas (armadilha, torreta, espírito, corrente)
+- [x] **C. Equipamento** — 4 habilidades novas (armadilha, torreta, espírito, corrente)
       e afixos aleatórios nas armas (brasa, geada, vampira, explosiva, afiada,
       ligeira, carrasca, eco).
 - [ ] **D. Chefes por andar** — base de chefe reaproveitável; Lobo da Longa Noite

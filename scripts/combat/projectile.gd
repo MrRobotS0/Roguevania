@@ -19,6 +19,7 @@ var crit_rule := ""
 var crit_mult := 1.75
 var source: Actor
 var color := Palette.ARROW
+var pull := false             # corrente: puxa quem acertar para perto de quem lançou
 
 var _traveled := 0.0
 var _hit: Array = []
@@ -83,6 +84,12 @@ func _physics_process(delta: float) -> void:
 		if d.parried:
 			_reflect()
 			return
+		if landed and pull and is_instance_valid(source):
+			var toward := source.global_position - t.global_position
+			t.velocity = Vector2(signf(toward.x) * minf(absf(toward.x) * 6.0, 340.0), -90.0)
+			Sfx.play("block", -6.0)
+			queue_free()
+			return
 		if landed:
 			_hit.append(t)
 			if pierce <= 0:
@@ -129,6 +136,14 @@ func _draw() -> void:
 		"shard":
 			var side := dir.orthogonal() * 2.0
 			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), Palette.GLASS)
+		"chain":
+			if is_instance_valid(source):
+				var back := source.center() - global_position
+				var links := int(back.length() / 4.0)
+				for i in links:
+					var p := back * (float(i) / maxi(links, 1))
+					draw_rect(Rect2(p.round() - Vector2(1, 1), Vector2(2, 2)), Color("8a8a96") if i % 2 else Color("5a5a62"))
+			draw_rect(Rect2(-3, -2, 5, 4), Color("c9c2b0"))
 		"javelin":
 			draw_line(-dir * 16.0, Vector2.ZERO, Palette.GLASS, 2.0)
 			draw_rect(Rect2(dir * 2.0 - Vector2(2, 2), Vector2(3, 3)), Palette.FLASH)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "espirito_cinza"
+title = "Espírito de Cinza"
+kind = "spirit"
+stat = "furia"
+cooldown = 16.0
+damage = 10.0
+params = {"life": 10.0, "speed": 150.0}
+color = Color(1.000, 0.702, 0.420, 1)
+starter = false
+unlock_cost = 55
+lore = "O que sobra de um peregrino que ardeu acreditando. Ainda quer lutar."

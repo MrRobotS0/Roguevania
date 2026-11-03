@@ -21,7 +21,7 @@ func prompt() -> String:
 func detail() -> String:
 	var stat: String = Combat.STAT_NAMES.get(gear.stat(), "")
 	var kind := "ARMA" if gear.is_weapon() else "HABILIDADE"
-	var extra: String = gear.data.describe()
+	var extra: String = gear.affix_text() if not gear.affixes.is_empty() else gear.data.describe()
 	return "%s DE %s%s" % [kind, stat, (" · " + extra) if extra != "" else ""]
 
 

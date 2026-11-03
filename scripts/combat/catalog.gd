@@ -19,7 +19,23 @@ const SKILLS := [
 	"res://content/skills/granada_cinzas.tres",
 	"res://content/skills/egide_bronze.tres",
 	"res://content/skills/lanca_vidro.tres",
+	"res://content/skills/armadilha_laminas.tres",
+	"res://content/skills/torreta_vidro.tres",
+	"res://content/skills/espirito_cinza.tres",
+	"res://content/skills/corrente_ferreiro.tres",
 ]
+
+# Afixos: modificadores sorteados nas armas que caem (0 a 2 por arma).
+const AFFIXES := {
+	"brasa": {"title": "de Brasa", "detail": "GOLPES QUEIMAM"},
+	"geada": {"title": "da Geada", "detail": "25% DE ATORDOAR"},
+	"vampira": {"title": "Vampira", "detail": "CADA ACERTO CURA 1"},
+	"explosiva": {"title": "Explosiva", "detail": "CRÍTICO EXPLODE EM VOLTA"},
+	"afiada": {"title": "Afiada", "detail": "+15% DE DANO"},
+	"ligeira": {"title": "Ligeira", "detail": "GOLPES 20% MAIS RÁPIDOS"},
+	"carrasca": {"title": "Carrasca", "detail": "+50% EM QUEM TEM MENOS DE 30% DE VIDA"},
+	"eco": {"title": "do Eco", "detail": "20% DE ACERTAR DUAS VEZES"},
+}
 
 const SKINS := [
 	"res://content/skins/andarilho.tres",
@@ -103,7 +119,16 @@ static func random_gear(rng: RandomNumberGenerator, tier: int, exclude: Array = 
 		options = pool
 	var pick: Resource = options[rng.randi_range(0, options.size() - 1)]
 	var bump := 1 if rng.randf() < 0.3 else 0
-	return Gear.of(pick, tier + bump)
+	var g := Gear.of(pick, tier + bump)
+	if g.is_weapon():
+		var roll := rng.randf() - 0.08 * tier
+		var count := 0 if roll > 0.45 else (1 if roll > 0.08 else 2)
+		var keys := AFFIXES.keys()
+		for i in count:
+			var a: String = keys[rng.randi_range(0, keys.size() - 1)]
+			if not g.affixes.has(a):
+				g.affixes.append(a)
+	return g
 
 
 static func biome(id: String) -> BiomeData:

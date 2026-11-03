@@ -6,6 +6,7 @@ extends RefCounted
 
 var data: Resource
 var tier := 0
+var affixes: Array[String] = []
 
 
 static func of(res: Resource, level := 0) -> Gear:
@@ -21,7 +22,20 @@ func is_weapon() -> bool:
 
 func title() -> String:
 	var t: String = data.title
+	if not affixes.is_empty():
+		t += " " + String(Catalog.AFFIXES[affixes[0]]["title"])
 	return t + (" +%d" % tier if tier > 0 else "")
+
+
+func has(affix: String) -> bool:
+	return affixes.has(affix)
+
+
+func affix_text() -> String:
+	var parts := PackedStringArray()
+	for a in affixes:
+		parts.append(String(Catalog.AFFIXES[a]["detail"]))
+	return " · ".join(parts)
 
 
 func power() -> float:

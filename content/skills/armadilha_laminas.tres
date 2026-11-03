@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "armadilha_laminas"
+title = "Armadilha de Lâminas"
+kind = "trap"
+stat = "astucia"
+cooldown = 9.0
+damage = 7.0
+params = {"life": 8.0, "tick": 0.35, "width": 30.0}
+color = Color(0.851, 0.886, 0.925, 1)
+starter = false
+unlock_cost = 40
+lore = "Os caçadores da duna enterram isto na cinza e esperam. A cinza é paciente; eles também."

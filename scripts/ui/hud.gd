@@ -214,6 +214,22 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 			"shield":
 				draw_rect(Rect2(c.x - 4, c.y - 6, 8, 11), col)
 				draw_rect(Rect2(c.x - 2, c.y - 4, 4, 7), col.lightened(0.3))
+			"trap":
+				draw_rect(Rect2(c.x - 6, c.y + 3, 12, 2), Palette.STONE_TOP)
+				for i in 4:
+					draw_rect(Rect2(c.x - 5 + i * 3, c.y - 2 - (i % 2) * 2, 1, 5 + (i % 2) * 2), col)
+			"turret":
+				draw_rect(Rect2(c.x - 1, c.y - 1, 2, 7), Palette.WOOD_TOP)
+				draw_rect(Rect2(c.x - 4, c.y - 6, 8, 5), col)
+				draw_rect(Rect2(c.x - 1, c.y - 5, 2, 2), Palette.FLASH)
+			"spirit":
+				draw_rect(Rect2(c.x - 3, c.y - 4, 6, 7), col)
+				draw_rect(Rect2(c.x - 2, c.y - 6, 4, 2), col.lightened(0.3))
+				draw_rect(Rect2(c.x - 1, c.y + 4, 2, 2), col.darkened(0.3))
+			"hook":
+				for i in 5:
+					draw_rect(Rect2(c.x - 6 + i * 2, c.y + 4 - i * 2, 2, 2), col if i % 2 else col.darkened(0.3))
+				draw_rect(Rect2(c.x + 3, c.y - 6, 3, 3), Palette.BLADE)
 			_:
 				draw_line(c + Vector2(-6, 4), c + Vector2(6, -4), col, 2.0)
 	if g.tier > 0:

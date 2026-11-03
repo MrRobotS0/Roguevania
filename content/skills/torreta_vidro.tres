@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "torreta_vidro"
+title = "Torreta de Vidro"
+kind = "turret"
+stat = "astucia"
+cooldown = 14.0
+damage = 7.0
+params = {"life": 12.0, "rate": 0.7, "range": 170.0}
+color = Color(0.749, 0.902, 0.918, 1)
+starter = false
+unlock_cost = 50
+lore = "Um olho de fulgurante preso num tripé. Atira em tudo que se mexe, menos em quem o montou."

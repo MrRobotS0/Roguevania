@@ -390,7 +390,12 @@ func current_move() -> Dictionary:
 	if g == null:
 		return {}
 	var data: WeaponData = g.data
-	return data.moves[_move_index]
+	var m: Dictionary = data.moves[_move_index]
+	if g.has("ligeira"):
+		m = m.duplicate()
+		for k in ["startup", "active", "recover"]:
+			m[k] = float(m[k]) * 0.8
+	return m
 
 
 func _attack_state(delta: float) -> void:
@@ -454,8 +459,10 @@ func _check_swing(g: Gear, m: Dictionary) -> void:
 			d.lift = 90.0
 		crit_any = crit_any or d.crit
 		boost(d)
+		_affix_before(g, d, e)
 		if e.hurt(d):
 			landed = true
+			_affix_after(g, d, e)
 	if room and room.has_cracked() and room.strike_cracked(box):
 		landed = true
 	if landed:
@@ -491,6 +498,7 @@ func _shoot_state(delta: float) -> void:
 		p.color = data.color
 		p.damage = Damage.make(float(s["damage"]) * g.power() * stat_mult(data.stat), facing, 40.0)
 		boost(p.damage)
+		_affix_before(g, p.damage, null)
 		p.damage.source = self
 		p.damage.status = s.get("status", {}).duplicate()
 		p.damage.stop = 0.03
@@ -524,6 +532,22 @@ func _use_skill(slot: int) -> bool:
 			p.damage.status = {"burn": float(data.params.get("burn", 3.0))}
 			p.damage.knock = 150.0
 			p.damage.stop = 0.05
+		"trap", "turret", "spirit":
+			if data.kind != "spirit" and not is_on_floor():
+				return false
+			var thing := Deployable.new()
+			thing.kind = data.kind
+			thing.owner_player = self
+			thing.damage = power
+			thing.params = data.params
+			thing.position = global_position + (Vector2(facing * 12, 0) if data.kind != "spirit" else Vector2(0, -20))
+			get_parent().add_child(thing)
+		"hook":
+			var p := _skill_projectile("chain", Vector2(facing * 520.0, 0), power)
+			p.life = float(data.params.get("range", 150.0)) / 520.0
+			p.pull = true
+			p.damage.status = {"stun": 0.6}
+			p.damage.knock = 0.0
 		"javelin":
 			var p := _skill_projectile("javelin", Vector2(facing * 460.0, 0), power)
 			p.pierce = int(data.params.get("pierce", 4))
@@ -1039,3 +1063,38 @@ func _draw_ghosts() -> void:
 		draw_set_transform(at, 0.0, Vector2(g[3], 1))
 		draw_texture_rect_region(_white, Rect2(-16, -30, 32, 32), Rect2((f % cols) * 32, (f / cols) * 32, 32, 32), tint)
 	draw_set_transform(Vector2.ZERO)
+
+
+# --- afixos da arma ----------------------------------------------------------------
+
+func _affix_before(g: Gear, d: Damage, target: Actor) -> void:
+	if g.affixes.is_empty():
+		return
+	if g.has("afiada"):
+		d.amount *= 1.15
+	if g.has("carrasca") and target and target.hp < target.max_hp * 0.3:
+		d.amount *= 1.5
+	if g.has("brasa"):
+		d.status["burn"] = 2.5
+	if g.has("geada") and randf() < 0.25:
+		d.status["stun"] = 0.5
+
+
+func _affix_after(g: Gear, d: Damage, target: Enemy) -> void:
+	if g.affixes.is_empty():
+		return
+	if g.has("vampira"):
+		heal(1)
+	if g.has("explosiva") and d.crit:
+		for e: Enemy in get_tree().get_nodes_in_group("enemies"):
+			if e != target and e.alive() and e.center().distance_to(target.center()) < 40.0:
+				var blast := Damage.make(d.amount * 0.5, 1 if e.global_position.x >= target.global_position.x else -1, 120.0)
+				blast.source = self
+				e.hurt(blast)
+		Fx.burst(target.center(), Palette.BURN, 16, 150.0, 0.35, 200.0, 2.0)
+		Sfx.play("boom", -10.0)
+	if g.has("eco") and randf() < 0.2 and is_instance_valid(target) and target.alive():
+		var again := Damage.make(d.amount * 0.5, d.dir, 30.0)
+		again.source = self
+		target.hurt.call_deferred(again)
+		Fx.streak(target.center() + Vector2(0, -4), d.dir, Palette.GLASS)

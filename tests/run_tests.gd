@@ -128,6 +128,8 @@ func _ready() -> void:
 	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
 	await _case("jato de fogo e estalactite machucam", _hazards)
 	await _case("opções: volume, tremor e troca de tecla", _options)
+	await _case("armadilha, torreta, espírito e corrente acertam", _new_skills)
+	await _case("afixos: afiada dá mais dano, vampira cura", _affixes)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -916,3 +918,45 @@ func _options() -> void:
 	Options.reload()
 	_check(Controls.key_name("jump") == "SPACE", "a tecla padrão não voltou (%s)" % Controls.key_name("jump"))
 	screen.queue_free()
+
+
+func _new_skills() -> void:
+	for id in ["armadilha_laminas", "torreta_vidro", "espirito_cinza", "corrente_ferreiro"]:
+		await _load(WIDE)
+		var p := level.player
+		p.skills[0] = Gear.of(Catalog.find(id))
+		var dist := 14.0 if id == "armadilha_laminas" else 90.0
+		var e := _calm(level.spawn("grunt", p.global_position + Vector2(dist, 0)))
+		e.set_physics_process(true)
+		e.set_process(false)
+		var start_x := e.global_position.x
+		input.then(["skill1"], 2).wait(5)
+		for i in 240:
+			await get_tree().physics_frame
+			if is_instance_valid(e):
+				e.velocity.x = 0.0 if id != "corrente_ferreiro" else e.velocity.x
+				e.state = "idle"
+			if not is_instance_valid(e) or e.hp < e.max_hp:
+				break
+		_check(not is_instance_valid(e) or e.hp < e.max_hp, "%s não machucou" % id)
+		if id == "corrente_ferreiro" and is_instance_valid(e):
+			await _frames(20)
+			_check(e.global_position.x < start_x - 10.0, "a corrente não puxou (%.0f -> %.0f)" % [start_x, e.global_position.x])
+
+
+func _affixes() -> void:
+	await _load(FLAT)
+	var p := level.player
+	var plain := Gear.of(Catalog.find("espada_cerimonial"))
+	var sharp := Gear.of(Catalog.find("espada_cerimonial"))
+	sharp.affixes.assign(["afiada", "vampira"])
+	_check(sharp.title().contains("Afiada"), "nome sem o afixo: " + sharp.title())
+	var dummy := _calm(level.spawn("grunt", p.global_position + Vector2(300, 0)))
+	var a := Damage.make(20, 1, 0)
+	p._affix_before(plain, a, dummy)
+	var b := Damage.make(20, 1, 0)
+	p._affix_before(sharp, b, dummy)
+	_check(is_equal_approx(b.amount, a.amount * 1.15), "afiada: %.1f vs %.1f" % [b.amount, a.amount])
+	p.hp = 50
+	p._affix_after(sharp, b, dummy)
+	_check(p.hp == 51, "vampira não curou (%d)" % p.hp)
