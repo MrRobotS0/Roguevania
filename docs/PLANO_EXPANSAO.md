@@ -22,3 +22,12 @@ Ordem de execução (cada etapa termina com testes passando e commit):
 - [x] **G.** README, MegaBrain Pessoal, memória.
 
 Regra: não abrir o jogo com janela. Arte conferida em PNG gerado (tools/previews).
+
+# Segunda rodada (pedida depois: "faz 6 7 8 10")
+
+- [ ] **6. Salas próprias por domínio** — 6 a 8 salas com a cara de cada domínio
+      (Salões, Forja, Torre, Jardim, Carcosa, Observatório) + verificador de salas
+      com o alcance real do pulo (`tools/validar_salas.py`), aplicado em TODAS as salas.
+- [ ] **7. Elite próprio por domínio** — um elite novo em cada um dos 6 domínios.
+- [ ] **8. Sons novos** — chefes, habilidades novas, inimigos novos.
+- [ ] **10. História** — abertura curta, final de verdade, códice (inscrições lidas + bestiário).
