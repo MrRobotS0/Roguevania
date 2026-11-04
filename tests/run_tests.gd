@@ -140,6 +140,7 @@ func _ready() -> void:
 	await _case("partida salva: sai, fecha e continua do mesmo andar", _save_resume)
 	await _case("esquiva no ar anda reta, pulo emenda a rolagem, mergulho quica", _fluid_moves)
 	await _case("inglês: textos fixos, com número e montados; fonte cobre tudo", _english)
+	await _case("atualização: compara versões e fica quieta fora do jogo exportado", _updater)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 
 	print("")
@@ -1299,3 +1300,10 @@ func _english() -> void:
 	_check(missing.is_empty(), "letras sem desenho na fonte: " + str(missing.keys()))
 	Lang.use("pt")
 	_check(Lang.t("Espada Cerimonial") == "Espada Cerimonial", "voltar ao português não voltou")
+
+
+func _updater() -> void:
+	_check(Updater.newer("0.2.0", "0.1.0") and Updater.newer("v1.0.0", "0.9.9") and Updater.newer("0.1.10", "0.1.9"), "versão mais nova não reconhecida")
+	_check(not Updater.newer("0.1.0", "0.1.0") and not Updater.newer("0.1.0", "0.2.0"), "versão igual ou mais velha passou por nova")
+	_check(Updater.version == String(ProjectSettings.get_setting("application/config/version")), "versão do pacote não lida")
+	_check(Updater.pending == "" and Updater.get_child_count() == 0, "o atualizador foi à rede nos testes")

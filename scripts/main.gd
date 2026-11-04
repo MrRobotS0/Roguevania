@@ -158,6 +158,8 @@ func _on_title_option(id: String) -> void:
 	match id:
 		"continue":
 			continue_run()
+		"update":
+			Updater.restart_into()
 		"skins":
 			open_skins()
 		"controls":

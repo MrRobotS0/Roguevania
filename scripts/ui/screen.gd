@@ -8,6 +8,7 @@ signal confirmed
 signal title_option(id: String)
 
 const TITLE_OPTIONS := [
+	["update", "ATUALIZAR AGORA"],
 	["continue", "CONTINUAR"],
 	["start", "COMEÇAR"],
 	["daily", "DESAFIO DO DIA"],
@@ -29,13 +30,20 @@ var _options: Array = []
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	# a atualização terminou de baixar com o título aberto: a opção aparece na hora
+	Updater.ready_to_apply.connect(func(_v: String) -> void:
+		if mode == "title":
+			show_title())
 
 
 func show_title() -> void:
 	mode = "title"
 	_index = 0
 	var saved := Run.saved()
-	_options = TITLE_OPTIONS.filter(func(o: Array) -> bool: return o[0] != "continue" or not saved.is_empty())
+	_options = TITLE_OPTIONS.filter(func(o: Array) -> bool:
+		if o[0] == "update":
+			return Updater.pending != ""
+		return o[0] != "continue" or not saved.is_empty())
 	lines = []
 	if not saved.is_empty():
 		var where: String = Catalog.STAGE_NAMES.get(saved["stage"], saved["stage"])
@@ -133,6 +141,8 @@ func _draw() -> void:
 			_embers(size)
 			PixelFont.body_centered(self, "MOKSHA", Vector2(mid, 62), Palette.GOLD, 4)
 			_title_menu(Vector2(mid, 118))
+			var tag := "V" + Updater.version + (("  ·  ATUALIZAÇÃO %s PRONTA" % Updater.pending) if Updater.pending != "" else "")
+			PixelFont.draw(self, tag, Vector2(size.x - 8 - PixelFont.width(tag), size.y - 12), Palette.UI_DIM)
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
 		"victory":
