@@ -170,28 +170,31 @@ func _confirm(id: String) -> void:
 func _draw() -> void:
 	var size := get_viewport_rect().size
 	var veil := Palette.UI_SHADOW
-	veil.a = 0.75
+	veil.a = 0.82
 	draw_rect(Rect2(Vector2.ZERO, size), veil)
 	var rows := _rows()
-	var line := 14.0
-	var box_h := 46.0 + rows.size() * line + 18.0
+	var line := 15.0
+	var head := 30.0
+	var foot := 14.0
+	var box_h := head + 6.0 + rows.size() * line + 6.0 + foot
 	var box := Rect2(roundf((size.x - WIDTH) * 0.5), roundf((size.y - box_h) * 0.5), WIDTH, roundf(box_h))
-	draw_rect(box.grow(2), Palette.UI_SHADOW)
-	draw_rect(box.grow(1), Palette.UI_FRAME)
-	draw_rect(box, Palette.UI_BAR_BG)
-	var x := box.position.x + 14.0
-	var y := box.position.y + 12.0
+	# a mesma caixa do Menu: painel escuro, cabeçalho e rodapé em faixas próprias
+	draw_rect(box.grow(3), Palette.UI_SHADOW)
+	draw_rect(box.grow(1), Menu.FRAME)
+	draw_rect(box, Menu.PANEL)
+	draw_rect(Rect2(box.position, Vector2(WIDTH, head)), Menu.HEAD)
+	draw_rect(Rect2(box.position + Vector2(0, head), Vector2(WIDTH, 1)), Menu.FRAME)
+	var x := box.position.x + 12.0
+	var y := box.position.y + 8.0
 	PixelFont.body(self, "OPÇÕES" if _page == "main" else "TECLAS", Vector2(x, y), Palette.GOLD, 2)
-	y += 28.0
+	y = box.position.y + head + 7.0
 	for i in rows.size():
 		var r: Dictionary = rows[i]
 		var selected := i == _index
 		if selected:
-			var hl := Palette.UI_FRAME
-			hl.a = 0.6
-			draw_rect(Rect2(box.position.x + 4, y - 3, WIDTH - 8, line - 1), hl)
+			draw_rect(Rect2(box.position.x + 4, y - 3, WIDTH - 8, line - 1), Menu.PICK)
 			draw_rect(Rect2(box.position.x + 4, y - 3, 2, line - 1), Palette.GOLD)
-		var color := Palette.UI_TEXT if selected else Palette.UI_DIM
+		var color := Palette.UI_TEXT if selected else Menu.ROW_TEXT
 		PixelFont.body(self, r["label"], Vector2(x + 4, y), color)
 		var value: String = r["value"]
 		if selected and _waiting:
@@ -199,7 +202,10 @@ func _draw() -> void:
 		elif selected and value != "" and value != ">" and _page == "main":
 			value = "< " + value + " >"
 		var vw := PixelFont.body_width(value)
-		PixelFont.body(self, value, Vector2(box.end.x - 14 - vw, y), Palette.GOLD if selected else Palette.UI_TEXT)
+		PixelFont.body(self, value, Vector2(box.end.x - 12 - vw, y), Palette.GOLD if selected else Menu.SUB)
 		y += line
 	var hint := "%s ESCOLHER   ←/→ MUDAR   %s VOLTAR" % [Controls.hint("move"), Controls.hint("cancel")]
-	PixelFont.draw_centered(self, hint, Vector2(size.x * 0.5, box.end.y - 8), Palette.UI_DIM)
+	var top := box.end.y - foot
+	draw_rect(Rect2(box.position.x, top, WIDTH, 1), Menu.FRAME)
+	draw_rect(Rect2(box.position.x, top + 1, WIDTH, foot - 1), Menu.HEAD)
+	PixelFont.body(self, hint, Vector2(x, top + 1), Menu.SUB)

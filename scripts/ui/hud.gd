@@ -167,6 +167,12 @@ func _icon(kind: String, at: Vector2, color: Color) -> void:
 
 func _draw_right(size: Vector2) -> void:
 	var x := size.x - 8.0
+	# placa escura atrás dos números do canto: legíveis em qualquer cenário
+	var plate := Palette.UI_SHADOW
+	plate.a = 0.62
+	var plate_h := 44.0 if not player.blueprints.is_empty() else 31.0
+	draw_rect(Rect2(size.x - 104.0, 4.0, 100.0, plate_h), plate)
+	draw_rect(Rect2(size.x - 104.0, 4.0 + plate_h, 100.0, 1), Color(Menu.FRAME, 0.5))
 	var essence := "%d" % player.essence
 	var w := PixelFont.body_width(essence)
 	PixelFont.body(self, essence, Vector2(x - w, 8), Palette.ESSENCE)

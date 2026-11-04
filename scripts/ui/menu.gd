@@ -5,10 +5,23 @@ extends Control
 # Pausa o jogo enquanto está aberta. ↑/↓ escolhe, J/E/Enter confirma,
 # Esc volta (quando permitido).
 
-const WIDTH := 384.0
+const WIDTH := 316.0
+const PAD := 10.0
 const LINE := PixelFont.BODY_LINE
-const ROW := LINE * 2 + 3
-const MAX_ROWS := 6
+const ROW_H := 16.0           # uma linha por item
+const DETAIL_H := 36.0        # painel da explicação do item escolhido (3 linhas)
+const FOOT_H := 14.0
+const MAX_ROWS := 8
+# cores da caixa: painel bem escuro e texto claro, para ler sem esforço
+const PANEL := Color("0e0b14")
+const HEAD := Color("161120")
+const FRAME := Color("5a4d74")
+const PICK := Color("2c2340")
+const ROW_TEXT := Color("cdc4de")
+const SUB := Color("9a8fb4")
+const DETAIL := Color("e6dff2")
+const DISABLED := Color("625a78")
+const DISABLED_PRICE := Color("8a4a52")
 
 var _open := false
 var _mode := ""
@@ -153,75 +166,122 @@ func _draw() -> void:
 	if not _open:
 		return
 	var size := get_viewport_rect().size
+	# o jogo some atrás: a caixa é a única coisa a ler
 	var veil := Palette.UI_SHADOW
-	veil.a = 0.6
+	veil.a = 0.82
 	draw_rect(Rect2(Vector2.ZERO, size), veil)
 
+	# "TÍTULO  ·  SALDO": o saldo vai pequeno no canto direito do cabeçalho
+	var title := _title
+	var info := ""
+	if "  ·  " in _title:
+		title = _title.get_slice("  ·  ", 0)
+		info = _title.get_slice("  ·  ", 1)
+	var info_w := float(PixelFont.body_width(info)) + 10.0 if info != "" else 0.0
+	var title_scale := 2 if PixelFont.body_width(title, 2) <= WIDTH - PAD * 2 - info_w else 1
+	var title_h := 7.0 * title_scale + 8.0
 	var sub_lines := PackedStringArray()
 	if _subtitle != "":
-		sub_lines = PixelFont.wrap(_subtitle.to_upper(), int((WIDTH - 24.0) / PixelFont.BODY_ADVANCE))
+		sub_lines = PixelFont.wrap(_subtitle.to_upper(), int((WIDTH - PAD * 2) / PixelFont.BODY_ADVANCE))
+		sub_lines = sub_lines.slice(0, 2)
 	var rows := mini(_options.size(), MAX_ROWS)
-	var box_h := 0.0
+	var has_detail := _mode == "choice" and _options.any(func(o: Dictionary) -> bool: return String(o.get("detail", "")) != "")
+	var body_h := 0.0
 	if _mode == "text":
-		box_h = 34.0 + (mini(_body.size(), TEXT_ROWS) + 2) * LINE
+		body_h = mini(_body.size(), TEXT_ROWS) * LINE + 4.0
 	else:
-		box_h = 34.0 + sub_lines.size() * LINE + 6.0 + rows * ROW + LINE + 4.0
+		body_h = rows * ROW_H + (DETAIL_H + 9.0 if has_detail else 0.0)
+	var head_h := PAD + title_h + (sub_lines.size() * LINE + 2.0 if sub_lines.size() > 0 else 0.0) + 6.0
+	var box_h := head_h + body_h + 8.0 + FOOT_H
 	var box := Rect2(roundf((size.x - WIDTH) * 0.5), roundf((size.y - box_h) * 0.5), WIDTH, roundf(box_h))
-	draw_rect(box.grow(2), Palette.UI_SHADOW)
-	draw_rect(box.grow(1), Palette.UI_FRAME)
-	draw_rect(box, Palette.UI_BAR_BG)
-	draw_rect(Rect2(box.position, Vector2(WIDTH, 1)), Palette.UI_FRAME.lightened(0.25))
-	var x := box.position.x + 12.0
-	var y := box.position.y + 11.0
-	PixelFont.body(self, _title, Vector2(x, y), Palette.GOLD, 2)
-	y += 23.0
+
+	# moldura: sombra, borda clara de 1 px e painel sólido
+	draw_rect(box.grow(3), Palette.UI_SHADOW)
+	draw_rect(box.grow(1), FRAME)
+	draw_rect(box, PANEL)
+	draw_rect(Rect2(box.position, Vector2(WIDTH, head_h - 4.0)), HEAD)
+	draw_rect(Rect2(box.position + Vector2(0, head_h - 4.0), Vector2(WIDTH, 1)), FRAME)
+
+	var x := box.position.x + PAD
+	var y := box.position.y + PAD
+	PixelFont.body(self, title, Vector2(x, y), Palette.GOLD, title_scale)
+	if info != "":
+		PixelFont.body(self, info, Vector2(box.end.x - PAD - info_w + 10.0, y + (7 * title_scale - 7) * 0.5), Palette.ESSENCE)
+	y += title_h
+	for line in sub_lines:
+		PixelFont.body(self, line, Vector2(x, y), SUB)
+		y += LINE
+	y = box.position.y + head_h + 4.0
 
 	if _mode == "text":
 		for line in _body.slice(_text_top, _text_top + TEXT_ROWS):
 			PixelFont.body(self, line, Vector2(x, y), Palette.UI_TEXT)
 			y += LINE
-		y += LINE * 0.5
-		var hint := "%s  CONTINUAR" % Controls.hint("confirm")
+		var hint := "%s CONTINUAR" % Controls.hint("confirm")
 		if _body.size() > TEXT_ROWS:
-			hint += "   %s  ROLAR (%d/%d)" % [Controls.hint("move"), mini(_text_top + TEXT_ROWS, _body.size()), _body.size()]
-		PixelFont.body(self, hint, Vector2(x, y), Palette.UI_DIM)
+			hint = "%s ROLAR %d/%d   " % [Controls.hint("move"), mini(_text_top + TEXT_ROWS, _body.size()), _body.size()] + hint
+		_footer(box, hint)
 		return
 
-	for line in sub_lines:
-		PixelFont.body(self, line, Vector2(x, y), Palette.UI_DIM)
-		y += LINE
-	y += 6.0
-	if _scroll > 0:
-		PixelFont.body(self, "↑", Vector2(box.end.x - 14, y - 9), Palette.UI_DIM)
+	# lista: uma linha por item (ícone, nome e preço à direita); a explicação
+	# fica só no painel de baixo, e só do item escolhido
+	var with_icons := _options.any(func(o: Dictionary) -> bool: return o.get("icon") != null or o.has("figure"))
+	var text_x := x + (20.0 if with_icons else 4.0)
 	for i in range(_scroll, _scroll + rows):
 		var o := _options[i]
 		var disabled: bool = o.get("disabled", false)
 		var selected := i == _index
-		var color: Color = o.get("color", Palette.UI_TEXT)
-		if disabled:
-			color = Palette.UI_FRAME.lightened(0.3)
+		var row := Rect2(box.position.x + 4, y, WIDTH - 8, ROW_H - 1)
 		if selected:
-			var hl := Palette.UI_FRAME
-			hl.a = 0.6
-			draw_rect(Rect2(box.position.x + 4, y - 4, WIDTH - 8, ROW - 1), hl)
-			draw_rect(Rect2(box.position.x + 4, y - 4, 2, ROW - 1), Palette.GOLD)
-			var bob := 1.0 if int(_t * 4.0) % 2 == 0 else 0.0
-			PixelFont.body(self, ">", Vector2(x - 4 + bob, y), Palette.GOLD)
-		var room_px := WIDTH - 30.0 - (28.0 if o.has("figure") or o.get("icon") else 0.0)
-		PixelFont.body(self, _fit(String(o["label"]).to_upper(), room_px), Vector2(x + 6, y), color)
-		if o.has("detail"):
-			var detail_color := Palette.UI_DIM if not disabled else color
-			PixelFont.body(self, _fit(String(o["detail"]).to_upper(), room_px), Vector2(x + 6, y + LINE), detail_color)
-		if o.has("figure"):
-			HeroLook.draw_figure(self, Vector2(box.end.x - 18, y + ROW - 6), o["figure"], disabled)
-		elif o.get("icon"):
-			var tint := Color(1, 1, 1, 0.45) if disabled else Color.WHITE
-			draw_texture(o["icon"], Vector2(box.end.x - 26, y - 1).round(), tint)
-		y += ROW
+			draw_rect(row, PICK)
+			draw_rect(Rect2(row.position, Vector2(2, row.size.y)), Palette.GOLD)
+		var label_color := ROW_TEXT
+		if selected:
+			label_color = Palette.UI_TEXT
+		if disabled:
+			label_color = DISABLED
+		var custom: Variant = o.get("color")
+		if custom != null and not disabled and o.has("price") == false:
+			label_color = custom
+		var ty := y + roundf((ROW_H - 1 - 7) * 0.5) - 2.0
+		if o.get("icon") != null:
+			draw_texture(o["icon"], Vector2(x, y - 1).round(), Color(1, 1, 1, 0.4) if disabled else Color.WHITE)
+		var price := String(o.get("price", ""))
+		var price_w := float(PixelFont.body_width(price)) if price != "" else 0.0
+		var room := box.end.x - PAD - text_x - (price_w + 8.0 if price != "" else 0.0)
+		PixelFont.body(self, _fit(String(o["label"]).to_upper(), room), Vector2(text_x, ty), label_color)
+		if price != "":
+			var pc: Color = o.get("price_color", Palette.GOLD)
+			PixelFont.body(self, price, Vector2(box.end.x - PAD - price_w, ty), DISABLED_PRICE if disabled else pc)
+		y += ROW_H
+	if _scroll > 0:
+		PixelFont.body(self, "↑", Vector2(box.end.x - 9, box.position.y + head_h - 2), SUB)
 	if _scroll + rows < _options.size():
-		PixelFont.body(self, "↓", Vector2(box.end.x - 14, y - 6), Palette.UI_DIM)
-	y += 2.0
-	var hint := "%s ESCOLHER   %s CONFIRMAR" % [Controls.hint("move"), Controls.hint("confirm")]
+		PixelFont.body(self, "↓", Vector2(box.end.x - 9, y - 10), SUB)
+
+	if has_detail:
+		y += 4.0
+		draw_rect(Rect2(box.position.x + PAD, y, WIDTH - PAD * 2, 1), FRAME)
+		y += 5.0
+		var o := _options[_index]
+		var room := WIDTH - PAD * 2 - (30.0 if o.has("figure") else 0.0)
+		var lines := PixelFont.wrap(String(o.get("detail", "")).to_upper(), int(room / PixelFont.BODY_ADVANCE))
+		var dy := y
+		for line in lines.slice(0, 3):
+			PixelFont.body(self, line, Vector2(x, dy), DETAIL)
+			dy += LINE
+		if o.has("figure"):
+			HeroLook.draw_figure(self, Vector2(box.end.x - PAD - 14, y + DETAIL_H - 6), o["figure"], o.get("disabled", false))
+
+	var hint := "%s ESCOLHER   %s OK" % [Controls.hint("move"), Controls.hint("confirm")]
 	if _cancel_ok:
-		hint += "   %s VOLTAR" % Controls.hint("cancel")
-	PixelFont.body(self, hint, Vector2(x, y), Palette.UI_DIM)
+		hint += "   %s SAIR" % Controls.hint("cancel")
+	_footer(box, hint)
+
+
+# Rodapé: as teclas numa faixa própria, em letra pequena, sem disputar com a lista.
+func _footer(box: Rect2, hint: String) -> void:
+	var top := box.end.y - FOOT_H
+	draw_rect(Rect2(box.position.x, top, WIDTH, 1), FRAME)
+	draw_rect(Rect2(box.position.x, top + 1, WIDTH, FOOT_H - 1), HEAD)
+	PixelFont.body(self, hint, Vector2(box.position.x + PAD, top + 1), SUB)

@@ -58,9 +58,9 @@ func interact(p: Player) -> void:
 				icon = GearIcon.named("frasco")
 				detail_text = "+1 FRASCO DE CURA NESTA PARTIDA"
 		var sold: bool = o.get("sold", false)
-		options.append({"label": "%s  ·  %d OURO" % [label, cost] if not sold else label + "  ·  VENDIDO",
-			"detail": detail_text, "disabled": sold or p.gold < cost, "color": Palette.GOLD, "icon": icon})
-	options.append({"label": "SAIR", "detail": "OURO: %d" % p.gold})
+		options.append({"label": label, "price": "VENDIDO" if sold else "%d OURO" % cost,
+			"detail": detail_text, "disabled": sold or p.gold < cost, "icon": icon})
+	options.append({"label": "SAIR", "detail": "VOCÊ TEM %d DE OURO" % p.gold})
 	menu().open_choice("O MERCADOR", "\"TUDO TEM PREÇO. ATÉ O QUE CAIU DO CÉU.\"", options,
 		func(i: int) -> void:
 			if i >= items.size():

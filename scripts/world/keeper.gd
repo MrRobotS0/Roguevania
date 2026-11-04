@@ -79,8 +79,8 @@ func _open_shop(p: Player) -> void:
 	var options: Array[Dictionary] = []
 	for o in offers:
 		var cost: int = o["cost"]
-		var option := {"label": "%s  ·  %d" % [o["title"], cost], "detail": o["detail"],
-			"disabled": p.essence < cost, "color": Palette.ESSENCE}
+		var option := {"label": o["title"], "price": "%d" % cost, "price_color": Palette.ESSENCE, "detail": o["detail"],
+			"disabled": p.essence < cost}
 		if o.has("figure"):
 			option["figure"] = o["figure"]
 		elif o.get("icon"):
@@ -90,7 +90,7 @@ func _open_shop(p: Player) -> void:
 		options.append(option)
 	options.append({"label": "SAIR", "detail": "A ESSÊNCIA QUE SOBRAR SE PERDE SE VOCÊ MORRER"})
 	var line: String = LINES[int(Run.time) % LINES.size()]
-	menu().open_choice("A VIGIA  ·  ESSÊNCIA: %d" % p.essence, line, options,
+	menu().open_choice("A VIGIA  ·  ESSÊNCIA %d" % p.essence, line, options,
 		func(i: int) -> void:
 			if i >= offers.size():
 				return
