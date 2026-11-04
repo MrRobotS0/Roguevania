@@ -75,8 +75,18 @@ def anchor(fr):
 
 def main():
     cache = {k: frames_of(k) for k in STRIPS}
-    # o ataque solta o rastro para a frente: o corpo fica à esquerda do quadro
-    ref_x = {k: anchor(cache[k][0])[0] for k in cache}
+    # Âncora fixa por tira (a do primeiro quadro, e o pé mais baixo da tira):
+    # o artista já alinhou os quadros dentro da tira. Ancorar quadro a quadro
+    # pelo pé fazia o corpo pular até 25 px para os lados na corrida.
+    first = {}
+    for seq, _ in ANIMS.values():
+        for strip, i in seq:
+            first.setdefault(strip, i)
+    ref_x = {}
+    for k in cache:
+        box = cache[k][first.get(k, 0)].getbbox()
+        ref_x[k] = round((box[0] + box[2]) / 2)
+    ref_y = {k: max(anchor(f)[1] for f in cache[k]) for k in cache}
     rows = list(ANIMS.items())
     cols = max(len(seq) for seq, _ in ANIMS.values())
     sheet = Image.new("RGBA", (cols * CW, len(rows) * CH), (0, 0, 0, 0))
@@ -84,10 +94,7 @@ def main():
     for r, (name, (seq, fps)) in enumerate(rows):
         for i, (strip, k) in enumerate(seq):
             fr = cache[strip][k]
-            ax, ay = anchor(fr)
-            # no ar não há pés no chão: usa o mesmo x do primeiro quadro da tira
-            if strip in ("jump", "air", "climb", "attack", "slash"):
-                ax = ref_x[strip]
+            ax, ay = ref_x[strip], ref_y[strip]
             ox = i * CW + CW // 2 - ax
             oy = r * CH + FOOT - ay
             sheet.alpha_composite(fr, (max(ox, i * CW), max(oy, r * CH)) if False else (ox, oy))

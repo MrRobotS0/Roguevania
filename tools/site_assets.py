@@ -22,6 +22,18 @@ KEEP = 2       # escala gravada
 def frames(sheet, seq):
     meta = json.load(open(os.path.join(SPR, sheet + ".json")))
     w, h = meta.get("w", meta.get("size", 32)), meta.get("h", meta.get("size", 32))
+    if meta.get("color"):
+        # arte pronta em cor cheia: a própria folha do jogo, sem prévia pintada
+        img = Image.open(os.path.join(SPR, sheet + ".png")).convert("RGBA")
+        out = []
+        for anim, idx in seq:
+            a = meta["anims"].get(anim)
+            if not a:
+                continue
+            for i in (range(a["frames"]) if idx is None else [idx]):
+                fr = img.crop((i * w, a["row"] * h, (i + 1) * w, (a["row"] + 1) * h))
+                out.append(fr.resize((w * KEEP, h * KEEP), Image.NEAREST))
+        return out, w * KEEP, h * KEEP
     img = Image.open(os.path.join(PREV, sheet + ".png")).convert("RGBA")
     bg = img.getpixel((0, 0))
     out = []
@@ -74,13 +86,66 @@ MOVES = {
     "idle": [("idle", None), ("idle_look", None)],
 }
 
+# domínio no site: prefixo dos fundos no jogo
+DOMAINS = {"mar": "bd", "saloes": "bd_saloes", "forja": "bd_forja", "torre": "bd_torre",
+           "jardim": "bd_jardim", "carcosa": "bd_carcosa", "observatorio": "bd_observatorio"}
+
+
+def scenery():
+    """Camadas do diorama 3D, a imagem de cada domínio e o herói (ícone e corrida)."""
+    img = os.path.join(ROOT, "site", "img")
+    os.makedirs(os.path.join(img, "layers"), exist_ok=True)
+    for dom, prefix in DOMAINS.items():
+        comp = None
+        for layer in ("sky", "far", "mid", "near"):
+            src = Image.open(os.path.join(SPR, "%s_cor_%s.png" % (prefix, layer))).convert("RGBA")
+            src.save(os.path.join(img, "layers", "%s_%s.png" % (dom, layer)))
+            if comp is None:
+                comp = src.copy()
+            else:
+                comp.alpha_composite(src.crop((0, 0, comp.width, comp.height)))
+        comp.resize((comp.width * 2, comp.height * 2), Image.NEAREST).save(os.path.join(img, dom + ".png"))
+    meta = json.load(open(os.path.join(SPR, "hero_g.json")))
+    sheet = Image.open(os.path.join(SPR, "hero_g.png")).convert("RGBA")
+    w, h = meta["w"], meta["h"]
+
+    def cell(anim, i, size):
+        a = meta["anims"][anim]
+        fr = sheet.crop((i * w, a["row"] * h, (i + 1) * w, (a["row"] + 1) * h))
+        box = fr.getbbox()
+        fr = fr.crop((box[0], 0, box[2], h))
+        k = max(1, min(size // fr.width, size // h))
+        fr = fr.resize((fr.width * k, h * k), Image.NEAREST)
+        out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        out.alpha_composite(fr, ((size - fr.width) // 2, size - fr.height))
+        return out
+
+    # corrida: a caixa de todos os quadros juntos, ampliada inteira até caber em 128
+    run = meta["anims"]["run"]
+    row = run["row"]
+    picks = [k * run["frames"] // 8 for k in range(8)]
+    frs = [sheet.crop((i * w, row * h, (i + 1) * w, (row + 1) * h)) for i in picks]
+    boxes = [f.getbbox() for f in frs]
+    ux0, uy0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
+    ux1, uy1 = max(b[2] for b in boxes), max(b[3] for b in boxes)
+    k = max(1, min(128 // (ux1 - ux0), 128 // (uy1 - uy0)))
+    strip_ = Image.new("RGBA", (128 * 8, 128), (0, 0, 0, 0))
+    for n, f in enumerate(frs):
+        f = f.crop((ux0, uy0, ux1, uy1))
+        f = f.resize((f.width * k, f.height * k), Image.NEAREST)
+        strip_.alpha_composite(f, (n * 128 + (128 - f.width) // 2, 128 - f.height))
+    strip_.save(os.path.join(img, "heroi_corrida.png"))
+    cell("idle", 0, 256).save(os.path.join(img, "heroi.png"))
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    scenery()
     info = {}
     for b, seq in BOSSES.items():
         strip("boss_" + b, b, seq, info)
     for e in ENEMIES:
-        if os.path.exists(os.path.join(PREV, e + ".png")):
+        if os.path.exists(os.path.join(SPR, e + ".json")):
             meta = json.load(open(os.path.join(SPR, e + ".json")))
             first = next(iter(meta["anims"]))
             seq = [(first, None)]
@@ -89,6 +154,6 @@ if __name__ == "__main__":
                     seq.append((extra, None))
             strip("enemy_" + e, e, seq, info)
     for m, seq in MOVES.items():
-        strip("hero_" + m, "hero", seq, info)
+        strip("hero_" + m, "hero_g", seq, info)
     json.dump(info, open(os.path.join(OUT, "anim.json"), "w"), indent=1)
     print(len(info), "tiras")
