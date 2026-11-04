@@ -24,8 +24,13 @@ static func palette(look: Dictionary) -> PackedColorArray:
 
 # Miniatura do herói parado (escolha de aparência, loja da Vigia).
 static func draw_figure(ci: CanvasItem, feet: Vector2, look: Dictionary, dim := false) -> void:
-	var tex := SpriteSheet.texture("hero", palette(look))
-	var a: Dictionary = SpriteSheet.meta("hero")["anims"]["idle"]
-	var src := Rect2(0, int(a["row"]) * 32, 32, 32)
+	var sheet := Player.SHEET
+	var m := SpriteSheet.meta(sheet)
+	var tex := SpriteSheet.texture(sheet, palette(look))
+	var a: Dictionary = m["anims"]["idle"]
+	var fw := float(m.get("w", 32))
+	var fh := float(m.get("h", 32))
+	# só o recorte em volta do corpo, reduzido para caber na linha do menu
+	var src := Rect2(fw * 0.5 - 24.0, int(a["row"]) * fh + fh - 50.0, 48, 48)
 	ci.draw_texture_rect_region(tex, Rect2(feet + Vector2(-16, -30), Vector2(32, 32)), src,
 		Color(0.45, 0.45, 0.5) if dim else Color.WHITE)

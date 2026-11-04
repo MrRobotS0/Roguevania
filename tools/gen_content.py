@@ -151,7 +151,7 @@ SKILLS = [
 
 SKINS = [
     dict(id="andarilho", title="O Andarilho", unlock="starter",
-         cloak="#2e5d8a", cloak_dark="#1f3f60", hood="#1a2a45", eye="#8ff7e8", scarf="#e8a33d",
+         cloak="#c41e3a", cloak_dark="#7a1424", hood="#1a1420", eye="#8ff7e8", scarf="#e8a33d",
          lore="Você acordou com ele. Ninguém lembra de costurar."),
     dict(id="manto_cinza", title="Manto de Cinza", unlock="essence", cost=60,
          cloak="#8a8580", cloak_dark="#5e5a57", hood="#3b3836", eye="#ffb36b", scarf="#c8452f",

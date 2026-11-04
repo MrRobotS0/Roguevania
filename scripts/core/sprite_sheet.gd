@@ -12,8 +12,8 @@ static var _meta := {}
 
 static func meta(sheet: String) -> Dictionary:
 	if not _meta.has(sheet):
-		var text := FileAccess.get_file_as_string("res://assets/sprites/%s.json" % sheet)
-		var parsed = JSON.parse_string(text)
+		var path := "res://assets/sprites/%s.json" % sheet
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
 		_meta[sheet] = parsed if parsed is Dictionary else {}
 	return _meta[sheet]
 
@@ -41,6 +41,8 @@ static func texture(sheet: String, palette: PackedColorArray, white := false) ->
 	if src.is_compressed():
 		src.decompress()
 	src.convert(Image.FORMAT_RGBA8)
+	if meta(sheet).get("color", false):
+		return _color_texture(sheet, src, palette, white, key)
 	var out := Image.create(src.get_width(), src.get_height(), false, Image.FORMAT_RGBA8)
 	var data := src.get_data()
 	var painted := PackedByteArray()
@@ -60,13 +62,36 @@ static func texture(sheet: String, palette: PackedColorArray, white := false) ->
 	return tex
 
 
+# Folha já colorida (arte importada). A paleta, se vier, recolore só os tons
+# perto de `key_hue` da folha (a capa do herói) para o tom de palette[3] — é
+# assim que aparências e cromas funcionam sobre arte pronta.
+static func _color_texture(sheet: String, src: Image, palette: PackedColorArray, white: bool, key: String) -> ImageTexture:
+	var out := src.duplicate() as Image
+	var key_hue := float(meta(sheet).get("key_hue", -1.0))
+	var recolor := palette.size() > 3 and key_hue >= 0.0
+	var target := palette[3] if recolor else Color.WHITE
+	for y in out.get_height():
+		for x in out.get_width():
+			var c := out.get_pixel(x, y)
+			if c.a < 0.5:
+				continue
+			if white:
+				out.set_pixel(x, y, Color(1, 1, 1, c.a))
+			elif recolor and c.s > 0.25 and absf(angle_difference(c.h * TAU, key_hue * TAU)) < 0.35:
+				out.set_pixel(x, y, Color.from_hsv(target.h, clampf(target.s * c.s / 0.75, 0.0, 1.0), clampf(c.v * (0.45 + target.v), 0.0, 1.0), c.a))
+	var tex := ImageTexture.create_from_image(out)
+	_cache[key] = tex
+	_images[key] = out
+	return tex
+
+
 # Sprite2D pronto para a folha: pés na origem, quadros de `size`.
 static func make_sprite(sheet: String) -> Sprite2D:
 	var m := meta(sheet)
 	var size: int = m.get("size", 32)
 	var s := Sprite2D.new()
 	s.centered = false
-	s.offset = Vector2(-size * 0.5, -size + 2)
+	s.offset = Vector2(-float(m.get("w", size)) * 0.5, -float(m.get("h", size)) + 2)
 	var rows := 0
 	var cols := 1
 	for a: Dictionary in m["anims"].values():

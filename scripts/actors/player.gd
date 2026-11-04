@@ -1014,7 +1014,8 @@ func _dead_state(delta: float) -> void:
 # rastro, cachecol e a arma guardada nas costas. Na frente (nó _front): a arma
 # na mão, o arco do golpe e os efeitos de status.
 
-const SHEET := "hero"
+# o herói gótico importado (tools/importar_heroi.py); "hero" é o antigo, gerado
+const SHEET := "hero_g"
 
 var body: Sprite2D
 var _front: Node2D
@@ -1117,11 +1118,12 @@ func _draw() -> void:
 	if state == State.DEAD:
 		return
 	begin_tint()
-	_draw_scarf()
+	if not _drawn_art():
+		_draw_scarf()
 	if state in [State.MOVE, State.ROLL, State.CLIMB, State.HURT]:
 		# arma guardada nas costas, na diagonal
 		var g := weapon(_slot)
-		if g and g.is_weapon() and (g.data as WeaponData).category != "bow":
+		if g and g.is_weapon() and (g.data as WeaponData).category != "bow" and not _drawn_art():
 			for i in 9:
 				raw(Rect2(Vector2(-facing * (5 - i * 0.6), -21 + i), Vector2(1, 1)), _blade_color())
 	end_tint()
@@ -1133,7 +1135,7 @@ func _draw_front() -> void:
 	var hx := _hand.x
 	var hy := _hand.y
 	match state:
-		State.ATTACK:
+		State.ATTACK when not _drawn_art():
 			var m := current_move()
 			var reach: Vector2 = m["reach"]
 			if _state_time < float(m["startup"]):
@@ -1309,17 +1311,25 @@ func _update_ghosts(delta: float) -> void:
 		_ghosts.append([global_position, 0.18, body.frame, facing])
 
 
+# A folha importada já traz espada, capa e lenço desenhados à mão.
+func _drawn_art() -> bool:
+	return bool(SpriteSheet.meta(SHEET).get("color", false))
+
+
 func _draw_ghosts() -> void:
 	if body == null:
 		return
 	var cols: int = body.hframes
+	var m := SpriteSheet.meta(SHEET)
+	var fw := float(m.get("w", 32))
+	var fh := float(m.get("h", 32))
 	for g in _ghosts:
 		var at: Vector2 = g[0] - global_position
-		var tint := skin.cloak.lightened(0.35)
+		var tint := skin.cloak.lightened(0.35) if not _drawn_art() else Color("ff6a7a")
 		tint.a = 0.5 * g[1] / 0.18
 		var f: int = g[2]
 		draw_set_transform(at, 0.0, Vector2(g[3], 1))
-		draw_texture_rect_region(_white, Rect2(-16, -30, 32, 32), Rect2((f % cols) * 32, (f / cols) * 32, 32, 32), tint)
+		draw_texture_rect_region(_white, Rect2(-fw * 0.5, -fh + 2, fw, fh), Rect2((f % cols) * fw, (f / cols) * fh, fw, fh), tint)
 	draw_set_transform(Vector2.ZERO)
 
 

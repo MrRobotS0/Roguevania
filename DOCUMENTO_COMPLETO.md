@@ -1460,3 +1460,59 @@ Priorize uma arquitetura limpa, modular, expansível e uma primeira versão jog�
 - Exportar: `Godot_console --headless --path . --export-release "Windows Desktop" build/Moksha.exe`. Os modelos ficam em `%APPDATA%\Godot\export_templates.7.2.stable`, e a pasta `build/` está fora do git.
 - A landing page fica em `site/` (Three.js, GSAP, EN/PT). O botão aponta para `releases/latest/download/Moksha-windows.zip`.
 - Falta criar o Release e ligar o Pages.
+
+---
+
+## 25. Troca da arte (04/11/2026, em andamento) — LER AO RETOMAR
+
+O desenho gerado por código bateu no teto. Agora o jogo usa arte **profissional e gratuita, com licença comercial**: a série Gothicvania do ansimuz e alguns pacotes de outros autores do OpenGameArt.
+
+**Ferramentas, na ordem:**
+1. `python tools/baixar_arte.py` baixa 25 pacotes para `arte_externa/` (fora do git, ~73 MB). Ele confere a licença de cada página e grava `arte_externa/LICENCAS.md`.
+   - 20 pacotes são CC0.
+   - 5 são CC-BY e exigem crédito: hell-hound, dark-emperor, dark-fantasy-platformer-bestiary, living-tissue.
+2. `python tools/importar_heroi.py` monta `assets/sprites/hero_g.png` e `.json` com o herói gótico, nos nomes de animação do jogo e com os pés alinhados. É uma folha em cor cheia (`"color": true`).
+3. `python tools/importar_cenarios.py` monta os fundos `assets/sprites/<prefixo>_cor_{sky,far,mid,near}.png`:
+
+   | Domínio | Cenário de origem |
+   |---|---|
+   | Mar de Cinzas | rocky pass |
+   | Salões | fort of illusion |
+   | Forja | industrial, recolorido para vermelho |
+   | Torre | gothicvania town |
+   | Jardim | swamp |
+   | Carcosa | junk wasteland, recolorido para amarelo-oliva |
+   | Observatório | espaço, montado em escala 2× |
+
+**Já feito no código:**
+- `SpriteSheet` aceita folha em cor cheia. Nela, a paleta recolore só os tons perto de `key_hue` (a capa vermelha) para a cor da aparência ou do croma.
+- O herói usa `SHEET := "hero_g"`.
+  - Com arte desenhada, não desenha mais a lâmina, o cachecol nem a arma nas costas; os arcos de golpe continuam.
+  - Os rastros de esquiva usam o tamanho novo.
+  - A miniatura nos menus usa o herói novo.
+- A aparência padrão "O Andarilho" tem a capa vermelha da arte.
+- O pacote de skills `gamedev@awesome-gamedev-agent-skills` está instalado (precisa reiniciar o Claude Code). As skills úteis aqui: `create-game-assets`, `game-feel`, `godot-shaders`, `godot-tilemap`, `platformer`, `camera-systems`.
+
+**Pendente, nesta ordem:**
+1. **Ambiência.** `scripts/world/ambience.gd` está escrito, mas não está ligado: raios de luz e névoa por shader com pontilhado, mais partículas com brilho por domínio. Falta:
+   - em `main.gd`, criar `Ambience` na CanvasLayer do fundo (layer -10, depois do backdrop);
+   - chamar `ambience.use(b.id)` em `_use_biome`;
+   - rodar os testes.
+2. **Tremor de tela** (pela skill de game feel): em `camera_rig.gd`, trocar `randf_range` por senoide suave com intensidade ao quadrado, para o tremor deixar de "chiar".
+3. **Blocos do chão:** mapear os tilesets do Gothicvania (16 px, igual ao jogo) para os blocos de cada domínio em `room.gd` (`_draw_stone`, atlas).
+4. **Inimigos e chefes** com a arte nova:
+   - Hell Beast, Nightmare, Dark Emperor e o demônio do Bestiary como chefes;
+   - caveira de fogo, fantasma, cão infernal, lobo, anjo, mago, aranha e golem como inimigos;
+   - importar em folhas `"color": true` com os nomes de animação de cada script.
+5. **Créditos** dos CC-BY no jogo (Códice ou título) e no site.
+6. **Site:** refazer as tiras com a arte nova (`tools/site_assets.py`), trocar as imagens dos domínios e publicar o `gh-pages` com `git subtree push --prefix site origin gh-pages`.
+7. **Soltar a versão:** `python tools/lancar_versao.py 0.3.0 "Arte nova"`. O Release precisa ser rodado por ele com `!`, porque o classificador bloqueia.
+8. **Pendências antigas:**
+   - o robô estoura o tempo nas fases em teia;
+   - o equilíbrio medido ainda não saiu;
+   - a troca de pacote do atualizador nunca foi testada com janela.
+
+**Regras que continuam valendo:**
+- nunca abrir o jogo com janela; conferir só em headless e por PNG;
+- commit sem "Co-Authored-By: Claude";
+- para ver o site, usar Playwright (`shots.py` no scratchpad) com `python -m http.server`.
