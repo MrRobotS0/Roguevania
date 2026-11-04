@@ -58,3 +58,15 @@ Fila (todos pedidos por ele):
 - [x] Inglês e português, com o seletor nas opções. Nome: MOKSHA.
 - [ ] Robô + equilíbrio medido (o robô ainda estoura o tempo nas fases em teia).
 - [x] Exportar .exe (build/) e landing page 3D (site/). Falta publicar: Release com o zip + GitHub Pages.
+
+# Quarta rodada — o grande update (04/11, noite: "o maior update de conteúdo da história")
+
+- [x] 6 domínios / 6 deuses novos com arte garimpada (fundo, blocos, HUD, clima, perigo, salas, trilha)
+- [x] rota de 10 andares com 3 escolhas por passagem
+- [x] 30 criaturas novas (18 comuns, 6 elites, 6 chefes), arte conferida pelo desenho
+- [x] 20 armas, 12 habilidades, 12 aparências, 6 mutações; ícones em pixel art para todo o equipamento
+- [x] história com 13 deuses + final ampliado; tudo em inglês também
+- [x] trilha nova no clima da trilha de Duna (composição original)
+- [x] menu sem tecla vazando entre telas
+- [x] Wiki no site, gerada dos dados do jogo
+- [ ] salas feitas à mão para os 6 domínios novos (hoje: conjunto base + 7 geradas cada)

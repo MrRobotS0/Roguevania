@@ -182,12 +182,14 @@ Tudo aconteceu em 03/11/2026.
 
 ## 5. Uma partida, do começo ao fim
 
-### Rota (8 andares)
+### Rota (10 andares, desde o grande update de 04/11)
 
 ```
-Mar de Cinzas ─┬─ Salões ─ Lobo da Longa Noite ─┬─ Torre de Babel ─── Arquiteto Mudo ──┬─ Carcosa ───── Rei sem Rosto ───┬─ Trono do
-               └─ Forja ── Colosso da Bigorna ──┘  Jardim Primordial ─ Mãe-Raiz ────────┘  Observatório ─ Último Astrônomo ┘  Imperador Cego
+Mar de Cinzas ─┬─ Salões ── Lobo da Longa Noite ─┬─ Torre de Babel ── Arquiteto Mudo ─┬─ Carcosa ───── Rei sem Rosto ───┬─ Penhascos do Sonho ─ Dragão Sonhado ──┬─ Trono do
+               ├─ Forja ─── Colosso da Bigorna ──┤  Jardim Primordial ─ Mãe-Raiz ──────┤  Observatório ─ Último Astrônomo ┤  Cavernas Fundas ──── Serpe do Fundo ───┤  Imperador Cego
+               └─ Necrópole ─ Rei Esquecido ─────┘  Catedral Submersa ─ O Que Responde ┘  Ventre ──────── O Insaciável ────┘  Bosque Errante ────── Raposa de 9 Caudas ┘
 ```
+Cada passagem oferece **três** caminhos (antes eram dois).
 
 - O **Mar de Cinzas** é sempre o primeiro andar. A saída dele leva à passagem.
 - Cada **domínio** termina numa saída "Enfrentar o guardião", que leva à arena
@@ -697,6 +699,14 @@ somam por cima.
 | observatorio | 100 | Fá♯ lídio | Observatório |
 | chefe | 150 | Ré menor harmônica | arenas dos guardiões |
 | chefe_final | 140 | Mi frígio dominante | Trono |
+| necropole | 60 | Dó menor | Necrópole |
+| catedral | 70 | Sol dórico | Catedral Submersa |
+| ventre | 90 | Dó♯ frígio | O Ventre |
+| penhascos | 84 | Lá lídio | Penhascos do Sonho |
+| cavernas | 76 | Si lócrio | Cavernas Fundas |
+| bosque | 104 | Sol Hijaz, 7/8 | Bosque Errante |
+
+**Trilha nova (04/11, pedido dele: "inspirar na trilha de Duna do Villeneuve"):** composição original, no clima desértico-ritual — drones graves, BRAAM de metais distorcidos, voz feminina por formantes (vogais a/e/i/o/u com vibrato e ornamentos), canto gutural, duduk/gaita de fole, taiko e frame drum em grupos irregulares, raspados metálicos, reverb sintético. Nenhuma melodia de Duna é usada. 17 faixas, 37,5 MB.
 
 **Verificação:** como eu não podia ouvir, as trilhas foram conferidas por números: volume médio, pico, emenda do loop e energia acima de 6 kHz. Isso pegou um sino com aliasing (chiado), que foi corrigido.
 
@@ -1608,3 +1618,26 @@ Ele pediu: "mude absolutamente tudo a temática do HUD de acordo com o mapa, ten
 **Falta (só ele pode):**
 - `! python tools/lancar_versao.py 0.3.0 "Arte nova ..."`: o classificador bloqueia criar o Release.
 - Testar com janela a troca de pacote do atualizador.
+
+---
+
+## 28. O grande update de conteúdo (04/11/2026, noite) — v0.4.0
+
+Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, bosses, história, deuses, itens, melhorias — tudo com arte pronta garimpada". Feito em duas partes (commits 74312f7 e b28acf9) + Wiki.
+
+**Domínios e deuses (7 → 13):** Necrópole (deus que lembrava os mortos), Catedral Submersa (que ouvia as preces), O Ventre (que devorava), Penhascos do Sonho (que sonhava), Cavernas Fundas (que se escondia), Bosque Errante (que caminhava). Cada um com: fundo garimpado (cemitério, igreja em tons de água, tecido vivo, magic cliffs em lilás, cavern, parallax forest), blocos de chão próprios, pele de HUD, névoa/partículas, perigo de cenário novo (mão de osso, jorro, bile, lampejo do sonho, ponta de rocha, espinheiro), 5 inscrições, 34 salas (conjunto base + 7 salas próprias geradas e validadas), trilha própria.
+
+**Rota:** 10 andares, 3 escolhas por passagem (Run.STAGES); Trono passou a tier 7.
+
+**Criaturas (30 novas, todas com arte escolhida pelo desenho):** ver tabela em docs/ACERVO_ARTE.md. Comuns herdam comportamentos existentes (ex.: Carpideira = Gárgula, Morto Desperto = Assassino, Escavador = Peregrino que explode); elites e chefes são listas de golpes (Boss). Chefes: Rei Esquecido, O Que Responde (Cthulhu da chierit), O Insaciável (Demon Slime), Dragão Sonhado, Serpe do Fundo, Raposa de Nove Caudas.
+**Armadilha aprendida:** no Godot 4.7 o `_init` da classe-pai NÃO roda quando a filha define o seu — toda criatura que herda chama `super._init()` primeiro (a Carpideira andava no chão com gravidade).
+
+**Equipamento:** armas 13 → 33, habilidades 10 → 22, aparências 6 → 18 (com cromas novas), mutações 14 → 20 (Luto, Prece Atendida, Fome sem Fim, Sono Leve, Pele de Pedra, Última Prece). **Ícones em pixel art garimpada** (496 RPG icons, Henrique Lazarini, CC0) em todo o equipamento: HUD, pedestal, Vigia, Mercador (GearIcon; `icon` em WeaponData/SkillData; versão 16 px gerada em tools/gen_content.py).
+
+**História:** treze deuses; o final ganhou a página do décimo terceiro ("o que se escondia viu tudo e não contou a ninguém"); o final verdadeiro tem treze cadeiras. Tudo traduzido para o inglês.
+
+**Menu:** a tecla que abria/fechava uma tela vazava para a próxima no mesmo quadro (Enter em Opções mexia na 1ª opção; Esc/Enter ao fechar confirmava COMEÇAR; clique do mouse no título começava a partida). Agora há `Controls.lock_ui()` / `ui_ready()` nas trocas de tela e o clique não escolhe nada no título.
+
+**Wiki:** `tools/gerar_wiki.py` + `tools/wiki_modelo.html` geram `site/wiki.html` direto dos arquivos do jogo (história, 13 deuses, rota, domínios com inscrições e criaturas animadas, guardiões, armas/habilidades com ícone, aparências com o herói recolorido, mutações, bênçãos, brasas, comandos), PT/EN, busca. Botão **Wiki** no topo do site.
+
+**Testes:** 63 casos (agora cobrindo as 30 criaturas e 6 chefes acertando o herói, as 25 armas novas machucando, ícones de todo o equipamento, mutações novas, trava do menu).

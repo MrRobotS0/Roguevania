@@ -83,7 +83,17 @@ BOSSES = {
 
 ENEMIES = ["penitent", "guard", "pilgrim", "archer", "assassin", "inquisitor", "smith", "slag", "wolf",
            "scribe", "gargoyle", "thorn", "moss_beast", "masked", "herald", "automaton", "star",
-           "mason", "seed_pod", "dancer", "lens"]
+           "mason", "seed_pod", "dancer", "lens",
+           # grande update: 6 domínios novos (comuns e elites)
+           "mourner", "risen", "grave_cat", "drowned", "votive", "prayer", "maw_tentacle", "larva", "parasite",
+           "nightmare", "incubus", "sleepwalker", "blind_lizard", "crevice_snake", "digger", "highwayman",
+           "wanderer", "frogman", "elite_caller", "elite_priestess", "elite_glutton", "elite_reverie",
+           "elite_hermit", "elite_bull", "elite_duelist", "elite_hunter", "elite_librarian", "elite_forgemaster",
+           "elite_thornkeeper", "elite_brass"]
+
+# chefes novos: a folha já se chama boss_<nome>
+NEW_BOSSES = ["boss_forgotten", "boss_answer", "boss_insatiable", "boss_dragon", "boss_wyrm", "boss_fox"]
+SIX = [("idle", None), ("walk", None), ("windup", 0), ("attack", 0), ("cast", None)]
 
 MOVES = {
     "run": [("run", None)],
@@ -97,7 +107,9 @@ MOVES = {
 
 # domínio no site: prefixo dos fundos no jogo
 DOMAINS = {"mar": "bd", "saloes": "bd_saloes", "forja": "bd_forja", "torre": "bd_torre",
-           "jardim": "bd_jardim", "carcosa": "bd_carcosa", "observatorio": "bd_observatorio"}
+           "jardim": "bd_jardim", "carcosa": "bd_carcosa", "observatorio": "bd_observatorio",
+           "necropole": "bd_necropole", "catedral": "bd_catedral", "ventre": "bd_ventre",
+           "penhascos": "bd_penhascos", "cavernas": "bd_cavernas", "bosque": "bd_bosque"}
 
 
 def scenery():
@@ -153,6 +165,14 @@ if __name__ == "__main__":
     info = {}
     for b, seq in BOSSES.items():
         strip("boss_" + b, b, seq, info)
+    for b in NEW_BOSSES:
+        strip(b, b, SIX, info)
+    # ícones do equipamento para a Wiki
+    icons = os.path.join(ROOT, "site", "img", "icons")
+    os.makedirs(icons, exist_ok=True)
+    for f in os.listdir(os.path.join(ROOT, "assets", "icons")):
+        if f.endswith(".png") and not f.endswith("_16.png"):
+            Image.open(os.path.join(ROOT, "assets", "icons", f)).save(os.path.join(icons, f))
     for e in ENEMIES:
         if os.path.exists(os.path.join(SPR, e + ".json")):
             meta = json.load(open(os.path.join(SPR, e + ".json")))

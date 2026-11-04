@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR" data-lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Wiki</title>
+<meta name="description" content="MOKSHA wiki: the story, the 13 gods, every domain, guardian, creature, weapon, skill and skin.">
+<link rel="icon" href="img/heroi.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07060b; --panel: #100d17; --panel2: #171320; --line: #2b2438; --text: #f2ecff; --dim: #b3a8cc;
+    --gold: #f2c14e; --gold-dk: #7a4a10; --focus: #8ff7e8;
+    --pixel: "Silkscreen", monospace; --body: "Pixelify Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body { margin: 0; color: var(--text); font: 400 17px/1.6 var(--body); overflow-x: hidden;
+    background: radial-gradient(1200px 500px at 70% -10%, #2a1a10 0%, transparent 60%), var(--bg); }
+  html[data-lang="pt"] [lang="en"], html[data-lang="en"] [lang="pt"] { display: none; }
+  img { image-rendering: pixelated; }
+  a { color: var(--gold); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  h1, h2, h3, h4 { font-family: var(--pixel); line-height: 1.2; margin: 0; }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--gold); color: #1a0f04; padding: 10px 14px; z-index: 99; }
+  .skip:focus { left: 8px; }
+
+  /* barra */
+  .bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    background: rgba(7,6,11,.92); border-bottom: 2px solid var(--line); backdrop-filter: blur(4px); }
+  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .12em; white-space: nowrap; }
+  .brand small { color: var(--dim); font-size: 12px; letter-spacing: .1em; margin-left: 6px; }
+  .bar .sp { flex: 1; }
+  .search { min-height: 44px; width: min(260px, 38vw); font: 400 15px var(--body); color: var(--text); background: var(--panel);
+    border: 2px solid var(--line); padding: 8px 12px; }
+  .search::placeholder { color: #8a7fa3; }
+  .lang { display: flex; }
+  .lang button { font: 400 13px var(--pixel); color: var(--dim); cursor: pointer; background: var(--panel); border: 2px solid var(--line);
+    min-height: 44px; min-width: 46px; }
+  .lang button[aria-pressed="true"] { color: #1a0f04; background: var(--gold); border-color: var(--gold); }
+  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; font: 700 13px var(--pixel); color: #1a0f04;
+    background: var(--gold); text-decoration: none; box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a, 0 4px 0 var(--gold-dk); }
+  .btn:active { transform: translateY(3px); box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a, 0 1px 0 var(--gold-dk); }
+
+  /* índice: chips com rolagem no celular, coluna fixa no computador */
+  .layout { width: min(1240px, 100% - 32px); margin-inline: auto; }
+  .toc { display: flex; gap: 6px; overflow-x: auto; padding: 12px 0; scrollbar-width: thin; }
+  .toc a { flex: none; font: 400 13px var(--pixel); color: var(--dim); text-decoration: none; padding: 10px 12px; min-height: 44px;
+    display: inline-flex; align-items: center; border: 2px solid var(--line); background: var(--panel); }
+  .toc a:hover, .toc a.on { color: var(--gold); border-color: var(--gold); }
+  @media (min-width: 1000px) {
+    .layout { display: grid; grid-template-columns: 210px 1fr; gap: 32px; }
+    .toc { position: sticky; top: 76px; align-self: start; flex-direction: column; overflow: visible; padding: 24px 0; }
+    .toc a { justify-content: flex-start; }
+  }
+  main { min-width: 0; padding-bottom: 64px; }
+
+  .hero { padding: 40px 0 16px; }
+  .hero h1 { font-size: clamp(34px, 7vw, 64px); color: var(--gold); letter-spacing: .06em;
+    text-shadow: 3px 3px 0 #3a1a04, 6px 6px 0 #1a0b04; }
+  .hero p { max-width: 62ch; color: var(--dim); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 20px; }
+  .stats div { background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; color: var(--dim); font-size: 14px; }
+  .stats b { display: block; font: 700 28px var(--pixel); color: var(--gold); }
+
+  section.top { padding-top: 48px; }
+  h2 { font-size: clamp(22px, 3.4vw, 32px); color: var(--gold); margin-bottom: 6px; }
+  .eyebrow { font: 400 12px var(--pixel); letter-spacing: .14em; color: var(--dim); margin: 0 0 4px; }
+  .lead { color: var(--dim); max-width: 70ch; margin: 0 0 18px; }
+
+  .story p { max-width: 70ch; }
+  details { border: 2px solid var(--line); background: var(--panel); padding: 12px 16px; margin-top: 14px; }
+  summary { cursor: pointer; font: 400 14px var(--pixel); color: var(--gold); min-height: 32px; }
+
+  .gods { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+  .gods a { display: block; height: 100%; padding: 12px 14px; text-decoration: none; color: var(--text); background: var(--panel);
+    border: 2px solid var(--line); border-left: 6px solid var(--c); }
+  .gods a:hover { background: var(--panel2); }
+  .gods b { display: block; font: 400 15px var(--body); }
+  .gods span { font: 400 13px var(--pixel); color: var(--c); }
+
+  .route { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .route .step { display: flex; flex-direction: column; gap: 6px; }
+  .route .arrow { font: 700 26px var(--pixel); color: var(--line); }
+  .chip { font: 400 13px var(--pixel); text-decoration: none; color: var(--text); padding: 8px 10px; min-height: 44px; display: flex;
+    align-items: center; background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--c); }
+  .chip:hover { border-color: var(--c); }
+
+  .domain { margin-top: 28px; border: 2px solid var(--line); background: var(--panel); }
+  .banner { position: relative; aspect-ratio: 16 / 5; background: center / cover no-repeat; image-rendering: pixelated; }
+  .banner .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,6,11,.92) 0%, rgba(7,6,11,.55) 55%, rgba(7,6,11,.1) 100%); }
+  .ban-text { position: relative; padding: 18px 20px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+  .num { font: 400 12px var(--pixel); color: var(--c); letter-spacing: .12em; margin: 0; }
+  .banner h3 { font-size: clamp(20px, 3.2vw, 30px); color: #fff; text-shadow: 2px 2px 0 #000; }
+  .god { margin: 2px 0 0; color: var(--c); font-size: 16px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--line); border-top: 2px solid var(--line); }
+  .facts div { background: var(--panel); padding: 10px 14px; font-size: 15px; }
+  .k { display: block; font: 400 11px var(--pixel); color: var(--c); letter-spacing: .1em; }
+  .lore { margin: 0; padding: 14px 18px 14px 40px; border-top: 2px solid var(--line); color: #ded5f0; }
+  .lore li { margin: 4px 0; font-style: italic; }
+  .lore li::marker { color: var(--c); font: 400 12px var(--pixel); }
+
+  .grid { display: grid; gap: 8px; }
+  .cards3 { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding: 12px; border-top: 2px solid var(--line); }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .card { background: var(--panel2); border: 2px solid var(--line); padding: 12px; display: flex; gap: 12px; align-items: flex-start; }
+  .card h4 { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .card p { margin: 0 0 4px; font-size: 15px; color: #d6cce8; }
+  .creature { flex-direction: column; }
+  .creature .stage { width: 100%; height: 160px; display: grid; place-items: end center; background:
+    linear-gradient(transparent 82%, rgba(255,255,255,.05) 82%), radial-gradient(60% 70% at 50% 85%, color-mix(in srgb, var(--c, #e8a33d) 22%, transparent), transparent); }
+  .role { font: 400 11px var(--pixel) !important; letter-spacing: .1em; color: var(--c, var(--gold)) !important; }
+  .spr { overflow: hidden; }
+  .film { height: 100%; animation: film var(--d) steps(var(--n)) infinite; }
+  @keyframes film { to { transform: translateX(-100%); } }
+  .gear img { flex: none; background: #0b0910; border: 2px solid var(--line); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px !important; }
+  .tags > span { border: 1px solid var(--line); padding: 1px 6px; color: var(--dim); }
+  .tags .stat { color: var(--s); border-color: var(--s); }
+  .unlock { font-size: 13px !important; color: var(--gold) !important; }
+  .skin .fig { flex: none; width: 96px; height: 120px; display: grid; place-items: end center; background: #0b0910; border: 2px solid var(--line); }
+  .skin .fig img { max-width: 92px; max-height: 116px; width: auto; height: auto; }
+
+  .list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+  .list li { background: var(--panel); border: 2px solid var(--line); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .list b { font: 400 14px var(--pixel); color: var(--text); }
+  .list span { color: var(--dim); font-size: 15px; }
+  .list em { font-style: normal; color: var(--gold); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 2px solid var(--line); }
+  td { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 15px; vertical-align: top; }
+  kbd { font: 400 13px var(--pixel); background: #0b0910; border: 1px solid var(--line); padding: 2px 6px; color: var(--gold); }
+  .scroll { overflow-x: auto; }
+  .hidden { display: none !important; }
+  .none { color: var(--dim); padding: 12px 0; }
+  footer { border-top: 2px solid var(--line); padding: 24px 16px; color: var(--dim); font-size: 14px; text-align: center; }
+
+  @media (max-width: 640px) {
+    .bar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+    .brand small { display: none; }
+    .lang button { min-width: 44px; }
+    .btn { padding: 8px 10px; font-size: 12px; }
+    .search { order: 5; width: 100%; }
+    .banner { aspect-ratio: 16 / 7; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .film { animation: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo"><span lang="pt">Pular para o conteúdo</span><span lang="en">Skip to content</span></a>
+<header class="bar">
+  <a class="brand" href="./">MOKSHA<small>WIKI</small></a>
+  <span class="sp"></span>
+  <input class="search" id="q" type="search" placeholder="Buscar arma, criatura..." aria-label="Buscar / Search">
+  <div class="lang" role="group" aria-label="Idioma / Language">
+    <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+  <a class="btn" href="./#download"><span lang="pt">Baixar</span><span lang="en">Download</span></a>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Índice">{{NAV}}</nav>
+  <main id="conteudo">
+    <section class="hero">
+      <p class="eyebrow">WIKI · V{{VERSION}}</p>
+      <h1>MOKSHA</h1>
+      <p><span lang="pt">Tudo sobre o jogo, tirado direto dos arquivos dele: a história, os treze deuses, cada domínio, guardião e criatura, e todo o equipamento.</span><span lang="en">Everything about the game, taken straight from its files: the story, the thirteen gods, every domain, guardian and creature, and all the gear.</span></p>
+      <div class="stats">{{STATS}}</div>
+    </section>
+
+    <section class="top story" id="historia">
+      <p class="eyebrow">LORE</p>
+      <h2><span lang="pt">A história</span><span lang="en">The story</span></h2>
+      {{INTRO}}
+      <details><summary><span lang="pt">O final (spoiler)</span><span lang="en">The ending (spoiler)</span></summary>{{ENDING}}</details>
+      <details><summary><span lang="pt">O final verdadeiro, com as 4 brasas (spoiler)</span><span lang="en">The true ending, with all 4 embers (spoiler)</span></summary>{{TRUE_ENDING}}</details>
+    </section>
+
+    <section class="top" id="deuses">
+      <p class="eyebrow">PANTHEON</p>
+      <h2><span lang="pt">Os 13 deuses</span><span lang="en">The 13 gods</span></h2>
+      <p class="lead"><span lang="pt">Numa noite sem nome, todos sumiram. Cada um deixou um domínio, que apodreceu do seu jeito.</span><span lang="en">On a nameless night, all of them vanished. Each left a domain behind, rotting in its own way.</span></p>
+      <ul class="gods">{{GODS}}</ul>
+    </section>
+
+    <section class="top" id="rota">
+      <p class="eyebrow">ROUTE</p>
+      <h2><span lang="pt">A rota de uma partida</span><span lang="en">The route of a run</span></h2>
+      <p class="lead"><span lang="pt">Dez andares. Depois de cada domínio vem o guardião dele; depois, a passagem, onde você escolhe um entre três caminhos. Morreu, volta ao Mar de Cinzas.</span><span lang="en">Ten floors. Each domain ends with its guardian; then comes the passage, where you choose one of three paths. Die, and you wake on the Sea of Ash again.</span></p>
+      {{ROUTE}}
+    </section>
+
+    <section class="top" id="dominios">
+      <p class="eyebrow">DOMAINS</p>
+      <h2><span lang="pt">Os domínios</span><span lang="en">The domains</span></h2>
+      <p class="lead"><span lang="pt">Inscrições, clima, perigo, criaturas, elite e guardião de cada lugar.</span><span lang="en">Inscriptions, weather, hazard, creatures, elite and guardian of each place.</span></p>
+      {{DOMAINS}}
+    </section>
+
+    <section class="top" id="guardioes">
+      <p class="eyebrow">BOSSES</p>
+      <h2><span lang="pt">Os guardiões</span><span lang="en">The guardians</span></h2>
+      <p class="lead"><span lang="pt">Todo golpe é avisado. A cada três golpes eles param, exaustos: é a sua janela. Com metade da vida, mudam de fase.</span><span lang="en">Every attack is telegraphed. Every third attack they stop, exhausted: that is your window. At half health, they change phase.</span></p>
+      <div class="grid cards">{{GUARDIANS}}</div>
+    </section>
+
+    <section class="top" id="armas">
+      <p class="eyebrow">WEAPONS</p>
+      <h2><span lang="pt">Armas</span><span lang="en">Weapons</span></h2>
+      <p class="lead"><span lang="pt">Duas por vez. As que caem podem vir com afixos (brasa, geada, vampira...). Planta entregue à Vigia faz a arma passar a aparecer nas partidas.</span><span lang="en">Two at a time. Dropped weapons may roll affixes (ember, frost, vampiric...). Deliver a blueprint to the Watcher and the weapon starts showing up in runs.</span></p>
+      <div class="grid cards" data-filter>{{WEAPONS}}</div>
+    </section>
+
+    <section class="top" id="habilidades">
+      <p class="eyebrow">SKILLS</p>
+      <h2><span lang="pt">Habilidades</span><span lang="en">Skills</span></h2>
+      <div class="grid cards" data-filter>{{SKILLS}}</div>
+    </section>
+
+    <section class="top" id="aparencias">
+      <p class="eyebrow">SKINS</p>
+      <h2><span lang="pt">Aparências</span><span lang="en">Skins</span></h2>
+      <p class="lead"><span lang="pt">Só mudam o visual. Cada uma tem cromas, outras cores com as tintas dos domínios.</span><span lang="en">Cosmetic only. Each one has chromas: other colorways in the domains' palettes.</span></p>
+      <div class="grid cards" data-filter>{{SKINS}}</div>
+    </section>
+
+    <section class="top" id="mutacoes">
+      <p class="eyebrow">MUTATIONS</p>
+      <h2><span lang="pt">Mutações</span><span lang="en">Mutations</span></h2>
+      <p class="lead"><span lang="pt">No altar de cada passagem. Até três por partida; valem até você morrer.</span><span lang="en">At the altar in each passage. Up to three per run; they last until you die.</span></p>
+      <ul class="list">{{MUTATIONS}}</ul>
+    </section>
+
+    <section class="top" id="progresso">
+      <p class="eyebrow">PROGRESSION</p>
+      <h2><span lang="pt">O que fica para sempre</span><span lang="en">What you keep forever</span></h2>
+      <p class="lead"><span lang="pt">Ouro e o que você carrega se perdem na morte. Essência entregue à Vigia, plantas, bênçãos, aparências e runas ficam.</span><span lang="en">Gold and what you carry are lost on death. Essence spent at the Watcher, blueprints, blessings, skins and runes stay.</span></p>
+      <h3 style="margin:18px 0 8px;font-size:16px"><span lang="pt">Bênçãos da Vigia</span><span lang="en">The Watcher's blessings</span></h3>
+      <ul class="list">{{BLESSINGS}}</ul>
+      <h3 style="margin:22px 0 8px;font-size:16px"><span lang="pt">Brasas do Deus (dificuldade)</span><span lang="en">God's Embers (difficulty)</span></h3>
+      <div class="scroll"><table>{{HEAT}}</table></div>
+    </section>
+
+    <section class="top" id="comandos">
+      <p class="eyebrow">CONTROLS</p>
+      <h2><span lang="pt">Comandos</span><span lang="en">Controls</span></h2>
+      <div class="scroll"><table>{{CONTROLS}}</table></div>
+      <p class="none" id="nada" hidden><span lang="pt">Nada encontrado.</span><span lang="en">Nothing found.</span></p>
+    </section>
+  </main>
+</div>
+<footer>MOKSHA · v{{VERSION}} · <span lang="pt">gerada a partir do jogo por tools/gerar_wiki.py</span><span lang="en">generated from the game by tools/gerar_wiki.py</span> · <a href="./">MOKSHA</a> · <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a></footer>
+<script>
+  const root = document.documentElement;
+  const q = document.getElementById("q");
+  const PH = { pt: "Buscar arma, criatura...", en: "Search weapon, creature..." };
+  function setLang(code) {
+    root.dataset.lang = code;
+    root.lang = code === "pt" ? "pt-BR" : "en";
+    q.placeholder = PH[code];
+    document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === code)));
+    try { localStorage.setItem("moksha-lang", code); } catch (e) {}
+  }
+  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
+  let saved = null;
+  try { saved = localStorage.getItem("moksha-lang"); } catch (e) {}
+  setLang(saved || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"));
+
+  // busca: filtra os cartões de criatura e de equipamento
+  const cards = [...document.querySelectorAll(".card[data-q]")];
+  q.addEventListener("input", () => {
+    const t = q.value.trim().toLowerCase();
+    let shown = 0;
+    cards.forEach(c => { const ok = !t || c.dataset.q.includes(t); c.classList.toggle("hidden", !ok); shown += ok; });
+    document.querySelectorAll(".domain").forEach(d => d.classList.toggle("hidden", !!t && !d.querySelector(".card:not(.hidden)")));
+    document.getElementById("nada").hidden = shown > 0;
+    if (t && shown) { const first = cards.find(c => !c.classList.contains("hidden")); first && first.scrollIntoView({ block: "center" }); }
+  });
+
+  // índice: marca a seção em que você está
+  const links = [...document.querySelectorAll(".toc a")];
+  const seen = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+  }), { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll("main section.top").forEach(s => seen.observe(s));
+</script>
+</body>
+</html>

@@ -10,38 +10,68 @@
   "n": 17
  },
  "boss_colossus": {
-  "w": 212,
-  "h": 260,
+  "w": 188,
+  "h": 248,
   "n": 14
  },
  "boss_architect": {
-  "w": 312,
-  "h": 250,
-  "n": 12
+  "w": 354,
+  "h": 352,
+  "n": 14
  },
  "boss_mother_root": {
-  "w": 416,
-  "h": 196,
-  "n": 22
+  "w": 320,
+  "h": 296,
+  "n": 16
  },
  "boss_faceless_king": {
-  "w": 238,
-  "h": 178,
-  "n": 9
+  "w": 262,
+  "h": 132,
+  "n": 13
  },
  "boss_astronomer": {
-  "w": 176,
-  "h": 188,
-  "n": 21
+  "w": 324,
+  "h": 258,
+  "n": 14
+ },
+ "boss_forgotten": {
+  "w": 282,
+  "h": 164,
+  "n": 18
+ },
+ "boss_answer": {
+  "w": 294,
+  "h": 148,
+  "n": 16
+ },
+ "boss_insatiable": {
+  "w": 360,
+  "h": 228,
+  "n": 22
+ },
+ "boss_dragon": {
+  "w": 528,
+  "h": 232,
+  "n": 20
+ },
+ "boss_wyrm": {
+  "w": 416,
+  "h": 196,
+  "n": 16
+ },
+ "boss_fox": {
+  "w": 422,
+  "h": 218,
+  "n": 20
  },
  "enemy_penitent": {
-  "w": 64,
-  "h": 90,
-  "n": 12
+  "w": 226,
+  "h": 104,
+  "n": 20
  },
  "enemy_guard": {
-  "w": 146,
-  "h": 108,
+  "w": 190,
+  "h": 114,
   "n": 10
  },
  "enemy_pilgrim": {
@@ -50,9 +80,9 @@
   "n": 8
  },
  "enemy_archer": {
-  "w": 70,
-  "h": 84,
-  "n": 10
+  "w": 104,
+  "h": 136,
+  "n": 16
  },
  "enemy_assassin": {
   "w": 64,
@@ -60,29 +90,29 @@
   "n": 11
  },
  "enemy_inquisitor": {
-  "w": 170,
-  "h": 72,
-  "n": 7
+  "w": 114,
+  "h": 140,
+  "n": 20
  },
  "enemy_smith": {
-  "w": 108,
-  "h": 176,
+  "w": 96,
+  "h": 100,
   "n": 17
  },
  "enemy_slag": {
-  "w": 48,
-  "h": 58,
-  "n": 3
+  "w": 104,
+  "h": 90,
+  "n": 9
  },
  "enemy_wolf": {
-  "w": 96,
-  "h": 58,
-  "n": 11
+  "w": 106,
+  "h": 68,
+  "n": 7
  },
  "enemy_scribe": {
-  "w": 126,
-  "h": 100,
-  "n": 14
+  "w": 284,
+  "h": 240,
+  "n": 18
  },
  "enemy_gargoyle": {
   "w": 102,
@@ -90,19 +120,19 @@
   "n": 5
  },
  "enemy_thorn": {
-  "w": 48,
-  "h": 76,
-  "n": 4
+  "w": 104,
+  "h": 92,
+  "n": 6
  },
  "enemy_moss_beast": {
-  "w": 76,
-  "h": 70,
-  "n": 13
+  "w": 196,
+  "h": 186,
+  "n": 17
  },
  "enemy_masked": {
-  "w": 52,
-  "h": 78,
-  "n": 10
+  "w": 230,
+  "h": 168,
+  "n": 16
  },
  "enemy_herald": {
   "w": 192,
@@ -115,29 +145,179 @@
   "n": 12
  },
  "enemy_star": {
-  "w": 178,
-  "h": 198,
+  "w": 86,
+  "h": 86,
   "n": 10
  },
  "enemy_mason": {
-  "w": 90,
-  "h": 132,
-  "n": 10
+  "w": 170,
+  "h": 118,
+  "n": 18
  },
  "enemy_seed_pod": {
-  "w": 64,
-  "h": 60,
-  "n": 17
+  "w": 110,
+  "h": 86,
+  "n": 15
  },
  "enemy_dancer": {
-  "w": 70,
-  "h": 116,
-  "n": 12
+  "w": 182,
+  "h": 90,
+  "n": 20
  },
  "enemy_lens": {
-  "w": 72,
+  "w": 90,
+  "h": 66,
+  "n": 11
+ },
+ "enemy_mourner": {
+  "w": 62,
+  "h": 94,
+  "n": 8
+ },
+ "enemy_risen": {
+  "w": 64,
+  "h": 90,
+  "n": 11
+ },
+ "enemy_grave_cat": {
+  "w": 170,
+  "h": 72,
+  "n": 6
+ },
+ "enemy_drowned": {
+  "w": 48,
+  "h": 76,
+  "n": 10
+ },
+ "enemy_votive": {
+  "w": 110,
+  "h": 104,
+  "n": 21
+ },
+ "enemy_prayer": {
+  "w": 324,
+  "h": 346,
+  "n": 10
+ },
+ "enemy_maw_tentacle": {
+  "w": 108,
+  "h": 176,
+  "n": 10
+ },
+ "enemy_larva": {
+  "w": 86,
+  "h": 132,
+  "n": 3
+ },
+ "enemy_parasite": {
+  "w": 116,
+  "h": 76,
+  "n": 6
+ },
+ "enemy_nightmare": {
+  "w": 238,
+  "h": 178,
+  "n": 9
+ },
+ "enemy_incubus": {
+  "w": 312,
+  "h": 250,
+  "n": 16
+ },
+ "enemy_sleepwalker": {
+  "w": 70,
+  "h": 78,
+  "n": 18
+ },
+ "enemy_blind_lizard": {
+  "w": 184,
+  "h": 48,
+  "n": 12
+ },
+ "enemy_crevice_snake": {
+  "w": 80,
+  "h": 72,
+  "n": 9
+ },
+ "enemy_digger": {
+  "w": 76,
+  "h": 76,
+  "n": 8
+ },
+ "enemy_highwayman": {
+  "w": 294,
+  "h": 210,
+  "n": 20
+ },
+ "enemy_wanderer": {
+  "w": 114,
+  "h": 108,
+  "n": 18
+ },
+ "enemy_frogman": {
+  "w": 106,
   "h": 70,
-  "n": 7
+  "n": 14
+ },
+ "enemy_elite_caller": {
+  "w": 126,
+  "h": 100,
+  "n": 14
+ },
+ "enemy_elite_priestess": {
+  "w": 198,
+  "h": 176,
+  "n": 22
+ },
+ "enemy_elite_glutton": {
+  "w": 138,
+  "h": 320,
+  "n": 16
+ },
+ "enemy_elite_reverie": {
+  "w": 378,
+  "h": 116,
+  "n": 20
+ },
+ "enemy_elite_hermit": {
+  "w": 250,
+  "h": 160,
+  "n": 22
+ },
+ "enemy_elite_bull": {
+  "w": 146,
+  "h": 108,
+  "n": 12
+ },
+ "enemy_elite_duelist": {
+  "w": 130,
+  "h": 126,
+  "n": 20
+ },
+ "enemy_elite_hunter": {
+  "w": 178,
+  "h": 130,
+  "n": 20
+ },
+ "enemy_elite_librarian": {
+  "w": 88,
+  "h": 130,
+  "n": 22
+ },
+ "enemy_elite_forgemaster": {
+  "w": 230,
+  "h": 186,
+  "n": 20
+ },
+ "enemy_elite_thornkeeper": {
+  "w": 372,
+  "h": 90,
+  "n": 26
+ },
+ "enemy_elite_brass": {
+  "w": 126,
+  "h": 142,
+  "n": 12
  },
  "hero_run": {
   "w": 98,

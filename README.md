@@ -34,13 +34,18 @@ folhas de sprite, e dá para trocar por arte desenhada à mão sem mexer no jogo
 Cada partida monta mapas novos. Morreu, recomeça do zero, mas o que foi
 desbloqueado fica para sempre.
 
-8 andares por partida. Cada domínio termina no guardião dele, e depois do
-guardião você escolhe o próximo domínio:
+10 andares por partida, por 13 domínios de 13 deuses. Cada domínio termina no
+guardião dele, e depois do guardião você escolhe entre três caminhos:
 
 ```
-Mar de Cinzas ─┬─ Salões ─ Lobo da Longa Noite ─┬─ Torre de Babel ─ Arquiteto Mudo ─┬─ Carcosa ───── Rei sem Rosto ───┬─ Trono do
-               └─ Forja ── Colosso da Bigorna ──┘  Jardim Primordial ─ Mãe-Raiz ────┘  Observatório ─ Último Astrônomo ┘  Imperador Cego
+Mar de Cinzas ─┬─ Salões ── Lobo da Longa Noite ─┬─ Torre de Babel ── Arquiteto Mudo ─┬─ Carcosa ───── Rei sem Rosto ───┬─ Penhascos do Sonho ─ Dragão Sonhado ──┬─ Trono do
+               ├─ Forja ─── Colosso da Bigorna ──┤  Jardim Primordial ─ Mãe-Raiz ──────┤  Observatório ─ Último Astrônomo ┤  Cavernas Fundas ──── Serpe do Fundo ───┤  Imperador Cego
+               └─ Necrópole ─ Rei Esquecido ─────┘  Catedral Submersa ─ O Que Responde ┘  Ventre ──────── O Insaciável ────┘  Bosque Errante ────── Raposa de 9 Caudas ┘
 ```
+
+Tudo sobre o jogo (história, deuses, criaturas, armas, aparências) está na
+**Wiki**: https://mrrobots0.github.io/Roguevania/wiki.html (gerada por
+`tools/gerar_wiki.py` a partir dos arquivos do jogo).
 
 Cada domínio é mais fundo que o anterior: os inimigos ficam mais fortes e os
 itens que caem, melhores. Cada um tem música, fundo, clima e perigo próprios.
@@ -77,7 +82,7 @@ itens que caem, melhores. Cada um tem música, fundo, clima e perigo próprios.
 |---|---|
 | Plantas | caem dos inimigos e só valem se você levar até a Vigia viva; aí ela vende o item |
 | Desbloqueios e bênçãos | comprados com Essência |
-| Aparências | 6 visuais para o herói |
+| Aparências | 18 visuais para o herói, com cromas |
 | Runas | **Asa de Cinza** (pulo duplo, nos Salões) e **Punho do Ferreiro** (quebra parede rachada, na Forja). Abrem caminhos que antes estavam fechados |
 | Brasas do Deus | dificuldade: cada vitória libera mais uma, até 4 (inimigos mais fortes, menos frascos) |
 

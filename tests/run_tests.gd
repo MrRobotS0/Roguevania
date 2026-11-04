@@ -1418,6 +1418,11 @@ func _hud_skins() -> void:
 
 
 func _credits() -> void:
+	# a tecla que abre/fecha uma tela não vale para a próxima (Opções ligava a tela cheia; Esc começava a partida)
+	Controls.lock_ui()
+	_check(not Controls.ui_ready(), "a trava de interface não segurou a tecla")
+	await _frames(5)
+	_check(Controls.ui_ready(), "a trava de interface não soltou")
 	var ids := Screen.TITLE_OPTIONS.map(func(o: Array) -> String: return String(o[0]))
 	var extras := Screen.EXTRAS.map(func(o: Array) -> String: return String(o[0]))
 	_check(ids.has("extras") and extras.has("credits"), "CRÉDITOS não está em EXTRAS no título")

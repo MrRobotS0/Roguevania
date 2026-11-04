@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MOKSHA</title>
-<meta name="description" content="MOKSHA. A pixel-art action roguelite. Seven gods vanished. You are what they left behind.">
+<meta name="description" content="MOKSHA. A pixel-art action roguelite. Thirteen gods vanished. You are what they left behind.">
 <meta property="og:title" content="MOKSHA">
-<meta property="og:description" content="Seven gods vanished. You are what they left behind.">
+<meta property="og:description" content="Thirteen gods vanished. You are what they left behind.">
 <meta property="og:image" content="img/mar.png">
 <link rel="icon" href="img/heroi.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +28,7 @@
     --body: "Pixelify Sans", system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); }
+  html { background: var(--bg); overflow-x: clip; }
   body { margin: 0; color: var(--text); font: 400 18px/1.55 var(--body); overflow-x: hidden; }
   img { image-rendering: pixelated; display: block; max-width: 100%; }
   a { color: var(--gold); }
@@ -62,6 +62,9 @@
   .btn svg { width: 22px; height: 22px; }
   .btn small { font: 400 13px var(--pixel); opacity: .75; }
   .mini { font-size: 13px; padding: 10px 14px; min-height: 44px; gap: 8px; }
+  /* botão secundário (Wiki): mesmo bloco, sem o ouro, para não competir com o Baixar */
+  .ghost { color: var(--gold); background: rgba(7,6,11,.75); box-shadow: inset 0 0 0 2px var(--gold), 0 4px 0 var(--gold-dk); }
+  .ghost:active { box-shadow: inset 0 0 0 2px var(--gold), 0 1px 0 var(--gold-dk); }
 
   /* capa */
   .hero { position: relative; height: 100vh; min-height: 600px; display: grid; place-items: center; text-align: center; }
@@ -102,7 +105,7 @@
   @keyframes cue { to { transform: translateY(12px); opacity: 0; } }
 
   /* viagem pelos domínios */
-  .journey { position: relative; height: 760vh; }
+  .journey { position: relative; height: 1300vh; }
   .pin { position: sticky; top: 0; height: 100vh; display: grid; align-items: end; padding-bottom: 12vh; }
   .pin::before { content: ""; position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(90deg, rgba(7,6,11,.72) 0%, rgba(7,6,11,.35) 38%, transparent 62%),
@@ -175,7 +178,7 @@
   .spr .film { image-rendering: pixelated; background-repeat: no-repeat; will-change: transform; }
 
   @media (max-width: 720px) {
-    .bar .btn { display: none; }
+    .bar .btn:not(.ghost) { display: none; }
     .altar { width: 280px; }
     .track { padding-left: 20vw; }
   }
@@ -206,6 +209,7 @@
 <header class="bar" id="bar">
   <a class="brand" href="#top">MOKSHA</a>
   <nav>
+    <a class="btn mini ghost" href="wiki.html">Wiki</a>
     <a class="btn mini" href="#download" data-i18n="get">Play free</a>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
@@ -219,13 +223,13 @@
     <div class="hero-inner">
       <h1 id="title" aria-label="MOKSHA"><span class="ch" aria-hidden="true"><span class="sh">M</span><span class="fg">M</span></span><span class="ch" aria-hidden="true"><span class="sh">O</span><span class="fg">O</span></span><span class="ch" aria-hidden="true"><span class="sh">K</span><span class="fg">K</span></span><span class="ch" aria-hidden="true"><span class="sh">S</span><span class="fg">S</span></span><span class="ch" aria-hidden="true"><span class="sh">H</span><span class="fg">H</span></span><span class="ch" aria-hidden="true"><span class="sh">A</span><span class="fg">A</span></span></h1>
       <svg class="sigil" viewBox="0 0 84 9" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M0 4h30v1H0zM54 4h30v1H54zM31 3h2v3h-2zM51 3h2v3h-2zM36 2h12v1H36zM34 3h2v3h-2zM48 3h2v3h-2zM36 6h12v1H36zM40 3h4v3h-4z" opacity=".95"/><path d="M41 4h2v1h-2z" fill="#1a0b04"/><path d="M38 0h1v2h-1zM45 0h1v2h-1zM41 0h2v1h-2zM38 7h1v2h-1zM45 7h1v2h-1zM41 8h2v1h-2z" opacity=".6"/></svg>
-      <p class="tagline" data-i18n-html="tagline">Seven gods vanished.<br><b>You are what they left behind.</b></p>
+      <p class="tagline" data-i18n-html="tagline">Thirteen gods vanished.<br><b>You are what they left behind.</b></p>
       <a class="btn dl" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
         <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
         <span data-i18n="download">Download free</span>
       </a>
       <p class="dl-note" role="status" aria-live="polite" hidden></p>
-      <p class="ver">WINDOWS · V0.3.0 · EN / PT</p>
+      <p class="ver">WINDOWS · V0.4.0 · EN / PT</p>
     </div>
     <div class="runner" aria-hidden="true"></div>
     <div class="cue" aria-hidden="true">SCROLL<i></i></div>
@@ -254,7 +258,7 @@
   <section class="g-wrap" id="guardians" aria-labelledby="g-t">
    <div class="guardians">
     <div class="head">
-      <p class="eyebrow" data-i18n="gEye">7 GUARDIANS</p>
+      <p class="eyebrow" data-i18n="gEye">14 GUARDIANS</p>
       <h2 class="big" id="g-t" data-i18n-html="gT">Each god left <span>a keeper</span>.</h2>
     </div>
     <div class="track" id="track"></div>
@@ -283,7 +287,8 @@
 
 <footer>
   <div class="wrap">
-    <span>MOKSHA · v0.3.0</span>
+    <span>MOKSHA · v0.4.0</span>
+    <a href="wiki.html">Wiki</a>
     <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a>
     <p class="credits"><span data-i18n="credits">Art, with thanks:</span>
       <a href="https://opengameart.org/users/ansimuz">ansimuz</a> (Gothicvania, CC0; Hell Hound, CC-BY 3.0) ·
@@ -291,7 +296,8 @@
       <a href="https://opengameart.org/content/dark-fantasy-platformer-bestiary">Emcee Flesher</a> (bestiary, CC-BY 4.0), with sprites by Stephen “Redshrike” Challener, Evert, Puffalotti, William.Thompsonj, Balmer, Calciumtrice and surt ·
       <a href="https://luizmelo.itch.io">Luiz Melo</a> (characters, CC0) ·
       <a href="https://chierit.itch.io">chierit</a> (Elementals, CC-BY 4.0) ·
-      <a href="https://pulsarcp.itch.io/fantasy-creatures">PulsarCP</a> (rune golem, CC0) ·
+      <a href="https://pulsarcp.itch.io/fantasy-creatures">PulsarCP</a> (fantasy creatures, CC0) ·
+      <a href="https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg">Henrique Lazarini</a> (icons, CC0) ·
       <a href="https://opengameart.org/content/animated-statue">Calciumtrice</a> (statue, CC-BY 3.0) ·
       <a href="https://opengameart.org/content/pixel-predator-plant-mob-character">CraftPix.net</a> (predator plant, OGA-BY 3.0) ·
       <a href="https://opengameart.org/content/pixel-wolf">alizard</a> (wolf, CC0) ·
@@ -310,6 +316,12 @@
     { accent: "#b8e05a", en: ["The Primordial Garden", "Where a god planted the world", "He did not vanish. He became a root. He still feels every step."], pt: ["O Jardim Primordial", "Onde um deus plantou o mundo", "Ele não sumiu. Virou raiz. Ainda sente cada passo."] },
     { accent: "#f0e070", en: ["Carcosa", "Where a god wore a mask", "The suns are black and no one finds it strange."], pt: ["Carcosa", "Onde um deus usava máscara", "Os sóis são negros e ninguém estranha."] },
     { accent: "#b48cff", en: ["The Celestial Observatory", "Where a god counted the stars", "In the logbook, the last line: he looked back."], pt: ["O Observatório Celeste", "Onde um deus contava as estrelas", "No caderno de bordo, a última linha: ele olhou de volta."] },
+    { accent: "#a8c0e8", en: ["The Necropolis", "Where a god remembered the dead", "Written inside an open grave: if you remember me, I come back."], pt: ["A Necrópole", "Onde um deus lembrava os mortos", "Escrito por dentro de uma cova aberta: se você lembrar de mim, eu volto."] },
+    { accent: "#6ab8e8", en: ["The Sunken Cathedral", "Where a god heard the prayers", "Something at the bottom began to answer. No one asked it to."], pt: ["A Catedral Submersa", "Onde um deus ouvia as preces", "Alguma coisa no fundo começou a responder. Ninguém pediu isso a ela."] },
+    { accent: "#c8d040", en: ["The Belly", "Where a god devoured", "You are walking inside him. The walls breathe."], pt: ["O Ventre", "Onde um deus devorava", "Você está andando por dentro dele. As paredes respiram."] },
+    { accent: "#c8a8ff", en: ["The Dream Cliffs", "Where a god dreamed", "This does not exist. It is the dream of a god who fell asleep and never woke."], pt: ["Os Penhascos do Sonho", "Onde um deus sonhava", "Isto não existe. É o sonho de um deus que dormiu e não acordou mais."] },
+    { accent: "#8ac8e8", en: ["The Deep Caverns", "Where a god hid", "Scratched in the rock, very deep: he knew. And told no one."], pt: ["As Cavernas Fundas", "Onde um deus se escondia", "Riscado na rocha, bem fundo: ele sabia. E não contou a ninguém."] },
+    { accent: "#e8d070", en: ["The Wandering Forest", "Where a god walked", "On a road sign pointing every way: he went this way."], pt: ["O Bosque Errante", "Onde um deus caminhava", "Numa placa de estrada, apontando para todos os lados: ele foi por aqui."] },
   ];
   const MOVES = [
     ["hero_combo", ["Combo", "Combo"], "J J J", 12],
@@ -327,12 +339,18 @@
     ["boss_mother_root", "#b8e05a", ["The Root Mother", "A Mãe-Raiz"], ["Everything that grows here was born of her.", "Tudo que cresce aqui nasceu dela."], ["THE GARDEN", "O JARDIM"]],
     ["boss_faceless_king", "#f0e070", ["The Faceless King", "O Rei sem Rosto"], ["The mask fell. There was nothing beneath.", "A máscara caiu. Não havia nada embaixo."], ["CARCOSA", "CARCOSA"]],
     ["boss_astronomer", "#b48cff", ["The Last Astronomer", "O Último Astrônomo"], ["Counted the stars until there were none left.", "Contou as estrelas até elas acabarem."], ["THE OBSERVATORY", "O OBSERVATÓRIO"]],
+    ["boss_forgotten", "#a8c0e8", ["The Forgotten King", "O Rei Esquecido"], ["Remembers every dead but himself.", "Lembra de todos os mortos, menos de si mesmo."], ["THE NECROPOLIS", "A NECRÓPOLE"]],
+    ["boss_answer", "#6ab8e8", ["The One Who Answers", "O Que Responde"], ["Someone heard the prayers. It was not the god.", "Alguém ouviu as preces. Não era o deus."], ["THE CATHEDRAL", "A CATEDRAL"]],
+    ["boss_insatiable", "#c8d040", ["The Insatiable", "O Insaciável"], ["The god who devoured ate even his own hunger.", "O deus que devorava comeu até a própria fome."], ["THE BELLY", "O VENTRE"]],
+    ["boss_dragon", "#c8a8ff", ["The Dreamed Dragon", "O Dragão Sonhado"], ["Dreamed up so the god would never be woken.", "Sonhado para que o deus nunca fosse acordado."], ["THE CLIFFS", "OS PENHASCOS"]],
+    ["boss_wyrm", "#8ac8e8", ["The Wyrm Below", "A Serpe do Fundo"], ["Left at the door so no one would go deeper.", "Deixada na porta para ninguém descer mais."], ["THE CAVERNS", "AS CAVERNAS"]],
+    ["boss_fox", "#e8d070", ["The Nine-Tailed Fox", "A Raposa de Nove Caudas"], ["Always went ahead of the god who walked. It still does.", "Ia sempre na frente do deus que caminhava. Ainda vai."], ["THE FOREST", "O BOSQUE"]],
   ];
   const PT = {
     get: "Jogar grátis", download: "Baixar grátis",
-    tagline: "Sete deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
+    tagline: "Treze deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
     movesT: "Nunca <span>pare</span> de se mexer.",
-    gEye: "7 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
+    gEye: "14 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
     dlT: "A cinza <span>lembra de você</span>.",
     dlP: "Grátis. Windows 10/11. Teclado ou controle.",
     credits: "Arte, com gratidão:",
@@ -583,7 +601,7 @@
     // profundidade de cada camada: o céu bem atrás, o chão perto
     const DEPTHS = [["sky", -60], ["far", -32], ["mid", -16], ["near", -6]];
     const DRIFT = { sky: 0, far: 0.0016, mid: 0.0045, near: 0.009 };
-    const ids = ["mar", "saloes", "forja", "torre", "jardim", "carcosa", "observatorio"];
+    const ids = ["mar", "saloes", "forja", "torre", "jardim", "carcosa", "observatorio", "necropole", "catedral", "ventre", "penhascos", "cavernas", "bosque"];
 
     function planeFor(depth) {
       // cobre a tela inteira naquela profundidade, com folga para o parallax
