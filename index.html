@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA</title>
+<meta name="description" content="MOKSHA, a 2D action roguelite. Seven gods vanished. Their domains remained.">
+<meta property="og:title" content="MOKSHA">
+<meta property="og:description" content="Seven gods vanished. Their domains remained.">
+<meta property="og:image" content="img/mar.png">
+<link rel="icon" href="img/heroi.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07060b;
+    --surface: rgba(18, 15, 26, .86);
+    --line: #2b2438;
+    --text: #f2ecff;
+    --dim: #b4a9cc;
+    --gold: #f2c14e;
+    --gold-dk: #8a5a14;
+    --accent: #e8a33d;
+    --focus: #8ff7e8;
+    --pixel: "Silkscreen", monospace;
+    --body: "Pixelify Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 400 18px/1.6 var(--body); overflow-x: hidden; }
+  img { image-rendering: pixelated; display: block; max-width: 100%; }
+  a { color: var(--gold); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+  /* o diorama 3D fica atrás de tudo, em pixels grandes */
+  #stage {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -2;
+    image-rendering: pixelated; background: #120c0e url("img/mar.png") center / cover;
+  }
+  .grain {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(7, 6, 11, .75) 100%);
+  }
+
+  /* barra do topo */
+  .bar {
+    position: fixed; inset: 0 0 auto 0; z-index: 20;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; transition: background .3s ease;
+  }
+  .bar.solid { background: rgba(7, 6, 11, .82); backdrop-filter: blur(6px); border-bottom: 2px solid var(--line); }
+  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .08em; opacity: 0; transition: opacity .3s ease; }
+  .bar.solid .brand { opacity: 1; }
+  .bar nav { display: flex; gap: 8px; align-items: center; }
+  .lang button {
+    font: 400 14px var(--pixel); color: var(--dim); cursor: pointer;
+    background: rgba(7, 6, 11, .6); border: 2px solid var(--line); padding: 8px 12px; min-height: 44px; min-width: 48px;
+  }
+  .lang button[aria-pressed="true"] { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+  .mini-cta {
+    font: 400 14px var(--pixel); text-decoration: none; color: var(--bg); background: var(--gold);
+    padding: 12px 14px; min-height: 44px; display: inline-flex; align-items: center;
+    box-shadow: 0 4px 0 var(--gold-dk);
+  }
+
+  /* capa */
+  .hero { position: relative; height: 100vh; min-height: 560px; display: grid; place-items: center; text-align: center; }
+  .hero-inner { padding: 0 16px; transform-style: preserve-3d; }
+  h1 {
+    margin: 0; font: 700 clamp(64px, 15vw, 168px)/.95 var(--pixel); letter-spacing: .05em; color: var(--gold);
+    text-shadow: 0 6px 0 #6b3a0c, 0 12px 0 #2a1406, 0 0 48px rgba(242, 193, 78, .45);
+  }
+  h1 .ch { display: inline-block; will-change: transform; }
+  .tagline { font-size: clamp(18px, 2.6vw, 26px); margin: 20px auto 36px; max-width: 32ch; text-shadow: 2px 2px 0 var(--bg); }
+  .cta {
+    position: relative; display: inline-flex; align-items: center; gap: 12px;
+    font: 700 20px var(--pixel); text-decoration: none; color: var(--bg); background: var(--gold);
+    padding: 18px 30px; min-height: 60px; overflow: hidden;
+    box-shadow: 0 6px 0 var(--gold-dk), 0 0 0 4px var(--bg), 0 0 40px rgba(242, 193, 78, .35);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .cta::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%);
+    animation: shine 3.2s ease-in-out infinite;
+  }
+  @keyframes shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+  .cta:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--gold-dk), 0 0 0 4px var(--bg), 0 0 56px rgba(242, 193, 78, .5); }
+  .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--gold-dk), 0 0 0 4px var(--bg); }
+  .cta svg { width: 22px; height: 22px; }
+  .meta { color: var(--dim); font-size: 15px; margin-top: 18px; text-shadow: 1px 1px 0 var(--bg); }
+  .scroll-cue {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    font: 400 12px var(--pixel); color: var(--dim); letter-spacing: .2em;
+  }
+  .scroll-cue i { display: block; width: 4px; height: 16px; margin: 8px auto 0; background: var(--gold); animation: cue 1.4s steps(4) infinite; }
+  @keyframes cue { from { transform: translateY(0); opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
+
+  /* o herói correndo pela capa (quadros reais do jogo) */
+  .runner {
+    position: absolute; bottom: 9vh; left: -140px; width: 128px; height: 128px;
+    background: url("img/heroi_corrida.png") 0 0 / 1024px 128px; image-rendering: pixelated;
+    animation: run-frames .55s steps(8) infinite, run-across 9s linear infinite;
+    filter: drop-shadow(0 0 12px rgba(143, 247, 232, .25));
+  }
+  @keyframes run-frames { to { background-position: -1024px 0; } }
+  @keyframes run-across { to { transform: translateX(calc(100vw + 280px)); } }
+
+  /* a viagem pelos domínios */
+  .journey { position: relative; height: 760vh; }
+  .journey-pin { position: sticky; top: 0; height: 100vh; display: grid; align-items: center; }
+  .domain-panel {
+    width: min(520px, 100% - 32px); margin-left: max(16px, 6vw);
+    background: linear-gradient(135deg, rgba(7, 6, 11, .9), rgba(7, 6, 11, .55));
+    border: 2px solid var(--line); border-left: 6px solid var(--accent);
+    padding: 28px 28px 24px; transition: border-color .6s ease;
+  }
+  .kicker { font: 400 13px var(--pixel); color: var(--accent); letter-spacing: .2em; margin: 0 0 8px; transition: color .6s ease; }
+  .domain-panel h2 { font: 700 clamp(26px, 4vw, 42px)/1.1 var(--pixel); color: var(--text); margin: 0 0 6px; }
+  .domain-panel .sub { color: var(--accent); margin: 0 0 18px; font-size: 18px; transition: color .6s ease; }
+  .domain-panel blockquote { margin: 0; color: var(--dim); font-size: 17px; border: 0; padding: 0; }
+  .rail { position: absolute; right: max(16px, 4vw); top: 50%; transform: translateY(-50%); display: grid; gap: 14px; }
+  .rail button {
+    width: 14px; height: 14px; padding: 0; border: 2px solid var(--dim); background: transparent; cursor: pointer;
+    transition: background .3s ease, transform .3s ease, border-color .3s ease;
+  }
+  .rail button.on { background: var(--accent); border-color: var(--accent); transform: scale(1.35); }
+  .rail button::before { content: ""; position: absolute; inset: -15px; }
+  .rail button { position: relative; }
+
+  /* seções sólidas por cima do diorama */
+  .solid-section { position: relative; background: linear-gradient(to bottom, rgba(7, 6, 11, .0), var(--bg) 120px); padding: 140px 0 96px; }
+  h2.title { font: 700 clamp(26px, 4vw, 40px)/1.15 var(--pixel); color: var(--gold); margin: 0 0 16px; }
+  .lede { color: var(--dim); max-width: 62ch; margin: 0 0 40px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; perspective: 900px; }
+  .card {
+    position: relative; background: var(--surface); border: 2px solid var(--line); padding: 24px;
+    transform-style: preserve-3d; transition: transform .25s ease, border-color .25s ease; will-change: transform;
+  }
+  .card:hover { border-color: var(--gold); }
+  .card .glow {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(242, 193, 78, .22), transparent 60%);
+  }
+  .card:hover .glow { opacity: 1; }
+  .card .icon { width: 48px; height: 48px; margin-bottom: 16px; transform: translateZ(40px); }
+  .card h3 { font: 600 21px var(--body); margin: 0 0 8px; transform: translateZ(28px); }
+  .card p { margin: 0; color: var(--dim); font-size: 16px; transform: translateZ(18px); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 64px; }
+  .stat { text-align: center; padding: 20px 8px; border-top: 2px solid var(--line); }
+  .stat b { display: block; font: 700 clamp(34px, 5vw, 52px)/1 var(--pixel); color: var(--gold); }
+  .stat span { color: var(--dim); font-size: 15px; }
+
+  .final { text-align: center; padding: 120px 0; background: radial-gradient(ellipse at 50% 120%, rgba(232, 116, 58, .28), transparent 60%), var(--bg); border-top: 2px solid var(--line); }
+  .final h2.title { color: var(--text); }
+  .steps { color: var(--dim); max-width: 56ch; margin: 32px auto 0; text-align: left; font-size: 16px; }
+  .steps li { margin-bottom: 6px; }
+
+  footer { background: var(--bg); padding: 32px 0 48px; color: var(--dim); font-size: 14px; border-top: 2px solid var(--line); }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+  .reveal { opacity: 0; transform: translateY(24px); }
+
+  @media (max-width: 640px) {
+    .bar .mini-cta { display: none; }
+    .rail { right: 10px; gap: 10px; }
+    .domain-panel { margin-left: 16px; padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .runner, .cta::after, .scroll-cue i { animation: none; }
+    .runner { display: none; }
+    .reveal { opacity: 1; transform: none; }
+    .card { transition: none; }
+  }
+</style>
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+</head>
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="bar" id="bar">
+  <a class="brand" href="#top">MOKSHA</a>
+  <nav>
+    <a class="mini-cta" href="#download" data-i18n="get">Download</a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-set-lang="pt" aria-pressed="false">PT</button>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="title">
+    <div class="hero-inner">
+      <h1 id="title" aria-label="MOKSHA"><span class="ch">M</span><span class="ch">O</span><span class="ch">K</span><span class="ch">S</span><span class="ch">H</span><span class="ch">A</span></h1>
+      <p class="tagline" data-i18n="tagline">Seven gods vanished. Their domains remained.</p>
+      <a class="cta" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
+        <span data-i18n="download">Download for Windows</span>
+      </a>
+      <p class="meta" data-i18n="meta">Free · Windows 10/11 · 40 MB · English &amp; Português</p>
+    </div>
+    <div class="runner" aria-hidden="true"></div>
+    <div class="scroll-cue" aria-hidden="true"><span data-i18n="scroll">Scroll</span><i></i></div>
+  </section>
+
+  <section class="journey" id="journey" aria-label="The seven domains">
+    <div class="journey-pin">
+      <article class="domain-panel" aria-live="polite">
+        <p class="kicker" id="d-kicker">DOMAIN 1 / 7</p>
+        <h2 id="d-name">The Sea of Ash</h2>
+        <p class="sub" id="d-sub">Domain of the god who burned</p>
+        <blockquote id="d-lore">A god burned here. No one knows which. Each House claims it was theirs.</blockquote>
+      </article>
+      <div class="rail" id="rail" role="group" aria-label="Domains"></div>
+    </div>
+  </section>
+
+  <section class="solid-section" aria-labelledby="feat">
+    <div class="wrap">
+      <h2 class="title reveal" id="feat" data-i18n="aboutTitle">A run never repeats</h2>
+      <p class="lede reveal" data-i18n="aboutText">An action roguelite in hand-made pixel art. Every death rebuilds the world: new maps, new weapons, new routes. What you bring back to the Warden stays forever.</p>
+      <div class="cards">
+        <div class="card reveal"><div class="glow"></div>
+          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#8ff7e8" d="M2 9h2v1H2zM4 8h2v1H4zM6 7h2v1H6zM8 5h2v2H8zM9 3h2v2H9z"/><path fill="#f2c14e" d="M1 10h3v1H1z"/></svg>
+          <h3 data-i18n="f1t">Fluid movement</h3><p data-i18n="f1">Double jump, air dash, rolls that chain into jumps, dives that bounce off enemies.</p></div>
+        <div class="card reveal"><div class="glow"></div>
+          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#b48cff" d="M1 1h4v3H1zM7 1h4v3H7zM4 8h4v3H4z"/><path fill="#b4a9cc" d="M3 4h1v2h4V4h1v3H6v1H5V7H3z"/></svg>
+          <h3 data-i18n="f2t">Maps that branch</h3><p data-i18n="f2">Up, down, back and forward. Long detours, secret walls and portals across every floor.</p></div>
+        <div class="card reveal"><div class="glow"></div>
+          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#d9e2ec" d="M9 1h2v2h-1v1H9v1H8v1H7v1H5V6h1V5h1V4h1V3h1z"/><path fill="#f2c14e" d="M3 7h2v1h1v2H5v1H3V9H1V8h2z"/></svg>
+          <h3 data-i18n="f3t">13 weapons, 10 skills</h3><p data-i18n="f3">Every hit of a combo has its own motion. Affixes, mutations and runes change how you play.</p></div>
+        <div class="card reveal"><div class="glow"></div>
+          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#e8743a" d="M3 2h6v1h1v3H9v1H8v2H4V7H3V6H2V3h1z"/><path fill="#07060b" d="M4 4h1v1H4zM7 4h1v1H7z"/><path fill="#f2c14e" d="M4 10h4v1H4z"/></svg>
+          <h3 data-i18n="f4t">Seven guardians</h3><p data-i18n="f4">One for each domain, and the Blind Emperor waiting on the throne at the end.</p></div>
+      </div>
+      <div class="stats">
+        <div class="stat reveal"><b data-count="7">7</b><span data-i18n="s_dom">domains</span></div>
+        <div class="stat reveal"><b data-count="272">272</b><span data-i18n="s_rooms">hand-made rooms</span></div>
+        <div class="stat reveal"><b data-count="35">35</b><span data-i18n="s_foes">creatures</span></div>
+        <div class="stat reveal"><b data-count="8">8</b><span data-i18n="s_floors">floors to the throne</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="download" aria-labelledby="dl">
+    <div class="wrap">
+      <h2 class="title reveal" id="dl" data-i18n="dlTitle">Wake up at the edge of the ash</h2>
+      <a class="cta reveal" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
+        <span data-i18n="download">Download for Windows</span>
+      </a>
+      <ol class="steps reveal">
+        <li data-i18n="s1">Unzip the file anywhere.</li>
+        <li data-i18n="s2">Open Moksha.exe. If Windows warns about an unknown publisher, choose "More info" and then "Run anyway".</li>
+        <li data-i18n="s3">Keyboard or gamepad. The language can be changed in Options.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>MOKSHA</span>
+    <a href="https://github.com/MrRobotS0/Roguevania" data-i18n="source">Source on GitHub</a>
+  </div>
+</footer>
+
+<script>
+  // --- textos ------------------------------------------------------------------
+  const DOMAINS = [
+    { id: "mar", accent: "#e8a33d", en: ["The Sea of Ash", "Domain of the god who burned", "A god burned here. No one knows which. Each House claims it was theirs."],
+      pt: ["O Mar de Cinzas", "Domínio do deus que ardeu", "Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas."] },
+    { id: "saloes", accent: "#9fe8ff", en: ["The Halls of the Last Winter", "Domain of the god who waited", "The god of winter promised to return in spring. No one here has seen another season since."],
+      pt: ["Os Salões do Último Inverno", "Domínio do deus que esperava", "O deus do Inverno prometeu voltar na primavera. Ninguém aqui viu outra estação desde então."] },
+    { id: "forja", accent: "#ff8a3a", en: ["The Crimson Forge", "Domain of the god who worked", "When the god of the forge vanished, the anvils kept striking on their own for a year."],
+      pt: ["A Forja Rubra", "Domínio do deus que trabalhava", "Quando o deus da Forja sumiu, as bigornas continuaram batendo sozinhas por um ano."] },
+    { id: "torre", accent: "#e8d070", en: ["The Tower of Babel", "Domain of the god who spoke every tongue", "The tower was built to reach the god. It did. He had already left."],
+      pt: ["A Torre de Babel", "Domínio do deus que falava todas as línguas", "A Torre foi feita para chegar ao deus. Chegou. Ele já tinha ido embora."] },
+    { id: "jardim", accent: "#b8e05a", en: ["The Primordial Garden", "Domain of the god who planted the world", "The god of the garden did not vanish. He became a root. He still feels every step."],
+      pt: ["O Jardim Primordial", "Domínio do deus que plantou o mundo", "O deus do Jardim não sumiu. Virou raiz. Ainda sente cada passo."] },
+    { id: "carcosa", accent: "#f0e070", en: ["Carcosa", "Domain of the god who wore a mask", "In Carcosa the suns are black and no one finds it strange."],
+      pt: ["Carcosa", "Domínio do deus que usava máscara", "Em Carcosa os sóis são negros e ninguém estranha."] },
+    { id: "observatorio", accent: "#b48cff", en: ["The Celestial Observatory", "Domain of the god who counted the stars", "In the logbook, the last line: he looked back."],
+      pt: ["O Observatório Celeste", "Domínio do deus que contava as estrelas", "No caderno de bordo, a última linha: ele olhou de volta."] },
+  ];
+  const PT = {
+    get: "Baixar", tagline: "Sete deuses sumiram. Seus domínios ficaram.", download: "Baixar para Windows",
+    meta: "Grátis · Windows 10/11 · 40 MB · English & Português", scroll: "Role",
+    aboutTitle: "Nenhuma partida se repete",
+    aboutText: "Um roguelite de ação em pixel art feita à mão. Cada morte refaz o mundo: mapas novos, armas novas, rotas novas. O que você leva até a Vigia fica para sempre.",
+    f1t: "Movimento fluido", f1: "Pulo duplo, esquiva no ar, rolagem que emenda no pulo, mergulho que quica nos inimigos.",
+    f2t: "Mapas que se ramificam", f2: "Para cima, para baixo, para trás e para a frente. Desvios longos, paredes secretas e portais em todo andar.",
+    f3t: "13 armas, 10 habilidades", f3: "Cada golpe do combo tem o seu movimento. Afixos, mutações e runas mudam o jeito de jogar.",
+    f4t: "Sete guardiões", f4: "Um por domínio, e o Imperador Cego esperando no trono, no fim.",
+    s_dom: "domínios", s_rooms: "salas feitas à mão", s_foes: "criaturas", s_floors: "andares até o trono",
+    dlTitle: "Acorde na beira da cinza",
+    s1: "Descompacte o arquivo onde quiser.",
+    s2: "Abra o Moksha.exe. Se o Windows avisar de editor desconhecido, escolha \"Mais informações\" e depois \"Executar assim mesmo\".",
+    s3: "Teclado ou controle. O idioma muda nas Opções.",
+    source: "Código no GitHub",
+  };
+  const EN = {};
+  document.querySelectorAll("[data-i18n]").forEach(el => { EN[el.dataset.i18n] = el.textContent; });
+  let lang = "en";
+  let current = 0;
+
+  function setLang(code) {
+    lang = code;
+    const table = code === "pt" ? PT : EN;
+    document.documentElement.lang = code === "pt" ? "pt-BR" : "en";
+    document.querySelectorAll("[data-i18n]").forEach(el => { const t = table[el.dataset.i18n]; if (t) el.textContent = t; });
+    document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === code)));
+    showDomain(current, true);
+    try { localStorage.setItem("moksha-lang", code); } catch (e) {}
+  }
+
+  function showDomain(i, instant) {
+    const d = DOMAINS[i];
+    const [name, sub, lore] = d[lang];
+    document.documentElement.style.setProperty("--accent", d.accent);
+    const fill = () => {
+      document.getElementById("d-kicker").textContent = (lang === "pt" ? "DOMÍNIO " : "DOMAIN ") + (i + 1) + " / 7";
+      document.getElementById("d-name").textContent = name;
+      document.getElementById("d-sub").textContent = sub;
+      document.getElementById("d-lore").textContent = lore;
+    };
+    document.querySelectorAll("#rail button").forEach((b, k) => b.classList.toggle("on", k === i));
+    if (instant || !window.gsap || still) { fill(); return; }
+    const parts = ["#d-kicker", "#d-name", "#d-sub", "#d-lore"];
+    gsap.to(parts, { opacity: 0, y: -10, duration: .18, stagger: .03, onComplete: () => {
+      fill();
+      gsap.fromTo(parts, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .45, stagger: .07, ease: "power3.out" });
+    } });
+  }
+
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // trilho dos domínios
+  const rail = document.getElementById("rail");
+  DOMAINS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", d.en[0]);
+    b.addEventListener("click", () => {
+      const j = document.getElementById("journey");
+      const top = j.offsetTop + (j.offsetHeight - innerHeight) * ((i + .5) / DOMAINS.length);
+      scrollTo({ top, behavior: still ? "auto" : "smooth" });
+    });
+    rail.appendChild(b);
+  });
+
+  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
+  let saved = null;
+  try { saved = localStorage.getItem("moksha-lang"); } catch (e) {}
+  setLang(saved || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"));
+
+  // barra do topo fica sólida depois da capa
+  const bar = document.getElementById("bar");
+  addEventListener("scroll", () => bar.classList.toggle("solid", scrollY > innerHeight * 0.6), { passive: true });
+
+  // cartões com inclinação 3D seguindo o cursor
+  if (!still) {
+    document.querySelectorAll(".card").forEach(card => {
+      card.addEventListener("pointermove", e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        card.style.transform = `rotateY(${(x - .5) * 14}deg) rotateX(${(.5 - y) * 12}deg) translateZ(8px)`;
+        card.style.setProperty("--mx", x * 100 + "%");
+        card.style.setProperty("--my", y * 100 + "%");
+      });
+      card.addEventListener("pointerleave", () => { card.style.transform = ""; });
+    });
+  }
+
+  // o domínio mostrado segue a posição da rolagem dentro da viagem
+  function sync(progress) {
+    const i = Math.min(DOMAINS.length - 1, Math.max(0, Math.floor(progress * DOMAINS.length)));
+    if (i === current) return;
+    current = i;
+    showDomain(i);
+    window.dispatchEvent(new CustomEvent("domain", { detail: i }));
+  }
+
+  // animações de rolagem
+  if (window.gsap && window.ScrollTrigger && !still) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from("h1 .ch", { y: 90, rotateX: -90, opacity: 0, duration: 1.1, stagger: .08, ease: "back.out(1.6)", delay: .15 });
+    gsap.from([".tagline", ".hero .cta", ".meta"], { opacity: 0, y: 24, duration: .8, stagger: .12, delay: .7, ease: "power3.out" });
+    gsap.to(".hero-inner", { yPercent: -30, opacity: 0, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+    document.querySelectorAll(".reveal").forEach(el => {
+      gsap.to(el, { opacity: 1, y: 0, duration: .8, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 88%" } });
+    });
+    document.querySelectorAll("[data-count]").forEach(el => {
+      const n = +el.dataset.count;
+      const o = { v: 0 };
+      gsap.to(o, { v: n, duration: 1.4, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 90%" },
+        onUpdate: () => { el.textContent = Math.round(o.v); } });
+    });
+    ScrollTrigger.create({
+      trigger: "#journey", start: "top top", end: "bottom bottom",
+      onUpdate: self => sync(self.progress),
+      onRefresh: self => sync(self.progress),
+    });
+  } else {
+    document.querySelectorAll(".reveal").forEach(el => { el.style.opacity = 1; el.style.transform = "none"; });
+  }
+</script>
+
+<script type="module">
+  // Diorama 3D: as camadas pintadas do jogo, em profundidade, renderizadas em
+  // baixa resolução e ampliadas (pixels grandes, como no jogo).
+  import * as THREE from "three";
+
+  const canvas = document.getElementById("stage");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
+  } catch (e) {
+    canvas.style.background = "#120c0e url('img/mar.png') center / cover";
+  }
+
+  if (renderer) {
+    const PIXEL = 3;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 200);
+    camera.position.set(0, 0, 10);
+    const loader = new THREE.TextureLoader();
+    const cache = {};
+    function tex(url, repeat) {
+      if (cache[url]) return cache[url];
+      const t = loader.load(url);
+      t.magFilter = THREE.NearestFilter;
+      t.minFilter = THREE.NearestFilter;
+      t.generateMipmaps = false;
+      t.colorSpace = THREE.SRGBColorSpace;
+      if (repeat) { t.wrapS = THREE.RepeatWrapping; t.repeat.set(0.5, 1); }
+      return (cache[url] = t);
+    }
+
+    // profundidade de cada camada: o céu bem atrás, o chão perto
+    const DEPTHS = [["sky", -60], ["far", -32], ["mid", -16], ["near", -6]];
+    const DRIFT = { sky: 0, far: 0.0016, mid: 0.0045, near: 0.009 };
+    const ids = ["mar", "saloes", "forja", "torre", "jardim", "carcosa", "observatorio"];
+
+    function planeFor(depth) {
+      // cobre a tela inteira naquela profundidade, com folga para o parallax
+      const dist = 10 - depth;
+      const h = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * 1.18;
+      return new THREE.PlaneGeometry(h * 16 / 9, h);
+    }
+
+    function makeSet(id) {
+      const g = new THREE.Group();
+      for (const [name, z] of DEPTHS) {
+        const m = new THREE.MeshBasicMaterial({ map: tex(`img/layers/${id}_${name}.png`, name !== "sky"), transparent: true, opacity: 1, depthWrite: false });
+        const mesh = new THREE.Mesh(planeFor(z), m);
+        mesh.position.z = z;
+        mesh.userData.layer = name;
+        g.add(mesh);
+      }
+      return g;
+    }
+
+    let shown = makeSet(ids[0]);
+    scene.add(shown);
+    ids.slice(1).forEach(id => DEPTHS.forEach(([n]) => tex(`img/layers/${id}_${n}.png`, n !== "sky")));
+
+    // brasas: pontos quadrados que sobem balançando
+    const COUNT = 700;
+    const pos = new Float32Array(COUNT * 3), seed = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      pos[i * 3] = (Math.random() - .5) * 40;
+      pos[i * 3 + 1] = (Math.random() - .5) * 24;
+      pos[i * 3 + 2] = -Math.random() * 30 + 4;
+      seed[i] = Math.random();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("seed", new THREE.BufferAttribute(seed, 1));
+    const emberMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { time: { value: 0 }, color: { value: new THREE.Color("#e8a33d") } },
+      vertexShader: `
+        attribute float seed; uniform float time; varying float vAlpha;
+        void main() {
+          vec3 p = position;
+          float t = time * (0.35 + seed * 0.5) + seed * 40.0;
+          p.y = mod(p.y + t * 1.6 + 12.0, 24.0) - 12.0;
+          p.x += sin(t * 1.3 + seed * 6.28) * 0.6;
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = (2.0 + seed * 3.0) * (12.0 / -mv.z);
+          vAlpha = 0.35 + 0.65 * fract(seed * 7.0 + time * 0.2);
+        }`,
+      fragmentShader: `
+        uniform vec3 color; varying float vAlpha;
+        void main() { gl_FragColor = vec4(color, vAlpha); }`,
+    });
+    scene.add(new THREE.Points(geo, emberMat));
+
+    // troca de domínio: a câmera mergulha pelas camadas e o novo surge atrás
+    let busy = false, pending = null;
+    function go(i) {
+      if (busy) { pending = i; return; }
+      busy = true;
+      const next = makeSet(ids[i]);
+      next.children.forEach(m => { m.material.opacity = 0; });
+      next.position.z = -6;
+      scene.add(next);
+      const old = shown;
+      emberMat.uniforms.color.value.set(getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#e8a33d");
+      const done = () => {
+        scene.remove(old);
+        old.children.forEach(m => { m.geometry.dispose(); m.material.dispose(); });
+        shown = next; busy = false;
+        if (pending !== null) { const p = pending; pending = null; if (p !== i) go(p); }
+      };
+      if (still || !window.gsap) {
+        next.position.z = 0;
+        next.children.forEach(m => { m.material.opacity = 1; });
+        done();
+        return;
+      }
+      const tl = gsap.timeline({ onComplete: done });
+      tl.to(camera.position, { z: 3.5, duration: .55, ease: "power2.in" }, 0);
+      old.children.forEach(m => tl.to(m.material, { opacity: 0, duration: .5, ease: "power1.in" }, .15));
+      tl.to(next.position, { z: 0, duration: .9, ease: "power3.out" }, .35);
+      next.children.forEach(m => tl.to(m.material, { opacity: 1, duration: .7 }, .35));
+      tl.to(camera.position, { z: 10, duration: .9, ease: "power3.out" }, .55);
+    }
+    addEventListener("domain", e => go(e.detail));
+
+    // câmera segue o cursor (e a inclinação do celular, se houver)
+    const aim = { x: 0, y: 0 };
+    addEventListener("pointermove", e => { aim.x = (e.clientX / innerWidth - .5) * 2; aim.y = (e.clientY / innerHeight - .5) * 2; }, { passive: true });
+
+    function resize() {
+      const w = Math.max(1, Math.round(innerWidth / PIXEL)), h = Math.max(1, Math.round(innerHeight / PIXEL));
+      renderer.setPixelRatio(1);
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      const cover = Math.max(1, (w / h) / (16 / 9));
+      scene.children.forEach(c => { if (c.isGroup) c.scale.set(cover, cover, 1); });
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    const clock = new THREE.Clock();
+    let visible = true;
+    document.addEventListener("visibilitychange", () => { visible = !document.hidden; });
+    function frame() {
+      requestAnimationFrame(frame);
+      if (!visible) return;
+      const t = clock.getElapsedTime();
+      emberMat.uniforms.time.value = still ? 0 : t;
+      if (!still) {
+        camera.position.x += (aim.x * 1.4 - camera.position.x) * 0.04;
+        camera.position.y += (-aim.y * 0.7 - camera.position.y) * 0.04;
+        camera.lookAt(0, 0, -20);
+      }
+      scene.children.forEach(c => {
+        if (!c.isGroup) return;
+        const cover = Math.max(1, camera.aspect / (16 / 9));
+        c.scale.set(cover, cover, 1);
+        c.children.forEach(m => { const d = DRIFT[m.userData.layer]; if (d && m.material.map) m.material.map.offset.x = still ? 0 : t * d; });
+      });
+      renderer.render(scene, camera);
+    }
+    frame();
+  }
+</script>
+</body>
+</html>
