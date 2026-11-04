@@ -252,6 +252,11 @@ EL = {  # chierit, CC-BY 4.0 — um arquivo por quadro
     "lr_a1": ("files", CH + "leaf_ranger*/**/PNG/1_atk/*.png"), "lr_sp": ("files", CH + "leaf_ranger*/**/PNG/sp_atk/*.png"),
     "lr_hit": ("files", CH + "leaf_ranger*/**/PNG/take_hit/*.png"),
 }
+FG = IT + "frost_guardian_free_v1.0/**/PNG files/"
+EL.update({  # chierit, CC-BY 4.0 — Frost Guardian vira a Fera-Musgo
+    "fg_idle": ("files", FG + "idle/*.png"), "fg_walk": ("files", FG + "walk/*.png"),
+    "fg_atk": ("files", FG + "1_atk/*.png"), "fg_hit": ("files", FG + "take_hit/*.png"),
+})
 RG = IT + "fantasy_creatures_bundle/**/Rune_Golem/crystal/"
 PC = {  # PulsarCP, CC0
     "rg_idle": ("fw", RG + "idle_sheet.png", 208), "rg_walk": ("fw", RG + "walk_sheet.png", 208),
@@ -321,6 +326,14 @@ SHEETS.update({
     # Dançarino Amarelo: "gira e atravessa a sala num rodopio" — assassino do vento
     "dancer": (six(seq("wh_idle", range(8)), seq("wh_run", range(8)), seq("wh_a2", [3]), seq("wh_a2", [8]),
                    seq("wh_a3", [10, 14]), seq("wh_hit", [2])), {"remap": [(0.4, 0.6, -140, 1.1)]}),
+    # Fera-Musgo: "não come, só cresce por cima do que encontra; investe em linha reta" — brutamontes (chierit);
+    # o gelo das costas vira musgo crescendo e o corpo vira casca escura
+    "moss_beast": ({"idle": seq("fg_idle", range(6)), "walk": seq("fg_walk", range(10)), "windup": seq("fg_atk", [3]),
+                    "charge": seq("fg_atk", [7]), "rest": seq("fg_hit", [2])},
+                   {"remap": [(0.42, 0.72, 78, 0.5, "="), (0.0, 0.12, 28, 0.55, "=")], "bright": 0.62}),
+    # Gárgula: "guardas que viraram pedra esperando a ordem de parar" — o morcego em pedra cinza
+    "gargoyle": ({"fly": grid_row("bat", 1, range(4)), "windup": grid_row("bat", 0, [0]), "dive": grid_row("bat", 1, [2])},
+                 {"sat": 0.15, "bright": 1.15}),
     # Guardiã de Espinhos: "faz o chão crescer contra você" — patrulheira de folhas
     "elite_thornkeeper": (six(seq("lr_idle", range(12)), seq("lr_run", range(10)), seq("lr_a1", [3]), seq("lr_a1", [6]),
                               seq("lr_sp", [6, 10]), seq("lr_hit", [2])), {}),

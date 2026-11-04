@@ -1,7 +1,7 @@
 {
- "w": 256,
- "h": 102,
- "size": 256,
+ "w": 160,
+ "h": 150,
+ "size": 160,
  "color": true,
  "anims": {
   "idle": {
@@ -12,27 +12,27 @@
   "walk": {
    "row": 1,
    "frames": 6,
-   "fps": 10
+   "fps": 8
   },
   "windup": {
    "row": 2,
    "frames": 1,
-   "fps": 8
+   "fps": 6
   },
   "attack": {
    "row": 3,
    "frames": 1,
-   "fps": 8
+   "fps": 6
   },
   "cast": {
    "row": 4,
-   "frames": 8,
+   "frames": 2,
    "fps": 6
   },
   "rest": {
    "row": 5,
    "frames": 1,
-   "fps": 8
+   "fps": 6
   }
  }
 }
