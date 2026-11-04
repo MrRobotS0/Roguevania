@@ -10,6 +10,7 @@ const DEFAULTS := {
 	"flashes": true,         # false = sem piscar branco forte
 	"vibration": true,
 	"timer": false,          # cronômetro de speedrun na tela
+	"hints": true,           # dicas da primeira partida
 	"keys": {},              # ação -> [physical keycode]
 }
 

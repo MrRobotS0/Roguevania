@@ -42,6 +42,7 @@ var daily := ""            # data do desafio do dia ("" = partida normal)
 var kills_by := {}         # título do inimigo -> abates nesta partida
 var weapon_kills := {}     # id da arma/habilidade -> abates nesta partida
 var killer := ""           # quem deu o último golpe no herói
+var hurt_by := {}          # quem tirou quanta vida do herói nesta partida
 var active := false
 
 
@@ -59,6 +60,7 @@ func new_run(seed_override := -1, heat_level := 0) -> void:
 	kills_by = {}
 	weapon_kills = {}
 	killer = ""
+	hurt_by = {}
 	active = true
 
 
@@ -162,6 +164,73 @@ func load_player(p: Player) -> void:
 	p.hp = clampi(carry["hp"], 1, p.max_hp)
 
 
+# --- partida salva ---------------------------------------------------------------------
+# Todo andar começa gravando onde a partida está. Sair (ou fechar o jogo) e
+# voltar recomeça daquele andar, com o que o herói tinha ao entrar nele.
+# Morrer, vencer ou desistir apaga.
+
+func snapshot() -> Dictionary:
+	var c := carry.duplicate()
+	if not c.is_empty():
+		c["weapons"] = c["weapons"].map(_gear_out)
+		c["skills"] = c["skills"].map(_gear_out)
+	return {"seed": seed_value, "stage": stage_id, "in_passage": in_passage, "path": path.duplicate(),
+		"time": time, "heat": heat, "daily": daily, "kills_by": kills_by.duplicate(),
+		"weapon_kills": weapon_kills.duplicate(), "carry": c}
+
+
+func restore(s: Dictionary) -> void:
+	new_run(int(s["seed"]), int(s["heat"]))
+	stage_id = s["stage"]
+	in_passage = s["in_passage"]
+	path.assign(s["path"])
+	time = float(s["time"])
+	daily = s["daily"]
+	kills_by = s["kills_by"].duplicate()
+	weapon_kills = s["weapon_kills"].duplicate()
+	var c: Dictionary = s["carry"].duplicate()
+	if not c.is_empty():
+		c["weapons"] = c["weapons"].map(_gear_in)
+		c["skills"] = c["skills"].map(_gear_in)
+		for k in ["hp", "flasks", "max_flasks", "essence", "kills", "gold"]:
+			c[k] = int(c.get(k, 0))
+		for k in ["furia", "astucia", "vigor"]:
+			c["levels"][k] = int(c["levels"].get(k, 0))
+	carry = c
+
+
+func suspend() -> void:
+	Meta.data["suspended"] = snapshot()
+	Meta.save()
+
+
+func discard_saved() -> void:
+	if Meta.data.has("suspended"):
+		Meta.data.erase("suspended")
+		Meta.save()
+
+
+static func saved() -> Dictionary:
+	return Meta.data.get("suspended", {})
+
+
+func _gear_out(g: Variant) -> Variant:
+	if g == null:
+		return null
+	return {"id": g.data.id, "tier": g.tier, "affixes": Array(g.affixes)}
+
+
+func _gear_in(d: Variant) -> Variant:
+	if d == null:
+		return null
+	var res := Catalog.find(String(d["id"]))
+	if res == null:
+		return null
+	var g := Gear.of(res, int(d["tier"]))
+	g.affixes.assign(d.get("affixes", []))
+	return g
+
+
 # --- desafio do dia ------------------------------------------------------------------
 # Mesma semente para qualquer um no mesmo dia: dá para comparar com os amigos.
 
@@ -178,6 +247,10 @@ func new_daily() -> void:
 	var date := today()
 	new_run(daily_seed(date), 0)
 	daily = date
+
+
+func note_hurt(who: String, amount: int) -> void:
+	hurt_by[who] = int(hurt_by.get(who, 0)) + amount
 
 
 func note_kill(enemy_title: String, weapon_id: String) -> void:

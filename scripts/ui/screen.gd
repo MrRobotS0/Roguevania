@@ -8,6 +8,7 @@ signal confirmed
 signal title_option(id: String)
 
 const TITLE_OPTIONS := [
+	["continue", "CONTINUAR"],
 	["start", "COMEÇAR"],
 	["daily", "DESAFIO DO DIA"],
 	["skins", "APARÊNCIA"],
@@ -22,6 +23,7 @@ var mode := ""
 var lines: Array = []       # [[texto, cor]]
 var _t := 0.0
 var _index := 0
+var _options: Array = []
 
 
 func _ready() -> void:
@@ -33,8 +35,15 @@ func show_title() -> void:
 	mode = "title"
 	_index = 0
 	var stats: Dictionary = Meta.data
+	var saved := Run.saved()
+	_options = TITLE_OPTIONS.filter(func(o: Array) -> bool: return o[0] != "continue" or not saved.is_empty())
 	lines = []
-	if int(stats["runs"]) > 0:
+	if not saved.is_empty():
+		var where: String = Catalog.STAGE_NAMES.get(saved["stage"], saved["stage"])
+		if saved["in_passage"]:
+			where = "A Passagem"
+		lines = [["PARTIDA SALVA: %s   ·   %s" % [where.to_upper(), _clock(float(saved["time"]))], Palette.GOLD]]
+	elif int(stats["runs"]) > 0:
 		lines = [["PARTIDAS %d   ·   VITÓRIAS %d   ·   MAIS ABATES %d" % [stats["runs"], stats["wins"], stats["best_kills"]], Palette.UI_DIM]]
 	_open()
 
@@ -46,6 +55,8 @@ func show_death(p: Player, place: String) -> void:
 		["%d INIMIGOS DERROTADOS   ·   %s" % [p.kills, _clock(Run.time)], Palette.UI_TEXT],
 		["%d DE ESSÊNCIA SE PERDEU NA CINZA" % p.essence, Palette.ESSENCE],
 	]
+	if int(Meta.data["deaths"]) <= 2:
+		lines.append(["O MAPA SE REFAZ A CADA PARTIDA. O QUE A VIGIA GUARDOU FICA.", Palette.UI_DIM])
 	_open()
 
 
@@ -95,13 +106,13 @@ func _process(delta: float) -> void:
 		return
 	if mode == "title":
 		if Input.is_action_just_pressed("up"):
-			_index = wrapi(_index - 1, 0, TITLE_OPTIONS.size())
+			_index = wrapi(_index - 1, 0, _options.size())
 			Sfx.play("ui_move", -12.0)
 		elif Input.is_action_just_pressed("down"):
-			_index = wrapi(_index + 1, 0, TITLE_OPTIONS.size())
+			_index = wrapi(_index + 1, 0, _options.size())
 			Sfx.play("ui_move", -12.0)
 		elif Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("attack1"):
-			pick(TITLE_OPTIONS[_index][0])
+			pick(_options[_index][0])
 		return
 	if Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("attack1"):
 		confirmed.emit()
@@ -144,8 +155,8 @@ func _draw() -> void:
 
 
 func _title_menu(top: Vector2) -> void:
-	for i in TITLE_OPTIONS.size():
-		var label: String = TITLE_OPTIONS[i][1]
+	for i in _options.size():
+		var label: String = _options[i][1]
 		var y := top.y + i * 12.0
 		var selected := i == _index
 		if selected:

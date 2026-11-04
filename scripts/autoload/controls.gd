@@ -91,10 +91,12 @@ func _ready() -> void:
 const KEY_HINTS := {
 	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "Q",
 	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO", "map": "M",
+	"walk": "A/D", "down": "S",
 }
 const PAD_HINTS := {
 	"attack1": "X", "attack2": "Y", "skill1": "LB", "skill2": "RB", "heal": "LT",
 	"interact": "CIMA", "confirm": "A", "cancel": "B", "move": "CIMA/BAIXO", "roll": "B", "jump": "A", "map": "SELECT",
+	"walk": "ANALÓGICO", "down": "BAIXO",
 }
 
 var pad_mode := false

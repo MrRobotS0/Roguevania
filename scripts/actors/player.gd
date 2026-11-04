@@ -56,6 +56,7 @@ var last_used := ""         # id da última arma/habilidade usada (estatísticas
 var _air_jumps := 0
 var _rage := 0.0
 var _stubborn_used := false
+var wolf_step := false        # Passo do Lobo: esquivou de um golpe, o próximo é crítico
 var _rolled_through: Array = []
 
 var _state_time := 0.0
@@ -104,10 +105,6 @@ func _ready() -> void:
 		skin = Meta.current_skin()
 	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.8, Vector2(0, -12))
 	_setup_look()
-
-
-func run_speed() -> float:
-	return RUN_SPEED * (1.15 if has_mutation("passo_ligeiro") else 1.0)
 
 
 func weapon(slot: int) -> Gear:
@@ -271,7 +268,7 @@ func _move_state(delta: float) -> void:
 	var accel := AIR_ACCEL
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
-	velocity.x = move_toward(velocity.x, dir * run_speed() + wind, accel * delta)
+	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind, accel * delta)
 	_gravity(delta)
 
 	if pad.just("jump"):
@@ -640,6 +637,17 @@ func _meteor_target(reach: float) -> Actor:
 	return best
 
 
+# Couraça de Escória: o golpe que entra faz a casca estourar em volta.
+func _slag_burst() -> void:
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
+		if e.alive() and e.center().distance_to(center()) < 44.0:
+			var d := Damage.make(14.0 * stat_mult("vigor"), 1 if e.global_position.x >= global_position.x else -1, 150.0)
+			d.source = self
+			d.status = {"burn": 1.5}
+			e.hurt(d)
+	Fx.burst(center(), Color("ff8a3a"), 14, 160.0, 0.35, 300.0, 2.0)
+
+
 func _skill_projectile(style: String, vel: Vector2, power: float) -> Projectile:
 	var p := Projectile.new()
 	p.room = room
@@ -820,6 +828,10 @@ func add_mutation(id: String) -> void:
 
 # Mutações que mexem no dano que o herói causa.
 func boost(d: Damage) -> void:
+	if wolf_step and not d.over_time:
+		wolf_step = false
+		d.crit = true
+		d.amount *= 1.75
 	if has_mutation("vinganca") and _rage > 0.0:
 		d.amount *= 1.4
 	if has_mutation("frieza") and d.crit:
@@ -851,15 +863,30 @@ func hurt(d: Damage) -> bool:
 	if state == State.DEAD:
 		return false
 	if d.over_time:
-		hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult() * (0.8 if has_mutation("couraca") else 1.0)), 1)
+		var before := hp
+		hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 1)
+		Run.note_hurt("QUEIMADURA", before - hp)
 		health_changed.emit(hp, max_hp)
 		return true
+	if _dodge > 0.0 and _invuln <= 0.0 and has_mutation("passo_ligeiro") and not wolf_step 			and is_instance_valid(d.source) and d.source != self:
+		wolf_step = true
+		Fx.burst(center(), Palette.GOLD, 10, 90.0, 0.3, -40.0)
+		Sfx.play("parry", -8.0)
 	if _invuln > 0.0 or _dodge > 0.0:
 		return false
 	if _guard(d):
 		return false
-	var taken := d.value() * Run.enemy_damage_mult() * (0.8 if has_mutation("couraca") else 1.0)
-	hp = maxi(hp - roundi(taken), 0)
+	var before_hit := hp
+	hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 0)
+	var who := "?"
+	if is_instance_valid(d.source):
+		if d.source.get("title") != null:
+			who = String(d.source.get("title"))
+		elif d.source.get_script():
+			who = String((d.source.get_script() as Script).get_global_name())
+	Run.note_hurt(who, before_hit - hp)
+	if has_mutation("couraca"):
+		_slag_burst()
 	if is_instance_valid(d.source) and d.source is Enemy:
 		Run.killer = d.source.title
 	if curse > 0:

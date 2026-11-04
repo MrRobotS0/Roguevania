@@ -24,7 +24,8 @@ func use_path(p: String, wipe := false) -> void:
 func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
 		"blueprints": [], "runes": [], "heat": 0,
-		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false}
+		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false,
+		"hints": []}
 
 
 func _load() -> void:

@@ -137,6 +137,8 @@ func _ready() -> void:
 	await _case("história: abertura, final, códice", _story)
 	await _case("armas novas acertam (a foice dos dois lados)", _new_weapons)
 	await _case("mutações novas: couraça, teimosia, barganha, passo, sede", _new_mutations)
+	await _case("partida salva: sai, fecha e continua do mesmo andar", _save_resume)
+	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1122,14 +1124,12 @@ func _new_weapons() -> void:
 func _new_mutations() -> void:
 	await _load(FLAT)
 	var p := level.player
-	var hit := Damage.make(20, 1, 0)
-	p.hurt(hit)
-	var plain := p.max_hp - p.hp
-	await _load(FLAT)
-	p = level.player
 	p.add_mutation("couraca")
+	var near := _calm(level.spawn("grunt", p.global_position + Vector2(20, 0)))
+	var far := _calm(level.spawn("grunt", p.global_position + Vector2(200, 0)))
 	p.hurt(Damage.make(20, 1, 0))
-	_check(p.max_hp - p.hp < plain, "couraça não reduziu (%d vs %d)" % [p.max_hp - p.hp, plain])
+	_check(near.hp < near.max_hp, "a couraça não estourou em quem estava colado")
+	_check(far.hp == far.max_hp, "a couraça acertou quem estava longe")
 
 	await _load(FLAT)
 	p = level.player
@@ -1149,12 +1149,89 @@ func _new_mutations() -> void:
 	_check(shop.price(item, p) == 70, "barganha não deu desconto (%d)" % shop.price(item, p))
 	shop.free()
 
-	_check(p.run_speed() == Player.RUN_SPEED, "corre mais rápido sem a mutação")
 	p.add_mutation("passo_ligeiro")
-	_check(p.run_speed() > Player.RUN_SPEED, "passo do lobo não acelerou")
+	var wolf := _calm(level.spawn("grunt", p.global_position + Vector2(200, 0)))
+	p._dodge = 0.2
+	var swing := Damage.make(10, 1, 0)
+	swing.source = wolf
+	p.hurt(swing)
+	_check(p.wolf_step, "esquiva perfeita não carregou o crítico")
+	var next := Damage.make(10, 1, 0)
+	p.boost(next)
+	_check(next.crit and not p.wolf_step, "o crítico do Passo do Lobo não saiu (ou não gastou)")
 
 	p.add_mutation("sede")
 	p.skill_cd[0] = 5.0
 	var dummy := _calm(level.spawn("grunt", p.global_position + Vector2(300, 0)))
 	p.on_kill(dummy)
 	_check(p.skill_cd[0] <= 4.05, "sede não adiantou a recarga (%.2f)" % p.skill_cd[0])
+
+
+func _save_resume() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(FLAT)
+	var p := level.player
+	Run.new_run(4242, 1)
+	var axe := Gear.of(Catalog.find("machado_carrasco"), 2)
+	axe.affixes.assign(["vampira", "eco"])
+	p.weapons[1] = axe
+	p.skills[1] = Gear.of(Catalog.find("sino_carcosa"))
+	p.gold = 77
+	p.add_mutation("couraca")
+	p.levels["vigor"] = 2
+	p.blueprints.assign(["foice_inverno"])
+	Run.save_player(p)
+	Run.go("saloes")
+	Run.note_kill("PENITENTE", "machado_carrasco")
+	Run.time = 321.0
+	Run.suspend()
+	Run.new_run(1, 0)
+	Meta.use_path("user://teste.save")
+	_check(not Run.saved().is_empty(), "a partida não ficou no disco")
+	Run.restore(Run.saved())
+	_check(Run.stage_id == "saloes" and Run.heat == 1 and Run.seed_value == 4242, "lugar ou semente errados: %s %d" % [Run.stage_id, Run.heat])
+	_check(Run.path.size() == 2 and is_equal_approx(Run.time, 321.0), "caminho ou tempo perdidos")
+	await _load(FLAT)
+	Run.restore(Run.saved())
+	var q := level.player
+	Run.load_player(q)
+	var w: Gear = q.weapons[1]
+	_check(w != null and w.data.id == "machado_carrasco" and w.tier == 2 and w.has("eco"), "arma voltou diferente")
+	_check(q.skills[1] != null and q.skills[1].data.id == "sino_carcosa", "habilidade não voltou")
+	_check(q.gold == 77 and q.has_mutation("couraca") and q.levels["vigor"] == 2, "ouro, mutação ou atributo perdidos")
+	_check(q.blueprints.has("foice_inverno"), "planta carregada se perdeu")
+	Run.discard_saved()
+	Meta.use_path("user://teste.save")
+	_check(Run.saved().is_empty(), "desistir não apagou a partida salva")
+	Meta.use_path("user://teste.save", true)
+
+
+func _guide() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(WIDE)
+	var p := level.player
+	var guide := Guide.new()
+	add_child(guide)
+	guide.bind(level)
+	var e := _calm(level.spawn("grunt", p.global_position + Vector2(120, 0)))
+	await _frames(10)
+	_check(guide.showing() == "atacar", "a dica de ataque não apareceu (%s)" % guide.showing())
+	await _frames(100)
+	input.then(["attack1"], 2).wait(10)
+	await _frames(6)
+	_check(guide.showing() == "atacar", "a dica sumiu sem esmaecer")
+	await _frames(30)
+	_check(guide.showing() == "", "atacou e a dica não saiu (%s)" % guide.showing())
+	_check(guide.seen("atacar"), "a dica não ficou marcada como vista")
+	guide.bind(level)
+	await _frames(10)
+	_check(guide.showing() != "atacar", "a mesma dica voltou")
+	Options.set_value("hints", false)
+	p.hp = 10
+	await _frames(10)
+	_check(guide.showing() == "", "com as dicas desligadas ainda mostrou")
+	Options.set_value("hints", true)
+	e.queue_free()
+	guide.queue_free()
+	Meta.use_path("user://teste.save", true)
+	Options.reload()

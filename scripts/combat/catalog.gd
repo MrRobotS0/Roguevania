@@ -101,10 +101,10 @@ const MUTATIONS := [
 	{"id": "lamina_plena", "title": "Lâmina Plena", "detail": "+20% DE DANO COM A VIDA ACIMA DE 80%"},
 	{"id": "colecionador", "title": "Colecionador", "detail": "+50% DE ESSÊNCIA E OURO DOS INIMIGOS"},
 	{"id": "folego", "title": "Fôlego", "detail": "+1 FRASCO DE CURA NESTA PARTIDA"},
-	{"id": "couraca", "title": "Couraça de Escória", "detail": "-20% DE DANO RECEBIDO"},
+	{"id": "couraca", "title": "Couraça de Escória", "detail": "AO APANHAR, ESTILHAÇOS ACERTAM QUEM ESTIVER COLADO"},
 	{"id": "ultimo_folego", "title": "Teimosia", "detail": "UMA VEZ POR ANDAR, FICA COM 1 DE VIDA EM VEZ DE MORRER"},
 	{"id": "sede", "title": "Sede de Batalha", "detail": "CADA ABATE ADIANTA AS HABILIDADES EM 1 S"},
-	{"id": "passo_ligeiro", "title": "Passo do Lobo", "detail": "CORRE 15% MAIS RÁPIDO"},
+	{"id": "passo_ligeiro", "title": "Passo do Lobo", "detail": "ROLAR ATRAVÉS DE UM GOLPE: O PRÓXIMO ATAQUE É CRÍTICO"},
 	{"id": "barganha", "title": "Língua de Mercador", "detail": "TUDO NO MERCADOR CUSTA 30% MENOS"},
 	{"id": "rastro_brasa", "title": "Rastro de Brasa", "detail": "ROLAR ATRAVÉS DE UM INIMIGO O INCENDEIA"},
 ]

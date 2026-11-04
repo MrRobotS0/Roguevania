@@ -14,6 +14,7 @@ var curtain: Curtain
 var map_view: MapView
 var options_screen: OptionsScreen
 var cutscene: Cutscene
+var guide: Guide
 var _playing := false
 
 
@@ -68,6 +69,8 @@ func _ready() -> void:
 	add_child(front)
 	hud = Hud.new()
 	front.add_child(hud)
+	guide = Guide.new()
+	front.add_child(guide)
 	map_view = MapView.new()
 	front.add_child(map_view)
 	screen = Screen.new()
@@ -105,7 +108,24 @@ func _use_biome(b: BiomeData) -> void:
 	foreground.ink = b.ink
 
 
+# Começar outra partida com uma salva esperando: pergunta antes de jogar fora.
+func _abandon_saved_first(then: Callable) -> bool:
+	if screen.mode != "title" or Run.saved().is_empty():
+		return false
+	var options: Array[Dictionary] = [
+		{"label": "NÃO, VOLTAR", "detail": ""},
+		{"label": "SIM, COMEÇAR DE NOVO", "detail": "A PARTIDA SALVA SE PERDE", "color": Palette.HURT},
+	]
+	menu.open_choice("ABANDONAR A PARTIDA SALVA?", "", options, func(i: int) -> void:
+		if i == 1:
+			Run.discard_saved()
+			then.call_deferred())
+	return true
+
+
 func _on_screen_confirmed() -> void:
+	if _abandon_saved_first(_on_screen_confirmed):
+		return
 	var unlocked := int(Meta.data["heat"])
 	if screen.mode != "title" or unlocked <= 0:
 		screen.close()
@@ -135,6 +155,8 @@ const HEAT_DETAILS := [
 
 func _on_title_option(id: String) -> void:
 	match id:
+		"continue":
+			continue_run()
 		"skins":
 			open_skins()
 		"controls":
@@ -146,6 +168,8 @@ func _on_title_option(id: String) -> void:
 		"codex":
 			open_codex()
 		"daily":
+			if _abandon_saved_first(_on_title_option.bind("daily")):
+				return
 			screen.close()
 			Run.new_daily()
 			_load_stage()
@@ -224,6 +248,16 @@ func _codex_bestiary() -> void:
 	menu.open_text("BESTIÁRIO", "\n".join(lines))
 
 
+func continue_run() -> void:
+	var s := Run.saved()
+	if s.is_empty():
+		return
+	screen.close()
+	Run.restore(s)
+	_load_stage()
+	Fx.toast("A PARTIDA CONTINUA DE ONDE PAROU")
+
+
 func start_run(seed_value := -1, heat := 0) -> void:
 	Run.new_run(seed_value, heat)
 	_load_stage()
@@ -257,7 +291,9 @@ func _load_stage() -> void:
 	Run.stage_tier = level.tier
 	weather.player = level.player
 	Run.load_player(level.player)
+	Run.suspend()
 	hud.bind(level.player, level.boss)
+	guide.bind(level)
 	level.player.died.connect(_on_player_died)
 	level.exit_used.connect(_on_exit)
 	_playing = true
@@ -276,6 +312,8 @@ func _clear_level() -> void:
 		level = null
 	hud.player = null
 	hud.boss = null
+	if guide:
+		guide.bind(null)
 
 
 func _on_exit(dest: String) -> void:
@@ -284,6 +322,7 @@ func _on_exit(dest: String) -> void:
 		"fim":
 			_playing = false
 			Run.active = false
+			Run.discard_saved()
 			Meta.record_run(true, level.player.kills)
 			Meta.record_heat_win(Run.heat)
 			Run.set_meta("record", Meta.record_stats(true))
@@ -307,6 +346,7 @@ func _on_player_died() -> void:
 		return
 	_playing = false
 	Run.active = false
+	Run.discard_saved()
 	Meta.record_run(false, level.player.kills)
 	Meta.record_stats(false)
 	var place := level.biome.title if level.biome else "TREINO"
@@ -330,6 +370,7 @@ func _pause() -> void:
 		{"label": "CONTINUAR", "detail": ""},
 		{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},
 		{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
+		{"label": "SALVAR E SAIR", "detail": "CONTINUA DEPOIS, DO COMEÇO DESTE ANDAR"},
 		{"label": "DESISTIR DA PARTIDA", "detail": "VOLTA AO TÍTULO; A ESSÊNCIA SE PERDE"},
 	]
 	var names: Array = level.player.mutations.map(func(id: String) -> String: return String(Catalog.mutation(id).get("title", id)))
@@ -345,6 +386,9 @@ func _on_pause_pick(i: int) -> void:
 	elif i == 2:
 		menu.open_text.call_deferred("COMANDOS", CONTROLS)
 	elif i == 3:
+		_show_title()
+	elif i == 4:
+		Run.discard_saved()
 		Meta.record_run(false, level.player.kills)
 		Meta.record_stats(false)
 		_show_title()
