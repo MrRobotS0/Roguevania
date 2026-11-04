@@ -1559,3 +1559,52 @@ Ele pediu: "mude absolutamente tudo a temática do HUD de acordo com o mapa, ten
 **Prévia sem abrir o jogo:** `python tools/previa_hud.py` gera `tools/previews/hud_temas.png`, com os 7 HUDs sobre os fundos de cada domínio.
 
 **Teste:** "HUD: cada domínio tem a sua pele e ela cabe na tela" (62 testes).
+
+---
+
+## 27. A lista do §25 inteira (04/11/2026, noite)
+
+**Blocos do chão:** `python tools/importar_blocos.py` grava `assets/sprites/tiles_<domínio>.png` no formato do atlas antigo (16 máscaras × 4, enterrados, tábuas). Cada domínio lê um bloco do tileset como 9 fatias de 16 px; a borda da arte vira a borda do bloco. O `Room` usa o atlas do domínio (`tiles_id`) e, com ele, não desenha musgo nem cinza por cima. Prévia em `tools/previews/blocos.png`.
+
+| Domínio | Tileset de origem |
+|---|---|
+| Mar | rocky pass |
+| Salões | fort of illusion |
+| Forja | gothic castle, avermelhado |
+| Torre | lajes da igreja em arenito |
+| Jardim | swamp |
+| Carcosa | cemitério, amarelado |
+| Observatório | cristal roxo do junk wasteland |
+
+**Inimigos e chefes:** `python tools/importar_inimigos.py` refaz as 34 folhas em cor cheia, com os mesmos nomes de animação.
+- Rodar DEPOIS de `gen_enemies.py`, se ele for rodado de novo, porque ele sobrescreve as folhas.
+- Idle, andar e voar têm vários quadros; preparo e golpe têm o quadro-chave.
+- Opções por folha: scale, hue, flip e key.
+- Chefes:
+
+  | Chefe | Arte |
+  |---|---|
+  | Imperador | Dark Emperor 2× |
+  | Rei Lobo | cão infernal 2× gelado |
+  | Colosso | Hell Beast 2× |
+  | Mãe-Raiz | dragão 2× |
+  | Arquiteto | demônio |
+  | Rei sem Rosto | Nightmare |
+  | Astrônomo | fantasma 2× |
+
+- O `Enemy` aceita folha colorida: o aviso de golpe tinge (paleta de 1 cor = tingir), e `sprite_parts` usa a mesma paleta.
+- Prévias: `tools/previews/inimigos.png`.
+
+**Herói:** a âncora agora é fixa por tira. O corpo pulava até 25 px para os lados na corrida e entre parado e correndo.
+
+**Créditos:** opção CRÉDITOS no título (`content/creditos.txt` e `creditos_en.txt`) e no rodapé do site.
+
+**Site:** `tools/site_assets.py` gera as camadas, a imagem de cada domínio, o herói e as tiras a partir das folhas coloridas. Publicado no `gh-pages`; o Pages está ligado em https://mrrobots0.github.io/Roguevania/.
+
+**Robô:**
+- Novos comportamentos: explora até 360 px e 150 s, usa portal, mira quem mira nele, desvia no ar e não cai da borda perseguindo.
+- Resultado: ainda morre no Mar de Cinzas, quase sempre pelo ATIRADOR DE VIDRO. É igual no commit anterior à sessão, então não é regressão. Fica para ele julgar jogando, antes de mexer no equilíbrio.
+
+**Falta (só ele pode):**
+- `! python tools/lancar_versao.py 0.3.0 "Arte nova ..."`: o classificador bloqueia criar o Release.
+- Testar com janela a troca de pacote do atualizador.
