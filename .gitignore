@@ -7,3 +7,4 @@ __pycache__/
 .claude/
 build/
 arte_externa/
+.claude/settings.local.json
