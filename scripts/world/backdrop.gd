@@ -39,16 +39,33 @@ const LAYERS := [["bd_far", 0.08, 0.04], ["bd_mid", 0.22, 0.1], ["bd_near", 0.45
 
 var _painted := {}
 var _painted_for := {}
+var _painted_layers := ""
+var _feet := {}
 
 
-func _layer(name: String) -> ImageTexture:
-	if _painted_for != sky:
+# Prefere o fundo em cor cheia (tools/pintar_fundos.py); sem ele, pinta a
+# silhueta antiga com as cores do bioma.
+func _layer(name: String) -> Texture2D:
+	if _painted_for != sky or _painted_layers != layers:
 		_painted.clear()
 		_painted_for = sky.duplicate()
+		_painted_layers = layers
 	var file := layers + name.trim_prefix("bd")
 	if not _painted.has(file):
-		_painted[file] = SpriteSheet.texture(file, _palette())
+		var full := "res://assets/sprites/%s_cor%s.png" % [layers, name.trim_prefix("bd")]
+		if ResourceLoader.exists(full):
+			_painted[file] = load(full)
+		else:
+			_painted[file] = SpriteSheet.texture(file, _palette())
 	return _painted[file]
+
+
+# Cor da última linha da camada (preenche embaixo quando a câmera sobe).
+func _foot(tex: Texture2D) -> Color:
+	if not _feet.has(tex):
+		var img := tex.get_image()
+		_feet[tex] = img.get_pixel(0, img.get_height() - 1) if img else Color.BLACK
+	return _feet[tex]
 
 
 func _palette() -> PackedColorArray:
@@ -82,7 +99,7 @@ func _dunes(size: Vector2, at: Vector2) -> void:
 		draw_texture(tex, Vector2(x0 + lw, y0))
 		if y0 < 0.0:
 			# o pé da camada não pode deixar buraco embaixo
-			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), SpriteSheet.image(layers + String(l[0]).trim_prefix("bd"), _palette()).get_pixel(0, tex.get_height() - 1))
+			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), _foot(tex))
 	# cinza caindo devagar
 	var ash := _c("sun", Color.WHITE)
 	ash.a = 0.18
