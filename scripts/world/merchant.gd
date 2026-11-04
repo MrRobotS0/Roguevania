@@ -42,20 +42,24 @@ func interact(p: Player) -> void:
 		var cost := price(o, p)
 		var label := ""
 		var detail_text := ""
+		var icon: Texture2D = null
 		match o["kind"]:
 			"gear":
 				var g: Gear = o["gear"]
 				label = g.title()
+				icon = GearIcon.of(g.data)
 				detail_text = "%s DE %s" % ["ARMA" if g.is_weapon() else "HABILIDADE", Combat.STAT_NAMES[g.stat()]]
 			"heal":
 				label = "Pão de Cinza"
+				icon = GearIcon.named("pao")
 				detail_text = "CURA METADE DA VIDA AGORA"
 			"flask":
 				label = "Frasco Extra"
+				icon = GearIcon.named("frasco")
 				detail_text = "+1 FRASCO DE CURA NESTA PARTIDA"
 		var sold: bool = o.get("sold", false)
 		options.append({"label": "%s  ·  %d OURO" % [label, cost] if not sold else label + "  ·  VENDIDO",
-			"detail": detail_text, "disabled": sold or p.gold < cost, "color": Palette.GOLD})
+			"detail": detail_text, "disabled": sold or p.gold < cost, "color": Palette.GOLD, "icon": icon})
 	options.append({"label": "SAIR", "detail": "OURO: %d" % p.gold})
 	menu().open_choice("O MERCADOR", "\"TUDO TEM PREÇO. ATÉ O QUE CAIU DO CÉU.\"", options,
 		func(i: int) -> void:

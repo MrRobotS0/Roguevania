@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "asa_dragao"
+title = "Asa do Dragão Sonhado"
+unlock = "essence"
+cost = 190
+cloak = Color(0.478, 0.290, 0.722, 1)
+cloak_dark = Color(0.306, 0.165, 0.502, 1)
+hood = Color(0.118, 0.063, 0.188, 1)
+eye = Color(1.000, 0.541, 0.941, 1)
+scarf = Color(1.000, 0.847, 0.290, 1)
+lore = "Existe só enquanto alguém sonha. Por via das dúvidas, não durma."
+chromas = [{"id": "sonho", "title": "Sonho", "cloak": "#9a8ad8", "cloak_dark": "#685d92", "hood": "#241840", "eye": "#ff8af0", "scarf": "#f0d0ff", "cost": 25}, {"id": "astral", "title": "Astral", "cloak": "#2a3a7a", "cloak_dark": "#1c2752", "hood": "#161230", "eye": "#ff8af0", "scarf": "#9fe8ff", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#120b1e", "eye": "#ff8af0", "scarf": "#3a2a4a", "cost": 25}]

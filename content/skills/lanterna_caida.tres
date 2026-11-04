@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lanterna_caida"
+title = "Lanterna Caída"
+kind = "meteor"
+stat = "vigor"
+cooldown = 11.0
+damage = 26.0
+params = {"radius": 42.0, "range": 220.0, "burn": 1.0}
+color = Color(0.541, 0.784, 0.910, 1)
+starter = false
+unlock_cost = 55
+lore = "A última luz que alguém levou para as Cavernas. Caiu. Ainda cai, sempre que você pede."
+icon = "res://assets/icons/lanterna_caida.png"

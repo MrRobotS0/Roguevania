@@ -16,3 +16,4 @@ color = Color(0.725, 0.659, 1.000, 1)
 moves = []
 shot = {"draw": 0.26, "recover": 0.24, "speed": 220.0, "damage": 10.0, "pierce": 0, "style": "star", "homing": 4.0, "look": "staff"}
 lore = "Aponta para onde o deus estava. O que sai dele procura alguém para acertar, como o astrônomo procurava."
+icon = "res://assets/icons/cetro_astronomo.png"

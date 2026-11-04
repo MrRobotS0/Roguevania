@@ -1121,7 +1121,11 @@ func _story() -> void:
 
 
 func _new_weapons() -> void:
-	for id in ["chicote_espinhos", "foice_inverno", "punhos_bronze", "besta_carcosa", "cetro_astronomo"]:
+	for id in ["chicote_espinhos", "foice_inverno", "punhos_bronze", "besta_carcosa", "cetro_astronomo",
+			"lamina_luto", "cetro_nomes", "espada_rei", "arco_ossos", "tridente_afogado", "clava_votiva", "arco_prece",
+			"cutelo_glutao", "garras_parasita", "dentes_ventre", "lamina_devaneio", "arco_sonho", "lanca_pesadelo",
+			"picareta_escavador", "sacola_bombas", "punhal_cego", "espada_estrada", "machado_touro", "arco_raposa",
+			"bordao_andarilho"]:
 		await _load(WIDE)
 		var p := level.player
 		p.weapons[0] = Gear.of(Catalog.find(id))
@@ -1143,8 +1147,26 @@ func _new_weapons() -> void:
 
 
 func _new_mutations() -> void:
+	# toda arma e habilidade tem ícone em pixel art (32 px e a versão de 16 px)
+	for r in Catalog.all_gear():
+		_check(GearIcon.of(r) != null and GearIcon.of(r, false) != null, "%s sem ícone" % r.id)
 	await _load(FLAT)
 	var p := level.player
+	p.add_mutation("pele_de_pedra")
+	p.hurt(Damage.make(20, 1, 0))
+	var stone := p.max_hp - p.hp
+	await _load(FLAT)
+	p = level.player
+	p.hurt(Damage.make(20, 1, 0))
+	_check(stone < p.max_hp - p.hp, "pele de pedra não reduziu o dano (%d)" % stone)
+	await _load(FLAT)
+	p = level.player
+	p.add_mutation("luto")
+	var hp0 := p.max_hp
+	p.on_kill(null)
+	_check(p.max_hp == hp0 + 1, "luto não deu vida máxima")
+	await _load(FLAT)
+	p = level.player
 	p.add_mutation("couraca")
 	var near := _calm(level.spawn("grunt", p.global_position + Vector2(20, 0)))
 	var far := _calm(level.spawn("grunt", p.global_position + Vector2(200, 0)))

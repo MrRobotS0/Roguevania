@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "manto_sonho"
+title = "Manto do Sonho"
+unlock = "essence"
+cost = 140
+cloak = Color(0.604, 0.541, 0.847, 1)
+cloak_dark = Color(0.416, 0.353, 0.659, 1)
+hood = Color(0.165, 0.125, 0.314, 1)
+eye = Color(1.000, 1.000, 1.000, 1)
+scarf = Color(0.941, 0.816, 1.000, 1)
+lore = "Leve como quem dorme. Quem olha muito tempo boceja."
+chromas = [{"id": "luto", "title": "Luto", "cloak": "#c8ccd8", "cloak_dark": "#888a92", "hood": "#2a2747", "eye": "#ffffff", "scarf": "#5a4a7a", "cost": 25}, {"id": "astral", "title": "Astral", "cloak": "#2a3a7a", "cloak_dark": "#1c2752", "hood": "#1c1a40", "eye": "#ffffff", "scarf": "#9fe8ff", "cost": 25}, {"id": "carne", "title": "Carne", "cloak": "#8a2a30", "cloak_dark": "#5d1c20", "hood": "#2a1530", "eye": "#ffffff", "scarf": "#e8b098", "cost": 25}]

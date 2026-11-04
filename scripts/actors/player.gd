@@ -65,6 +65,8 @@ var _next_fidget := 5.0
 const FLIP_TIME := 0.3
 var _rage := 0.0
 var _stubborn_used := false
+var _hunger := 0            # Fome sem Fim: abates nesta partida (até +30% de dano)
+var _mourned := 0           # Luto: vida máxima ganha com abates (até +25)
 var wolf_step := false        # Passo do Lobo: esquivou de um golpe, o próximo é crítico
 var _rolled_through: Array = []
 
@@ -867,7 +869,7 @@ func _heal_state(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
 	_gravity(delta)
 	if _state_time >= FLASK_TIME:
-		heal(roundi(max_hp * FLASK_HEAL_RATIO))
+		heal(roundi(max_hp * FLASK_HEAL_RATIO * (1.3 if has_mutation("prece_atendida") else 1.0)))
 		_enter(State.MOVE)
 
 
@@ -913,6 +915,12 @@ func boost(d: Damage) -> void:
 		d.amount *= 1.25
 	if has_mutation("lamina_plena") and hp >= max_hp * 0.8:
 		d.amount *= 1.2
+	if has_mutation("fome_sem_fim"):
+		d.amount *= 1.0 + 0.02 * mini(_hunger, 15)
+	if has_mutation("sono_leve") and not is_on_floor():
+		d.amount *= 1.3
+	if has_mutation("ultima_prece") and hp < max_hp * 0.3:
+		d.amount *= 1.35
 
 
 func on_kill(e: Node) -> void:
@@ -921,6 +929,12 @@ func on_kill(e: Node) -> void:
 		Run.note_kill(e.title, last_used)
 	if has_mutation("sangue_quente") and alive():
 		heal(maxi(2, roundi(max_hp * 0.03)))
+	_hunger += 1
+	if has_mutation("luto") and _mourned < 25 and alive():
+		_mourned += 1
+		max_hp += 1
+		hp += 1
+		health_changed.emit(hp, max_hp)
 	if has_mutation("sede"):
 		for i in skill_cd.size():
 			skill_cd[i] = maxf(skill_cd[i] - 1.0, 0.0)
@@ -952,7 +966,8 @@ func hurt(d: Damage) -> bool:
 	if _guard(d):
 		return false
 	var before_hit := hp
-	hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 0)
+	var taken := d.value() * Run.enemy_damage_mult() * (0.85 if has_mutation("pele_de_pedra") else 1.0)
+	hp = maxi(hp - roundi(taken), 0)
 	var who := "?"
 	if is_instance_valid(d.source):
 		if d.source.get("title") != null:

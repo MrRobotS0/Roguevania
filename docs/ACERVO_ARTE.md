@@ -87,6 +87,21 @@ Estes ficaram de fora por terem um quadro só (sem animação):
 - gargoyle-0 (dr_corchit, CC0, gárgula de pedra de frente; daria para animar por código);
 - mystery-monk (abaixo do nível).
 
+## Grande update (04/11): o que entrou
+
+| Arte | Autor / licença | Usado como |
+|---|---|---|
+| ✅ medieval-king-pack (rei de capa vermelha) | Luiz Melo · CC0 | **Rei Esquecido** (desbotado em azul-cinza, 1,7×) |
+| ✅ hero-knight-2 / huntress-2 / martial-hero-3 / medieval-warrior 1 e 2 / goblin | Luiz Melo · CC0 | Cavaleiro Votivo, Sonâmbula, Eremita, Salteador, Andarilho, Escavador |
+| ✅ water-priestess, metal-bladekeeper | chierit · CC-BY 4.0 | Sacerdotisa Afogada, Lâmina do Devaneio |
+| ✅ free-cthulu, boss-demon-slime | chierit · CC-BY 4.0 (conferido na página: uso comercial ok, crédito) | O Que Responde, O Insaciável |
+| ✅ Spirit Fox, Emberwing Dragon (void), Abyss Jelly | PulsarCP · CC0 | Raposa de Nove Caudas, Dragão Sonhado, Prece Viva |
+| ✅ Gothicvania: fantasma, gato, esqueleto que levanta, demônio alado, pesadelo, besta, mago da igreja, dragão e lagarto da gruta, cobra | ansimuz · CC0 | Carpideira, Fome das Covas, Morto Desperto, Íncubo, Pesadelo, Glutão, Chamador de Nomes, Serpe do Fundo, Lagarto Cego, Serpente da Fenda |
+| ✅ bestiário: sapo, wartaur, andromalius, minion, aranha, coisa do pântano | OGA · CC-BY | Sapo-Homem, Touro da Estrada, Tentáculo Faminto, Larva, Parasita, Afogado |
+| ✅ cenários: cemitério, igreja, tecido vivo, magic cliffs, cavern, parallax forest, mist forest | ansimuz · CC0 | fundos e blocos dos 6 domínios novos |
+| ✅ 496 pixel art icons for medieval/fantasy RPG | Henrique Lazarini (7Soul1) · CC0 | ícones de todas as armas e habilidades, pão, frasco, cálice |
+| 🟢 Ravenmore Fantasy Icon Pack | Ravenmore · CC-BY 3.0 | baixado, ainda sem uso (ícones grandes de armas) |
+
 ## Desenhados por código / recoloridos (tools/desenhar_personagens.py, importar_inimigos.py)
 
 - ✅ **Mãe-Raiz:** desenhada por código (mulher-árvore, cabelo de cipó, semente acesa no peito).

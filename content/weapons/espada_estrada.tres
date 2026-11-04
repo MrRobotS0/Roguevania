@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "espada_estrada"
+title = "Espada da Estrada"
+category = "melee"
+stat = "furia"
+crit_rule = ""
+crit_mult = 1.75
+starter = false
+unlock_cost = 35
+color = Color(0.847, 0.816, 0.627, 1)
+moves = [{"startup": 0.06, "active": 0.08, "recover": 0.16, "damage": 11, "knock": 100, "reach": Vector2(30, 18), "lunge": 80, "stop": 0.045, "shake": 1.8, "shape": "down"}, {"startup": 0.06, "active": 0.08, "recover": 0.16, "damage": 12, "knock": 110, "reach": Vector2(30, 20), "lunge": 80, "stop": 0.05, "shake": 2.0, "shape": "up"}, {"startup": 0.06, "active": 0.08, "recover": 0.18, "damage": 12, "knock": 110, "reach": Vector2(30, 18), "lunge": 90, "stop": 0.05, "shake": 2.0, "shape": "down"}, {"startup": 0.1, "active": 0.1, "recover": 0.28, "damage": 17, "knock": 240, "reach": Vector2(36, 22), "lunge": 160, "stop": 0.09, "shake": 4.0, "shape": "thrust", "crit": true}]
+shot = {}
+lore = "O salteador cobrava pedágio com ela. Não tinha onde gastar: a estrada não chega a lugar nenhum."
+icon = "res://assets/icons/espada_estrada.png"

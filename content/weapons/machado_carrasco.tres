@@ -16,3 +16,4 @@ color = Color(0.722, 0.651, 0.788, 1)
 moves = [{"startup": 0.2, "active": 0.1, "recover": 0.28, "damage": 26, "knock": 220, "reach": Vector2(34, 26), "lunge": 40, "stop": 0.09, "shake": 4.5, "shape": "smash"}, {"startup": 0.16, "active": 0.1, "recover": 0.26, "damage": 20, "knock": 160, "reach": Vector2(34, 28), "lunge": 50, "stop": 0.08, "shake": 4.0, "shape": "up"}, {"startup": 0.24, "active": 0.12, "recover": 0.4, "damage": 34, "knock": 300, "reach": Vector2(38, 28), "lunge": 60, "stop": 0.12, "shake": 6.0, "shape": "smash", "status": {"stun": 0.6}}]
 shot = {}
 lore = "Na Casa Vesper, a sentença era lida pelo cego e executada pelo surdo. Assim ninguém ouvia o perdão."
+icon = "res://assets/icons/machado_carrasco.png"

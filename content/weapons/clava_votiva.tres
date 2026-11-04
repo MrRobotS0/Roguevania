@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clava_votiva"
+title = "Clava Votiva"
+category = "melee"
+stat = "vigor"
+crit_rule = "stunned"
+crit_mult = 2.1
+starter = false
+unlock_cost = 50
+color = Color(0.949, 0.757, 0.306, 1)
+moves = [{"startup": 0.18, "active": 0.12, "recover": 0.28, "damage": 22, "knock": 220, "reach": Vector2(32, 26), "lunge": 40, "stop": 0.09, "shake": 4.5, "shape": "smash", "status": {"stun": 0.4}}, {"startup": 0.22, "active": 0.14, "recover": 0.38, "damage": 30, "knock": 300, "reach": Vector2(36, 28), "lunge": 50, "stop": 0.12, "shake": 6.0, "shape": "smash", "status": {"stun": 0.8}}]
+shot = {}
+lore = "Feita com os votos de ouro que ninguém veio buscar. Cada pancada é uma promessa cumprida."
+icon = "res://assets/icons/clava_votiva.png"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "machado_touro"
+title = "Machado do Touro"
+category = "melee"
+stat = "vigor"
+crit_rule = "behind"
+crit_mult = 2.0
+starter = false
+unlock_cost = 55
+color = Color(0.784, 0.627, 0.376, 1)
+moves = [{"startup": 0.16, "active": 0.12, "recover": 0.28, "damage": 20, "knock": 200, "reach": Vector2(34, 26), "lunge": 60, "stop": 0.09, "shake": 4.0, "shape": "spin"}, {"startup": 0.22, "active": 0.14, "recover": 0.36, "damage": 30, "knock": 300, "reach": Vector2(38, 28), "lunge": 140, "stop": 0.12, "shake": 6.0, "shape": "smash"}]
+shot = {}
+lore = "Pedágio pago em ferro. O touro aceitava, mas cortava junto."
+icon = "res://assets/icons/machado_touro.png"

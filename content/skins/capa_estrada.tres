@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "capa_estrada"
+title = "Capa da Estrada"
+unlock = "essence"
+cost = 100
+cloak = Color(0.478, 0.353, 0.165, 1)
+cloak_dark = Color(0.329, 0.251, 0.110, 1)
+hood = Color(0.165, 0.118, 0.063, 1)
+eye = Color(0.910, 0.816, 0.439, 1)
+scarf = Color(0.659, 0.784, 0.439, 1)
+lore = "Poeira de todos os caminhos do Bosque, que são um só."
+chromas = [{"id": "musgo", "title": "Musgo", "cloak": "#4a6a2a", "cloak_dark": "#32481c", "hood": "#242412", "eye": "#e8d070", "scarf": "#c84a6a", "cost": 25}, {"id": "fenda", "title": "Fenda", "cloak": "#3a4048", "cloak_dark": "#272b30", "hood": "#1a1510", "eye": "#e8d070", "scarf": "#6a5a3a", "cost": 25}, {"id": "carcosa", "title": "Carcosa", "cloak": "#c8a830", "cloak_dark": "#887220", "hood": "#2a1f10", "eye": "#e8d070", "scarf": "#5a1a2a", "cost": 25}]

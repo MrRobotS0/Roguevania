@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mao_cova"
+title = "Mão da Cova"
+kind = "roots"
+stat = "astucia"
+cooldown = 8.0
+damage = 15.0
+params = {"speed": 200.0, "stun": 0.9}
+color = Color(0.910, 0.878, 0.784, 1)
+starter = false
+unlock_cost = 45
+lore = "Corre por baixo da terra e agarra o primeiro pé que encontra."
+icon = "res://assets/icons/mao_cova.png"

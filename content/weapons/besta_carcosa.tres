@@ -16,3 +16,4 @@ color = Color(0.910, 0.824, 0.353, 1)
 moves = []
 shot = {"draw": 0.34, "recover": 0.28, "speed": 420.0, "damage": 7.0, "pierce": 0, "count": 3, "spread": 0.12, "look": "crossbow"}
 lore = "Três virotes amarelos de uma vez. Em Carcosa ninguém mira: atira-se em tudo que tem rosto."
+icon = "res://assets/icons/besta_carcosa.png"

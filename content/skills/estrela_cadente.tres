@@ -15,3 +15,4 @@ color = Color(1.000, 0.824, 0.478, 1)
 starter = false
 unlock_cost = 60
 lore = "Cada estrela caída é um nome que o deus esqueceu. Esta lembra o seu."
+icon = "res://assets/icons/estrela_cadente.png"

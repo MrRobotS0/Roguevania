@@ -43,7 +43,10 @@ func _draw() -> void:
 	glow.a = 0.25 + 0.15 * sin(_t * 4.0)
 	draw_rect(Rect2(-6, -24 + bob, 12, 14), glow)
 	var c: Color = gear.data.color
-	if gear.is_weapon():
+	var tex := GearIcon.of(gear.data)
+	if tex:
+		draw_texture(tex, Vector2(-8, roundf(-25 + bob)))
+	elif gear.is_weapon():
 		var data: WeaponData = gear.data
 		match data.category:
 			"bow":

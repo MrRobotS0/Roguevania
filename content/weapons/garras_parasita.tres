@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "garras_parasita"
+title = "Garras do Parasita"
+category = "melee"
+stat = "astucia"
+crit_rule = "airborne"
+crit_mult = 1.9
+starter = false
+unlock_cost = 45
+color = Color(1.000, 0.478, 0.353, 1)
+moves = [{"startup": 0.02, "active": 0.05, "recover": 0.05, "damage": 5, "knock": 40, "reach": Vector2(20, 14), "lunge": 60, "stop": 0.02, "shake": 0.8, "shape": "jab"}, {"startup": 0.02, "active": 0.05, "recover": 0.05, "damage": 5, "knock": 40, "reach": Vector2(20, 14), "lunge": 60, "stop": 0.02, "shake": 0.8, "shape": "jab"}, {"startup": 0.02, "active": 0.05, "recover": 0.05, "damage": 5, "knock": 40, "reach": Vector2(20, 14), "lunge": 60, "stop": 0.02, "shake": 0.8, "shape": "jab"}, {"startup": 0.04, "active": 0.08, "recover": 0.16, "damage": 11, "knock": 160, "reach": Vector2(24, 18), "lunge": 120, "stop": 0.05, "shake": 2.5, "shape": "up", "crit": true}]
+shot = {}
+lore = "Arrancadas de algo que vivia dentro de algo que vivia dentro do deus."
+icon = "res://assets/icons/garras_parasita.png"

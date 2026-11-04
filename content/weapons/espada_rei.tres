@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "espada_rei"
+title = "Espada do Rei Esquecido"
+category = "melee"
+stat = "vigor"
+crit_rule = "stunned"
+crit_mult = 2.0
+starter = false
+unlock_cost = 70
+color = Color(0.847, 0.863, 0.910, 1)
+moves = [{"startup": 0.16, "active": 0.12, "recover": 0.28, "damage": 22, "knock": 200, "reach": Vector2(38, 26), "lunge": 60, "stop": 0.09, "shake": 4.0, "shape": "down"}, {"startup": 0.18, "active": 0.12, "recover": 0.3, "damage": 24, "knock": 220, "reach": Vector2(38, 28), "lunge": 60, "stop": 0.09, "shake": 4.0, "shape": "spin"}, {"startup": 0.24, "active": 0.14, "recover": 0.4, "damage": 34, "knock": 320, "reach": Vector2(44, 30), "lunge": 90, "stop": 0.13, "shake": 6.5, "shape": "smash", "status": {"stun": 0.7}}]
+shot = {}
+lore = "Grande demais para qualquer mão viva. O rei a carregava sem saber por quê. Agora você também."
+icon = "res://assets/icons/espada_rei.png"

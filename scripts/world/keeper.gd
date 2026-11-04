@@ -48,7 +48,7 @@ func _offers() -> Array[Dictionary]:
 		if r.starter or Meta.is_unlocked(r.id) or not Meta.knows(r.id):
 			continue
 		var kind := "ARMA" if r is WeaponData else "HABILIDADE"
-		out.append({"id": r.id, "title": r.title, "cost": r.unlock_cost,
+		out.append({"id": r.id, "title": r.title, "cost": r.unlock_cost, "icon": GearIcon.of(r),
 			"detail": "%s DE %s · PASSA A APARECER NAS PARTIDAS" % [kind, Combat.STAT_NAMES[r.stat]]})
 	for s in Catalog.skins():
 		if s.unlock != "essence" or Meta.is_unlocked(s.id):
@@ -83,6 +83,10 @@ func _open_shop(p: Player) -> void:
 			"disabled": p.essence < cost, "color": Palette.ESSENCE}
 		if o.has("figure"):
 			option["figure"] = o["figure"]
+		elif o.get("icon"):
+			option["icon"] = o["icon"]
+		elif String(o["id"]).begins_with("calice"):
+			option["icon"] = GearIcon.named("calice")
 		options.append(option)
 	options.append({"label": "SAIR", "detail": "A ESSÊNCIA QUE SOBRAR SE PERDE SE VOCÊ MORRER"})
 	var line: String = LINES[int(Run.time) % LINES.size()]

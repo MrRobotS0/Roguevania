@@ -15,3 +15,4 @@ color = Color(0.949, 0.757, 0.306, 1)
 starter = false
 unlock_cost = 35
 lore = "Escudo da guarda pessoal do Imperador. O polimento é um espelho: quem ataca vê a si mesmo antes do golpe."
+icon = "res://assets/icons/egide_bronze.png"

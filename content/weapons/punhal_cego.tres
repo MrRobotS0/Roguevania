@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "punhal_cego"
+title = "Punhal Cego"
+category = "melee"
+stat = "astucia"
+crit_rule = "stunned"
+crit_mult = 2.4
+starter = false
+unlock_cost = 50
+color = Color(0.541, 0.784, 0.910, 1)
+moves = [{"startup": 0.03, "active": 0.06, "recover": 0.08, "damage": 7, "knock": 50, "reach": Vector2(22, 14), "lunge": 70, "stop": 0.03, "shake": 1.0, "shape": "down"}, {"startup": 0.03, "active": 0.06, "recover": 0.08, "damage": 7, "knock": 50, "reach": Vector2(22, 14), "lunge": 70, "stop": 0.03, "shake": 1.0, "shape": "thrust"}, {"startup": 0.05, "active": 0.08, "recover": 0.14, "damage": 11, "knock": 120, "reach": Vector2(26, 14), "lunge": 110, "stop": 0.05, "shake": 2.0, "shape": "thrust"}]
+shot = {}
+lore = "O Eremita lutava no escuro e não precisava ver. Acerta onde dói, não onde brilha."
+icon = "res://assets/icons/punhal_cego.png"

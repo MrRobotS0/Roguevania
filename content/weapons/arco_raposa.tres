@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arco_raposa"
+title = "Arco da Raposa"
+category = "bow"
+stat = "astucia"
+crit_rule = "far"
+crit_mult = 1.9
+starter = false
+unlock_cost = 60
+color = Color(0.624, 0.847, 1.000, 1)
+moves = []
+shot = {"draw": 0.24, "recover": 0.2, "speed": 260.0, "damage": 7.0, "pierce": 0, "count": 2, "spread": 0.25, "style": "orb", "homing": 2.5}
+lore = "Duas chamas-fátuas por disparo. Como a raposa, vão na frente e não param de procurar."
+icon = "res://assets/icons/arco_raposa.png"

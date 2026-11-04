@@ -219,6 +219,10 @@ func _draw_slots(size: Vector2) -> void:
 
 
 func _draw_icon(g: Gear, c: Vector2) -> void:
+	var tex := GearIcon.of(g.data)
+	if tex:
+		draw_texture(tex, (c - Vector2(8, 8)).round())
+		return
 	var col: Color = g.data.color
 	if g.is_weapon():
 		var data: WeaponData = g.data

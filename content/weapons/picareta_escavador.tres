@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "picareta_escavador"
+title = "Picareta do Escavador"
+category = "melee"
+stat = "vigor"
+crit_rule = "stunned"
+crit_mult = 2.0
+starter = false
+unlock_cost = 45
+color = Color(0.659, 0.722, 0.784, 1)
+moves = [{"startup": 0.18, "active": 0.12, "recover": 0.26, "damage": 21, "knock": 200, "reach": Vector2(30, 28), "lunge": 30, "stop": 0.09, "shake": 4.5, "shape": "smash"}, {"startup": 0.2, "active": 0.12, "recover": 0.3, "damage": 24, "knock": 240, "reach": Vector2(30, 30), "lunge": 30, "stop": 0.1, "shake": 5.0, "shape": "smash", "status": {"stun": 0.5}}]
+shot = {}
+lore = "Cavou mil anos atrás de um deus que não queria ser achado. Ainda tem a forma da mão do dono."
+icon = "res://assets/icons/picareta_escavador.png"

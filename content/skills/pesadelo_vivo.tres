@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pesadelo_vivo"
+title = "Pesadelo Domado"
+kind = "spirit"
+stat = "furia"
+cooldown = 15.0
+damage = 13.0
+params = {"life": 9.0, "speed": 200.0}
+color = Color(0.416, 0.910, 1.000, 1)
+starter = false
+unlock_cost = 60
+lore = "Um pesadelo pequeno, que aprendeu a correr por cima dos outros."
+icon = "res://assets/icons/pesadelo_vivo.png"

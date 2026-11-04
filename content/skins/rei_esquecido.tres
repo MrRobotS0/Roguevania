@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rei_esquecido"
+title = "Coroa sem Nome"
+unlock = "feat"
+feat = "boss"
+feat_text = "Derrote o Imperador Cego"
+cloak = Color(0.910, 0.878, 0.784, 1)
+cloak_dark = Color(0.659, 0.627, 0.533, 1)
+hood = Color(0.227, 0.227, 0.290, 1)
+eye = Color(1.000, 0.847, 0.290, 1)
+scarf = Color(1.000, 0.847, 0.290, 1)
+lore = "Uma coroa gasta de tanto ser tocada. O nome, você inventa."
+chromas = [{"id": "luto", "title": "Luto", "cloak": "#c8ccd8", "cloak_dark": "#888a92", "hood": "#323444", "eye": "#ffd84a", "scarf": "#5a4a7a", "cost": 25}, {"id": "babel", "title": "Ouro de Babel", "cloak": "#d8c890", "cloak_dark": "#928861", "hood": "#3a3a5a", "eye": "#ffd84a", "scarf": "#e0b04a", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#20202a", "eye": "#ffd84a", "scarf": "#3a2a4a", "cost": 25}]

@@ -15,3 +15,4 @@ color = Color(0.498, 0.749, 0.290, 1)
 starter = false
 unlock_cost = 45
 lore = "Uma muda da Mãe-Raiz. Plantada no chão, corre na direção que você apontar e não perdoa nada no caminho."
+icon = "res://assets/icons/raiz_viva.png"

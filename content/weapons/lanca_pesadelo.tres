@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lanca_pesadelo"
+title = "Lança do Pesadelo"
+category = "melee"
+stat = "furia"
+crit_rule = "airborne"
+crit_mult = 2.1
+starter = false
+unlock_cost = 55
+color = Color(0.416, 0.910, 1.000, 1)
+moves = [{"startup": 0.08, "active": 0.1, "recover": 0.2, "damage": 14, "knock": 140, "reach": Vector2(48, 12), "lunge": 110, "stop": 0.05, "shake": 2.5, "shape": "thrust"}, {"startup": 0.1, "active": 0.1, "recover": 0.22, "damage": 14, "knock": 140, "reach": Vector2(40, 24), "lunge": 70, "stop": 0.05, "shake": 2.5, "shape": "up"}, {"startup": 0.14, "active": 0.12, "recover": 0.3, "damage": 22, "knock": 260, "reach": Vector2(54, 14), "lunge": 180, "stop": 0.09, "shake": 4.0, "shape": "thrust"}]
+shot = {}
+lore = "Feita da crina de fogo azul de um pesadelo. Quem leva o golpe acorda assustado, se acordar."
+icon = "res://assets/icons/lanca_pesadelo.png"

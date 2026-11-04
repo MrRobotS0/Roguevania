@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bordao_andarilho"
+title = "Bordão do Andarilho"
+category = "melee"
+stat = "astucia"
+crit_rule = "tip"
+crit_mult = 1.9
+starter = false
+unlock_cost = 40
+color = Color(0.722, 0.604, 0.353, 1)
+moves = [{"startup": 0.08, "active": 0.1, "recover": 0.18, "damage": 10, "knock": 140, "reach": Vector2(46, 12), "lunge": 60, "stop": 0.05, "shake": 2.0, "shape": "thrust"}, {"startup": 0.1, "active": 0.12, "recover": 0.22, "damage": 12, "knock": 160, "reach": Vector2(40, 22), "lunge": 40, "stop": 0.05, "shake": 2.0, "shape": "spin"}, {"startup": 0.12, "active": 0.12, "recover": 0.28, "damage": 16, "knock": 240, "reach": Vector2(48, 14), "lunge": 100, "stop": 0.07, "shake": 3.0, "shape": "thrust", "status": {"stun": 0.5}}]
+shot = {}
+lore = "Gasto na ponta de tanto apontar caminhos. Todos errados, mas com convicção."
+icon = "res://assets/icons/bordao_andarilho.png"

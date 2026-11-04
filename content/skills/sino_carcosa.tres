@@ -15,3 +15,4 @@ color = Color(0.910, 0.824, 0.353, 1)
 starter = false
 unlock_cost = 50
 lore = "O sino do Arauto, que anuncia o rei que nunca chega. Quem ouve para no lugar, esperando."
+icon = "res://assets/icons/sino_carcosa.png"

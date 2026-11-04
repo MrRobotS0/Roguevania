@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "couro_fenda"
+title = "Couro da Fenda"
+unlock = "essence"
+cost = 120
+cloak = Color(0.227, 0.251, 0.282, 1)
+cloak_dark = Color(0.149, 0.173, 0.204, 1)
+hood = Color(0.039, 0.047, 0.063, 1)
+eye = Color(0.541, 0.784, 0.910, 1)
+scarf = Color(0.416, 0.353, 0.227, 1)
+lore = "Curtido no escuro. Não reflete luz nenhuma."
+chromas = [{"id": "afogado", "title": "Afogado", "cloak": "#2a5a7a", "cloak_dark": "#1c3d52", "hood": "#0c151e", "eye": "#8ac8e8", "scarf": "#c8a830", "cost": 25}, {"id": "estrada", "title": "Estrada", "cloak": "#7a5a2a", "cloak_dark": "#523d1c", "hood": "#1a1510", "eye": "#8ac8e8", "scarf": "#a8c870", "cost": 25}, {"id": "brasa", "title": "Brasa", "cloak": "#8a2a1a", "cloak_dark": "#5d1c11", "hood": "#1a0f10", "eye": "#8ac8e8", "scarf": "#ff8a3a", "cost": 25}]

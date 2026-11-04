@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mortalha"
+title = "Mortalha"
+unlock = "essence"
+cost = 110
+cloak = Color(0.784, 0.800, 0.847, 1)
+cloak_dark = Color(0.541, 0.557, 0.620, 1)
+hood = Color(0.165, 0.180, 0.243, 1)
+eye = Color(0.659, 0.753, 0.910, 1)
+scarf = Color(0.353, 0.290, 0.478, 1)
+lore = "Costurada pelas carpideiras para quem ninguém mais lembra."
+chromas = [{"id": "afogado", "title": "Afogado", "cloak": "#2a5a7a", "cloak_dark": "#1c3d52", "hood": "#1c2635", "eye": "#a8c0e8", "scarf": "#c8a830", "cost": 25}, {"id": "sonho", "title": "Sonho", "cloak": "#9a8ad8", "cloak_dark": "#685d92", "hood": "#2a2747", "eye": "#a8c0e8", "scarf": "#f0d0ff", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#181a24", "eye": "#a8c0e8", "scarf": "#3a2a4a", "cost": 25}]

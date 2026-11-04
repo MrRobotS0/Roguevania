@@ -16,3 +16,4 @@ color = Color(1.000, 0.541, 0.227, 1)
 moves = [{"startup": 0.18, "active": 0.14, "recover": 0.3, "damage": 20, "knock": 200, "reach": Vector2(30, 24), "lunge": 30, "stop": 0.09, "shake": 4.0, "shape": "spin", "status": {"burn": 1.5}}, {"startup": 0.24, "active": 0.12, "recover": 0.34, "damage": 28, "knock": 240, "reach": Vector2(34, 24), "lunge": 40, "stop": 0.1, "shake": 5.0, "shape": "smash", "status": {"burn": 2.0}}, {"startup": 0.28, "active": 0.14, "recover": 0.42, "damage": 36, "knock": 320, "reach": Vector2(40, 28), "lunge": 70, "stop": 0.13, "shake": 7.0, "shape": "smash", "status": {"burn": 3.0}}]
 shot = {}
 lore = "Os ferreiros cativos não largam os seus. Este foi tirado de uma mão que ainda estava quente."
+icon = "res://assets/icons/martelo_forja.png"

@@ -15,3 +15,4 @@ color = Color(1.000, 0.604, 0.235, 1)
 starter = true
 unlock_cost = 0
 lore = "Um punhado de Cinza Sagrada num jarro de barro. Os sacerdotes chamam de heresia. Os soldados, de munição."
+icon = "res://assets/icons/granada_cinzas.png"

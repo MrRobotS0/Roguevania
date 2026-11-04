@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "escama_serpe"
+title = "Escama da Serpe"
+unlock = "essence"
+cost = 170
+cloak = Color(0.659, 0.227, 0.165, 1)
+cloak_dark = Color(0.416, 0.125, 0.094, 1)
+hood = Color(0.165, 0.055, 0.039, 1)
+eye = Color(1.000, 0.690, 0.314, 1)
+scarf = Color(1.000, 0.541, 0.227, 1)
+lore = "Uma escama só já pesa como armadura. Esta é a mais leve."
+chromas = [{"id": "fenda", "title": "Fenda", "cloak": "#3a4048", "cloak_dark": "#272b30", "hood": "#1a0d0d", "eye": "#ffb050", "scarf": "#6a5a3a", "cost": 25}, {"id": "carne", "title": "Carne", "cloak": "#8a2a30", "cloak_dark": "#5d1c20", "hood": "#2a0c0d", "eye": "#ffb050", "scarf": "#e8b098", "cost": 25}, {"id": "babel", "title": "Ouro de Babel", "cloak": "#d8c890", "cloak_dark": "#928861", "hood": "#32243a", "eye": "#ffb050", "scarf": "#e0b04a", "cost": 25}]

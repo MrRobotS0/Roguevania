@@ -18,6 +18,26 @@ const WEAPONS := [
 	"res://content/weapons/punhos_bronze.tres",
 	"res://content/weapons/besta_carcosa.tres",
 	"res://content/weapons/cetro_astronomo.tres",
+	"res://content/weapons/arco_ossos.tres",
+	"res://content/weapons/arco_prece.tres",
+	"res://content/weapons/arco_raposa.tres",
+	"res://content/weapons/arco_sonho.tres",
+	"res://content/weapons/bordao_andarilho.tres",
+	"res://content/weapons/cetro_nomes.tres",
+	"res://content/weapons/clava_votiva.tres",
+	"res://content/weapons/cutelo_glutao.tres",
+	"res://content/weapons/dentes_ventre.tres",
+	"res://content/weapons/espada_estrada.tres",
+	"res://content/weapons/espada_rei.tres",
+	"res://content/weapons/garras_parasita.tres",
+	"res://content/weapons/lamina_devaneio.tres",
+	"res://content/weapons/lamina_luto.tres",
+	"res://content/weapons/lanca_pesadelo.tres",
+	"res://content/weapons/machado_touro.tres",
+	"res://content/weapons/picareta_escavador.tres",
+	"res://content/weapons/punhal_cego.tres",
+	"res://content/weapons/sacola_bombas.tres",
+	"res://content/weapons/tridente_afogado.tres",
 ]
 
 const SKILLS := [
@@ -31,6 +51,18 @@ const SKILLS := [
 	"res://content/skills/sino_carcosa.tres",
 	"res://content/skills/raiz_viva.tres",
 	"res://content/skills/estrela_cadente.tres",
+	"res://content/skills/bile_acida.tres",
+	"res://content/skills/dentes_chao.tres",
+	"res://content/skills/escudo_eremita.tres",
+	"res://content/skills/fogo_raposa.tres",
+	"res://content/skills/grito_carpideira.tres",
+	"res://content/skills/laco_salteador.tres",
+	"res://content/skills/lanterna_caida.tres",
+	"res://content/skills/mao_cova.tres",
+	"res://content/skills/olho_sonho.tres",
+	"res://content/skills/onda_catedral.tres",
+	"res://content/skills/pesadelo_vivo.tres",
+	"res://content/skills/prece_lancada.tres",
 ]
 
 # Afixos: modificadores sorteados nas armas que caem (0 a 2 por arma).
@@ -52,6 +84,18 @@ const SKINS := [
 	"res://content/skins/casca_vidro.tres",
 	"res://content/skins/olhos_fechados.tres",
 	"res://content/skins/saco_penitente.tres",
+	"res://content/skins/asa_dragao.tres",
+	"res://content/skins/capa_estrada.tres",
+	"res://content/skins/cinza_pura.tres",
+	"res://content/skins/couro_fenda.tres",
+	"res://content/skins/escama_serpe.tres",
+	"res://content/skins/manto_sonho.tres",
+	"res://content/skins/mortalha.tres",
+	"res://content/skins/nove_caudas.tres",
+	"res://content/skins/pele_ventre.tres",
+	"res://content/skins/rei_esquecido.tres",
+	"res://content/skins/tentaculo.tres",
+	"res://content/skins/vestes_afogadas.tres",
 ]
 
 const BIOMES := {
@@ -131,6 +175,12 @@ const MUTATIONS := [
 	{"id": "passo_ligeiro", "title": "Passo do Lobo", "detail": "ROLAR ATRAVÉS DE UM GOLPE: O PRÓXIMO ATAQUE É CRÍTICO"},
 	{"id": "barganha", "title": "Língua de Mercador", "detail": "TUDO NO MERCADOR CUSTA 30% MENOS"},
 	{"id": "rastro_brasa", "title": "Rastro de Brasa", "detail": "ROLAR ATRAVÉS DE UM INIMIGO O INCENDEIA"},
+	{"id": "luto", "title": "Luto", "detail": "CADA ABATE DÁ +1 DE VIDA MÁXIMA (ATÉ +25)"},
+	{"id": "prece_atendida", "title": "Prece Atendida", "detail": "O FRASCO CURA 30% A MAIS"},
+	{"id": "fome_sem_fim", "title": "Fome sem Fim", "detail": "+2% DE DANO POR ABATE NA PARTIDA (ATÉ +30%)"},
+	{"id": "sono_leve", "title": "Sono Leve", "detail": "+30% DE DANO NO AR"},
+	{"id": "pele_de_pedra", "title": "Pele de Pedra", "detail": "-15% DE DANO RECEBIDO"},
+	{"id": "ultima_prece", "title": "Última Prece", "detail": "+35% DE DANO COM MENOS DE 30% DE VIDA"},
 ]
 const MAX_MUTATIONS := 3
 

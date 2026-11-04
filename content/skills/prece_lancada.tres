@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "prece_lancada"
+title = "Prece Lançada"
+kind = "javelin"
+stat = "furia"
+cooldown = 6.0
+damage = 20.0
+params = {"pierce": 7}
+color = Color(0.541, 0.816, 0.941, 1)
+starter = false
+unlock_cost = 45
+lore = "Uma prece afiada. Atravessa tudo até chegar a quem tem que ouvir."
+icon = "res://assets/icons/prece_lancada.png"

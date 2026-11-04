@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arco_sonho"
+title = "Arco do Sonho"
+category = "bow"
+stat = "furia"
+crit_rule = "far"
+crit_mult = 1.9
+starter = false
+unlock_cost = 55
+color = Color(0.878, 0.816, 1.000, 1)
+moves = []
+shot = {"draw": 0.28, "recover": 0.22, "speed": 240.0, "damage": 10.0, "pierce": 0, "style": "star", "homing": 3.5}
+lore = "A Sonâmbula atirava dormindo e nunca errava. A flecha sabe onde você queria acertar."
+icon = "res://assets/icons/arco_sonho.png"

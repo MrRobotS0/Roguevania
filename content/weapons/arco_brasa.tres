@@ -16,3 +16,4 @@ color = Color(1.000, 0.604, 0.235, 1)
 moves = []
 shot = {"draw": 0.26, "recover": 0.2, "speed": 340.0, "damage": 9.0, "pierce": 1, "status": {"burn": 2.5}}
 lore = "As pontas são mergulhadas em Cinza Sagrada. O que ela toca lembra que um deus ardeu aqui."
+icon = "res://assets/icons/arco_brasa.png"

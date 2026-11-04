@@ -16,3 +16,4 @@ color = Color(0.851, 0.886, 0.925, 1)
 moves = [{"startup": 0.06, "active": 0.08, "recover": 0.16, "damage": 10, "knock": 90, "reach": Vector2(28, 18), "lunge": 70, "stop": 0.045, "shake": 1.5, "shape": "down"}, {"startup": 0.06, "active": 0.08, "recover": 0.18, "damage": 12, "knock": 110, "reach": Vector2(28, 20), "lunge": 80, "stop": 0.05, "shake": 2.0, "shape": "up"}, {"startup": 0.12, "active": 0.1, "recover": 0.3, "damage": 15, "knock": 240, "reach": Vector2(34, 22), "lunge": 150, "stop": 0.09, "shake": 4.0, "shape": "thrust", "crit": true}]
 shot = {}
 lore = "Forjada para os desfiles das Casas do Mar de Cinzas. Nunca devia ter visto sangue. Viu."
+icon = "res://assets/icons/espada_cerimonial.png"

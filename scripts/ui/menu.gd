@@ -207,13 +207,16 @@ func _draw() -> void:
 			draw_rect(Rect2(box.position.x + 4, y - 4, 2, ROW - 1), Palette.GOLD)
 			var bob := 1.0 if int(_t * 4.0) % 2 == 0 else 0.0
 			PixelFont.body(self, ">", Vector2(x - 4 + bob, y), Palette.GOLD)
-		var room_px := WIDTH - 30.0 - (28.0 if o.has("figure") else 0.0)
+		var room_px := WIDTH - 30.0 - (28.0 if o.has("figure") or o.get("icon") else 0.0)
 		PixelFont.body(self, _fit(String(o["label"]).to_upper(), room_px), Vector2(x + 6, y), color)
 		if o.has("detail"):
 			var detail_color := Palette.UI_DIM if not disabled else color
 			PixelFont.body(self, _fit(String(o["detail"]).to_upper(), room_px), Vector2(x + 6, y + LINE), detail_color)
 		if o.has("figure"):
 			HeroLook.draw_figure(self, Vector2(box.end.x - 18, y + ROW - 6), o["figure"], disabled)
+		elif o.get("icon"):
+			var tint := Color(1, 1, 1, 0.45) if disabled else Color.WHITE
+			draw_texture(o["icon"], Vector2(box.end.x - 26, y - 1).round(), tint)
 		y += ROW
 	if _scroll + rows < _options.size():
 		PixelFont.body(self, "↓", Vector2(box.end.x - 14, y - 6), Palette.UI_DIM)

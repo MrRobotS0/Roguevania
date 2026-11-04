@@ -16,3 +16,4 @@ color = Color(0.624, 0.910, 1.000, 1)
 moves = []
 shot = {"draw": 0.3, "recover": 0.22, "speed": 360.0, "damage": 11.0, "pierce": 0, "status": {"stun": 0.5}}
 lore = "A corda é um fio de gelo que nunca derrete. A flecha chega antes do frio."
+icon = "res://assets/icons/arco_inverno.png"

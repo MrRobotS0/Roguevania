@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cetro_nomes"
+title = "Cetro dos Nomes"
+category = "bow"
+stat = "furia"
+crit_rule = "stunned"
+crit_mult = 1.9
+starter = false
+unlock_cost = 55
+color = Color(0.784, 0.416, 0.910, 1)
+moves = []
+shot = {"draw": 0.3, "recover": 0.26, "speed": 200.0, "damage": 11.0, "pierce": 1, "style": "glyph", "homing": 3.0, "look": "staff"}
+lore = "O Chamador lia os nomes dos mortos com ele. Cada glifo que sai é um nome procurando o dono."
+icon = "res://assets/icons/cetro_nomes.png"

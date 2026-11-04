@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dentes_ventre"
+title = "Dentes do Ventre"
+category = "bow"
+stat = "astucia"
+crit_rule = "behind"
+crit_mult = 2.0
+starter = false
+unlock_cost = 50
+color = Color(0.941, 0.878, 0.784, 1)
+moves = []
+shot = {"draw": 0.3, "recover": 0.24, "speed": 360.0, "damage": 6.0, "pierce": 0, "count": 4, "spread": 0.18, "style": "thorn"}
+lore = "Um punhado de dentes que caíram da Goela. Jogados, voltam a morder."
+icon = "res://assets/icons/dentes_ventre.png"

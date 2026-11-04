@@ -15,3 +15,4 @@ color = Color(1.000, 0.702, 0.420, 1)
 starter = false
 unlock_cost = 55
 lore = "O que sobra de um peregrino que ardeu acreditando. Ainda quer lutar."
+icon = "res://assets/icons/espirito_cinza.png"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arco_ossos"
+title = "Arco de Osso"
+category = "bow"
+stat = "astucia"
+crit_rule = "far"
+crit_mult = 1.9
+starter = false
+unlock_cost = 40
+color = Color(0.910, 0.878, 0.784, 1)
+moves = []
+shot = {"draw": 0.24, "recover": 0.2, "speed": 420.0, "damage": 11.0, "pierce": 2}
+lore = "Costela e tendão de alguém que pediu para ser útil depois de morto."
+icon = "res://assets/icons/arco_ossos.png"

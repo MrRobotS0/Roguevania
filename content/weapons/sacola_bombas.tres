@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sacola_bombas"
+title = "Sacola de Bombas"
+category = "bow"
+stat = "vigor"
+crit_rule = "burning"
+crit_mult = 1.8
+starter = false
+unlock_cost = 50
+color = Color(1.000, 0.604, 0.235, 1)
+moves = []
+shot = {"draw": 0.34, "recover": 0.3, "speed": 220.0, "damage": 16.0, "pierce": 0, "style": "bomb", "status": {"burn": 2.0}}
+lore = "Os escavadores abriam caminho com isto. O caminho, às vezes, era alguém."
+icon = "res://assets/icons/sacola_bombas.png"

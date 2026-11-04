@@ -15,3 +15,4 @@ color = Color(0.541, 0.541, 0.588, 1)
 starter = false
 unlock_cost = 45
 lore = "Prendia os cativos à bigorna. Agora puxa quem estiver longe demais."
+icon = "res://assets/icons/corrente_ferreiro.png"

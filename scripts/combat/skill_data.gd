@@ -20,6 +20,7 @@ extends Resource
 @export var starter := false
 @export var unlock_cost := 0
 @export_multiline var lore := ""
+@export var icon := ""          # pixel art do item (assets/icons); vazio = desenho por código
 
 
 func describe() -> String:

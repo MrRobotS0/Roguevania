@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "laco_salteador"
+title = "Laço do Salteador"
+kind = "hook"
+stat = "astucia"
+cooldown = 5.0
+damage = 10.0
+params = {"range": 180.0}
+color = Color(0.847, 0.784, 0.565, 1)
+starter = false
+unlock_cost = 40
+lore = "Puxa a vítima para perto. Na estrada, a conversa é sempre de perto."
+icon = "res://assets/icons/laco_salteador.png"

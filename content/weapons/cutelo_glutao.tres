@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cutelo_glutao"
+title = "Cutelo do Glutão"
+category = "melee"
+stat = "vigor"
+crit_rule = "burning"
+crit_mult = 1.9
+starter = false
+unlock_cost = 55
+color = Color(0.910, 0.416, 0.416, 1)
+moves = [{"startup": 0.14, "active": 0.1, "recover": 0.24, "damage": 18, "knock": 180, "reach": Vector2(34, 24), "lunge": 50, "stop": 0.08, "shake": 3.5, "shape": "down", "status": {"burn": 2.0}}, {"startup": 0.14, "active": 0.1, "recover": 0.24, "damage": 18, "knock": 180, "reach": Vector2(34, 24), "lunge": 50, "stop": 0.08, "shake": 3.5, "shape": "up", "status": {"burn": 2.0}}, {"startup": 0.2, "active": 0.14, "recover": 0.34, "damage": 28, "knock": 280, "reach": Vector2(38, 28), "lunge": 70, "stop": 0.12, "shake": 5.5, "shape": "smash", "status": {"burn": 3.0}}]
+shot = {}
+lore = "O primeiro que o deus engoliu cortava a própria comida com isto. Por dentro do deus, nunca faltou."
+icon = "res://assets/icons/cutelo_glutao.png"

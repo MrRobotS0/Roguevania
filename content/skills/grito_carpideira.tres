@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grito_carpideira"
+title = "Grito da Carpideira"
+kind = "bell"
+stat = "vigor"
+cooldown = 10.0
+damage = 8.0
+params = {"radius": 84.0, "stun": 1.1}
+color = Color(0.659, 0.753, 0.910, 1)
+starter = false
+unlock_cost = 45
+lore = "Um choro tão alto que os vivos esquecem de se mexer."
+icon = "res://assets/icons/grito_carpideira.png"

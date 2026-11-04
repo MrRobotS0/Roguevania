@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "nove_caudas"
+title = "Nove Caudas"
+unlock = "essence"
+cost = 180
+cloak = Color(0.910, 0.933, 0.973, 1)
+cloak_dark = Color(0.659, 0.722, 0.847, 1)
+hood = Color(0.353, 0.416, 0.541, 1)
+eye = Color(0.624, 0.847, 1.000, 1)
+scarf = Color(1.000, 0.541, 0.416, 1)
+lore = "Pelo branco de raposa, com a ponta acesa."
+chromas = [{"id": "sonho", "title": "Sonho", "cloak": "#9a8ad8", "cloak_dark": "#685d92", "hood": "#42456d", "eye": "#9fd8ff", "scarf": "#f0d0ff", "cost": 25}, {"id": "brasa", "title": "Brasa", "cloak": "#8a2a1a", "cloak_dark": "#5d1c11", "hood": "#423e4d", "eye": "#9fd8ff", "scarf": "#ff8a3a", "cost": 25}, {"id": "luto", "title": "Luto", "cloak": "#c8ccd8", "cloak_dark": "#888a92", "hood": "#424c64", "eye": "#9fd8ff", "scarf": "#5a4a7a", "cost": 25}]

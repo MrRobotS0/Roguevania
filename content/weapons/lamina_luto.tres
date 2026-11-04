@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lamina_luto"
+title = "Lâmina do Luto"
+category = "melee"
+stat = "astucia"
+crit_rule = "behind"
+crit_mult = 2.0
+starter = false
+unlock_cost = 45
+color = Color(0.659, 0.753, 0.910, 1)
+moves = [{"startup": 0.05, "active": 0.08, "recover": 0.14, "damage": 9, "knock": 80, "reach": Vector2(28, 16), "lunge": 80, "stop": 0.04, "shake": 1.5, "shape": "down"}, {"startup": 0.05, "active": 0.08, "recover": 0.14, "damage": 9, "knock": 80, "reach": Vector2(28, 16), "lunge": 80, "stop": 0.04, "shake": 1.5, "shape": "up"}, {"startup": 0.08, "active": 0.1, "recover": 0.22, "damage": 14, "knock": 160, "reach": Vector2(32, 18), "lunge": 130, "stop": 0.06, "shake": 2.5, "shape": "thrust"}]
+shot = {}
+lore = "As carpideiras cortam uma mecha de quem choram com ela. A lâmina não lembra de quem; você vai lembrar."
+icon = "res://assets/icons/lamina_luto.png"

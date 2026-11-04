@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "tridente_afogado"
+title = "Tridente Afogado"
+category = "melee"
+stat = "astucia"
+crit_rule = "tip"
+crit_mult = 2.0
+starter = false
+unlock_cost = 50
+color = Color(0.416, 0.722, 0.910, 1)
+moves = [{"startup": 0.08, "active": 0.1, "recover": 0.2, "damage": 12, "knock": 120, "reach": Vector2(52, 10), "lunge": 80, "stop": 0.05, "shake": 2.0, "shape": "thrust"}, {"startup": 0.1, "active": 0.1, "recover": 0.22, "damage": 13, "knock": 120, "reach": Vector2(52, 12), "lunge": 80, "stop": 0.05, "shake": 2.0, "shape": "thrust"}, {"startup": 0.14, "active": 0.12, "recover": 0.3, "damage": 19, "knock": 220, "reach": Vector2(58, 14), "lunge": 150, "stop": 0.08, "shake": 3.5, "shape": "thrust", "status": {"stun": 0.4}}]
+shot = {}
+lore = "O cavaleiro votivo desceu com ele para guardar a nave. A ferrugem é a única coisa que não se afogou."
+icon = "res://assets/icons/tridente_afogado.png"

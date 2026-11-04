@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bile_acida"
+title = "Bile Ácida"
+kind = "bomb"
+stat = "astucia"
+cooldown = 7.0
+damage = 18.0
+params = {"radius": 40.0, "burn": 4.0}
+color = Color(0.784, 0.816, 0.251, 1)
+starter = false
+unlock_cost = 45
+lore = "Um jarro do que o Ventre usava para digerir deuses. Queima por mais tempo."
+icon = "res://assets/icons/bile_acida.png"

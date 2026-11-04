@@ -32,6 +32,8 @@ PACKS = [
     "retro-pixel-art-guihud-elements-including-dialogue-box", "basic-hud-tiles-alphabet",
     # personagens que casam com a história (garimpo de 04/11): Lobo Pálido, Espinheiro, Colosso
     "pixel-wolf", "pixel-predator-plant-mob-character", "animated-statue",
+    # ícones dos itens (armas, habilidades, mutações): pixel art pronta
+    "496-pixel-art-icons-for-medievalfantasy-rpg", "fantasy-icon-pack-by-ravenmore-0",
 ]
 
 
@@ -43,7 +45,10 @@ def main():
     os.makedirs(DEST, exist_ok=True)
     open(os.path.join(DEST, ".gdignore"), "w").close()
     log = ["# Arte de terceiros", "", "| Pacote | Autor | Licença | Página |", "|---|---|---|---|"]
+    only = [a for a in __import__('sys').argv[1:]]
     for slug in PACKS:
+        if only and slug not in only:
+            continue
         page = "https://opengameart.org/content/" + slug
         html = get(page).decode("utf-8", "ignore")
         lic = re.findall(r"license-name[^>]*>([^<]+)", html)
@@ -69,6 +74,12 @@ def main():
                     print("zip ruim:", name)
         log.append("| %s | %s | %s | %s |" % (slug, author, ", ".join(lic), page))
         print("ok %-42s %s  %s" % (slug, ", ".join(lic), author))
+    if only:
+        # baixando só alguns: soma ao registro que já existe em vez de apagá-lo
+        path = os.path.join(DEST, "LICENCAS.md")
+        old = open(path, encoding="utf-8").read().splitlines() if os.path.exists(path) else log[:4]
+        keep = [l for l in old if not any(l.startswith("| %s |" % o) for o in only)]
+        log = keep + log[4:]
     open(os.path.join(DEST, "LICENCAS.md"), "w", encoding="utf-8").write("\n".join(log) + "\n")
 
 

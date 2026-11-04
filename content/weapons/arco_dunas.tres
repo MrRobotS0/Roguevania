@@ -16,3 +16,4 @@ color = Color(0.788, 0.702, 0.541, 1)
 moves = []
 shot = {"draw": 0.22, "recover": 0.18, "speed": 380.0, "damage": 12.0, "pierce": 0}
 lore = "Corda de tendão de besta-de-areia. Acerta melhor quem tem paciência para esperar a distância certa."
+icon = "res://assets/icons/arco_dunas.png"
