@@ -53,7 +53,7 @@ SOURCES = {
     "hound_walk": ("strip", "hell-hound-character/Hell-Hound-Files/PNG/hell-hound-walk.png", 12),
     "hound_run": ("strip", "hell-hound-character/Hell-Hound-Files/PNG/hell-hound-run.png", 5),
     "hound_jump": ("strip", "hell-hound-character/Hell-Hound-Files/PNG/hell-hound-jump.png", 6),
-"flip": True,     "wolf": ("strip", GPC + "wolf-runing-cycle/Sprites/wolf-runing-cycle.png", 4),
+    "wolf": ("strip", GPC + "wolf-runing-cycle/Sprites/wolf-runing-cycle.png", 4),
     "fskull": ("strip", GPC + "Fire-Skull-Files/PNG/fire-skull.png", 8),
     "ghost_idle": ("strip", GPC + "Ghost-Files/PNG/ghost-idle.png", 7),
     "ghost_shriek": ("strip", GPC + "Ghost-Files/PNG/ghost-shriek.png", 4),
@@ -84,6 +84,14 @@ SOURCES = {
     "shambler": ("strip", BEST + "ansimuz-shambler-pal2-alpha_0.png", 4),
     "andro": ("grid", BEST + "balmer-andromalius-57x88-alpha.png", 57, 88),
     "minion": ("grid", BEST + "balmer-minion-45x66-alpha.png", 45, 66),
+    # garimpo de 04/11 (escolhidos pelo que o desenho mostra x a história do personagem)
+    "pwolf_sit": ("strip", "pixel-wolf/wolf_sit.png", 4),
+    "pwolf_run": ("strip", "pixel-wolf/wolf_run.png", 5),
+    "pwolf_jump": ("strip", "pixel-wolf/wolf_jump.png", 4),
+    "pwolf_tail": ("strip", "pixel-wolf/wolf_tail.png", 2),
+    "plant_idle": ("grid", "pixel-predator-plant-mob-character/Idle/Plant3_Idle_full.png", 64, 64),
+    "plant_atk": ("grid", "pixel-predator-plant-mob-character/Attack/Plant3_Attack_full.png", 64, 64),
+    "statue": ("grid", "animated-statue/statue spritesheet no green.png", 64, 64),
 }
 
 
@@ -109,8 +117,9 @@ SHEETS = {
     "archer": ({"idle": seq("wizard", range(5)), "walk": seq("wizard", range(5)), "aim": seq("wizard", [8]),
                 "aim_lock": seq("wizard", [11])}, {}),
     "pilgrim": ({"walk": seq("ghoul", range(8)), "ignite": seq("ghoul", [3, 6])}, {"flip": True}),
-    "wolf": ({"idle": seq("hound_idle", range(6)), "run": seq("hound_run", range(5)), "crouch": seq("hound_jump", [0]),
-              "lunge": seq("hound_jump", [2]), "stun": seq("hound_jump", [5])}, {}),
+    # Lobo Pálido: "guarda a porta de um dono que não volta" — lobo cinza-claro (alizard, CC0)
+    "wolf": ({"idle": seq("pwolf_tail", [0, 1]), "run": seq("pwolf_run", range(5)), "crouch": seq("pwolf_sit", [0]),
+              "lunge": seq("pwolf_jump", [1]), "stun": seq("pwolf_jump", [3])}, {"key": (12, 98, 98), "flip": True}),
     "gargoyle": ({"fly": grid_row("bat", 1, range(4)), "windup": grid_row("bat", 0, [0]), "dive": grid_row("bat", 1, [2])}, {}),
     "star": ({"idle": seq("fskull", range(8)), "windup": seq("fskull", [2, 5])}, {}),
     "emperor": ({"idle": grid_row("emperor", 0, range(4)), "walk": grid_row("emperor", 4, range(6)), "windup": grid_row("emperor", 1, [1]),
@@ -134,14 +143,19 @@ SHEETS = {
     "slag": ({"idle": grid_row("worm", 1, [0, 1, 2]), "hop": grid_row("worm", 2, [3]), "land": grid_row("worm", 1, [4])}, {"hue": -40, "sat": 1.3}),
     "mason": (six(grid_row("minion", 0, [0, 1]), grid_row("minion", 0, range(4)), grid_row("minion", 0, [1]),
                   grid_row("minion", 1, [0]), grid_row("minion", 0, [2, 3]), grid_row("minion", 0, [0])), {"flip": True}),
-    "colossus": (six(seq("beast_idle", range(6)), seq("beast_idle", range(6)), seq("beast_breath", [0]), seq("beast_breath", [3]),
-                     seq("beast_breath", range(4)), seq("beast_idle", [0])), {"flip": True, "scale": 2}),
+    # Colosso da Bigorna: "o ferreiro que o deus esqueceu ligado" — estátua com martelo (Calciumtrice, CC-BY),
+    # em 2x e puxada para bronze; o golpe bate o martelo e solta a onda no chão
+    "colossus": (six(grid_row("statue", 0, range(4)), grid_row("statue", 1, range(8)), grid_row("statue", 2, [1]),
+                     grid_row("statue", 2, [3]), grid_row("statue", 2, [0, 1]), grid_row("statue", 3, [2])),
+                 {"scale": 2, "sat": 2.2, "bright": 0.8}),
     # ---- Jardim
     "moss_beast": ({"idle": grid_row("frog", 0, range(6)), "walk": grid_row("frog", 0, range(6)), "windup": grid_row("frog", 1, [0]),
                     "charge": grid_row("frog", 1, [1]), "rest": grid_row("frog", 2, [0])}, {"flip": True}),
     "seed_pod": ({"idle": grid_row("snail", 0, range(4)), "walk": grid_row("snail", 1, range(10)), "windup": grid_row("snail", 1, [4, 5]),
                   "attack": grid_row("snail", 1, [7])}, {"flip": True}),
-    "thorn": ({"idle": seq("thing", [0, 1]), "windup": seq("thing", [2]), "attack": seq("thing", [3])}, {}),
+    # Espinheiro: "abre a flor antes de atirar" — flor carnívora (CraftPix, OGA-BY), linha de perfil
+    "thorn": ({"idle": grid_row("plant_idle", 3, range(4)), "windup": grid_row("plant_atk", 3, [2]),
+               "attack": grid_row("plant_atk", 3, [5])}, {}),
     "mother_root": (six(seq("dragon_idle", range(6)), seq("dragon_idle", range(6)), seq("dragon_breath", [1]), seq("dragon_breath", [4]),
                         seq("dragon_tail", range(8)), seq("dragon_idle", [0])), {"flip": True, "scale": 2}),
     # ---- Torre de Babel

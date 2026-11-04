@@ -30,6 +30,8 @@ PACKS = [
     "tiny-rpg-mana-soul-gui", "pixel-uihud-pack", "pixel-uihud-pack-2", "retropixel-icons-v1-9x9", "pixel-hearts",
     "scroll-themed-hud-bars", "pixui-asset-pack-1-ctatz", "pixel-ui-kit", "sci-fi-user-interface", "health-orb-11",
     "retro-pixel-art-guihud-elements-including-dialogue-box", "basic-hud-tiles-alphabet",
+    # personagens que casam com a história (garimpo de 04/11): Lobo Pálido, Espinheiro, Colosso
+    "pixel-wolf", "pixel-predator-plant-mob-character", "animated-statue",
 ]
 
 

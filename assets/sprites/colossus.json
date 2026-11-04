@@ -1,17 +1,17 @@
 {
- "w": 120,
- "h": 134,
- "size": 134,
+ "w": 128,
+ "h": 128,
+ "size": 128,
  "color": true,
  "anims": {
   "idle": {
    "row": 0,
-   "frames": 6,
+   "frames": 4,
    "fps": 6
   },
   "walk": {
    "row": 1,
-   "frames": 6,
+   "frames": 8,
    "fps": 10
   },
   "windup": {
@@ -26,7 +26,7 @@
   },
   "cast": {
    "row": 4,
-   "frames": 4,
+   "frames": 2,
    "fps": 6
   },
   "rest": {

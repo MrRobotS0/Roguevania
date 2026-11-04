@@ -1,12 +1,12 @@
 {
- "w": 26,
- "h": 40,
- "size": 40,
+ "w": 66,
+ "h": 48,
+ "size": 66,
  "color": true,
  "anims": {
   "idle": {
    "row": 0,
-   "frames": 2,
+   "frames": 4,
    "fps": 6
   },
   "windup": {
