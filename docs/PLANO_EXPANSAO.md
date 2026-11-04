@@ -52,9 +52,9 @@ Feito:
       (pulo real) e segue para os 4 lados; desvios de 1 a 3 salas; portais.
 
 Fila (todos pedidos por ele):
-- [ ] Inimigos mais vivos (2ª passada): investidas, tempos variados, perseguição real.
-- [ ] HUD temático por domínio (cada domínio com a sua moldura).
-- [ ] Pixel art do jogo inteiro no máximo (herói, inimigos, blocos, fundos, objetos).
-- [ ] Inglês e português, com o seletor nas opções.
-- [ ] Robô + equilíbrio medido.
-- [ ] Exportar .exe e página (landing page) para o GitHub Pages com o botão de download.
+- [x] Inimigos mais vivos (2ª passada): perseguição mais rápida, menos tempo parado.
+- [x] HUD temático por domínio (cada domínio com a sua moldura).
+- [~] Pixel art: feito animação por golpe do combo e fundos em cor cheia; faltam blocos do chão e inimigos.
+- [x] Inglês e português, com o seletor nas opções. Nome: MOKSHA.
+- [ ] Robô + equilíbrio medido (o robô ainda estoura o tempo nas fases em teia).
+- [x] Exportar .exe (build/) e landing page 3D (site/). Falta publicar: Release com o zip + GitHub Pages.

@@ -1399,3 +1399,64 @@ Não sobrescreva funcionalidades existentes sem necessidade. Não tente implemen
 Priorize uma arquitetura limpa, modular, expansível e uma primeira versão jogável de alta qualidade.
 
 **O objetivo é construir um universo que possa crescer com o desenvolvimento do jogo.**
+
+
+---
+
+## 24. Rodada de 04/11/2026: MOKSHA
+
+**Nome:** MOKSHA (o herói também se chama Moksha). O título fica em inglês; o resto alterna entre inglês e português em OPÇÕES > IDIOMA. A tradução fica em `content/lang/en.txt`, e `tools/textos.py` lista o que falta.
+
+**Variedade**
+- **Armas novas:** Chicote de Espinhos, Foice do Inverno, Punhos de Bronze, Besta de Carcosa e Cetro do Astrônomo.
+- **Habilidades novas:** Sino de Carcosa, Raiz Viva e Estrela Cadente.
+- **Mutações novas:**
+  - Couraça de Escória: estilhaços em quem está colado;
+  - Teimosia: 1 de vida uma vez por andar;
+  - Sede de Batalha;
+  - Passo do Lobo: esquiva perfeita deixa o próximo golpe crítico;
+  - Língua de Mercador;
+  - Rastro de Brasa.
+- **Inimigos próprios:** Pedreiro da Torre, Broto Espinhento, Dançarino Amarelo e Lente Viva.
+- **Combos mais longos** e uma animação própria para cada golpe (7 formatos × 6 quadros).
+
+**Movimento**
+- pulo duplo para todos (a runa Asa de Cinza dá o terceiro);
+- esquiva no ar;
+- rolagem que emenda no pulo, mantendo o embalo;
+- golpe e tiro cancelados por pulo;
+- mergulho que quica em quem acerta;
+- velocidade 165.
+
+**Inimigos:** aceleração, pulo de degrau, descida de plataforma atrás do herói, perseguição mais rápida.
+
+**Fases em teia**
+- `RoomTemplate.links()` usa o `JumpMap` (`scripts/world/jump_map.gd`) para saber que portas se ligam com o pulo real.
+- O caminho principal sorteia a direção (direita, baixo, cima, esquerda).
+- Os desvios têm 1 a 3 salas, e há portais (`scripts/world/portal.gd`).
+
+**Verificador de salas**
+- Ninguém atravessa parede no ar.
+- Quem entra por L ou T tem que chegar a todas as portas.
+- Com essas regras, 7 salas que travavam foram corrigidas.
+- Ordem dos geradores de sala: `salas_mar_de_cinzas` → `salas_andares` (apaga a pasta!) → `salas_dominios` → `salas_artesanais`.
+
+**Partida salva e dicas**
+- Cada andar grava a partida; CONTINUAR fica no título e SALVAR E SAIR na pausa.
+- As dicas são só a tecla de cada comando, uma vez cada.
+- Saíram os textos que explicavam o jogo.
+
+**HUD por domínio:** `scripts/ui/hud_theme.gd`. A prévia sai em `tools/previa_hud.py`.
+
+**Fundos:** `tools/pintar_fundos.py` gera camadas em cor cheia (`assets/sprites/*_cor_*.png`), e o jogo prefere essas às silhuetas.
+
+**Bugs corrigidos**
+- O projétil de um inimigo morto não acertava ninguém, porque a cópia do dano guardava quem atirou e esse inimigo já não existia.
+- A troca de andar acontecia no meio da física do herói (agora é adiada para o fim do quadro).
+
+**Robô:** `tests/robo.tscn -- --partidas=N --brasas=H --reflexo=0.75 [--rastro=1]` grava `docs/ROBO.md`. Pendente: nas fases em teia ele visita todos os desvios e estoura o tempo.
+
+**Distribuição**
+- Exportar: `Godot_console --headless --path . --export-release "Windows Desktop" build/Moksha.exe`. Os modelos ficam em `%APPDATA%\Godot\export_templates.7.2.stable`, e a pasta `build/` está fora do git.
+- A landing page fica em `site/` (Three.js, GSAP, EN/PT). O botão aponta para `releases/latest/download/Moksha-windows.zip`.
+- Falta criar o Release e ligar o Pages.

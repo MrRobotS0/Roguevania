@@ -1,4 +1,7 @@
-# O Legado dos Deuses (nome provisório)
+# MOKSHA
+
+> Antes chamado *O Legado dos Deuses*. Jogo em inglês e português (Opções > Idioma).
+
 
 Ação roguelite / metroidvania 2D em pixel art. Godot 4.7.2, GDScript.
 Nome e sons são **provisórios**. A arte é pixel art gerada por scripts Python
