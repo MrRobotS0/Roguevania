@@ -131,8 +131,7 @@ func _draw() -> void:
 	match mode:
 		"title":
 			_embers(size)
-			PixelFont.body_centered(self, "O LEGADO", Vector2(mid, 46), Palette.UI_TEXT, 3)
-			PixelFont.body_centered(self, "DOS DEUSES", Vector2(mid, 74), Palette.GOLD, 3)
+			PixelFont.body_centered(self, "MOKSHA", Vector2(mid, 62), Palette.GOLD, 4)
 			_title_menu(Vector2(mid, 118))
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)

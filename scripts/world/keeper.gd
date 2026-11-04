@@ -5,7 +5,7 @@ extends Interactable
 # desbloqueios permanentes e enche os frascos uma vez.
 
 const LINES := [
-	"VOCÊ DE NOVO. OU OUTRO IGUAL A VOCÊ. É DIFÍCIL DIZER.",
+	"MOKSHA. VOCÊ DE NOVO. OU OUTRO IGUAL A VOCÊ. É DIFÍCIL DIZER.",
 	"A ESSÊNCIA É O QUE SOBRA QUANDO ALGO MORRE ACREDITANDO. TRAGA MAIS.",
 	"EU VIGIO A PASSAGEM DESDE QUE OS DEUSES SAÍRAM POR ELA.",
 ]

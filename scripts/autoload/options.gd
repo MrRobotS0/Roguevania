@@ -11,6 +11,7 @@ const DEFAULTS := {
 	"vibration": true,
 	"timer": false,          # cronômetro de speedrun na tela
 	"hints": true,           # dicas da primeira partida
+	"lang": "pt",            # pt | en (o nome do jogo fica igual)
 	"keys": {},              # ação -> [physical keycode]
 }
 

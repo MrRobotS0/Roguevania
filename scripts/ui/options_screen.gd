@@ -58,6 +58,7 @@ func _rows() -> Array:
 		out.append({"id": "back", "label": "VOLTAR", "value": ""})
 		return out
 	return [
+		{"id": "lang", "label": "IDIOMA", "value": Lang.NAMES[Lang.lang]},
 		{"id": "master", "label": "VOLUME GERAL", "value": _pct("master")},
 		{"id": "music", "label": "MÚSICA", "value": _pct("music")},
 		{"id": "sfx", "label": "EFEITOS", "value": _pct("sfx")},
@@ -129,6 +130,11 @@ func change(id: String, step: int) -> void:
 
 func _change(id: String, step: int) -> void:
 	match id:
+		"lang":
+			var i := wrapi(Lang.LANGS.find(Lang.lang) + step, 0, Lang.LANGS.size())
+			Options.set_value("lang", Lang.LANGS[i])
+			Lang.use(Lang.LANGS[i])
+			Sfx.play("ui_move", -10.0)
 		"master", "music", "sfx", "shake":
 			var v := float(Options.get_value(id))
 			var i := clampi(roundi(v * 10.0) + step, 0, 10)
@@ -144,7 +150,7 @@ func _confirm(id: String) -> void:
 		"back":
 			if _page == "keys":
 				_page = "main"
-				_index = 9
+				_index = 10
 			else:
 				close()
 		"keys":
@@ -152,7 +158,7 @@ func _confirm(id: String) -> void:
 			_index = 0
 		"reset_keys":
 			Options.set_value("keys", {})
-		"fullscreen", "flashes", "vibration", "timer", "hints":
+		"fullscreen", "flashes", "vibration", "timer", "hints", "lang":
 			_change(id, 1)
 		_:
 			if _page == "keys" and REBINDABLE.has(id):

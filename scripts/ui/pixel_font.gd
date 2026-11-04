@@ -140,10 +140,12 @@ const MARKS_BODY := {
 # --- fonte pequena ---------------------------------------------------------------
 
 static func width(text: String, scale := 1) -> int:
+	text = Lang.t(text)
 	return maxi(text.length() * ADVANCE - 1, 0) * scale
 
 
 static func draw(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
+	text = Lang.t(text)
 	# A sombra de 1 px dá contraste sobre qualquer fundo do cenário.
 	if shadow.a > 0.0:
 		_small_run(ci, text, pos + Vector2(scale, scale), shadow, scale)
@@ -176,10 +178,12 @@ static func _small_run(ci: CanvasItem, text: String, pos: Vector2, color: Color,
 # --- fonte de texto ----------------------------------------------------------------
 
 static func body_width(text: String, scale := 1) -> int:
+	text = Lang.t(text)
 	return maxi(text.length() * BODY_ADVANCE - 1, 0) * scale
 
 
 static func body(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale := 1, shadow := Palette.UI_SHADOW) -> void:
+	text = Lang.t(text)
 	if shadow.a > 0.0:
 		_body_run(ci, text, pos + Vector2(scale, scale), shadow, scale)
 	_body_run(ci, text, pos, color, scale)
@@ -219,6 +223,7 @@ static func _body_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, 
 
 # Quebra o texto em linhas de até `limit` caracteres, sem cortar palavras.
 static func wrap(text: String, limit: int) -> PackedStringArray:
+	text = Lang.t(text)
 	var out := PackedStringArray()
 	for paragraph in text.split("\n"):
 		var line := ""

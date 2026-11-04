@@ -139,6 +139,7 @@ func _ready() -> void:
 	await _case("mutações novas: couraça, teimosia, barganha, passo, sede", _new_mutations)
 	await _case("partida salva: sai, fecha e continua do mesmo andar", _save_resume)
 	await _case("esquiva no ar anda reta, pulo emenda a rolagem, mergulho quica", _fluid_moves)
+	await _case("inglês: textos fixos, com número e montados; fonte cobre tudo", _english)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 
 	print("")
@@ -1277,3 +1278,24 @@ func _fluid_moves() -> void:
 			bounced = true
 			break
 	_check(bounced and e.hp < e.max_hp, "o mergulho não quicou no inimigo")
+
+
+func _english() -> void:
+	Lang.use("en")
+	_check(Lang.t("Espada Cerimonial") == "CEREMONIAL SWORD", "nome de arma: " + Lang.t("Espada Cerimonial"))
+	_check(Lang.t("12 INIMIGOS DERROTADOS") == "12 ENEMIES DEFEATED", "com número: " + Lang.t("12 INIMIGOS DERROTADOS"))
+	_check(Lang.t("ARMA DE FÚRIA") == "FURY WEAPON", "ordem invertida: " + Lang.t("ARMA DE FÚRIA"))
+	_check(Lang.t("ENTRAR: SEGUIR EM FRENTE") == "ENTER: PRESS ON", "montado: " + Lang.t("ENTRAR: SEGUIR EM FRENTE"))
+	_check(Lang.t("MOKSHA") == "MOKSHA", "o nome do jogo mudou")
+	var missing := {}
+	for line in FileAccess.get_file_as_string("res://content/lang/en.txt").split("
+"):
+		if line.begins_with(";") or not line.contains(" = "):
+			continue
+		for ch in line.substr(line.find(" = ") + 3).to_upper():
+			var base: String = PixelFont.ACCENTS[ch][0] if PixelFont.ACCENTS.has(ch) else ch
+			if not PixelFont.BODY.has(base) and ch != " " and ch != "{" and ch != "}" and not "0123456789%".contains(ch):
+				missing[ch] = true
+	_check(missing.is_empty(), "letras sem desenho na fonte: " + str(missing.keys()))
+	Lang.use("pt")
+	_check(Lang.t("Espada Cerimonial") == "Espada Cerimonial", "voltar ao português não voltou")

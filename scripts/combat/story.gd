@@ -7,7 +7,7 @@ const INTRO := [
 	"Houve um tempo em que sete deuses dividiam o mundo. Cada um tinha um domínio, e cada domínio tinha a cara do seu deus.",
 	"Numa noite sem nome, todos sumiram. Ao mesmo tempo. Ninguém viu para onde foram.",
 	"Os domínios ficaram. Sem dono, apodreceram do jeito de cada um: a cinza ficou sagrada, o inverno não acabou, a forja não parou.",
-	"Você acordou na beira do Mar de Cinzas, com um manto que não lembra de ter vestido. A Vigia diz que você já esteve aqui antes. Muitas vezes.",
+	"Você acordou na beira do Mar de Cinzas, com um manto que não lembra de ter vestido. A Vigia te chama de Moksha e diz que você já esteve aqui antes. Muitas vezes.",
 	"Em algum lugar, no fim de tudo, está o Trono. Quem senta nele sabe o que aconteceu com os deuses.",
 ]
 
