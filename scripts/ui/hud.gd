@@ -33,6 +33,17 @@ var _banner_t := 99.0
 var _toasts: Array = []
 var _boss_shown := 0.0
 var _t := 0.0
+var _theme := HudTheme.of("")
+var _theme_from := HudTheme.of("")
+var _theme_to := HudTheme.of("")
+var _theme_k := 1.0
+
+
+# Muda a moldura para a do domínio, com uma troca curta (0,3 s).
+func set_theme(id: String) -> void:
+	_theme_from = _theme
+	_theme_to = HudTheme.of(id)
+	_theme_k = 0.0
 
 
 func _ready() -> void:
@@ -55,6 +66,9 @@ func bind(who: Player, boss_node: Enemy = null) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _theme_k < 1.0:
+		_theme_k = move_toward(_theme_k, 1.0, delta / 0.3)
+		_theme = HudTheme.blend(_theme_from, _theme_to, _theme_k)
 	_banner_t += delta
 	for t in _toasts:
 		t[1] -= delta
@@ -77,7 +91,7 @@ func _draw() -> void:
 	var size := get_viewport_rect().size
 	if player and is_instance_valid(player):
 		_draw_health(Vector2(8, 8))
-		_draw_flasks(Vector2(8, 20))
+		_draw_flasks(Vector2(8, 23))
 		_draw_right(size)
 		_draw_slots(size)
 		_draw_prompt(size)
@@ -91,12 +105,15 @@ func _draw() -> void:
 
 func _draw_health(at: Vector2) -> void:
 	var ratio := float(player.hp) / player.max_hp
-	draw_rect(Rect2(at - Vector2(2, 2), BAR + Vector2(4, 4)), Palette.UI_SHADOW)
-	draw_rect(Rect2(at - Vector2(1, 1), BAR + Vector2(2, 2)), Palette.UI_FRAME)
-	draw_rect(Rect2(at, BAR), Palette.UI_BAR_BG)
+	HudTheme.panel(self, Rect2(at, BAR), _theme, _t)
 	draw_rect(Rect2(at, Vector2(roundf(BAR.x * _ghost), BAR.y)), Palette.UI_HP_GHOST)
 	draw_rect(Rect2(at, Vector2(roundf(BAR.x * ratio), BAR.y)), Palette.UI_HP)
 	draw_rect(Rect2(at, Vector2(roundf(BAR.x * ratio), 1)), Palette.UI_HP.lightened(0.35))
+	if _theme["style"] == "circuit":
+		# no Observatório a vida é medida em células
+		var gap: Color = _theme["bg"]
+		for x in range(6, int(BAR.x), 6):
+			draw_rect(Rect2(at.x + x, at.y, 1, BAR.y), gap)
 	PixelFont.draw(self, "%d/%d" % [player.hp, player.max_hp], at + Vector2(BAR.x + 6, 1), Palette.UI_TEXT)
 	if player.has_status("burn"):
 		PixelFont.draw(self, "QUEIMANDO", at + Vector2(BAR.x + 46, 1), Palette.BURN)
@@ -162,12 +179,9 @@ func _draw_slots(size: Vector2) -> void:
 	for i in 4:
 		var p := start + Vector2(i * (SLOT + 4) + (6 if i >= 2 else 0), 0)
 		var g: Gear = gear[i]
-		draw_rect(Rect2(p - Vector2(1, 1), Vector2(SLOT + 2, SLOT + 2)), Palette.UI_SHADOW)
-		draw_rect(Rect2(p, Vector2(SLOT, SLOT)), Palette.UI_BAR_BG)
-		var frame := Palette.UI_FRAME
+		HudTheme.panel(self, Rect2(p, Vector2(SLOT, SLOT)), _theme, _t, false)
 		if g:
-			frame = Combat.STAT_COLORS[g.stat()].darkened(0.2)
-		draw_rect(Rect2(p, Vector2(SLOT, SLOT)), frame, false, 1.0)
+			draw_rect(Rect2(p, Vector2(SLOT, SLOT)), Combat.STAT_COLORS[g.stat()].darkened(0.2), false, 1.0)
 		if g:
 			_draw_icon(g, p + Vector2(SLOT, SLOT) * 0.5)
 			if i >= 2:
@@ -282,12 +296,9 @@ func _draw_prompt(size: Vector2) -> void:
 	var key_w := PixelFont.body_width(key) + 6.0
 	var w := maxf(PixelFont.body_width(title) + key_w + 6.0, PixelFont.body_width(detail)) + 14.0
 	var box := Rect2(roundf(size.x * 0.5 - w * 0.5), y - 5, roundf(w), 17.0 if detail == "" else 29.0)
-	var bg := Palette.UI_SHADOW
-	bg.a = 0.8
-	draw_rect(box, bg)
-	draw_rect(Rect2(box.position, Vector2(box.size.x, 1)), Palette.UI_FRAME)
+	HudTheme.panel(self, box, _theme, _t, false)
 	var left := box.position.x + 7.0
-	draw_rect(Rect2(left - 2, y - 2, key_w, 11), Palette.UI_FRAME)
+	draw_rect(Rect2(left - 2, y - 2, key_w, 11), _theme["frame"])
 	PixelFont.body(self, key, Vector2(left + 1, y), Palette.GOLD)
 	PixelFont.body(self, title, Vector2(left + key_w + 4, y), Palette.UI_TEXT)
 	if detail != "":
@@ -298,9 +309,7 @@ func _draw_boss(size: Vector2) -> void:
 	var w := 260.0
 	var at := Vector2((size.x - w) * 0.5, size.y - 20.0)
 	PixelFont.body_centered(self, boss.title, Vector2(size.x * 0.5, at.y - 9), Palette.GOLD)
-	draw_rect(Rect2(at - Vector2(2, 2), Vector2(w + 4, 9)), Palette.UI_SHADOW)
-	draw_rect(Rect2(at - Vector2(1, 1), Vector2(w + 2, 7)), Palette.UI_FRAME)
-	draw_rect(Rect2(at, Vector2(w, 5)), Palette.UI_BAR_BG)
+	HudTheme.panel(self, Rect2(at, Vector2(w, 5)), _theme, _t)
 	draw_rect(Rect2(at, Vector2(w * _boss_shown / boss.max_hp, 5)), Palette.UI_HP_GHOST)
 	draw_rect(Rect2(at, Vector2(w * float(boss.hp) / boss.max_hp, 5)), Color("8f5fd0"))
 	draw_rect(Rect2(at.x + w * 0.5, at.y - 1, 1, 7), Palette.UI_TEXT)
@@ -342,8 +351,8 @@ func _draw_status(size: Vector2) -> void:
 		PixelFont.draw(self, split, Vector2(size.x - 8 - PixelFont.width(split), size.y - 11), Palette.UI_DIM)
 	if player.curse > 0:
 		var violet := Color("c08fff")
-		_icon("skull", Vector2(8, 33), violet)
-		PixelFont.body(self, "%d" % player.curse, Vector2(19, 33), violet)
+		_icon("skull", Vector2(8, 36), violet)
+		PixelFont.body(self, "%d" % player.curse, Vector2(19, 36), violet)
 	for door: TimedDoor in get_tree().get_nodes_in_group("timed_doors"):
 		if door.is_open:
 			continue

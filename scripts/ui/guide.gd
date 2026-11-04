@@ -138,7 +138,7 @@ func _draw() -> void:
 		w = maxf(w, _line_width(line))
 	w += 16.0
 	var h := 14.0 + lines.size() * PixelFont.BODY_LINE
-	var at := Vector2(roundf(lerpf(-w, 6.0, slide)), 44.0)
+	var at := Vector2(roundf(lerpf(-w, 6.0, slide)), 48.0)
 	var bg := Palette.UI_SHADOW
 	bg.a = 0.82 * a
 	draw_rect(Rect2(at, Vector2(w, h)), bg)
