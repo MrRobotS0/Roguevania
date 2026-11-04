@@ -4,7 +4,7 @@ extends Enemy
 # Inquisidor Profeta (elite): dois cortes de incensário de perto, e de longe
 # um salto que cai onde você está, com onda de choque dos dois lados.
 
-const CHASE := 60.0
+const CHASE := 88.0
 const LEAP_COOLDOWN := 3.0
 const SLASH_DAMAGE := 18.0
 const SLAM_DAMAGE := 22.0

@@ -4,7 +4,7 @@ extends Enemy
 # Estrela Caída (Observatório) / alma do Arauto (Carcosa): flutua até você,
 # pisca (aviso) e explode. Matar antes também explode, mas longe de você.
 
-const SPEED := 55.0
+const SPEED := 75.0
 const FUSE := 0.8
 
 

@@ -33,7 +33,7 @@ func think(delta: float) -> void:
 				set_state("chase")
 		"chase":
 			face_player()
-			velocity.x = 0.0 if blocked(facing) else facing * 50.0
+			velocity.x = 0.0 if blocked(facing) else facing * 78.0
 			if absf(d.x) < 150.0 and absf(d.y) < 30.0 and state_time > 0.8:
 				velocity.x = 0.0
 				set_state("twirl")

@@ -5,11 +5,11 @@ extends Enemy
 # É o inimigo para treinar "esperar o aviso, rolar ou interromper".
 
 const WALK := 34.0
-const CHASE := 72.0
+const CHASE := 100.0
 const REACH := 30.0
 const WINDUP := 0.5
 const ACTIVE := 0.14
-const RECOVER := 0.6
+const RECOVER := 0.42
 const DAMAGE := 15
 
 var _hit_done := false

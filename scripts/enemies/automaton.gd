@@ -29,7 +29,7 @@ func think(delta: float) -> void:
 	match state:
 		"idle", "chase":
 			face_player()
-			velocity.x = 0.0 if blocked(facing) or absf(d.x) < 60.0 else facing * 30.0
+			velocity.x = 0.0 if blocked(facing) or absf(d.x) < 60.0 else facing * 48.0
 			if _cd <= 0.0 and sees_player(260.0, 40.0):
 				set_state("aim")
 				Sfx.play("laser_charge", -8.0)

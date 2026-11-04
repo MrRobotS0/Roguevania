@@ -5,7 +5,7 @@ extends Enemy
 # tudo: acerta na frente e solta faíscas que queimam dos dois lados.
 # Firme: golpe comum não interrompe o aviso.
 
-const WALK := 26.0
+const WALK := 40.0
 const REACH := 40.0
 const WINDUP := 0.75
 const SLAM_DAMAGE := 26.0

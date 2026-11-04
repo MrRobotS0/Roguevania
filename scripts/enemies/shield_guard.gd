@@ -5,12 +5,12 @@ extends Enemy
 # Vira devagar — role por trás dele, ou bata enquanto ele está atacando.
 
 const WALK := 28.0
-const CHASE := 55.0
+const CHASE := 78.0
 const REACH := 38.0
 const TURN_DELAY := 0.45
 const WINDUP := 0.55
 const ACTIVE := 0.12
-const RECOVER := 0.75
+const RECOVER := 0.55
 const DAMAGE := 16.0
 
 const ARMOR := Color("8a2e2e")

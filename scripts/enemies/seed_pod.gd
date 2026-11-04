@@ -32,7 +32,7 @@ func think(delta: float) -> void:
 				set_state("chase")
 		"chase":
 			face_player()
-			velocity.x = 0.0 if blocked(facing) else facing * 32.0
+			velocity.x = 0.0 if blocked(facing) else facing * 46.0
 			if d.length() < RANGE and state_time > 0.6:
 				velocity.x = 0.0
 				set_state("swell")

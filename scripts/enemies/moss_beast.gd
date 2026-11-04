@@ -35,7 +35,7 @@ func think(delta: float) -> void:
 			if absf(d.x) < 160.0 and absf(d.y) < 30.0:
 				set_state("windup")
 			else:
-				velocity.x = 0.0 if blocked(facing) else facing * 40.0
+				velocity.x = 0.0 if blocked(facing) else facing * 62.0
 		"windup":
 			velocity.x = 0.0
 			if state_time >= 0.6:

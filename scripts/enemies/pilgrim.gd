@@ -4,7 +4,7 @@ extends Enemy
 # Peregrino Cinzento: anda até você e se incendeia. Bater nele durante o
 # aviso apaga o pavio (ele recomeça); matar no aviso faz explodir mesmo assim.
 
-const SPEED := 40.0
+const SPEED := 58.0
 const FUSE := 0.9
 const RADIUS := 40.0
 const DAMAGE := 22.0

@@ -4,7 +4,7 @@ extends Enemy
 # Lobo Pálido: rápido. Para de correr, abaixa (aviso) e investe mordendo em
 # linha reta. Rolar por baixo do bote ou bater durante o aviso.
 
-const RUN := 120.0
+const RUN := 145.0
 const LUNGE := 330.0
 const CROUCH := 0.4
 const BITE := 16.0

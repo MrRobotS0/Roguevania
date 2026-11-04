@@ -43,7 +43,7 @@ func think(delta: float) -> void:
 				velocity.x = 0.0
 				set_state("aim")
 			else:
-				velocity.x = 0.0 if blocked(facing) else facing * 40.0
+				velocity.x = 0.0 if blocked(facing) else facing * 62.0
 		"windup":
 			velocity.x = 0.0
 			if state_time >= 0.45:
