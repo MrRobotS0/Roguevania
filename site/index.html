@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MOKSHA</title>
-<meta name="description" content="MOKSHA, a 2D action roguelite. Seven gods vanished. Their domains remained.">
+<meta name="description" content="MOKSHA. A pixel-art action roguelite. Seven gods vanished. You are what they left behind.">
 <meta property="og:title" content="MOKSHA">
-<meta property="og:description" content="Seven gods vanished. Their domains remained.">
+<meta property="og:description" content="Seven gods vanished. You are what they left behind.">
 <meta property="og:image" content="img/mar.png">
 <link rel="icon" href="img/heroi.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,12 +15,13 @@
 <style>
   :root {
     --bg: #07060b;
-    --surface: rgba(18, 15, 26, .86);
+    --ink: #0d0a12;
     --line: #2b2438;
     --text: #f2ecff;
-    --dim: #b4a9cc;
+    --dim: #a99dc2;
     --gold: #f2c14e;
-    --gold-dk: #8a5a14;
+    --gold-dk: #7a4a10;
+    --blood: #d9434b;
     --accent: #e8a33d;
     --focus: #8ff7e8;
     --pixel: "Silkscreen", monospace;
@@ -28,169 +29,152 @@
   }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
-  body { margin: 0; color: var(--text); font: 400 18px/1.6 var(--body); overflow-x: hidden; }
+  body { margin: 0; color: var(--text); font: 400 18px/1.55 var(--body); overflow-x: hidden; }
   img { image-rendering: pixelated; display: block; max-width: 100%; }
   a { color: var(--gold); }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+  .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
 
-  /* o diorama 3D fica atrás de tudo, em pixels grandes */
-  #stage {
-    position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -2;
-    image-rendering: pixelated; background: #120c0e url("img/mar.png") center / cover;
-  }
-  .grain {
-    position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(7, 6, 11, .75) 100%);
-  }
+  #stage { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -3; image-rendering: pixelated;
+    background: #120c0e url("img/mar.png") center / cover; }
+  /* tela de tubo: linhas finas e cantos escuros */
+  .crt { position: fixed; inset: 0; z-index: 50; pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 58%, rgba(5,4,8,.7) 100%); }
 
-  /* barra do topo */
-  .bar {
-    position: fixed; inset: 0 0 auto 0; z-index: 20;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; transition: background .3s ease;
-  }
-  .bar.solid { background: rgba(7, 6, 11, .82); backdrop-filter: blur(6px); border-bottom: 2px solid var(--line); }
-  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .08em; opacity: 0; transition: opacity .3s ease; }
+  .bar { position: fixed; inset: 0 0 auto 0; z-index: 40; display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; }
+  .bar.solid { background: rgba(7,6,11,.86); border-bottom: 2px solid var(--line); }
+  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .12em; opacity: 0; transition: opacity .3s; }
   .bar.solid .brand { opacity: 1; }
   .bar nav { display: flex; gap: 8px; align-items: center; }
-  .lang button {
-    font: 400 14px var(--pixel); color: var(--dim); cursor: pointer;
-    background: rgba(7, 6, 11, .6); border: 2px solid var(--line); padding: 8px 12px; min-height: 44px; min-width: 48px;
-  }
+  .lang button { font: 400 14px var(--pixel); color: var(--dim); cursor: pointer; background: rgba(7,6,11,.7);
+    border: 2px solid var(--line); padding: 8px 12px; min-height: 44px; min-width: 48px; }
   .lang button[aria-pressed="true"] { color: var(--bg); background: var(--gold); border-color: var(--gold); }
-  .mini-cta {
-    font: 400 14px var(--pixel); text-decoration: none; color: var(--bg); background: var(--gold);
-    padding: 12px 14px; min-height: 44px; display: inline-flex; align-items: center;
-    box-shadow: 0 4px 0 var(--gold-dk);
-  }
+
+  /* botão: bloco de pixel com bisel, afunda quando aperta */
+  .btn { display: inline-flex; align-items: center; gap: 14px; text-decoration: none; cursor: pointer;
+    font: 700 20px var(--pixel); color: #1a0f04; background: var(--gold); padding: 18px 30px; min-height: 60px;
+    border: 0; box-shadow: inset -4px -4px 0 #c08a24, inset 4px 4px 0 #ffe08a, 0 6px 0 var(--gold-dk), 0 0 0 4px var(--bg);
+    transition: transform .08s steps(2), box-shadow .08s steps(2); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(5px); box-shadow: inset -4px -4px 0 #c08a24, inset 4px 4px 0 #ffe08a, 0 1px 0 var(--gold-dk), 0 0 0 4px var(--bg); }
+  .btn svg { width: 22px; height: 22px; }
+  .btn small { font: 400 13px var(--pixel); opacity: .75; }
+  .mini { font-size: 13px; padding: 10px 14px; min-height: 44px; gap: 8px; }
 
   /* capa */
-  .hero { position: relative; height: 100vh; min-height: 560px; display: grid; place-items: center; text-align: center; }
-  .hero-inner { padding: 0 16px; transform-style: preserve-3d; }
-  h1 {
-    margin: 0; font: 700 clamp(64px, 15vw, 168px)/.95 var(--pixel); letter-spacing: .05em; color: var(--gold);
-    text-shadow: 0 6px 0 #6b3a0c, 0 12px 0 #2a1406, 0 0 48px rgba(242, 193, 78, .45);
-  }
-  h1 .ch { display: inline-block; will-change: transform; }
-  .tagline { font-size: clamp(18px, 2.6vw, 26px); margin: 20px auto 36px; max-width: 32ch; text-shadow: 2px 2px 0 var(--bg); }
-  .cta {
-    position: relative; display: inline-flex; align-items: center; gap: 12px;
-    font: 700 20px var(--pixel); text-decoration: none; color: var(--bg); background: var(--gold);
-    padding: 18px 30px; min-height: 60px; overflow: hidden;
-    box-shadow: 0 6px 0 var(--gold-dk), 0 0 0 4px var(--bg), 0 0 40px rgba(242, 193, 78, .35);
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .cta::after {
-    content: ""; position: absolute; inset: 0; transform: translateX(-120%);
-    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%);
-    animation: shine 3.2s ease-in-out infinite;
-  }
-  @keyframes shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
-  .cta:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--gold-dk), 0 0 0 4px var(--bg), 0 0 56px rgba(242, 193, 78, .5); }
-  .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--gold-dk), 0 0 0 4px var(--bg); }
-  .cta svg { width: 22px; height: 22px; }
-  .meta { color: var(--dim); font-size: 15px; margin-top: 18px; text-shadow: 1px 1px 0 var(--bg); }
-  .scroll-cue {
-    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-    font: 400 12px var(--pixel); color: var(--dim); letter-spacing: .2em;
-  }
-  .scroll-cue i { display: block; width: 4px; height: 16px; margin: 8px auto 0; background: var(--gold); animation: cue 1.4s steps(4) infinite; }
-  @keyframes cue { from { transform: translateY(0); opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
-
-  /* o herói correndo pela capa (quadros reais do jogo) */
-  .runner {
-    position: absolute; bottom: 9vh; left: -140px; width: 128px; height: 128px;
+  .hero { position: relative; height: 100vh; min-height: 600px; display: grid; place-items: center; text-align: center; }
+  h1 { margin: 0; font: 700 clamp(70px, 16vw, 190px)/.9 var(--pixel); letter-spacing: .04em; color: var(--gold);
+    text-shadow: -3px 0 0 rgba(217,67,75,.75), 3px 0 0 rgba(143,247,232,.55), 0 8px 0 #5a2a08, 0 16px 0 #1c0c04, 0 0 60px rgba(242,193,78,.4); }
+  h1 .ch { display: inline-block; }
+  .tagline { font: 400 clamp(17px, 2.4vw, 24px)/1.4 var(--body); margin: 26px auto 40px; max-width: 30ch; text-shadow: 2px 2px 0 var(--bg); }
+  .tagline b { color: var(--gold); font-weight: 600; }
+  .ver { margin-top: 18px; font: 400 13px var(--pixel); color: var(--dim); letter-spacing: .1em; text-shadow: 1px 1px 0 var(--bg); }
+  .runner { position: absolute; bottom: 8vh; left: -160px; width: 128px; height: 128px;
     background: url("img/heroi_corrida.png") 0 0 / 1024px 128px; image-rendering: pixelated;
-    animation: run-frames .55s steps(8) infinite, run-across 9s linear infinite;
-    filter: drop-shadow(0 0 12px rgba(143, 247, 232, .25));
-  }
-  @keyframes run-frames { to { background-position: -1024px 0; } }
-  @keyframes run-across { to { transform: translateX(calc(100vw + 280px)); } }
+    animation: frames8 .55s steps(8) infinite, across 9s linear infinite; }
+  @keyframes frames8 { to { background-position: -1024px 0; } }
+  @keyframes across { to { transform: translateX(calc(100vw + 320px)); } }
+  .cue { position: absolute; bottom: 26px; left: 50%; translate: -50% 0; font: 400 12px var(--pixel); color: var(--dim); letter-spacing: .3em; }
+  .cue i { display: block; width: 4px; height: 14px; margin: 8px auto 0; background: var(--gold); animation: cue 1.2s steps(3) infinite; }
+  @keyframes cue { to { transform: translateY(12px); opacity: 0; } }
 
-  /* a viagem pelos domínios */
+  /* viagem pelos domínios */
   .journey { position: relative; height: 760vh; }
-  .journey-pin { position: sticky; top: 0; height: 100vh; display: grid; align-items: center; }
-  .domain-panel {
-    width: min(520px, 100% - 32px); margin-left: max(16px, 6vw);
-    background: linear-gradient(135deg, rgba(7, 6, 11, .9), rgba(7, 6, 11, .55));
-    border: 2px solid var(--line); border-left: 6px solid var(--accent);
-    padding: 28px 28px 24px; transition: border-color .6s ease;
-  }
-  .kicker { font: 400 13px var(--pixel); color: var(--accent); letter-spacing: .2em; margin: 0 0 8px; transition: color .6s ease; }
-  .domain-panel h2 { font: 700 clamp(26px, 4vw, 42px)/1.1 var(--pixel); color: var(--text); margin: 0 0 6px; }
-  .domain-panel .sub { color: var(--accent); margin: 0 0 18px; font-size: 18px; transition: color .6s ease; }
-  .domain-panel blockquote { margin: 0; color: var(--dim); font-size: 17px; border: 0; padding: 0; }
-  .rail { position: absolute; right: max(16px, 4vw); top: 50%; transform: translateY(-50%); display: grid; gap: 14px; }
-  .rail button {
-    width: 14px; height: 14px; padding: 0; border: 2px solid var(--dim); background: transparent; cursor: pointer;
-    transition: background .3s ease, transform .3s ease, border-color .3s ease;
-  }
-  .rail button.on { background: var(--accent); border-color: var(--accent); transform: scale(1.35); }
+  .pin { position: sticky; top: 0; height: 100vh; display: grid; align-items: end; padding-bottom: 12vh; }
+  .pin::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(7,6,11,.72) 0%, rgba(7,6,11,.35) 38%, transparent 62%),
+                linear-gradient(0deg, rgba(7,6,11,.6) 0%, transparent 45%); }
+  .plate { position: relative; margin-left: max(16px, 6vw); max-width: min(640px, 100% - 32px); }
+  .plate .num { font: 700 clamp(64px, 10vw, 120px)/.8 var(--pixel); color: transparent; -webkit-text-stroke: 2px var(--accent); opacity: .85; }
+  .plate h2 { font: 700 clamp(30px, 5vw, 58px)/1 var(--pixel); margin: 6px 0 10px; text-shadow: 3px 3px 0 var(--bg), 0 0 30px rgba(0,0,0,.6); }
+  .plate .sub { color: var(--accent); font-size: 19px; margin: 0 0 10px; text-shadow: 2px 2px 0 var(--bg); }
+  .plate blockquote { margin: 0; max-width: 46ch; color: var(--text); opacity: .9; font-size: 17px; padding-left: 14px; border-left: 4px solid var(--accent);
+    text-shadow: 2px 2px 0 var(--bg); background: linear-gradient(90deg, rgba(7,6,11,.65), transparent); }
+  .rail { position: absolute; right: max(16px, 4vw); top: 50%; translate: 0 -50%; display: grid; gap: 14px; }
+  .rail button { position: relative; width: 14px; height: 14px; padding: 0; border: 2px solid var(--dim); background: transparent; cursor: pointer; }
   .rail button::before { content: ""; position: absolute; inset: -15px; }
-  .rail button { position: relative; }
+  .rail button.on { background: var(--accent); border-color: var(--accent); transform: scale(1.4); }
 
-  /* seções sólidas por cima do diorama */
-  .solid-section { position: relative; background: linear-gradient(to bottom, rgba(7, 6, 11, .0), var(--bg) 120px); padding: 140px 0 96px; }
-  h2.title { font: 700 clamp(26px, 4vw, 40px)/1.15 var(--pixel); color: var(--gold); margin: 0 0 16px; }
-  .lede { color: var(--dim); max-width: 62ch; margin: 0 0 40px; }
+  /* blocos sólidos */
+  .block { position: relative; background: var(--bg); padding: 120px 0; }
+  .block::before { content: ""; position: absolute; inset: -120px 0 auto 0; height: 120px; background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none; }
+  .eyebrow { font: 400 14px var(--pixel); color: var(--blood); letter-spacing: .3em; margin: 0 0 10px; }
+  h2.big { font: 700 clamp(40px, 7vw, 88px)/.95 var(--pixel); margin: 0 0 48px; color: var(--text); }
+  h2.big span { color: var(--gold); }
 
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; perspective: 900px; }
-  .card {
-    position: relative; background: var(--surface); border: 2px solid var(--line); padding: 24px;
-    transform-style: preserve-3d; transition: transform .25s ease, border-color .25s ease; will-change: transform;
-  }
-  .card:hover { border-color: var(--gold); }
-  .card .glow {
-    position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease;
-    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(242, 193, 78, .22), transparent 60%);
-  }
-  .card:hover .glow { opacity: 1; }
-  .card .icon { width: 48px; height: 48px; margin-bottom: 16px; transform: translateZ(40px); }
-  .card h3 { font: 600 21px var(--body); margin: 0 0 8px; transform: translateZ(28px); }
-  .card p { margin: 0; color: var(--dim); font-size: 16px; transform: translateZ(18px); }
+  /* moveset */
+  .moves { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px; background: var(--line); border: 2px solid var(--line); }
+  .move { position: relative; background: var(--ink); padding: 28px 24px 22px; min-height: 280px; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
+  .move::after { content: ""; position: absolute; left: 0; right: 0; bottom: 92px; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 12px); }
+  .move .spr { justify-self: center; align-self: end; margin-bottom: 18px; }
+  .move h3 { font: 700 20px var(--pixel); margin: 0 0 4px; letter-spacing: .04em; }
+  .move kbd { font: 400 12px var(--pixel); color: var(--gold); border: 2px solid var(--gold-dk); padding: 2px 8px; background: #1a1206; }
+  .move:hover { background: #120e1a; }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 64px; }
-  .stat { text-align: center; padding: 20px 8px; border-top: 2px solid var(--line); }
-  .stat b { display: block; font: 700 clamp(34px, 5vw, 52px)/1 var(--pixel); color: var(--gold); }
-  .stat span { color: var(--dim); font-size: 15px; }
+  /* guardiões: rolagem horizontal presa */
+  .g-wrap { position: relative; height: 300vh; background: var(--bg); }
+  .guardians { position: sticky; top: 0; height: 100vh; overflow: hidden; background:
+      radial-gradient(ellipse at 50% 120%, rgba(217,67,75,.22), transparent 55%), var(--bg); }
+  .guardians .head { position: absolute; top: 88px; left: max(16px, 6vw); z-index: 2; }
+  .guardians h2.big { font-size: clamp(30px, 4.6vw, 60px); margin-bottom: 0; }
+  .track { position: absolute; left: 0; top: 0; height: 100%; display: flex; align-items: flex-end; gap: 6vw; padding: 0 30vw 10vh 50vw; will-change: transform; }
+  .altar { position: relative; flex: 0 0 auto; width: 360px; display: grid; justify-items: center; text-align: center; }
+  .altar .light { position: absolute; bottom: 120px; width: 300px; height: 520px; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--c) 45%, transparent), transparent 62%);
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); opacity: .55; }
+  .altar .spr { position: relative; margin-bottom: -6px; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--c) 40%, transparent)); }
+  .altar .base { width: 260px; height: 26px; background: linear-gradient(#3a3046, #1b1626); box-shadow: inset 0 3px 0 #5a4c6e, 0 6px 0 #0d0a12; }
+  .altar h3 { font: 700 22px var(--pixel); margin: 20px 0 4px; color: var(--c); }
+  .altar p { margin: 0; color: var(--dim); font-size: 16px; max-width: 30ch; }
+  .altar .tag { font: 400 12px var(--pixel); color: var(--dim); letter-spacing: .2em; margin-top: 6px; }
 
-  .final { text-align: center; padding: 120px 0; background: radial-gradient(ellipse at 50% 120%, rgba(232, 116, 58, .28), transparent 60%), var(--bg); border-top: 2px solid var(--line); }
-  .final h2.title { color: var(--text); }
-  .steps { color: var(--dim); max-width: 56ch; margin: 32px auto 0; text-align: left; font-size: 16px; }
-  .steps li { margin-bottom: 6px; }
+  /* bestiário */
+  .beasts { overflow: hidden; padding: 30px 0; border-block: 2px solid var(--line);
+    background: repeating-linear-gradient(90deg, #0b0910 0 32px, #0e0b14 32px 64px); }
+  .row { display: flex; gap: 56px; width: max-content; align-items: flex-end; padding: 10px 0; animation: drift 60s linear infinite; }
+  .row.back { animation-direction: reverse; animation-duration: 75s; }
+  .row:hover { animation-play-state: paused; }
+  @keyframes drift { to { transform: translateX(-50%); } }
 
-  footer { background: var(--bg); padding: 32px 0 48px; color: var(--dim); font-size: 14px; border-top: 2px solid var(--line); }
+  /* fim */
+  .final { position: relative; text-align: center; padding: 160px 0 140px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 110%, rgba(232,116,58,.35), transparent 60%), var(--bg); }
+  .final h2.big { margin-bottom: 18px; }
+  .final p.lead { color: var(--dim); max-width: 44ch; margin: 0 auto 40px; }
+  .final .small { color: var(--dim); font-size: 14px; margin-top: 20px; }
+  footer { background: var(--bg); padding: 30px 0 46px; color: var(--dim); font-size: 14px; border-top: 2px solid var(--line); }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
 
-  .reveal { opacity: 0; transform: translateY(24px); }
+  .spr { image-rendering: pixelated; background-repeat: no-repeat; }
 
-  @media (max-width: 640px) {
-    .bar .mini-cta { display: none; }
-    .rail { right: 10px; gap: 10px; }
-    .domain-panel { margin-left: 16px; padding: 20px; }
+  @media (max-width: 720px) {
+    .bar .btn { display: none; }
+    .altar { width: 280px; }
+    .track { padding-left: 20vw; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .runner, .cta::after, .scroll-cue i { animation: none; }
-    .runner { display: none; }
-    .reveal { opacity: 1; transform: none; }
-    .card { transition: none; }
+    .runner, .cue i, .row { animation: none !important; }
+    .spr { animation: none !important; }
   }
 </style>
 <script type="importmap">
   { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js">
+<link rel="preload" as="image" href="img/layers/mar_sky.png">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 </head>
 <body>
 <canvas id="stage" aria-hidden="true"></canvas>
-<div class="grain" aria-hidden="true"></div>
+<div class="crt" aria-hidden="true"></div>
 
 <header class="bar" id="bar">
   <a class="brand" href="#top">MOKSHA</a>
   <nav>
-    <a class="mini-cta" href="#download" data-i18n="get">Download</a>
+    <a class="btn mini" href="#download" data-i18n="get">Play free</a>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
       <button type="button" data-set-lang="pt" aria-pressed="false">PT</button>
@@ -202,124 +186,187 @@
   <section class="hero" aria-labelledby="title">
     <div class="hero-inner">
       <h1 id="title" aria-label="MOKSHA"><span class="ch">M</span><span class="ch">O</span><span class="ch">K</span><span class="ch">S</span><span class="ch">H</span><span class="ch">A</span></h1>
-      <p class="tagline" data-i18n="tagline">Seven gods vanished. Their domains remained.</p>
-      <a class="cta" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
-        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
-        <span data-i18n="download">Download for Windows</span>
+      <p class="tagline" data-i18n-html="tagline">Seven gods vanished.<br><b>You are what they left behind.</b></p>
+      <a class="btn" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
+        <span data-i18n="download">Download free</span>
       </a>
-      <p class="meta" data-i18n="meta">Free · Windows 10/11 · 40 MB · English &amp; Português</p>
+      <p class="ver">WINDOWS · V0.1.0 · EN / PT</p>
     </div>
     <div class="runner" aria-hidden="true"></div>
-    <div class="scroll-cue" aria-hidden="true"><span data-i18n="scroll">Scroll</span><i></i></div>
+    <div class="cue" aria-hidden="true">SCROLL<i></i></div>
   </section>
 
-  <section class="journey" id="journey" aria-label="The seven domains">
-    <div class="journey-pin">
-      <article class="domain-panel" aria-live="polite">
-        <p class="kicker" id="d-kicker">DOMAIN 1 / 7</p>
+  <section class="journey" id="journey" aria-label="Domains">
+    <div class="pin">
+      <article class="plate" aria-live="polite">
+        <div class="num" id="d-num">01</div>
         <h2 id="d-name">The Sea of Ash</h2>
-        <p class="sub" id="d-sub">Domain of the god who burned</p>
+        <p class="sub" id="d-sub">Where a god burned</p>
         <blockquote id="d-lore">A god burned here. No one knows which. Each House claims it was theirs.</blockquote>
       </article>
       <div class="rail" id="rail" role="group" aria-label="Domains"></div>
     </div>
   </section>
 
-  <section class="solid-section" aria-labelledby="feat">
+  <section class="block" aria-labelledby="moves-t">
     <div class="wrap">
-      <h2 class="title reveal" id="feat" data-i18n="aboutTitle">A run never repeats</h2>
-      <p class="lede reveal" data-i18n="aboutText">An action roguelite in hand-made pixel art. Every death rebuilds the world: new maps, new weapons, new routes. What you bring back to the Warden stays forever.</p>
-      <div class="cards">
-        <div class="card reveal"><div class="glow"></div>
-          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#8ff7e8" d="M2 9h2v1H2zM4 8h2v1H4zM6 7h2v1H6zM8 5h2v2H8zM9 3h2v2H9z"/><path fill="#f2c14e" d="M1 10h3v1H1z"/></svg>
-          <h3 data-i18n="f1t">Fluid movement</h3><p data-i18n="f1">Double jump, air dash, rolls that chain into jumps, dives that bounce off enemies.</p></div>
-        <div class="card reveal"><div class="glow"></div>
-          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#b48cff" d="M1 1h4v3H1zM7 1h4v3H7zM4 8h4v3H4z"/><path fill="#b4a9cc" d="M3 4h1v2h4V4h1v3H6v1H5V7H3z"/></svg>
-          <h3 data-i18n="f2t">Maps that branch</h3><p data-i18n="f2">Up, down, back and forward. Long detours, secret walls and portals across every floor.</p></div>
-        <div class="card reveal"><div class="glow"></div>
-          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#d9e2ec" d="M9 1h2v2h-1v1H9v1H8v1H7v1H5V6h1V5h1V4h1V3h1z"/><path fill="#f2c14e" d="M3 7h2v1h1v2H5v1H3V9H1V8h2z"/></svg>
-          <h3 data-i18n="f3t">13 weapons, 10 skills</h3><p data-i18n="f3">Every hit of a combo has its own motion. Affixes, mutations and runes change how you play.</p></div>
-        <div class="card reveal"><div class="glow"></div>
-          <svg class="icon" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="#e8743a" d="M3 2h6v1h1v3H9v1H8v2H4V7H3V6H2V3h1z"/><path fill="#07060b" d="M4 4h1v1H4zM7 4h1v1H7z"/><path fill="#f2c14e" d="M4 10h4v1H4z"/></svg>
-          <h3 data-i18n="f4t">Seven guardians</h3><p data-i18n="f4">One for each domain, and the Blind Emperor waiting on the throne at the end.</p></div>
-      </div>
-      <div class="stats">
-        <div class="stat reveal"><b data-count="7">7</b><span data-i18n="s_dom">domains</span></div>
-        <div class="stat reveal"><b data-count="272">272</b><span data-i18n="s_rooms">hand-made rooms</span></div>
-        <div class="stat reveal"><b data-count="35">35</b><span data-i18n="s_foes">creatures</span></div>
-        <div class="stat reveal"><b data-count="8">8</b><span data-i18n="s_floors">floors to the throne</span></div>
-      </div>
+      <p class="eyebrow">MOVESET</p>
+      <h2 class="big" id="moves-t" data-i18n-html="movesT">Never <span>stop</span> moving.</h2>
+      <div class="moves" id="moves"></div>
     </div>
+  </section>
+
+  <section class="g-wrap" id="guardians" aria-labelledby="g-t">
+   <div class="guardians">
+    <div class="head">
+      <p class="eyebrow" data-i18n="gEye">7 GUARDIANS</p>
+      <h2 class="big" id="g-t" data-i18n-html="gT">Each god left <span>a keeper</span>.</h2>
+    </div>
+    <div class="track" id="track"></div>
+   </div>
+  </section>
+
+  <section class="beasts" aria-label="Bestiary">
+    <div class="row" id="row1"></div>
+    <div class="row back" id="row2"></div>
   </section>
 
   <section class="final" id="download" aria-labelledby="dl">
     <div class="wrap">
-      <h2 class="title reveal" id="dl" data-i18n="dlTitle">Wake up at the edge of the ash</h2>
-      <a class="cta reveal" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
-        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
-        <span data-i18n="download">Download for Windows</span>
+      <h2 class="big" id="dl" data-i18n-html="dlT">The ash <span>remembers you</span>.</h2>
+      <p class="lead" data-i18n="dlP">Free. Windows 10/11. Keyboard or gamepad.</p>
+      <a class="btn" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
+        <span data-i18n="download">Download free</span>
+        <small>40 MB</small>
       </a>
-      <ol class="steps reveal">
-        <li data-i18n="s1">Unzip the file anywhere.</li>
-        <li data-i18n="s2">Open Moksha.exe. If Windows warns about an unknown publisher, choose "More info" and then "Run anyway".</li>
-        <li data-i18n="s3">Keyboard or gamepad. The language can be changed in Options.</li>
-      </ol>
+      <p class="small" data-i18n="smart">Windows may warn about an unknown publisher: More info → Run anyway.</p>
     </div>
   </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>MOKSHA</span>
-    <a href="https://github.com/MrRobotS0/Roguevania" data-i18n="source">Source on GitHub</a>
+    <span>MOKSHA · v0.1.0</span>
+    <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a>
   </div>
 </footer>
 
 <script>
-  // --- textos ------------------------------------------------------------------
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const DOMAINS = [
-    { id: "mar", accent: "#e8a33d", en: ["The Sea of Ash", "Domain of the god who burned", "A god burned here. No one knows which. Each House claims it was theirs."],
-      pt: ["O Mar de Cinzas", "Domínio do deus que ardeu", "Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas."] },
-    { id: "saloes", accent: "#9fe8ff", en: ["The Halls of the Last Winter", "Domain of the god who waited", "The god of winter promised to return in spring. No one here has seen another season since."],
-      pt: ["Os Salões do Último Inverno", "Domínio do deus que esperava", "O deus do Inverno prometeu voltar na primavera. Ninguém aqui viu outra estação desde então."] },
-    { id: "forja", accent: "#ff8a3a", en: ["The Crimson Forge", "Domain of the god who worked", "When the god of the forge vanished, the anvils kept striking on their own for a year."],
-      pt: ["A Forja Rubra", "Domínio do deus que trabalhava", "Quando o deus da Forja sumiu, as bigornas continuaram batendo sozinhas por um ano."] },
-    { id: "torre", accent: "#e8d070", en: ["The Tower of Babel", "Domain of the god who spoke every tongue", "The tower was built to reach the god. It did. He had already left."],
-      pt: ["A Torre de Babel", "Domínio do deus que falava todas as línguas", "A Torre foi feita para chegar ao deus. Chegou. Ele já tinha ido embora."] },
-    { id: "jardim", accent: "#b8e05a", en: ["The Primordial Garden", "Domain of the god who planted the world", "The god of the garden did not vanish. He became a root. He still feels every step."],
-      pt: ["O Jardim Primordial", "Domínio do deus que plantou o mundo", "O deus do Jardim não sumiu. Virou raiz. Ainda sente cada passo."] },
-    { id: "carcosa", accent: "#f0e070", en: ["Carcosa", "Domain of the god who wore a mask", "In Carcosa the suns are black and no one finds it strange."],
-      pt: ["Carcosa", "Domínio do deus que usava máscara", "Em Carcosa os sóis são negros e ninguém estranha."] },
-    { id: "observatorio", accent: "#b48cff", en: ["The Celestial Observatory", "Domain of the god who counted the stars", "In the logbook, the last line: he looked back."],
-      pt: ["O Observatório Celeste", "Domínio do deus que contava as estrelas", "No caderno de bordo, a última linha: ele olhou de volta."] },
+    { accent: "#e8a33d", en: ["The Sea of Ash", "Where a god burned", "A god burned here. No one knows which. Each House claims it was theirs."], pt: ["O Mar de Cinzas", "Onde um deus ardeu", "Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas."] },
+    { accent: "#9fe8ff", en: ["The Halls of the Last Winter", "Where a god waited", "The god of winter promised to return in spring. No one here has seen another season since."], pt: ["Os Salões do Último Inverno", "Onde um deus esperou", "O deus do Inverno prometeu voltar na primavera. Ninguém aqui viu outra estação desde então."] },
+    { accent: "#ff8a3a", en: ["The Crimson Forge", "Where a god worked", "When he vanished, the anvils kept striking on their own for a year."], pt: ["A Forja Rubra", "Onde um deus trabalhou", "Quando ele sumiu, as bigornas continuaram batendo sozinhas por um ano."] },
+    { accent: "#e8d070", en: ["The Tower of Babel", "Where a god spoke every tongue", "Built to reach the god. It did. He had already left."], pt: ["A Torre de Babel", "Onde um deus falava todas as línguas", "Feita para chegar ao deus. Chegou. Ele já tinha ido embora."] },
+    { accent: "#b8e05a", en: ["The Primordial Garden", "Where a god planted the world", "He did not vanish. He became a root. He still feels every step."], pt: ["O Jardim Primordial", "Onde um deus plantou o mundo", "Ele não sumiu. Virou raiz. Ainda sente cada passo."] },
+    { accent: "#f0e070", en: ["Carcosa", "Where a god wore a mask", "The suns are black and no one finds it strange."], pt: ["Carcosa", "Onde um deus usava máscara", "Os sóis são negros e ninguém estranha."] },
+    { accent: "#b48cff", en: ["The Celestial Observatory", "Where a god counted the stars", "In the logbook, the last line: he looked back."], pt: ["O Observatório Celeste", "Onde um deus contava as estrelas", "No caderno de bordo, a última linha: ele olhou de volta."] },
+  ];
+  const MOVES = [
+    ["hero_combo", ["Combo", "Combo"], "J J J", 12],
+    ["hero_flip", ["Double jump", "Pulo duplo"], "SPACE ×2", 14],
+    ["hero_dash", ["Air dash", "Esquiva no ar"], "SHIFT", 12],
+    ["hero_roll", ["Roll", "Rolagem"], "SHIFT", 16],
+    ["hero_smash", ["Heavy", "Golpe pesado"], "K", 10],
+    ["hero_idle", ["Breathe", "Respire"], "—", 8],
+  ];
+  const BOSSES = [
+    ["boss_emperor", "#f2c14e", ["The Blind Emperor", "O Imperador Cego"], ["Tore out his eyes to see the future.", "Arrancou os olhos para ver o futuro."], ["THE THRONE", "O TRONO"]],
+    ["boss_wolf_king", "#9fe8ff", ["The Long Night Wolf", "O Lobo da Longa Noite"], ["He howls and the pack answers.", "Uiva e a matilha responde."], ["THE HALLS", "OS SALÕES"]],
+    ["boss_colossus", "#ff8a3a", ["The Anvil Colossus", "O Colosso da Bigorna"], ["The smith the god forgot to turn off.", "O ferreiro que o deus esqueceu ligado."], ["THE FORGE", "A FORJA"]],
+    ["boss_architect", "#e8d070", ["The Mute Architect", "O Arquiteto Mudo"], ["Raised the tower. Forgot his own tongue.", "Ergueu a Torre. Esqueceu a própria língua."], ["THE TOWER", "A TORRE"]],
+    ["boss_mother_root", "#b8e05a", ["The Root Mother", "A Mãe-Raiz"], ["Everything that grows here was born of her.", "Tudo que cresce aqui nasceu dela."], ["THE GARDEN", "O JARDIM"]],
+    ["boss_faceless_king", "#f0e070", ["The Faceless King", "O Rei sem Rosto"], ["The mask fell. There was nothing beneath.", "A máscara caiu. Não havia nada embaixo."], ["CARCOSA", "CARCOSA"]],
+    ["boss_astronomer", "#b48cff", ["The Last Astronomer", "O Último Astrônomo"], ["Counted the stars until there were none left.", "Contou as estrelas até elas acabarem."], ["THE OBSERVATORY", "O OBSERVATÓRIO"]],
   ];
   const PT = {
-    get: "Baixar", tagline: "Sete deuses sumiram. Seus domínios ficaram.", download: "Baixar para Windows",
-    meta: "Grátis · Windows 10/11 · 40 MB · English & Português", scroll: "Role",
-    aboutTitle: "Nenhuma partida se repete",
-    aboutText: "Um roguelite de ação em pixel art feita à mão. Cada morte refaz o mundo: mapas novos, armas novas, rotas novas. O que você leva até a Vigia fica para sempre.",
-    f1t: "Movimento fluido", f1: "Pulo duplo, esquiva no ar, rolagem que emenda no pulo, mergulho que quica nos inimigos.",
-    f2t: "Mapas que se ramificam", f2: "Para cima, para baixo, para trás e para a frente. Desvios longos, paredes secretas e portais em todo andar.",
-    f3t: "13 armas, 10 habilidades", f3: "Cada golpe do combo tem o seu movimento. Afixos, mutações e runas mudam o jeito de jogar.",
-    f4t: "Sete guardiões", f4: "Um por domínio, e o Imperador Cego esperando no trono, no fim.",
-    s_dom: "domínios", s_rooms: "salas feitas à mão", s_foes: "criaturas", s_floors: "andares até o trono",
-    dlTitle: "Acorde na beira da cinza",
-    s1: "Descompacte o arquivo onde quiser.",
-    s2: "Abra o Moksha.exe. Se o Windows avisar de editor desconhecido, escolha \"Mais informações\" e depois \"Executar assim mesmo\".",
-    s3: "Teclado ou controle. O idioma muda nas Opções.",
-    source: "Código no GitHub",
+    get: "Jogar grátis", download: "Baixar grátis",
+    tagline: "Sete deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
+    movesT: "Nunca <span>pare</span> de se mexer.",
+    gEye: "7 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
+    dlT: "A cinza <span>lembra de você</span>.",
+    dlP: "Grátis. Windows 10/11. Teclado ou controle.",
+    smart: "O Windows pode avisar de editor desconhecido: Mais informações → Executar assim mesmo.",
   };
   const EN = {};
   document.querySelectorAll("[data-i18n]").forEach(el => { EN[el.dataset.i18n] = el.textContent; });
-  let lang = "en";
-  let current = 0;
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { EN[el.dataset.i18nHtml] = el.innerHTML; });
+  let lang = "en", current = 0, ANIM = {};
+  const L = () => (lang === "pt" ? 1 : 0);
+
+  // sprite animado a partir das tiras de tools/site_assets.py
+  function sprite(name, scale, fps) {
+    const a = ANIM[name];
+    const el = document.createElement("div");
+    el.className = "spr";
+    el.setAttribute("aria-hidden", "true");
+    if (!a) return el;
+    const w = a.w * scale, h = a.h * scale;
+    el.style.width = w + "px";
+    el.style.height = h + "px";
+    el.style.backgroundImage = `url(img/anim/${name}.png)`;
+    el.style.backgroundSize = `${w * a.n}px ${h}px`;
+    if (!still) el.animate([{ backgroundPosition: "0 0" }, { backgroundPosition: `-${w * a.n}px 0` }],
+      { duration: (a.n / fps) * 1000, iterations: Infinity, easing: `steps(${a.n})` });
+    return el;
+  }
+
+  function buildMoves() {
+    const box = document.getElementById("moves");
+    box.innerHTML = "";
+    for (const [name, label, key, fps] of MOVES) {
+      const m = document.createElement("div");
+      m.className = "move";
+      m.appendChild(sprite(name, 2.5, fps));
+      const t = document.createElement("div");
+      t.innerHTML = `<h3>${label[L()]}</h3><kbd>${key}</kbd>`;
+      m.appendChild(t);
+      box.appendChild(m);
+    }
+  }
+
+  function buildGuardians() {
+    const tr = document.getElementById("track");
+    tr.innerHTML = "";
+    for (const [name, color, title, line, place] of BOSSES) {
+      const a = document.createElement("article");
+      a.className = "altar";
+      a.style.setProperty("--c", color);
+      const light = document.createElement("div");
+      light.className = "light";
+      a.appendChild(light);
+      a.appendChild(sprite(name, innerHeight < 820 ? 1.25 : 1.5, 6));
+      const base = document.createElement("div");
+      base.className = "base";
+      a.appendChild(base);
+      const txt = document.createElement("div");
+      txt.innerHTML = `<h3>${title[L()]}</h3><p>${line[L()]}</p><div class="tag">${place[L()]}</div>`;
+      a.appendChild(txt);
+      tr.appendChild(a);
+    }
+  }
+
+  function buildBeasts() {
+    const names = Object.keys(ANIM).filter(k => k.startsWith("enemy_"));
+    const half = Math.ceil(names.length / 2);
+    [["row1", names.slice(0, half)], ["row2", names.slice(half)]].forEach(([id, list]) => {
+      const row = document.getElementById(id);
+      row.innerHTML = "";
+      for (const pass of [0, 1]) for (const n of list) row.appendChild(sprite(n, 1.5, 7));
+    });
+  }
 
   function setLang(code) {
     lang = code;
     const table = code === "pt" ? PT : EN;
     document.documentElement.lang = code === "pt" ? "pt-BR" : "en";
-    document.querySelectorAll("[data-i18n]").forEach(el => { const t = table[el.dataset.i18n]; if (t) el.textContent = t; });
+    document.querySelectorAll("[data-i18n]").forEach(el => { if (table[el.dataset.i18n]) el.textContent = table[el.dataset.i18n]; });
+    document.querySelectorAll("[data-i18n-html]").forEach(el => { if (table[el.dataset.i18nHtml]) el.innerHTML = table[el.dataset.i18nHtml]; });
     document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === code)));
+    if (Object.keys(ANIM).length) { buildMoves(); buildGuardians(); }
     showDomain(current, true);
     try { localStorage.setItem("moksha-lang", code); } catch (e) {}
   }
@@ -329,60 +376,25 @@
     const [name, sub, lore] = d[lang];
     document.documentElement.style.setProperty("--accent", d.accent);
     const fill = () => {
-      document.getElementById("d-kicker").textContent = (lang === "pt" ? "DOMÍNIO " : "DOMAIN ") + (i + 1) + " / 7";
+      document.getElementById("d-num").textContent = String(i + 1).padStart(2, "0");
       document.getElementById("d-name").textContent = name;
       document.getElementById("d-sub").textContent = sub;
       document.getElementById("d-lore").textContent = lore;
     };
     document.querySelectorAll("#rail button").forEach((b, k) => b.classList.toggle("on", k === i));
     if (instant || !window.gsap || still) { fill(); return; }
-    const parts = ["#d-kicker", "#d-name", "#d-sub", "#d-lore"];
-    gsap.to(parts, { opacity: 0, y: -10, duration: .18, stagger: .03, onComplete: () => {
+    const parts = ["#d-num", "#d-name", "#d-sub", "#d-lore"];
+    gsap.to(parts, { opacity: 0, x: -24, duration: .16, stagger: .02, onComplete: () => {
       fill();
-      gsap.fromTo(parts, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .45, stagger: .07, ease: "power3.out" });
+      gsap.fromTo(parts, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: .5, stagger: .06, ease: "power4.out" });
     } });
   }
 
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // trilho dos domínios
-  const rail = document.getElementById("rail");
-  DOMAINS.forEach((d, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.setAttribute("aria-label", d.en[0]);
-    b.addEventListener("click", () => {
-      const j = document.getElementById("journey");
-      const top = j.offsetTop + (j.offsetHeight - innerHeight) * ((i + .5) / DOMAINS.length);
-      scrollTo({ top, behavior: still ? "auto" : "smooth" });
-    });
-    rail.appendChild(b);
-  });
-
-  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
-  let saved = null;
-  try { saved = localStorage.getItem("moksha-lang"); } catch (e) {}
-  setLang(saved || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"));
-
-  // barra do topo fica sólida depois da capa
-  const bar = document.getElementById("bar");
-  addEventListener("scroll", () => bar.classList.toggle("solid", scrollY > innerHeight * 0.6), { passive: true });
-
-  // cartões com inclinação 3D seguindo o cursor
-  if (!still) {
-    document.querySelectorAll(".card").forEach(card => {
-      card.addEventListener("pointermove", e => {
-        const r = card.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        card.style.transform = `rotateY(${(x - .5) * 14}deg) rotateX(${(.5 - y) * 12}deg) translateZ(8px)`;
-        card.style.setProperty("--mx", x * 100 + "%");
-        card.style.setProperty("--my", y * 100 + "%");
-      });
-      card.addEventListener("pointerleave", () => { card.style.transform = ""; });
-    });
+  function stage(on) {
+    document.getElementById("stage").style.visibility = on ? "visible" : "hidden";
+    window.dispatchEvent(new CustomEvent("stage", { detail: on }));
   }
 
-  // o domínio mostrado segue a posição da rolagem dentro da viagem
   function sync(progress) {
     const i = Math.min(DOMAINS.length - 1, Math.max(0, Math.floor(progress * DOMAINS.length)));
     if (i === current) return;
@@ -391,28 +403,58 @@
     window.dispatchEvent(new CustomEvent("domain", { detail: i }));
   }
 
-  // animações de rolagem
-  if (window.gsap && window.ScrollTrigger && !still) {
+  const rail = document.getElementById("rail");
+  DOMAINS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", d.en[0]);
+    b.addEventListener("click", () => {
+      const j = document.getElementById("journey");
+      scrollTo({ top: j.offsetTop + (j.offsetHeight - innerHeight) * ((i + .5) / DOMAINS.length), behavior: still ? "auto" : "smooth" });
+    });
+    rail.appendChild(b);
+  });
+
+  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
+  const bar = document.getElementById("bar");
+  addEventListener("scroll", () => bar.classList.toggle("solid", scrollY > innerHeight * .6), { passive: true });
+
+  let saved = null;
+  try { saved = localStorage.getItem("moksha-lang"); } catch (e) {}
+  setLang(saved || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"));
+
+  // os scripts adiados (GSAP) rodam antes deste evento
+  document.addEventListener("DOMContentLoaded", () => {
+    fetch("img/anim/anim.json").then(r => r.json()).then(data => {
+      ANIM = data;
+      buildMoves();
+      buildGuardians();
+      buildBeasts();
+      setupMotion();
+    });
+  });
+
+  function setupMotion() {
+    if (!window.gsap || !window.ScrollTrigger || still) return;
     gsap.registerPlugin(ScrollTrigger);
-    gsap.from("h1 .ch", { y: 90, rotateX: -90, opacity: 0, duration: 1.1, stagger: .08, ease: "back.out(1.6)", delay: .15 });
-    gsap.from([".tagline", ".hero .cta", ".meta"], { opacity: 0, y: 24, duration: .8, stagger: .12, delay: .7, ease: "power3.out" });
-    gsap.to(".hero-inner", { yPercent: -30, opacity: 0, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
-    document.querySelectorAll(".reveal").forEach(el => {
-      gsap.to(el, { opacity: 1, y: 0, duration: .8, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 88%" } });
+    gsap.from("h1 .ch", { y: 120, opacity: 0, duration: .9, stagger: .07, ease: "steps(6)", delay: .1 });
+    gsap.from([".tagline", ".hero .btn", ".ver"], { opacity: 0, y: 20, duration: .6, stagger: .12, delay: .65, ease: "power3.out" });
+    gsap.to(".hero-inner", { yPercent: -35, opacity: 0, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+    ScrollTrigger.create({ trigger: "#journey", start: "top top", end: "bottom bottom", onUpdate: s => sync(s.progress), onRefresh: s => sync(s.progress) });
+    ScrollTrigger.create({ trigger: "#journey", start: "top bottom", end: "bottom top",
+      onLeave: () => stage(false), onEnterBack: () => stage(true) });
+    // os guardiões passam de lado enquanto o palco fica grudado no topo
+    const track = document.getElementById("track");
+    const wrap = document.getElementById("guardians");
+    const fit = () => { wrap.style.height = (track.scrollWidth - innerWidth + innerHeight) + "px"; };
+    fit();
+    addEventListener("resize", fit);
+    gsap.to(track, {
+      x: () => -(track.scrollWidth - innerWidth),
+      ease: "none",
+      scrollTrigger: { trigger: wrap, start: "top top", end: "bottom bottom", scrub: .6, invalidateOnRefresh: true },
     });
-    document.querySelectorAll("[data-count]").forEach(el => {
-      const n = +el.dataset.count;
-      const o = { v: 0 };
-      gsap.to(o, { v: n, duration: 1.4, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 90%" },
-        onUpdate: () => { el.textContent = Math.round(o.v); } });
-    });
-    ScrollTrigger.create({
-      trigger: "#journey", start: "top top", end: "bottom bottom",
-      onUpdate: self => sync(self.progress),
-      onRefresh: self => sync(self.progress),
-    });
-  } else {
-    document.querySelectorAll(".reveal").forEach(el => { el.style.opacity = 1; el.style.transform = "none"; });
+    gsap.utils.toArray(".move").forEach((m, i) => gsap.from(m, { opacity: 0, y: 40, duration: .5, delay: (i % 3) * .08, ease: "power3.out", scrollTrigger: { trigger: m, start: "top 90%" } }));
   }
 </script>
 
@@ -474,7 +516,9 @@
 
     let shown = makeSet(ids[0]);
     scene.add(shown);
-    ids.slice(1).forEach(id => DEPTHS.forEach(([n]) => tex(`img/layers/${id}_${n}.png`, n !== "sky")));
+    // os outros domínios só quando o navegador estiver à toa
+    const idle = window.requestIdleCallback || (cb => setTimeout(cb, 1500));
+    idle(() => ids.slice(1).forEach(id => DEPTHS.forEach(([n]) => tex(`img/layers/${id}_${n}.png`, n !== "sky"))));
 
     // brasas: pontos quadrados que sobem balançando
     const COUNT = 700;
@@ -558,11 +602,12 @@
     resize();
 
     const clock = new THREE.Clock();
-    let visible = true;
+    let visible = true, onStage = true;
     document.addEventListener("visibilitychange", () => { visible = !document.hidden; });
+    addEventListener("stage", e => { onStage = e.detail; });
     function frame() {
       requestAnimationFrame(frame);
-      if (!visible) return;
+      if (!visible || !onStage) return;
       const t = clock.getElapsedTime();
       emberMat.uniforms.time.value = still ? 0 : t;
       if (!still) {

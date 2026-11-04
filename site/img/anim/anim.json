@@ -1,0 +1,177 @@
+{
+ "boss_emperor": {
+  "w": 144,
+  "h": 128,
+  "n": 10
+ },
+ "boss_wolf_king": {
+  "w": 192,
+  "h": 128,
+  "n": 9
+ },
+ "boss_colossus": {
+  "w": 192,
+  "h": 160,
+  "n": 10
+ },
+ "boss_architect": {
+  "w": 176,
+  "h": 176,
+  "n": 8
+ },
+ "boss_mother_root": {
+  "w": 192,
+  "h": 160,
+  "n": 8
+ },
+ "boss_faceless_king": {
+  "w": 144,
+  "h": 144,
+  "n": 9
+ },
+ "boss_astronomer": {
+  "w": 160,
+  "h": 160,
+  "n": 8
+ },
+ "enemy_penitent": {
+  "w": 80,
+  "h": 72,
+  "n": 8
+ },
+ "enemy_guard": {
+  "w": 96,
+  "h": 72,
+  "n": 8
+ },
+ "enemy_pilgrim": {
+  "w": 64,
+  "h": 64,
+  "n": 4
+ },
+ "enemy_archer": {
+  "w": 64,
+  "h": 64,
+  "n": 6
+ },
+ "enemy_assassin": {
+  "w": 80,
+  "h": 64,
+  "n": 7
+ },
+ "enemy_inquisitor": {
+  "w": 96,
+  "h": 80,
+  "n": 7
+ },
+ "enemy_smith": {
+  "w": 112,
+  "h": 104,
+  "n": 7
+ },
+ "enemy_slag": {
+  "w": 64,
+  "h": 48,
+  "n": 2
+ },
+ "enemy_wolf": {
+  "w": 96,
+  "h": 64,
+  "n": 6
+ },
+ "enemy_scribe": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_gargoyle": {
+  "w": 80,
+  "h": 64,
+  "n": 5
+ },
+ "enemy_thorn": {
+  "w": 64,
+  "h": 64,
+  "n": 4
+ },
+ "enemy_moss_beast": {
+  "w": 96,
+  "h": 72,
+  "n": 7
+ },
+ "enemy_masked": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_herald": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_automaton": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_star": {
+  "w": 64,
+  "h": 64,
+  "n": 6
+ },
+ "enemy_mason": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_seed_pod": {
+  "w": 64,
+  "h": 64,
+  "n": 9
+ },
+ "enemy_dancer": {
+  "w": 80,
+  "h": 80,
+  "n": 10
+ },
+ "enemy_lens": {
+  "w": 64,
+  "h": 64,
+  "n": 7
+ },
+ "hero_run": {
+  "w": 64,
+  "h": 64,
+  "n": 8
+ },
+ "hero_roll": {
+  "w": 64,
+  "h": 64,
+  "n": 6
+ },
+ "hero_flip": {
+  "w": 64,
+  "h": 64,
+  "n": 8
+ },
+ "hero_dash": {
+  "w": 64,
+  "h": 64,
+  "n": 6
+ },
+ "hero_combo": {
+  "w": 64,
+  "h": 64,
+  "n": 18
+ },
+ "hero_smash": {
+  "w": 64,
+  "h": 64,
+  "n": 12
+ },
+ "hero_idle": {
+  "w": 64,
+  "h": 64,
+  "n": 20
+ }
+}
