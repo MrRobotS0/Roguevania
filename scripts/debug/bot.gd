@@ -11,6 +11,8 @@ extends PlayerInput
 const ARRIVE := 10.0
 const STUCK_JUMP := 4.0
 const STUCK_SKIP := 11.0
+const EXPLORE_BUDGET := 150.0    # s no andar caçando coisas; depois, só a saída
+const ITEM_RANGE := 360.0        # só desvia por item/altar até essa distância
 
 var player: Player
 var level: Level
@@ -34,8 +36,10 @@ var _reacted := {}               # inimigo -> instante do aviso já decidido
 var _target: Enemy
 var _target_clock := 0.0
 var _ignored := {}               # inimigo -> até quando ignorar
+var _fight_time := {}            # inimigo -> segundos brigando com ele
 var _interact_wait := 0.0
 var _why := ""                   # o que decidiu no último quadro (para o relatório de travas)
+var _portal_to: Portal           # portal de destino quando o objetivo atual é um portal
 var trace := false
 
 
@@ -48,6 +52,7 @@ func setup(p: Player, lv: Level) -> void:
 	_skip.clear()
 	_reacted.clear()
 	_ignored.clear()
+	_fight_time.clear()
 	_progress_clock = 0.0
 	_best_left = 999999
 
@@ -55,7 +60,7 @@ func setup(p: Player, lv: Level) -> void:
 func poll() -> void:
 	_frame += 1
 	if trace and _frame % 300 == 0 and player and is_instance_valid(player):
-		print("    t%d %s cel %s alvo %s %s caminho %d | %s" % [int(Run.stage_time), level.kind, nav.cell_of(player.global_position),
+		print("    t%d hp%d %s cel %s alvo %s %s caminho %d | %s" % [int(Run.stage_time), player.hp, level.kind, nav.cell_of(player.global_position),
 			(_goal.get_script() as Script).get_global_name() if _goal and is_instance_valid(_goal) and _goal.get_script() else "-",
 			nav.cell_of(_goal.global_position) if _goal and is_instance_valid(_goal) else Vector2i.ZERO, _path.size(), _why])
 	_want.clear()
@@ -125,7 +130,11 @@ func _pick_target(delta: float) -> Enemy:
 			continue
 		var d := e.center() - player.center()
 		var boss_room := level.is_boss_room and e == level.boss
-		if not boss_room and (absf(d.x) > 170.0 or absf(d.y) > 44.0):
+		# quem está mirando no herói vira alvo de mais longe (como um jogador faria)
+		var aiming := e.state == "aim"
+		# (só no mesmo nível: em cima de uma plataforma ele não alcança, segue o caminho)
+		var reach := Vector2(260.0, 44.0) if aiming else Vector2(170.0, 44.0)
+		if not boss_room and (absf(d.x) > reach.x or absf(d.y) > reach.y):
 			continue
 		if not boss_room and not level.room.clear_line(player.center(), e.center()):
 			continue
@@ -133,13 +142,12 @@ func _pick_target(delta: float) -> Enemy:
 		if score < best_d:
 			best = e
 			best_d = score
-	if best != _target:
-		_target = best
-		_target_clock = 0.0
-	elif best:
-		_target_clock += delta
+	_target = best
+	if best:
+		# tempo de briga somado por inimigo (o alvo alterna quando ele sai da mira)
+		_fight_time[best] = float(_fight_time.get(best, 0.0)) + delta
 		# briga longa demais com alguém que não dá para alcançar: deixa para lá
-		if _target_clock > 25.0 and not level.is_boss_room:
+		if _fight_time[best] > 25.0 and not level.is_boss_room:
 			_ignored[best] = Time.get_ticks_msec() + 10000
 			_target = null
 			return null
@@ -147,13 +155,12 @@ func _pick_target(delta: float) -> Enemy:
 
 
 func _dodge_projectiles() -> bool:
-	if not player.is_on_floor():
-		return false
+	# vale no ar também: o herói tem esquiva no ar, e os tiros pegam no meio do pulo
 	for p: Node in level.get_children():
 		if not (p is Projectile) or p.team != "enemy":
 			continue
 		var to_me: Vector2 = player.center() - p.global_position
-		if to_me.length() > 46.0 or p.velocity.dot(to_me) <= 0.0:
+		if to_me.length() > 70.0 or p.velocity.dot(to_me) <= 0.0:
 			continue
 		if _decide(p):
 			_dir(signf(p.velocity.x))
@@ -210,6 +217,13 @@ func _fight(e: Enemy) -> void:
 		return
 	var reach: Vector2 = data.moves[0]["reach"]
 	if dist > reach.x * 0.8 or absf(d.y) > 20.0:
+		# atirador em outro nível: não dá para alcançar daqui, segue o caminho
+		if absf(d.y) > 20.0 and e.state in ["aim", "cooldown"]:
+			_ignored[e] = Time.get_ticks_msec() + 6000
+			return
+		# não persegue para fora da borda (cair do degrau custa a subida de volta)
+		if player.is_on_floor() and not level.room.is_solid_at(player.global_position + Vector2(toward * 12.0, 6.0)):
+			return
 		_dir(toward)
 		if absf(d.y) > 20.0 and d.y < 0.0 and player.is_on_floor() and dist < 40.0:
 			_press("jump")
@@ -244,6 +258,14 @@ func _navigate(delta: float) -> void:
 			return
 	var target := _goal.global_position
 	var close := absf(target.x - player.global_position.x) < ARRIVE and absf(target.y - player.global_position.y) < 20.0
+	if close and player.is_on_floor() and _goal is Portal:
+		# o menu do portal é do jogador; o robô viaja direto para o destino escolhido
+		if _portal_to and is_instance_valid(_portal_to):
+			(_goal as Portal).travel(player, _portal_to)
+		_portal_to = null
+		_goal = null
+		_path.clear()
+		return
 	if close and player.is_on_floor():
 		if _interact_wait <= 0.0:
 			_press("interact")
@@ -340,6 +362,8 @@ func _wanted(it: Node2D) -> bool:
 		return false
 	if it is ExitGate:
 		return true
+	if it is Portal:
+		return _portal_to != null and it == _goal
 	if not it.has_method("can_interact") or not it.call("can_interact", player):
 		return false
 	if it is Pickup:
@@ -376,12 +400,18 @@ func _choose_goal() -> void:
 			gates.append(it)
 			continue
 		var d := it.global_position.distance_to(player.global_position)
+		# como um jogador: o que está perto, e só enquanto há tempo para explorar
+		if d > ITEM_RANGE or Run.stage_time > EXPLORE_BUDGET:
+			continue
 		if d < best_d:
 			best = it
 			best_d = d
 	if best == null and not gates.is_empty():
 		gates.sort_custom(func(a: Node2D, b: Node2D) -> bool: return a.global_position.x < b.global_position.x)
 		best = gates[exit_pick % gates.size()] if level.kind == "passagem" else gates[0]
+		var shortcut := _portal_toward(best.global_position)
+		if shortcut:
+			best = shortcut
 	if best == null:
 		return
 	_goal = best
@@ -390,3 +420,28 @@ func _choose_goal() -> void:
 	_progress_clock = 0.0
 	if not nav.knows(here):
 		return
+
+
+# Atalho por portal: o portal já visto mais perto do herói, se algum outro
+# portal visto deixa bem mais perto do destino. Fica guardado em _portal_to.
+func _portal_toward(dest: Vector2) -> Portal:
+	_portal_to = null
+	var here := player.global_position
+	var direct := here.distance_to(dest)
+	var near_me: Portal = null
+	var near_goal: Portal = null
+	for n in level.get_tree().get_nodes_in_group("portals"):
+		var p := n as Portal
+		if not p.found:
+			continue
+		if near_me == null or p.global_position.distance_to(here) < near_me.global_position.distance_to(here):
+			near_me = p
+		if near_goal == null or p.global_position.distance_to(dest) < near_goal.global_position.distance_to(dest):
+			near_goal = p
+	if near_me == null or near_goal == null or near_me == near_goal:
+		return null
+	var via := here.distance_to(near_me.global_position) + near_goal.global_position.distance_to(dest)
+	if via > direct * 0.6:
+		return null
+	_portal_to = near_goal
+	return near_me
