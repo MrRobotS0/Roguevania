@@ -69,6 +69,14 @@ static func _color_texture(sheet: String, src: Image, palette: PackedColorArray,
 	var out := src.duplicate() as Image
 	var key_hue := float(meta(sheet).get("key_hue", -1.0))
 	var recolor := palette.size() > 3 and key_hue >= 0.0
+	# paleta de uma cor só = tingir tudo na direção dela (alfa = quanto)
+	var tint := palette.size() == 1
+	if not (white or tint or recolor):
+		# arte pronta sem troca de cor: a folha vale como está
+		var plain := ImageTexture.create_from_image(out)
+		_cache[key] = plain
+		_images[key] = out
+		return plain
 	var target := palette[3] if recolor else Color.WHITE
 	for y in out.get_height():
 		for x in out.get_width():
@@ -77,6 +85,9 @@ static func _color_texture(sheet: String, src: Image, palette: PackedColorArray,
 				continue
 			if white:
 				out.set_pixel(x, y, Color(1, 1, 1, c.a))
+			elif tint:
+				var t := palette[0]
+				out.set_pixel(x, y, Color(c.lerp(t, t.a), c.a))
 			elif recolor and c.s > 0.25 and absf(angle_difference(c.h * TAU, key_hue * TAU)) < 0.35:
 				out.set_pixel(x, y, Color.from_hsv(target.h, clampf(target.s * c.s / 0.75, 0.0, 1.0), clampf(c.v * (0.45 + target.v), 0.0, 1.0), c.a))
 	var tex := ImageTexture.create_from_image(out)

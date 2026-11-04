@@ -40,6 +40,7 @@ var _tex: ImageTexture
 var _white: ImageTexture
 var _warn: ImageTexture
 var _frame_size := Vector2i(32, 32)
+var _pal := PackedColorArray()
 
 
 func _ready() -> void:
@@ -64,12 +65,21 @@ func _ready() -> void:
 func _setup_sprite() -> void:
 	if look == "":
 		look = sheet
-	var pal := EnemyLooks.palette(look)
-	var warn := EnemyLooks.palette(look, true)
-	if elite:
-		# elite: contorno em brasa
-		pal[1] = Color("8a2a10")
-		warn[1] = Color("8a2a10")
+	var pal := PackedColorArray()
+	var warn := PackedColorArray()
+	if SpriteSheet.meta(sheet).get("color", false):
+		# arte pronta em cor cheia: o aviso de golpe esquenta o corpo inteiro
+		var hot := Palette.TELEGRAPH
+		hot.a = 0.5
+		warn = PackedColorArray([hot])
+	else:
+		pal = EnemyLooks.palette(look)
+		warn = EnemyLooks.palette(look, true)
+		if elite:
+			# elite: contorno em brasa
+			pal[1] = Color("8a2a10")
+			warn[1] = Color("8a2a10")
+	_pal = pal
 	_tex = SpriteSheet.texture(sheet, pal)
 	_warn = SpriteSheet.texture(sheet, warn)
 	_white = SpriteSheet.texture(sheet, pal, true)
@@ -113,7 +123,7 @@ func sprite_parts() -> Array:
 	var out: Array = []
 	if body == null or not body.visible:
 		return out
-	var img := SpriteSheet.image(sheet, EnemyLooks.palette(look))
+	var img := SpriteSheet.image(sheet, _pal)
 	var r := body.region_rect
 	for y in range(0, int(r.size.y), 2):
 		for x in range(0, int(r.size.x), 2):

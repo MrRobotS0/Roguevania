@@ -1,52 +1,23 @@
 {
- "size": 32,
  "w": 32,
- "h": 24,
+ "h": 31,
+ "size": 32,
+ "color": true,
  "anims": {
   "idle": {
    "row": 0,
-   "frames": 2,
-   "fps": 4,
-   "hands": [
-    [
-     [
-      0,
-      -12
-     ]
-    ],
-    [
-     [
-      0,
-      -12
-     ]
-    ]
-   ]
+   "frames": 3,
+   "fps": 6
   },
   "hop": {
    "row": 1,
    "frames": 1,
-   "fps": 1,
-   "hands": [
-    [
-     [
-      0,
-      -12
-     ]
-    ]
-   ]
+   "fps": 8
   },
   "land": {
    "row": 2,
    "frames": 1,
-   "fps": 1,
-   "hands": [
-    [
-     [
-      0,
-      -12
-     ]
-    ]
-   ]
+   "fps": 8
   }
  }
 }
