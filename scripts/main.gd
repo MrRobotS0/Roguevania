@@ -175,6 +175,9 @@ func _on_title_option(id: String) -> void:
 			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
 		"codex":
 			open_codex()
+		"credits":
+			var file := "res://content/creditos%s.txt" % ("_en" if Lang.lang == "en" else "")
+			menu.open_text("CRÉDITOS", FileAccess.get_file_as_string(file))
 		"daily":
 			if _abandon_saved_first(_on_title_option.bind("daily")):
 				return

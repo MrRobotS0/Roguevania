@@ -17,6 +17,7 @@ const TITLE_OPTIONS := [
 	["codex", "CÓDICE"],
 	["stats", "ESTATÍSTICAS"],
 	["controls", "COMANDOS"],
+	["credits", "CRÉDITOS"],
 	["quit", "SAIR"],
 ]
 

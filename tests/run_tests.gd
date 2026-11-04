@@ -145,6 +145,7 @@ func _ready() -> void:
 	await _case("cromas: trancados, comprados na Vigia, vestidos e salvos", _chromas)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 	await _case("HUD: cada domínio tem a sua pele e ela cabe na tela", _hud_skins)
+	await _case("créditos: a arte CC-BY aparece no título, nos dois idiomas", _credits)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1384,3 +1385,15 @@ func _hud_skins() -> void:
 		hud.queue_redraw()
 		await _frames(2)
 	hud.queue_free()
+
+
+func _credits() -> void:
+	var ids := Screen.TITLE_OPTIONS.map(func(o: Array) -> String: return String(o[0]))
+	_check(ids.has("credits"), "o título não tem CRÉDITOS")
+	for f in ["res://content/creditos.txt", "res://content/creditos_en.txt"]:
+		var text := FileAccess.get_file_as_string(f)
+		for who in ["ANSIMUZ", "THEBLACKSWORD", "REDSHRIKE", "EMCEE FLESHER", "BALMER", "CALCIUMTRICE", "TIOPALADA"]:
+			_check(text.contains(who), "%s sem crédito para %s" % [f, who])
+	# todo inimigo com arte nova tem a folha colorida e os nomes que o script pede
+	for sheet in ["penitent", "emperor", "colossus", "mother_root", "architect", "faceless_king", "astronomer", "wolf_king"]:
+		_check(SpriteSheet.meta(sheet).get("color", false), "%s ainda é a folha antiga" % sheet)
