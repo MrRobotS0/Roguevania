@@ -22,6 +22,8 @@ var ghost := false        # true = o herói atravessa (ex.: assassino enterrado)
 var uses_gravity := true
 var unstoppable := false   # chefes: golpe comum não interrompe
 var tier_scaling := true   # vida cresce com a profundidade do andar (chefes já vêm prontos)
+var agile := true          # anda no chão: pula degrau e desce de plataforma atrás do herói
+var accel := 1800.0        # quanto demora para mudar de velocidade (dá peso ao corpo)
 
 var _stun := 0.0
 var _shown_hp := 0.0
@@ -149,6 +151,8 @@ func hurt(d: Damage) -> bool:
 		velocity.x = d.dir * d.knock / weight
 		if d.lift > 0.0:
 			velocity.y = -d.lift / weight
+		elif uses_gravity and is_on_floor() and d.knock > 60.0:
+			velocity.y = -minf(d.knock * 0.4, 110.0) / weight
 		Fx.burst(center(), Palette.HIT, 12 if d.crit else 6, 180.0 if d.crit else 120.0)
 		Fx.streak(center(), d.dir, Palette.UI_CRIT if d.crit else Palette.SLASH)
 		Fx.impact(center() + Vector2(-d.dir * 3.0, 0), Palette.UI_CRIT if d.crit else Palette.FLASH, d.crit)
@@ -213,7 +217,11 @@ func _physics_process(delta: float) -> void:
 		if state_time >= _stun:
 			set_state("chase")
 	else:
+		var before := velocity.x
 		think(delta)
+		# andar ganha aceleração; bote e investida (salto grande) continuam secos
+		if uses_gravity and accel > 0.0 and absf(velocity.x - before) < 200.0:
+			velocity.x = move_toward(before, velocity.x, accel * delta)
 	move_and_slide()
 	if body:
 		_update_sprite()
@@ -261,12 +269,22 @@ func sees_player(range_x: float, range_y: float) -> bool:
 	return room.clear_line(eye(), player.center())
 
 
-# Parede ou buraco à frente: não anda para lá.
+# Parede ou buraco à frente: não anda para lá. Quem é ágil, indo atrás do
+# herói, pula um degrau de até 2 blocos e se joga da beirada se ele está embaixo.
 func blocked(dir: int) -> bool:
 	var front := global_position.x + dir * (w * 0.5 + 2.0)
 	var wall := room.is_solid_at(Vector2(front, global_position.y - 4.0))
 	var floor_ahead := room.is_ground_at(Vector2(front, global_position.y + 4.0))
-	return wall or not floor_ahead
+	var chasing := agile and uses_gravity and player != null and player.alive() and signf(to_player().x) == dir
+	if wall:
+		if chasing and is_on_floor() and to_player().y < 8.0 				and not room.is_solid_at(Vector2(front, global_position.y - 36.0)) 				and not room.is_solid_at(Vector2(global_position.x, global_position.y - h - 30.0)):
+			var step := 2 if room.is_solid_at(Vector2(front, global_position.y - 20.0)) else 1
+			velocity.y = -330.0 if step == 1 else -430.0
+			return false
+		return true
+	if not floor_ahead:
+		return not (chasing and to_player().y > 20.0 and absf(to_player().x) < 160.0)
+	return false
 
 
 func front_rect(width: float, height: float, lift := 2.0) -> Rect2:
