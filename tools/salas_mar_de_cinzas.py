@@ -66,7 +66,8 @@ def rooms():
     out.append(r)
 
     r = R("combate_fortaleza", "combate", 48, 18, head="Muralha de uma Casa nobre: atiradores no adarve")
-    r.door("L", 13, 4).door("R", 13, 4).fill(12, 35, 11, 11, "=").fill(11, 11, 11, 16).fill(36, 36, 11, 16)
+    r.door("L", 13, 4).door("R", 13, 4).fill(12, 35, 11, 11, "=").fill(11, 11, 11, 13).fill(36, 36, 11, 13)
+    r.fill(7, 9, 14, 14, "=").fill(38, 40, 14, 14, "=")
     r.fill(20, 26, 8, 8, "=").fill(21, 25, 5, 5, "=").fill(22, 24, 2, 2, "=").door("T", 22, 3)
     r.put(16, 10, "r").put(31, 10, "r").put(24, 16, "e").put(42, 16, "e").put(5, 16, "e")
     out.append(r)
@@ -74,6 +75,7 @@ def rooms():
     r = R("combate_templo", "combate", 38, 16, head="Templo profético; o chão cede no meio (desvio para baixo)")
     r.door("L", 11, 4).door("R", 11, 4).door("B", 17, 3).fill(12, 13, 9, 14).fill(24, 25, 9, 14)
     r.fill(15, 22, 6, 6, "=").put(8, 14, "e").put(30, 14, "e").put(12, 8, "r")
+    r.fill(9, 11, 12, 12, "=").fill(14, 16, 12, 12, "=").fill(21, 23, 12, 12, "=").fill(26, 28, 12, 12, "=")
     out.append(r)
 
     r = R("combate_vidro", "combate", 42, 14, weight=7, head="Campo de vidro: o chão estala antes de explodir")

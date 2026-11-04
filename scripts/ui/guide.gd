@@ -1,10 +1,9 @@
 class_name Guide
 extends Control
 
-# Dicas da primeira partida: cada uma aparece uma vez na vida, na hora em que
-# faz sentido (o primeiro inimigo, o primeiro aviso de golpe, a primeira
-# Vigia...), e some quando o jogador faz o que ela ensina. Ficam no canto
-# esquerdo, embaixo da vida, sem pausar nada. Desliga em OPÇÕES > DICAS.
+# Dicas da primeira partida: só a tecla de cada comando, uma vez na vida, na
+# hora em que faz falta (o primeiro inimigo, o primeiro aviso de golpe), e
+# somem quando o jogador faz o que ela mostra. Desliga em OPÇÕES > DICAS.
 #
 # No texto, {acao} vira a tecla daquela ação no aparelho em uso.
 
@@ -12,25 +11,13 @@ const HOLD := 7.0
 const MIN_SHOW := 1.6
 const SLIDE := 0.2
 const FADE := 0.3
-const NEAR := 80.0
 
 const HINTS := {
-	"andar": "{walk} ANDA   {jump} PULA\nSEGURE {jump} PARA PULAR MAIS ALTO",
-	"atacar": "{attack1} ATACA COM A ARMA 1\n{attack2} ATACA COM A ARMA 2",
-	"rolar": "O \"!\" AVISA QUE VEM GOLPE\n{roll} ROLA: INVENCÍVEL NA ROLAGEM",
-	"curar": "{heal} BEBE UM FRASCO: CURA METADE\nSÃO POUCOS, GUARDE PARA A HORA CERTA",
-	"essencia": "ESSÊNCIA: GASTE COM A VIGIA\nMORRER COM ELA NO BOLSO PERDE TUDO",
-	"ouro": "OURO SÓ VALE NESTA PARTIDA\nGASTE COM O MERCADOR",
-	"planta": "PLANTA! ENTREGUE À VIGIA E O ITEM\nPASSA A EXISTIR EM TODA PARTIDA",
-	"vigia": "A VIGIA GUARDA O QUE FICA PARA SEMPRE\nMELHORIAS, PLANTAS E APARÊNCIAS",
-	"mutacao": "MUTAÇÃO: UM BÔNUS SÓ DESTA PARTIDA\nCABEM ATÉ 3",
-	"fragmento": "FRAGMENTO DIVINO: +1 NUM ATRIBUTO\nCADA ARMA CRESCE COM UM DELES",
-	"runa": "RUNA: UM PODER QUE FICA PARA SEMPRE\nABRE CAMINHOS NOS PRÓXIMOS ANDARES",
-	"mercador": "O MERCADOR TROCA OURO POR ARMAS\nE CURA. O ESTOQUE MUDA A CADA ANDAR",
-	"mapa": "SEGURE {map} PARA VER O MAPA\nDESVIOS ESCONDEM TESOURO",
-	"mergulho": "NO AR, {down} + {attack1} MERGULHA\nE ESMAGA QUEM ESTÁ EMBAIXO",
-	"relogio": "PORTA DO RELÓGIO: SÓ ABRE PARA QUEM\nCHEGA RÁPIDO. A CONTAGEM ESTÁ NO ALTO",
-	"salvar": "A PARTIDA SE SALVA A CADA ANDAR\nPAUSA ({cancel}) > SALVAR E SAIR",
+	"andar": "{walk} ANDAR   {jump} PULAR",
+	"atacar": "{attack1} {attack2} ATACAR",
+	"rolar": "{roll} ESQUIVAR",
+	"curar": "{heal} CURAR",
+	"mergulho": "NO AR: {down} + {attack1}",
 }
 
 var level: Level
@@ -107,17 +94,8 @@ func _want(id: String) -> void:
 
 # Quando cada dica merece aparecer.
 func _watch(p: Player) -> void:
-	match level.kind:
-		"gerada":
-			if Run.stage_time > 0.6:
-				_want("andar")
-			if Run.stage_time > 50.0:
-				_want("mapa")
-			if Run.stage_time < 4.0 and not get_tree().get_nodes_in_group("timed_doors").is_empty():
-				_want("relogio")
-		"passagem":
-			if Run.stage_time > 4.0:
-				_want("salvar")
+	if level.kind == "gerada" and Run.stage_time > 0.6:
+		_want("andar")
 	for e: Enemy in level.enemies():
 		if not e.alive():
 			continue
@@ -128,27 +106,8 @@ func _watch(p: Player) -> void:
 			_want("rolar")
 	if p.hp < p.max_hp * 0.45 and p.flasks > 0:
 		_want("curar")
-	if p.essence > 0:
-		_want("essencia")
-	if p.gold > 0 and seen("essencia"):
-		_want("ouro")
-	if not p.blueprints.is_empty():
-		_want("planta")
 	if p.kills >= 4:
 		_want("mergulho")
-	for it: Node2D in get_tree().get_nodes_in_group("interactables"):
-		if not it.visible or it.global_position.distance_to(p.global_position) > NEAR:
-			continue
-		if it is Keeper:
-			_want("vigia")
-		elif it is MutationAltar:
-			_want("mutacao")
-		elif it is Altar:
-			_want("fragmento")
-		elif it is RuneAltar:
-			_want("runa")
-		elif it is Merchant:
-			_want("mercador")
 
 
 # A dica sai mais cedo quando o jogador já fez o que ela pede.

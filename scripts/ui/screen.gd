@@ -34,7 +34,6 @@ func _ready() -> void:
 func show_title() -> void:
 	mode = "title"
 	_index = 0
-	var stats: Dictionary = Meta.data
 	var saved := Run.saved()
 	_options = TITLE_OPTIONS.filter(func(o: Array) -> bool: return o[0] != "continue" or not saved.is_empty())
 	lines = []
@@ -43,8 +42,6 @@ func show_title() -> void:
 		if saved["in_passage"]:
 			where = "A Passagem"
 		lines = [["PARTIDA SALVA: %s   ·   %s" % [where.to_upper(), _clock(float(saved["time"]))], Palette.GOLD]]
-	elif int(stats["runs"]) > 0:
-		lines = [["PARTIDAS %d   ·   VITÓRIAS %d   ·   MAIS ABATES %d" % [stats["runs"], stats["wins"], stats["best_kills"]], Palette.UI_DIM]]
 	_open()
 
 
@@ -55,8 +52,6 @@ func show_death(p: Player, place: String) -> void:
 		["%d INIMIGOS DERROTADOS   ·   %s" % [p.kills, _clock(Run.time)], Palette.UI_TEXT],
 		["%d DE ESSÊNCIA SE PERDEU NA CINZA" % p.essence, Palette.ESSENCE],
 	]
-	if int(Meta.data["deaths"]) <= 2:
-		lines.append(["O MAPA SE REFAZ A CADA PARTIDA. O QUE A VIGIA GUARDOU FICA.", Palette.UI_DIM])
 	_open()
 
 
@@ -138,7 +133,6 @@ func _draw() -> void:
 			_embers(size)
 			PixelFont.body_centered(self, "O LEGADO", Vector2(mid, 46), Palette.UI_TEXT, 3)
 			PixelFont.body_centered(self, "DOS DEUSES", Vector2(mid, 74), Palette.GOLD, 3)
-			PixelFont.body_centered(self, "OS DEUSES SUMIRAM. SEUS DOMÍNIOS FICARAM.", Vector2(mid, 100), Palette.UI_DIM)
 			_title_menu(Vector2(mid, 118))
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
@@ -150,8 +144,6 @@ func _draw() -> void:
 		y += PixelFont.BODY_LINE
 	if mode != "title" and _t > 0.6 and int(_t * 2.0) % 2 == 0:
 		PixelFont.body_centered(self, "%s  NOVA PARTIDA" % Controls.hint("confirm"), Vector2(mid, size.y - 36), Palette.UI_TEXT)
-	if mode == "title":
-		PixelFont.draw_centered(self, "NOME, ARTE E SONS PROVISÓRIOS", Vector2(mid, size.y - 12), Palette.UI_FRAME.lightened(0.3))
 
 
 func _title_menu(top: Vector2) -> void:

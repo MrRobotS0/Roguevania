@@ -96,6 +96,10 @@ class Room:
                 top = min(y, ty) - 1
                 if not self.clear_column(x, y, top) or not self.clear_column(tx, ty, top):
                     continue
+                # as colunas do meio também: ninguém atravessa parede no ar
+                step = 1 if tx > x else -1
+                if any(not self.clear_column(mx, top, top + 1) for mx in range(x + step, tx, step)):
+                    continue
                 out.append((tx, ty))
         return out
 
@@ -181,7 +185,17 @@ def check_rows(rows):
     for side, run in ds:
         if not door_exit_ok(room, side, run, reach):
             problems.append("a porta %s%s não se alcança" % (side, run[0]))
-    # quem entra por qualquer porta precisa conseguir sair (nada de ficar preso)
+    # O gerador entra pela esquerda ou pelo teto e sai pela direita ou pelo
+    # chão; os desvios se prendem a qualquer porta que sobrou. Então quem
+    # entra por L ou T tem que chegar a TODAS as outras portas.
+    for i, (side, run) in enumerate(ds):
+        if side not in "LT" or not entries[i]:
+            continue
+        r = room.reach(entries[i])
+        for j, (s2, r2) in enumerate(ds):
+            if j != i and not door_exit_ok(room, s2, r2, r):
+                problems.append("entrando por %s%s não se chega à porta %s%s" % (side, run[0], s2, r2[0]))
+    # quem volta de um desvio (qualquer porta) precisa conseguir seguir
     forward = [(side, run) for side, run in ds if side in "RB"]
     for i, (side, run) in enumerate(ds):
         if not entries[i]:

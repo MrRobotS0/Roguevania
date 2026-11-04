@@ -80,6 +80,16 @@ func _moves(x: int, y: int) -> Array:
 			var top := mini(y, ty) - 1
 			if not _clear_column(x, y, top) or not _clear_column(tx, ty, top):
 				continue
+			var blocked := false
+			var step := 1 if tx > x else -1
+			var mx := x + step
+			while mx != tx:
+				if not _clear_column(mx, top, top + 1):
+					blocked = true
+					break
+				mx += step
+			if blocked:
+				continue
 			if absi(dx) <= 1 and dy <= 0:
 				continue
 			out.append([Vector2i(tx, ty), "jump"])

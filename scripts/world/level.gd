@@ -304,7 +304,6 @@ func _on_elite_killed(e: Enemy) -> void:
 	p.position = e.global_position
 	add_child.call_deferred(p)
 	drop_blueprint(e.center() + Vector2(0, -8))
-	Fx.toast("O ELITE DEIXOU ALGO PARA TRÁS")
 
 
 func _on_boss_killed(_e: Enemy) -> void:

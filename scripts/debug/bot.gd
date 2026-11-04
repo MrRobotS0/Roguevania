@@ -35,6 +35,8 @@ var _target: Enemy
 var _target_clock := 0.0
 var _ignored := {}               # inimigo -> até quando ignorar
 var _interact_wait := 0.0
+var _why := ""                   # o que decidiu no último quadro (para o relatório de travas)
+var trace := false
 
 
 func setup(p: Player, lv: Level) -> void:
@@ -52,6 +54,10 @@ func setup(p: Player, lv: Level) -> void:
 
 func poll() -> void:
 	_frame += 1
+	if trace and _frame % 300 == 0 and player and is_instance_valid(player):
+		print("    t%d %s cel %s alvo %s %s caminho %d | %s" % [int(Run.stage_time), level.kind, nav.cell_of(player.global_position),
+			(_goal.get_script() as Script).get_global_name() if _goal and is_instance_valid(_goal) and _goal.get_script() else "-",
+			nav.cell_of(_goal.global_position) if _goal and is_instance_valid(_goal) else Vector2i.ZERO, _path.size(), _why])
 	_want.clear()
 	if player and is_instance_valid(player) and player.alive() and level and is_instance_valid(level):
 		_think(player.get_physics_process_delta_time())
@@ -86,11 +92,14 @@ func _think(delta: float) -> void:
 	if player.state == Player.State.CLIMB or player.state == Player.State.HEAL:
 		return
 	if _dodge_projectiles():
+		_why = "desviando"
 		return
 	var e := _pick_target(delta)
 	if e:
+		_why = "lutando com " + e.title
 		_fight(e)
 		return
+	_why = "andando"
 	if player.hp < player.max_hp * 0.5 and player.flasks > 0 and player.is_on_floor() and _nearest_enemy_distance() > 140.0:
 		_press("heal")
 		return
@@ -314,7 +323,7 @@ func _watch_progress(delta: float, here: Vector2i) -> void:
 	_progress_clock += delta
 	if _progress_clock > STUCK_SKIP and not _path.is_empty():
 		# preso: anota onde foi e empurra o herói para o próximo passo
-		stuck_events.append([level.kind, here])
+		stuck_events.append([level.kind, here, _path.slice(0, 3), player.global_position.round(), "%s estado %d %s" % [_goal.name if _goal else "", player.state, _why]])
 		player.global_position = BotNav.center_of(_path[0][0])
 		player.velocity = Vector2.ZERO
 		_progress_clock = 0.0

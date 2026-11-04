@@ -19,6 +19,7 @@ import sys
 import zlib
 from collections import deque
 
+from salas_andares import top_ladders
 from salas_mar_de_cinzas import R
 from validar_salas import Room, check_rows, doors, door_entry, door_exit_ok
 
@@ -53,7 +54,7 @@ def torre():
 
     r = sala("combate_escadaria_babel", 34, 26, "Torre: escadaria em lances, e a varanda quebrada lá no alto")
     r.door("L", 21, 4).door("R", 3, 4).door("B", 28, 3)
-    degraus(r, 8, 23, 6)
+    degraus(r, 8, 22, 5)
     r.fill(26, 32, 18, 18)
     degraus(r, 26, 15, 6, lado=-1)
     r.fill(1, 8, 10, 10)
@@ -198,6 +199,7 @@ def jardim():
     r.door("L", 15, 4).door("R", 13, 4).door("T", 30, 3)
     for x0, x1, top in ((6, 9, 18), (14, 17, 17), (18, 22, 18), (27, 30, 18), (34, 42, 17)):
         r.fill(x0, x1, top, 18)
+    r.fill(26, 28, 11, 11, "=")
     r.fill(10, 14, 14, 14).fill(20, 24, 11, 11).fill(30, 34, 14, 14)
     r.fill(26, 28, 8, 8, "=").fill(29, 32, 5, 5, "=").fill(27, 30, 3, 3, "=")
     solo(r, 12, 1, "r")
@@ -339,8 +341,8 @@ def observatorio():
     for y, larg in enumerate((18, 14, 11, 8, 6, 4, 3, 2, 1), start=1):
         r.fill(1, larg, y, y).fill(54 - larg + 1, 54, y, y)
     r.fill(25, 30, 17, 22)
-    r.fill(8, 12, 20, 20, "=").fill(16, 20, 17, 17, "=")
-    r.fill(43, 47, 20, 20, "=").fill(35, 39, 17, 17, "=")
+    r.fill(10, 14, 20, 20, "=").fill(16, 20, 17, 17, "=")
+    r.fill(41, 45, 20, 20, "=").fill(35, 39, 17, 17, "=")
     r.fill(21, 24, 14, 14, "=").fill(31, 34, 14, 14, "=")
     r.fill(15, 19, 11, 11, "=").fill(36, 40, 11, 11, "=")
     r.fill(21, 25, 8, 8, "=").fill(30, 34, 8, 8, "=")
@@ -585,6 +587,9 @@ if __name__ == "__main__":
         segredos = 0
         for r in plantas():
             rows = ["".join(row) for row in r.g]
+            if any(p for p in check_rows(rows)[0] if "porta T" in p):
+                top_ladders(r)
+                rows = ["".join(row) for row in r.g]
             if bid == "jardim_primordial":
                 rows = organico(rows, zlib.crc32(r.name.encode()))
             if segredos < SEGREDOS_POR_DOMINIO and r.kind == "combate":

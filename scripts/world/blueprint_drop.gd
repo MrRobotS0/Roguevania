@@ -30,7 +30,7 @@ func _physics_process(delta: float) -> void:
 		player.gear_changed.emit()
 		Sfx.play("blueprint", -4.0)
 		Fx.burst(global_position, Palette.GLASS, 14, 90.0, 0.5, -40.0)
-		Fx.toast("PLANTA: %s · LEVE ATÉ A VIGIA" % String(item.title).to_upper())
+		Fx.toast("PLANTA: %s" % String(item.title).to_upper())
 		queue_free()
 	queue_redraw()
 

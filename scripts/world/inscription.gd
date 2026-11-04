@@ -25,7 +25,7 @@ func interact(_p: Player) -> void:
 	read = true
 	Sfx.play("page", -4.0)
 	if Meta.note_lore(text):
-		Fx.toast("NOVA INSCRIÇÃO NO CÓDICE")
+		pass
 	menu().open_text("INSCRIÇÃO", text)
 
 

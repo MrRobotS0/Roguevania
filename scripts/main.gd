@@ -173,7 +173,6 @@ func _on_title_option(id: String) -> void:
 			screen.close()
 			Run.new_daily()
 			_load_stage()
-			Fx.toast("DESAFIO DO DIA " + Run.daily + " · MESMA SEMENTE PARA TODOS")
 		"quit":
 			get_tree().quit()
 
@@ -255,7 +254,6 @@ func continue_run() -> void:
 	screen.close()
 	Run.restore(s)
 	_load_stage()
-	Fx.toast("A PARTIDA CONTINUA DE ONDE PAROU")
 
 
 func start_run(seed_value := -1, heat := 0) -> void:
@@ -295,7 +293,8 @@ func _load_stage() -> void:
 	hud.bind(level.player, level.boss)
 	guide.bind(level)
 	level.player.died.connect(_on_player_died)
-	level.exit_used.connect(_on_exit)
+	# a saída é usada no meio do passo de física do herói: troca de andar no fim do quadro
+	level.exit_used.connect(_on_exit, CONNECT_DEFERRED)
 	_playing = true
 	Run.active = true
 	curtain.reveal()

@@ -37,7 +37,7 @@ func copy() -> Damage:
 	d.stop = stop
 	d.shake = shake
 	d.status = status.duplicate()
-	d.source = source
+	d.source = source if is_instance_valid(source) else null
 	d.over_time = over_time
 	d.unblockable = unblockable
 	return d
