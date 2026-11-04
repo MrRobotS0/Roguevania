@@ -83,6 +83,7 @@ func _ready() -> void:
 	Meta.use_path("user://teste.save", true)
 	Sfx.muted = true
 
+	await _case("todo script compila e a tela principal abre", _all_scripts)
 	await _case("pulo sobe ~3 blocos", _jump_height)
 	await _case("soltar o pulo cedo dá pulo curto", _short_hop)
 	await _case("ainda pula logo depois de sair da beirada", _coyote)
@@ -1331,3 +1332,26 @@ func _chromas() -> void:
 	_check(near.call(look["cloak"], Color("#9fc4dc")) and near.call(look["eye"], s.eye), "a cor do croma não chegou ao herói (ou trocou o olho)")
 	_check(Meta.current_look()["closed_eyes"] == s.closed_eyes, "o croma mexeu no que não é cor")
 	Meta.use_path("user://teste.save", true)
+
+
+# Os testes de jogo não passam pela tela principal; este pega erro de
+# compilação em qualquer script (um nome que colide com o do Godot, por exemplo).
+func _all_scripts() -> void:
+	var broken: Array[String] = []
+	var dirs: Array[String] = ["res://scripts"]
+	while not dirs.is_empty():
+		var dir: String = dirs.pop_back()
+		for sub in DirAccess.get_directories_at(dir):
+			dirs.append(dir.path_join(sub))
+		for file in DirAccess.get_files_at(dir):
+			if file.ends_with(".gd"):
+				var script := load(dir.path_join(file)) as GDScript
+				if script == null or not script.can_instantiate():
+					broken.append(file)
+	_check(broken.is_empty(), "não compilam: " + ", ".join(broken))
+	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _frames(5)
+	_check(main.get("hud") != null and main.get("screen") != null, "a tela principal não montou")
+	main.queue_free()
+	await _frames(2)

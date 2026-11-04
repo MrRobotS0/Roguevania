@@ -40,7 +40,7 @@ var _theme_k := 1.0
 
 
 # Muda a moldura para a do domínio, com uma troca curta (0,3 s).
-func set_theme(id: String) -> void:
+func use_theme(id: String) -> void:
 	_theme_from = _theme
 	_theme_to = HudTheme.of(id)
 	_theme_k = 0.0

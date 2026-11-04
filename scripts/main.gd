@@ -101,7 +101,7 @@ func _load_backdrop_preview() -> void:
 
 
 func _use_biome(b: BiomeData) -> void:
-	hud.set_theme(b.id)
+	hud.use_theme(b.id)
 	backdrop.style = b.backdrop
 	backdrop.sky = b.sky
 	backdrop.layers = b.layers
