@@ -55,6 +55,15 @@ def frames(sheet, seq):
 
 def strip(name, sheet, seq, info):
     fr, w, h = frames(sheet, seq)
+    # tira justa: corta todos os quadros pela caixa que soma todos eles. O pé
+    # fica na borda de baixo e o corpo não pula entre quadros (o site alinha
+    # pelo pé e escala pelo tamanho real, sem margem transparente).
+    boxes = [f.getbbox() for f in fr if f.getbbox()]
+    if boxes:
+        x0, y0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
+        x1, y1 = max(b[2] for b in boxes), max(b[3] for b in boxes)
+        fr = [f.crop((x0, y0, x1, y1)) for f in fr]
+        w, h = x1 - x0, y1 - y0
     s = Image.new("RGBA", (w * len(fr), h), (0, 0, 0, 0))
     for i, f in enumerate(fr):
         s.alpha_composite(f, (i * w, 0))

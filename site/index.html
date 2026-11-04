@@ -65,10 +65,29 @@
 
   /* capa */
   .hero { position: relative; height: 100vh; min-height: 600px; display: grid; place-items: center; text-align: center; }
-  h1 { margin: 0; white-space: nowrap; font: 700 clamp(40px, 14vw, 190px)/.9 var(--pixel); letter-spacing: .04em; color: var(--gold);
-    text-shadow: -3px 0 0 rgba(217,67,75,.75), 3px 0 0 rgba(143,247,232,.55), 0 8px 0 #5a2a08, 0 16px 0 #1c0c04, 0 0 60px rgba(242,193,78,.4); }
-  h1 .ch { display: inline-block; }
-  .tagline { font: 400 clamp(17px, 2.4vw, 24px)/1.4 var(--body); margin: 26px auto 40px; max-width: 30ch; text-shadow: 2px 2px 0 var(--bg); }
+  /* título: ouro em faixas de pixel, contorno escuro, extrusão em degraus e
+     um reflexo que passa de vez em quando (drop-shadow em vez de text-shadow,
+     que pintaria por cima do texto recortado no gradiente) */
+  h1 { margin: 0; white-space: nowrap; font: 700 clamp(40px, 14vw, 190px)/.9 var(--pixel); letter-spacing: .06em; padding-left: .06em;
+    color: var(--gold);
+    filter: drop-shadow(3px 0 0 #1a0b04) drop-shadow(-3px 0 0 #1a0b04) drop-shadow(0 -3px 0 #1a0b04)
+            drop-shadow(0 4px 0 #6b3410) drop-shadow(0 4px 0 #3d1a07) drop-shadow(0 4px 0 #1a0b04)
+            drop-shadow(0 0 34px rgba(242,193,78,.35)); }
+  /* o ouro vai em cada letra (o GSAP move as letras, e o recorte no h1 não as alcança);
+     o reflexo atravessa letra por letra, uma depois da outra */
+  h1 .ch { display: inline-block;
+    background:
+      linear-gradient(100deg, transparent 0 40%, rgba(255,250,225,.9) 45% 52%, transparent 57% 100%) -220% 0 / 200% 100% no-repeat,
+      linear-gradient(#fff4c8 0 18%, #ffd866 18% 40%, #f2b23a 40% 62%, #d27c22 62% 82%, #9c4d14 82% 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shine 7s steps(16) infinite; }
+  h1 .ch:nth-child(2) { animation-delay: .08s; } h1 .ch:nth-child(3) { animation-delay: .16s; }
+  h1 .ch:nth-child(4) { animation-delay: .24s; } h1 .ch:nth-child(5) { animation-delay: .32s; }
+  h1 .ch:nth-child(6) { animation-delay: .4s; }
+  @keyframes shine { 0%, 82% { background-position: -220% 0, 0 0; } 100% { background-position: 220% 0, 0 0; } }
+  .sigil { display: block; width: clamp(180px, 34vw, 420px); height: auto; margin: 22px auto 0; color: var(--gold); image-rendering: pixelated;
+    filter: drop-shadow(0 3px 0 #1a0b04); }
+  .tagline { font: 400 clamp(17px, 2.4vw, 24px)/1.4 var(--body); margin: 18px auto 40px; max-width: 36ch; text-wrap: balance; text-shadow: 2px 2px 0 var(--bg); }
   .tagline b { color: var(--gold); font-weight: 600; }
   .ver { margin-top: 18px; font: 400 13px var(--pixel); color: var(--dim); letter-spacing: .1em; text-shadow: 1px 1px 0 var(--bg); }
   .runner { position: absolute; bottom: 8vh; left: -160px; width: 128px; height: 128px;
@@ -105,10 +124,9 @@
   h2.big span { color: var(--gold); }
 
   /* moveset */
-  .moves { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px; background: var(--line); border: 2px solid var(--line); }
-  .move { position: relative; background: var(--ink); padding: 28px 24px 22px; min-height: 280px; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
-  .move::after { content: ""; position: absolute; left: 0; right: 0; bottom: 92px; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 12px); }
-  .move .spr { justify-self: center; align-self: end; margin-bottom: 18px; }
+  .moves { display: flex; flex-wrap: wrap; gap: 2px; background: var(--line); border: 2px solid var(--line); }
+  .move { position: relative; flex: 1 1 260px; background: var(--ink); padding: 24px 24px 22px; display: grid; grid-template-rows: 190px auto; row-gap: 18px; overflow: hidden; }
+  .move .stage { display: flex; align-items: flex-end; justify-content: center; border-bottom: 2px dashed var(--line); padding-bottom: 6px; }
   .move h3 { font: 700 20px var(--pixel); margin: 0 0 4px; letter-spacing: .04em; }
   .move kbd { font: 400 12px var(--pixel); color: var(--gold); border: 2px solid var(--gold-dk); padding: 2px 8px; background: #1a1206; }
   .move:hover { background: #120e1a; }
@@ -124,7 +142,10 @@
   .altar .light { position: absolute; bottom: 120px; width: 300px; height: 520px; pointer-events: none;
     background: radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--c) 45%, transparent), transparent 62%);
     clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); opacity: .55; }
-  .altar .spr { position: relative; margin-bottom: -6px; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--c) 40%, transparent)); }
+  .altar .stage { position: relative; height: 300px; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .altar .spr { position: relative; margin-bottom: -2px; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--c) 40%, transparent)); }
+  .altar > div:last-child { height: 124px; }
+  @media (max-height: 819px) { .altar .stage { height: 220px; } .altar .light { bottom: 100px; } }
   .altar .base { width: 260px; height: 26px; background: linear-gradient(#3a3046, #1b1626); box-shadow: inset 0 3px 0 #5a4c6e, 0 6px 0 #0d0a12; }
   .altar h3 { font: 700 22px var(--pixel); margin: 20px 0 4px; color: var(--c); }
   .altar p { margin: 0; color: var(--dim); font-size: 16px; max-width: 30ch; }
@@ -158,7 +179,10 @@
   @media (prefers-reduced-motion: reduce) {
     .runner, .cue i, .row { animation: none !important; }
     .spr { animation: none !important; }
+    h1 .ch { animation: none !important; }
   }
+  /* celular: altar menor e nome numa linha só, para os textos alinharem */
+  @media (max-width: 600px) { .altar { width: 300px; } .altar h3 { font-size: 15px; letter-spacing: .02em; } .altar .light { width: 240px; } .altar .base { width: 220px; } }
 </style>
 <script type="importmap">
   { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -187,6 +211,7 @@
   <section class="hero" aria-labelledby="title">
     <div class="hero-inner">
       <h1 id="title" aria-label="MOKSHA"><span class="ch">M</span><span class="ch">O</span><span class="ch">K</span><span class="ch">S</span><span class="ch">H</span><span class="ch">A</span></h1>
+      <svg class="sigil" viewBox="0 0 84 9" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M0 4h30v1H0zM54 4h30v1H54zM31 3h2v3h-2zM51 3h2v3h-2zM36 2h12v1H36zM34 3h2v3h-2zM48 3h2v3h-2zM36 6h12v1H36zM40 3h4v3h-4z" opacity=".95"/><path d="M41 4h2v1h-2z" fill="#1a0b04"/><path d="M38 0h1v2h-1zM45 0h1v2h-1zM41 0h2v1h-2zM38 7h1v2h-1zM45 7h1v2h-1zM41 8h2v1h-2z" opacity=".6"/></svg>
       <p class="tagline" data-i18n-html="tagline">Seven gods vanished.<br><b>You are what they left behind.</b></p>
       <a class="btn" href="https://github.com/MrRobotS0/Roguevania/releases/latest/download/Moksha-windows.zip">
         <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
@@ -321,13 +346,27 @@
     return el;
   }
 
+  // escala que faz a tira caber na caixa, em passos de 0,5 (as tiras são 2x:
+  // 0,5 = 1 pixel do jogo por pixel da tela), sem passar de `most`
+  function fit(name, boxW, boxH, most) {
+    const a = ANIM[name];
+    if (!a) return 1;
+    const k = Math.min(most, boxW / a.w, boxH / a.h);
+    return Math.max(.5, Math.floor(k * 2) / 2);
+  }
+
   function buildMoves() {
     const box = document.getElementById("moves");
     box.innerHTML = "";
+    // a mesma escala em todos os cartões: o herói tem o mesmo tamanho em todos
+    const k = Math.min(...MOVES.map(([n]) => fit(n, 230, 170, 2)));
     for (const [name, label, key, fps] of MOVES) {
       const m = document.createElement("div");
       m.className = "move";
-      m.appendChild(sprite(name, 2.5, fps));
+      const stage = document.createElement("div");
+      stage.className = "stage";
+      stage.appendChild(sprite(name, k, fps));
+      m.appendChild(stage);
       const t = document.createElement("div");
       t.innerHTML = `<h3>${label[L()]}</h3><kbd>${key}</kbd>`;
       m.appendChild(t);
@@ -345,7 +384,11 @@
       const light = document.createElement("div");
       light.className = "light";
       a.appendChild(light);
-      a.appendChild(sprite(name, innerHeight < 820 ? 1.25 : 1.5, 6));
+      const stage = document.createElement("div");
+      stage.className = "stage";
+      const sh = innerHeight < 820 ? 210 : 290;
+      stage.appendChild(sprite(name, fit(name, Math.min(400, innerWidth * .74), sh, 1.5), 6));
+      a.appendChild(stage);
       const base = document.createElement("div");
       base.className = "base";
       a.appendChild(base);
@@ -362,7 +405,7 @@
     [["row1", names.slice(0, half)], ["row2", names.slice(half)]].forEach(([id, list]) => {
       const row = document.getElementById(id);
       row.innerHTML = "";
-      for (const pass of [0, 1]) for (const n of list) row.appendChild(sprite(n, 1.5, 7));
+      for (const pass of [0, 1]) for (const n of list) row.appendChild(sprite(n, fit(n, 150, 110, 1.5), 7));
     });
   }
 
