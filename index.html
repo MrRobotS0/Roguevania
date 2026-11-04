@@ -659,7 +659,7 @@
         uniform vec3 color; varying float vAlpha;
         void main() { gl_FragColor = vec4(color, vAlpha); }`,
     });
-    scene.add(new THREE.Points(geo, emberMat));
+    // as brasas ficaram de fora: quadradinhos na frente da pintura sujavam a tela inteira (pedido dele)
 
     // troca de domínio: a câmera mergulha pelas camadas e o novo surge atrás
     let busy = false, pending = null;
