@@ -39,6 +39,10 @@ const TABLE := {
 	"elite_thornkeeper": ["3a5a2a", "7a2a4a", "ffd84a", "c84a6a", "0c1008", "4a3a20", "e8f0c0"],
 	"elite_duelist": ["c8a830", "2a2010", "ffffff", "f0e070", "0c0a06", "3a2a1a", "ffffff"],
 	"elite_brass": ["b88a3a", "5a4020", "9fe8ff", "e0b860", "100c08", "3a2a1a", "dff6ff"],
+	"mason": ["6a5642", "a8583a", "ff9a3c", "9a968a", "1a1612", "4a3a30", "c9c2b0"],
+	"seed_pod": ["8a6a3a", "4a6a2a", "ff6a4a", "c8e07a", "2a0c10", "4a3a20", "e8f0c0"],
+	"dancer": ["d8b830", "5a1a2a", "ffffff", "f0e070", "0c0a06", "3a2a1a", "ffffff"],
+	"lens": ["b88a3a", "1a2a4a", "9fe8ff", "e0b860", "dff6ff", "3a2a1a", "ffffff"],
 }
 
 

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sino_carcosa"
+title = "Sino de Carcosa"
+kind = "bell"
+stat = "vigor"
+cooldown = 11.0
+damage = 9.0
+params = {"radius": 72.0, "stun": 1.4}
+color = Color(0.910, 0.824, 0.353, 1)
+starter = false
+unlock_cost = 50
+lore = "O sino do Arauto, que anuncia o rei que nunca chega. Quem ouve para no lugar, esperando."

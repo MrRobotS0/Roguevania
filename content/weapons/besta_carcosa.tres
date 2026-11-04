@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "besta_carcosa"
+title = "Besta de Carcosa"
+category = "bow"
+stat = "astucia"
+crit_rule = "behind"
+crit_mult = 2.0
+starter = false
+unlock_cost = 45
+color = Color(0.910, 0.824, 0.353, 1)
+moves = []
+shot = {"draw": 0.34, "recover": 0.28, "speed": 420.0, "damage": 7.0, "pierce": 0, "count": 3, "spread": 0.12, "look": "crossbow"}
+lore = "Três virotes amarelos de uma vez. Em Carcosa ninguém mira: atira-se em tudo que tem rosto."

@@ -60,7 +60,7 @@ func _physics_process(delta: float) -> void:
 		if fuse <= 0.0:
 			explode()
 			return
-	if style == "wave":
+	if style == "wave" or style == "roots":
 		# a onda corre rente ao chão e só some na parede
 		if room.is_solid_at(global_position + Vector2(signf(velocity.x) * 4.0, -2.0)):
 			queue_free()
@@ -180,6 +180,19 @@ func _draw() -> void:
 			for i in 4:
 				draw_rect(Rect2(-6 + i * 3, -4 - k * 4.0 + i % 2 * 2, 3, 4 + k * 4.0), Palette.DUST.lightened(0.2))
 			draw_rect(Rect2(-7, 2, 14, 2), Palette.BURN)
+		"brick":
+			var turn := _spin * 0.25
+			draw_set_transform(Vector2.ZERO, turn)
+			draw_rect(Rect2(-3, -2, 6, 4), color)
+			draw_rect(Rect2(-3, -2, 6, 1), color.lightened(0.3))
+			draw_rect(Rect2(-3, 1, 6, 1), color.darkened(0.4))
+			draw_set_transform(Vector2.ZERO)
+		"roots":
+			var grow := clampf(_traveled / 30.0, 0.3, 1.0)
+			for i in 4:
+				var tall := (5.0 + float((i * 7) % 5)) * grow
+				draw_rect(Rect2(-7 + i * 4, 3 - tall, 2, tall), color if i % 2 else color.darkened(0.35))
+			draw_rect(Rect2(-8, 2, 16, 2), Color("4a3a24"))
 		"chain":
 			if is_instance_valid(source):
 				var back := source.center() - global_position

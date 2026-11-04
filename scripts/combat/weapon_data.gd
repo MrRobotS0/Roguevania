@@ -12,6 +12,9 @@ extends Resource
 # crit_rule: crítico extra por situação
 #   "behind" pelas costas · "burning" alvo queimando · "far" de longe
 #   "stunned" alvo atordoado · "airborne" atacando no ar
+#   "tip" acertando com a ponta (longe do corpo)
+# shot também aceita: count + spread (vários de uma vez), style e homing
+# (o que sai e se persegue), look ("crossbow", "staff") para o desenho
 
 @export var id := ""
 @export var title := ""
@@ -34,11 +37,18 @@ func describe() -> String:
 		"far": "CRÍTICO DE LONGE",
 		"stunned": "CRÍTICO EM ALVO ATORDOADO",
 		"airborne": "CRÍTICO NO AR",
+		"tip": "CRÍTICO COM A PONTA",
 	}.get(crit_rule, "")
 	var last := ""
 	for m: Dictionary in moves:
 		if m.get("crit", false):
 			last = "ÚLTIMO GOLPE CRÍTICO"
+		if m.get("shape", "") == "spin":
+			last = "ACERTA DOS DOIS LADOS"
+	if int(shot.get("count", 1)) > 1:
+		last = "%d DE UMA VEZ" % int(shot["count"])
+	elif float(shot.get("homing", 0.0)) > 0.0:
+		last = "PROCURA O ALVO"
 	var parts := PackedStringArray()
 	for part in [last, rule]:
 		if part != "":

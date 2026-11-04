@@ -84,6 +84,17 @@ def humanoid(w, h, k=1.0, pose="idle", t=0.0, bob=0, robe=True, head="hood", wea
     elif weapon == "bell":
         c.limb(hand, add(hand, (0, 4 * k)), 1.0, f.p_wood)
         c.poly([add(hand, (-3 * k, 9 * k)), add(hand, (-1.5 * k, 4 * k)), add(hand, (1.5 * k, 4 * k)), add(hand, (3 * k, 9 * k))], f.p_acc)
+    elif weapon == "brick":
+        held = add(hand, (0, -3 * k)) if pose in ("windup", "cast") else hand
+        c.rect(held[0] - 3 * k, held[1] - 2.5 * k, 6 * k, 4 * k, f.p_sec)
+        c.rect(held[0] - 3 * k, held[1] - 2.5 * k, 6 * k, 1, f.p_acc)
+        c.mark(held[0], held[1] - 0.5 * k, SEC_HI)
+    elif weapon == "fan":
+        ang = {"windup": -2.6, "attack": 1.4, "cast": -3.0}.get(pose, 0.9)
+        for i in range(5):
+            a2 = ang - 0.5 + i * 0.25
+            c.limb(hand, add(hand, (math.sin(a2) * 8 * k, math.cos(a2) * 8 * k)), 1.0 * k, f.p_acc)
+        c.mark(hand[0], hand[1], EYE)
     elif weapon == "hammer":
         ang = {"windup": -3.0, "attack": 1.8}.get(pose, -2.3)
         d = (math.sin(ang), math.cos(ang))
@@ -197,6 +208,62 @@ def moss_anims():
     return A
 
 
+def seed_pod(walk=0.0, swell=0.0, burst=False):
+    """O broto do Jardim: uma cabaça que anda em raízes e incha antes de estourar."""
+    f = Fig(32, 32)
+    c, cx, fy = f.c, f.cx, f.fy
+    s = math.sin(walk)
+    for side, ph in ((-1, s), (1, -s)):
+        c.limb((cx + side * 3, fy - 6), (cx + side * 6 + ph * 2, fy), 1.6, f.p_sec_back if side < 0 else f.p_sec)
+    r = 6 + swell * 2.5
+    body = (cx, fy - 8 - r * 0.8)
+    c.ellipse(body, r, r * 0.95, f.p_main)
+    for i in range(3):
+        c.limb((body[0] - r * 0.6 + i * r * 0.6, body[1] - r * 0.7), (body[0] - r * 0.5 + i * r * 0.5, body[1] + r * 0.6), 1, f.p_main_back)
+    c.limb((body[0], body[1] - r), (body[0] + 2, body[1] - r - 4), 1.4, f.p_sec)
+    c.ellipse((body[0] + 3, body[1] - r - 4), 2.2, 1.2, f.p_sec)
+    spikes = 6 if burst else 4
+    for i in range(spikes):
+        a = i * math.tau / spikes + 0.4
+        c.mark(body[0] + math.cos(a) * (r + 1), body[1] + math.sin(a) * (r + 1), METAL)
+    if swell > 0.4:
+        c.ellipse((body[0] + 1, body[1]), 1.6 + swell, 1.6 + swell, f.p_face)
+        c.mark(body[0] + 1, body[1], EYE)
+    else:
+        c.mark(body[0] + 2, body[1] - 1, EYE)
+    return f.done()
+
+
+def seed_anims():
+    return {"idle": (2, [seed_pod(0), seed_pod(0.6)]),
+            "walk": (8, [seed_pod(i / 4 * math.tau) for i in range(4)]),
+            "windup": (8, [seed_pod(0, 0.7), seed_pod(0, 1.0)]),
+            "attack": (1, [seed_pod(0, 1.3, True)])}
+
+
+def lens(open_=0.0, t=0.0):
+    """Lente Viva do Observatório: um olho de vidro que paira entre anéis de latão."""
+    f = Fig(32, 32)
+    c, cx, fy = f.c, f.cx, f.fy - 10
+    for i in range(2):
+        a = t + i * math.pi
+        c.limb((cx + math.cos(a) * 9, fy + math.sin(a) * 3 - 1), (cx - math.cos(a) * 9, fy - math.sin(a) * 3 + 1), 1, f.p_acc)
+    c.ellipse((cx, fy), 7, 7, f.p_main)
+    c.ellipse((cx, fy), 5, 5, f.p_sec)
+    iris = 1.5 + open_ * 2.0
+    c.ellipse((cx + 1, fy), iris, iris, f.p_face)
+    c.mark(cx + 1, fy, EYE)
+    c.mark(cx - 2, fy - 3, SEC_HI)
+    c.rect(cx - 1, fy + 7, 3, 3, f.p_acc)
+    return f.done()
+
+
+def lens_anims():
+    return {"idle": (6, [lens(0, i * 0.8) for i in range(4)]),
+            "windup": (10, [lens(0.8, 0), lens(1.0, 0.4)]),
+            "attack": (1, [lens(1.3, 0)])}
+
+
 def star(pulse=0.0, w=32, h=32, k=1.0):
     f = Fig(w, h)
     c, cx, fy = f.c, f.cx, f.fy - 8 * k
@@ -293,6 +360,10 @@ SHEETS = {
     "herald": (lambda: human_anims(40, 40, 1.0, head="hood", weapon="bell"), 40, 40),
     "automaton": (lambda: human_anims(40, 40, 1.05, robe=False, head="lens"), 40, 40),
     "star": (star_anims, 32, 32),
+    "mason": (lambda: human_anims(40, 40, 1.05, robe=False, head="helm", weapon="brick"), 40, 40),
+    "seed_pod": (seed_anims, 32, 32),
+    "dancer": (lambda: human_anims(40, 40, 1.0, robe=True, head="mask", weapon="fan", cape=True), 40, 40),
+    "lens": (lens_anims, 32, 32),
     # chefes
     "wolf_king": (wolf_king_anims, 96, 64),
     "colossus": (lambda: human_anims(96, 80, 2.2, robe=False, head="helm", weapon="hammer"), 96, 80),
@@ -318,6 +389,10 @@ PALETTES = {
     "herald": ("#d8d0a0", "#4a3a5a", "#ffd84a", "#c8a040", "#14101a", "#4a3a30", "#e8e2d0"),
     "automaton": ("#8a6a3a", "#4a3a2a", "#9fe8ff", "#c8a050", "#0c1018", "#3a2a1a", "#dff6ff"),
     "star": ("#e8f0ff", "#9ab0d8", "#ffffff", "#ffd84a", "#1a2030", "#3a2a1a", "#ffffff"),
+    "mason": ("#6a5642", "#a8583a", "#ff9a3c", "#9a968a", "#1a1612", "#4a3a30", "#c9c2b0"),
+    "seed_pod": ("#8a6a3a", "#4a6a2a", "#ff6a4a", "#c8e07a", "#2a0c10", "#4a3a20", "#e8f0c0"),
+    "dancer": ("#d8b830", "#5a1a2a", "#ffffff", "#f0e070", "#0c0a06", "#3a2a1a", "#ffffff"),
+    "lens": ("#b88a3a", "#1a2a4a", "#9fe8ff", "#e0b860", "#dff6ff", "#3a2a1a", "#ffffff"),
     "wolf_king": ("#dfe8f0", "#f4fbff", "#9fe8ff", "#6a8ab0", "#1a2230", "#5b3f2c", "#bfe6ea"),
     "colossus": ("#7a4a38", "#4a2a20", "#ff8a3a", "#4a4a52", "#140c0c", "#3a2a22", "#ffb050"),
     "architect": ("#d8c890", "#3a3a7a", "#ffd84a", "#e0b04a", "#1a1420", "#5b3f2c", "#e8e2d0"),

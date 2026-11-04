@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "estrela_cadente"
+title = "Estrela Cadente"
+kind = "meteor"
+stat = "furia"
+cooldown = 12.0
+damage = 30.0
+params = {"radius": 36.0, "range": 220.0, "burn": 2.0}
+color = Color(1.000, 0.824, 0.478, 1)
+starter = false
+unlock_cost = 60
+lore = "Cada estrela caída é um nome que o deus esqueceu. Esta lembra o seu."

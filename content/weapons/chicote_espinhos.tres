@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chicote_espinhos"
+title = "Chicote de Espinhos"
+category = "melee"
+stat = "astucia"
+crit_rule = "tip"
+crit_mult = 1.9
+starter = false
+unlock_cost = 45
+color = Color(0.612, 0.776, 0.353, 1)
+moves = [{"startup": 0.1, "active": 0.08, "recover": 0.2, "damage": 11, "knock": 80, "reach": Vector2(62, 10), "lunge": 30, "stop": 0.05, "shake": 1.5, "shape": "lash"}, {"startup": 0.12, "active": 0.09, "recover": 0.26, "damage": 14, "knock": 140, "reach": Vector2(66, 12), "lunge": 40, "stop": 0.06, "shake": 2.0, "shape": "lash", "status": {"stun": 0.3}}]
+shot = {}
+lore = "Trançado com um galho que ainda cresce. Cada vez que estala, fica um pouco mais comprido."

@@ -24,4 +24,6 @@ static func situational_crit(rule: String, attacker: Actor, target: Actor, trave
 			return target.has_status("stun")
 		"airborne":
 			return not attacker.is_on_floor()
+		"tip":
+			return traveled >= 40.0
 	return false

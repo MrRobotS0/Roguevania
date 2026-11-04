@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cetro_astronomo"
+title = "Cetro do Astrônomo"
+category = "bow"
+stat = "furia"
+crit_rule = "stunned"
+crit_mult = 1.9
+starter = false
+unlock_cost = 55
+color = Color(0.725, 0.659, 1.000, 1)
+moves = []
+shot = {"draw": 0.26, "recover": 0.24, "speed": 220.0, "damage": 10.0, "pierce": 0, "style": "star", "homing": 4.0, "look": "staff"}
+lore = "Aponta para onde o deus estava. O que sai dele procura alguém para acertar, como o astrônomo procurava."

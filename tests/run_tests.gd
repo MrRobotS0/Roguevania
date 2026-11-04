@@ -135,6 +135,8 @@ func _ready() -> void:
 	await _case("desafio do dia, estatísticas e recorde", _extras)
 	await _case("os 6 elites dos domínios atacam e acertam", _elites)
 	await _case("história: abertura, final, códice", _story)
+	await _case("armas novas acertam (a foice dos dois lados)", _new_weapons)
+	await _case("mutações novas: couraça, teimosia, barganha, passo, sede", _new_mutations)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -935,11 +937,12 @@ func _options() -> void:
 
 
 func _new_skills() -> void:
-	for id in ["armadilha_laminas", "torreta_vidro", "espirito_cinza", "corrente_ferreiro"]:
+	for id in ["armadilha_laminas", "torreta_vidro", "espirito_cinza", "corrente_ferreiro",
+			"sino_carcosa", "raiz_viva", "estrela_cadente"]:
 		await _load(WIDE)
 		var p := level.player
 		p.skills[0] = Gear.of(Catalog.find(id))
-		var dist := 14.0 if id == "armadilha_laminas" else 90.0
+		var dist := 14.0 if id == "armadilha_laminas" else (40.0 if id == "sino_carcosa" else 90.0)
 		var e := _calm(level.spawn("grunt", p.global_position + Vector2(dist, 0)))
 		e.set_physics_process(true)
 		e.set_process(false)
@@ -1011,7 +1014,8 @@ func _bosses() -> void:
 
 
 func _domain_enemies() -> void:
-	for name in ["scribe", "gargoyle", "thorn_plant", "moss_beast", "masked", "herald", "automaton", "fallen_star"]:
+	for name in ["scribe", "gargoyle", "thorn_plant", "moss_beast", "masked", "herald", "automaton", "fallen_star",
+			"mason", "seed_pod", "dancer", "lens"]:
 		await _load(WIDE)
 		var p := level.player
 		p.max_hp = 9999
@@ -1091,3 +1095,66 @@ func _story() -> void:
 	_check(missing.is_empty(), "sem verbete no bestiário: %s" % [missing])
 	scene.queue_free()
 	Meta.use_path("user://teste.save", true)
+
+
+func _new_weapons() -> void:
+	for id in ["chicote_espinhos", "foice_inverno", "punhos_bronze", "besta_carcosa", "cetro_astronomo"]:
+		await _load(WIDE)
+		var p := level.player
+		p.weapons[0] = Gear.of(Catalog.find(id))
+		var data: WeaponData = p.weapons[0].data
+		var dist := 120.0 if data.category == "bow" else 16.0
+		if id == "chicote_espinhos":
+			dist = 50.0
+		var side := -1.0 if id == "foice_inverno" else 1.0
+		var e := _calm(level.spawn("grunt", p.global_position + Vector2(dist * side, 0)))
+		input.then(["attack1"], 2).wait(4).then(["attack1"], 2).wait(30)
+		for i in 120:
+			await get_tree().physics_frame
+			if is_instance_valid(e):
+				e.state = "idle"
+				e.velocity.x = 0.0
+			if not is_instance_valid(e) or e.hp < e.max_hp:
+				break
+		_check(not is_instance_valid(e) or e.hp < e.max_hp, "%s não machucou" % id)
+
+
+func _new_mutations() -> void:
+	await _load(FLAT)
+	var p := level.player
+	var hit := Damage.make(20, 1, 0)
+	p.hurt(hit)
+	var plain := p.max_hp - p.hp
+	await _load(FLAT)
+	p = level.player
+	p.add_mutation("couraca")
+	p.hurt(Damage.make(20, 1, 0))
+	_check(p.max_hp - p.hp < plain, "couraça não reduziu (%d vs %d)" % [p.max_hp - p.hp, plain])
+
+	await _load(FLAT)
+	p = level.player
+	p.add_mutation("ultimo_folego")
+	p.hurt(Damage.make(9999, 1, 0))
+	_check(p.hp == 1 and p.alive(), "teimosia não segurou (%d)" % p.hp)
+	await _frames(60)
+	p.hurt(Damage.make(9999, 1, 0))
+	_check(p.hp == 0, "teimosia valeu duas vezes no mesmo andar")
+
+	await _load(FLAT)
+	p = level.player
+	var shop := Merchant.new()
+	var item := {"kind": "heal", "cost": 100}
+	_check(shop.price(item, p) == 100, "preço sem mutação mudou")
+	p.add_mutation("barganha")
+	_check(shop.price(item, p) == 70, "barganha não deu desconto (%d)" % shop.price(item, p))
+	shop.free()
+
+	_check(p.run_speed() == Player.RUN_SPEED, "corre mais rápido sem a mutação")
+	p.add_mutation("passo_ligeiro")
+	_check(p.run_speed() > Player.RUN_SPEED, "passo do lobo não acelerou")
+
+	p.add_mutation("sede")
+	p.skill_cd[0] = 5.0
+	var dummy := _calm(level.spawn("grunt", p.global_position + Vector2(300, 0)))
+	p.on_kill(dummy)
+	_check(p.skill_cd[0] <= 4.05, "sede não adiantou a recarga (%.2f)" % p.skill_cd[0])

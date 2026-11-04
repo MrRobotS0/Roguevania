@@ -55,6 +55,8 @@ var curse := 0              # baú maldito: qualquer golpe mata até matar `curs
 var last_used := ""         # id da última arma/habilidade usada (estatísticas)
 var _air_jumps := 0
 var _rage := 0.0
+var _stubborn_used := false
+var _rolled_through: Array = []
 
 var _state_time := 0.0
 var _coyote := 0.0
@@ -102,6 +104,10 @@ func _ready() -> void:
 		skin = Meta.current_skin()
 	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.8, Vector2(0, -12))
 	_setup_look()
+
+
+func run_speed() -> float:
+	return RUN_SPEED * (1.15 if has_mutation("passo_ligeiro") else 1.0)
 
 
 func weapon(slot: int) -> Gear:
@@ -265,7 +271,7 @@ func _move_state(delta: float) -> void:
 	var accel := AIR_ACCEL
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
-	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind, accel * delta)
+	velocity.x = move_toward(velocity.x, dir * run_speed() + wind, accel * delta)
 	_gravity(delta)
 
 	if pad.just("jump"):
@@ -444,6 +450,9 @@ func _attack_state(delta: float) -> void:
 func _check_swing(g: Gear, m: Dictionary) -> void:
 	var data: WeaponData = g.data
 	var box := attack_rect(m["reach"])
+	if m.get("shape", "") == "spin":
+		var r: Vector2 = m["reach"]
+		box = Rect2(global_position.x - r.x, global_position.y - h * 0.5 - r.y * 0.5 - 1.0, r.x * 2.0, r.y)
 	var landed := false
 	var crit_any := false
 	for e: Actor in get_tree().get_nodes_in_group("enemies"):
@@ -452,10 +461,14 @@ func _check_swing(g: Gear, m: Dictionary) -> void:
 		if not box.intersects(e.hurt_rect()):
 			continue
 		_swing_hits.append(e)
-		var d := Damage.make(float(m["damage"]) * g.power() * stat_mult(data.stat), facing, float(m["knock"]))
+		var side := facing
+		if m.get("shape", "") == "spin":
+			side = 1 if e.global_position.x >= global_position.x else -1
+		var d := Damage.make(float(m["damage"]) * g.power() * stat_mult(data.stat), side, float(m["knock"]))
 		d.source = self
 		d.status = m.get("status", {}).duplicate()
-		d.crit = bool(m.get("crit", false)) or Combat.situational_crit(data.crit_rule, self, e)
+		var gap := absf(e.center().x - center().x)
+		d.crit = bool(m.get("crit", false)) or Combat.situational_crit(data.crit_rule, self, e, gap)
 		if d.crit:
 			d.amount *= data.crit_mult
 			d.knock *= 1.3
@@ -488,25 +501,30 @@ func _shoot_state(delta: float) -> void:
 		return
 	if not _shot_fired and _state_time >= float(s["draw"]):
 		_shot_fired = true
-		var p := Projectile.new()
-		p.room = room
-		p.team = "player"
-		p.style = "arrow"
-		p.source = self
-		p.position = center() + Vector2(facing * 8, -1)
-		p.velocity = Vector2(facing * float(s["speed"]), 0)
-		p.pierce = int(s.get("pierce", 0))
-		p.crit_rule = data.crit_rule
-		p.crit_mult = data.crit_mult
-		p.color = data.color
-		p.damage = Damage.make(float(s["damage"]) * g.power() * stat_mult(data.stat), facing, 40.0)
-		boost(p.damage)
-		_affix_before(g, p.damage, null)
-		p.damage.source = self
-		p.damage.status = s.get("status", {}).duplicate()
-		p.damage.stop = 0.03
-		get_parent().add_child(p)
-		Sfx.play("bow", -6.0)
+		var count := int(s.get("count", 1))
+		var spread := float(s.get("spread", 0.0))
+		for i in count:
+			var p := Projectile.new()
+			p.room = room
+			p.team = "player"
+			p.style = String(s.get("style", "arrow"))
+			p.source = self
+			p.position = center() + Vector2(facing * 8, -1)
+			var tilt := (i - (count - 1) * 0.5) * spread
+			p.velocity = Vector2(facing * float(s["speed"]), 0).rotated(tilt * facing)
+			p.homing = float(s.get("homing", 0.0))
+			p.pierce = int(s.get("pierce", 0))
+			p.crit_rule = data.crit_rule
+			p.crit_mult = data.crit_mult
+			p.color = data.color
+			p.damage = Damage.make(float(s["damage"]) * g.power() * stat_mult(data.stat), facing, 40.0)
+			boost(p.damage)
+			_affix_before(g, p.damage, null)
+			p.damage.source = self
+			p.damage.status = s.get("status", {}).duplicate()
+			p.damage.stop = 0.03
+			get_parent().add_child(p)
+		Sfx.play("star_pop" if s.get("style", "") == "star" else "bow", -6.0)
 	if _state_time >= float(s["draw"]) + float(s["recover"]):
 		_enter(State.MOVE)
 
@@ -553,6 +571,36 @@ func _use_skill(slot: int) -> bool:
 			p.pull = true
 			p.damage.status = {"stun": 0.6}
 			p.damage.knock = 0.0
+		"bell":
+			_ring_bell(power, data)
+		"roots":
+			if not is_on_floor():
+				return false
+			var p := _skill_projectile("roots", Vector2(facing * float(data.params.get("speed", 230.0)), 0), power)
+			p.position = global_position + Vector2(facing * 10, -2)
+			p.color = data.color
+			p.pierce = 99
+			p.life = 1.6
+			p.damage.status = {"stun": float(data.params.get("stun", 0.7))}
+			p.damage.knock = 40.0
+			p.damage.lift = 120.0
+			Sfx.play("thorn_shoot", -6.0)
+		"meteor":
+			var target := _meteor_target(float(data.params.get("range", 220.0)))
+			var at := target.center() if target else center() + Vector2(facing * 90.0, 0)
+			var p := _skill_projectile("star", Vector2(facing * 20.0, 380.0), power)
+			var drop := 8.0
+			while drop < 150.0 and not room.is_solid_at(at + Vector2(-facing * 12.0, -drop - 8.0)):
+				drop += 8.0
+			p.position = at + Vector2(-facing * 12.0, -drop)
+			p.color = data.color
+			p.radius = float(data.params.get("radius", 36.0))
+			p.homing = 2.0
+			p.life = 1.5
+			p.damage.status = {"burn": float(data.params.get("burn", 2.0))}
+			p.damage.knock = 160.0
+			p.damage.stop = 0.06
+			Sfx.play("star_pop", -4.0)
 		"javelin":
 			var p := _skill_projectile("javelin", Vector2(facing * 460.0, 0), power)
 			p.pierce = int(data.params.get("pierce", 4))
@@ -563,6 +611,33 @@ func _use_skill(slot: int) -> bool:
 	skill_cd[slot] = data.cooldown * (0.65 if has_mutation("polvora") else 1.0)
 	Sfx.play("throw", -6.0)
 	return true
+
+
+func _ring_bell(power: float, data: SkillData) -> void:
+	var radius := float(data.params.get("radius", 72.0))
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
+		if e.alive() and e.center().distance_to(center()) <= radius + e.w * 0.5:
+			var d := Damage.make(power, 1 if e.global_position.x >= global_position.x else -1, 60.0)
+			d.source = self
+			d.status = {"stun": float(data.params.get("stun", 1.4))}
+			d.unblockable = true
+			e.hurt(d)
+	Fx.burst(center(), data.color, 26, 190.0, 0.4, 0.0, 2.0)
+	Fx.add_shake(3.0)
+	Sfx.play("bell", -2.0)
+
+
+func _meteor_target(reach: float) -> Actor:
+	var best: Actor = null
+	var best_d := reach
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
+		if not e.alive():
+			continue
+		var d := e.center().distance_to(center())
+		if d < best_d:
+			best = e
+			best_d = d
+	return best
 
 
 func _skill_projectile(style: String, vel: Vector2, power: float) -> Projectile:
@@ -623,6 +698,7 @@ func _start_roll() -> void:
 	if dir != 0.0:
 		facing = int(signf(dir))
 	_dodge = ROLL_DODGE
+	_rolled_through.clear()
 	Fx.dust(global_position, 4)
 	Sfx.play("roll", -10.0)
 	_enter(State.ROLL)
@@ -633,6 +709,12 @@ func _roll_state(delta: float) -> void:
 	var speed := ROLL_SPEED if k < 0.7 else lerpf(ROLL_SPEED, RUN_SPEED * 0.6, (k - 0.7) / 0.3)
 	velocity.x = facing * speed
 	_gravity(delta)
+	if has_mutation("rastro_brasa"):
+		for e: Actor in get_tree().get_nodes_in_group("enemies"):
+			if e.alive() and not _rolled_through.has(e) and e.hurt_rect().intersects(hurt_rect()):
+				_rolled_through.append(e)
+				e.add_status("burn", 3.0)
+				Fx.burst(e.center(), Palette.BURN, 8, 90.0, 0.3, -60.0)
 	if pad.just("jump"):
 		_jump_buffer = JUMP_BUFFER
 	if _state_time >= ROLL_TIME:
@@ -752,6 +834,9 @@ func on_kill(e: Node) -> void:
 		Run.note_kill(e.title, last_used)
 	if has_mutation("sangue_quente") and alive():
 		heal(maxi(2, roundi(max_hp * 0.03)))
+	if has_mutation("sede"):
+		for i in skill_cd.size():
+			skill_cd[i] = maxf(skill_cd[i] - 1.0, 0.0)
 	if curse > 0:
 		curse -= 1
 		if curse == 0:
@@ -766,19 +851,25 @@ func hurt(d: Damage) -> bool:
 	if state == State.DEAD:
 		return false
 	if d.over_time:
-		hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 1)
+		hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult() * (0.8 if has_mutation("couraca") else 1.0)), 1)
 		health_changed.emit(hp, max_hp)
 		return true
 	if _invuln > 0.0 or _dodge > 0.0:
 		return false
 	if _guard(d):
 		return false
-	hp = maxi(hp - roundi(d.value() * Run.enemy_damage_mult()), 0)
+	var taken := d.value() * Run.enemy_damage_mult() * (0.8 if has_mutation("couraca") else 1.0)
+	hp = maxi(hp - roundi(taken), 0)
 	if is_instance_valid(d.source) and d.source is Enemy:
 		Run.killer = d.source.title
 	if curse > 0:
 		hp = 0
 		Fx.toast("A MALDIÇÃO COBROU")
+	elif hp <= 0 and has_mutation("ultimo_folego") and not _stubborn_used:
+		_stubborn_used = true
+		hp = 1
+		Fx.toast("TEIMOSIA: AINDA NÃO")
+		Fx.burst(center(), Palette.GOLD, 18, 120.0, 0.5, -60.0)
 	_rage = 3.0
 	apply_statuses(d)
 	_invuln = HURT_IFRAMES
@@ -928,9 +1019,22 @@ func _draw_front() -> void:
 				px(hx, hy - 1, 1, 3, Palette.GOLD)
 		State.SHOOT:
 			var pull := clampf(_state_time / 0.25, 0.0, 1.0) * 3.0
-			px(hx + 2, hy - 6, 1, 13, Palette.WOOD_TOP)
-			px(hx + 2 - pull, hy - 5, 1, 11, Palette.UI_DIM)
-			px(hx - 5 + pull, hy, 8, 1, Palette.ARROW)
+			var g := weapon(_slot)
+			var look := String((g.data as WeaponData).shot.get("look", "")) if g and g.is_weapon() else ""
+			match look:
+				"crossbow":
+					px(hx - 4, hy - 1, 11, 2, Palette.WOOD_TOP)
+					px(hx + 5, hy - 5, 1, 11, Palette.UI_DIM)
+					px(hx + 1 - pull, hy - 2, 1, 1, g.data.color)
+					px(hx + 1 - pull, hy + 1, 1, 1, g.data.color)
+				"staff":
+					px(hx + 1, hy - 9, 1, 17, Palette.WOOD_TOP)
+					px(hx, hy - 12, 3, 3, g.data.color)
+					px(hx + 1, hy - 11, 1, 1, Palette.FLASH)
+				_:
+					px(hx + 2, hy - 6, 1, 13, Palette.WOOD_TOP)
+					px(hx + 2 - pull, hy - 5, 1, 11, Palette.UI_DIM)
+					px(hx - 5 + pull, hy, 8, 1, Palette.ARROW)
 		State.BLOCK:
 			var parry := _state_time <= PARRY_WINDOW
 			px(hx + 1, hy - 8, 3, 15, Palette.DANGER if parry else Palette.GOLD)
@@ -970,9 +1074,27 @@ func _draw_slash() -> void:
 	var origin := Vector2(0, -h * 0.5)
 	var shape: String = m.get("shape", "down")
 	match shape:
-		"thrust":
-			points = PackedVector2Array([origin + Vector2(2, -3), origin + Vector2(reach.x + 4, -1),
-				origin + Vector2(reach.x + 6, 0), origin + Vector2(reach.x + 4, 1), origin + Vector2(2, 3)])
+		"thrust", "jab":
+			var tall := 3.0 if shape == "thrust" else 2.0
+			points = PackedVector2Array([origin + Vector2(2, -tall), origin + Vector2(reach.x + 4, -1),
+				origin + Vector2(reach.x + 6, 0), origin + Vector2(reach.x + 4, 1), origin + Vector2(2, tall)])
+		"lash":
+			var wave := (1.0 - fade) * 9.0
+			for i in 9:
+				var t := i / 8.0
+				points.append(origin + Vector2(4 + t * reach.x, sin(t * 6.0 + wave) * 3.0 * t - 1.0))
+			for i in range(8, -1, -1):
+				var t := i / 8.0
+				points.append(origin + Vector2(4 + t * reach.x, sin(t * 6.0 + wave) * 3.0 * t + 1.0))
+		"spin":
+			var r := reach.x
+			var turn := (1.0 - fade) * TAU
+			for i in 9:
+				var ang := turn + lerpf(0.0, PI * 1.6, i / 8.0)
+				points.append(origin + Vector2(cos(ang) * r, sin(ang) * r * 0.45))
+			for i in range(8, -1, -1):
+				var ang := turn + lerpf(0.0, PI * 1.6, i / 8.0)
+				points.append(origin + Vector2(cos(ang) * (r - 6.0), sin(ang) * (r - 6.0) * 0.45))
 		"smash":
 			var r := reach.x
 			for i in 9:
@@ -996,7 +1118,7 @@ func _draw_slash() -> void:
 	pen.draw_colored_polygon(points, color)
 	var edge := Palette.FLASH
 	edge.a = 0.9 * fade
-	var outer := points.slice(0, 9) if shape != "thrust" else points.slice(0, 3)
+	var outer := points.slice(0, 3) if shape in ["thrust", "jab"] else points.slice(0, 9)
 	pen.draw_polyline(outer, edge, 1.0)
 
 

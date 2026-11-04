@@ -13,6 +13,11 @@ const WEAPONS := [
 	"res://content/weapons/adagas_gemeas.tres",
 	"res://content/weapons/martelo_forja.tres",
 	"res://content/weapons/arco_inverno.tres",
+	"res://content/weapons/chicote_espinhos.tres",
+	"res://content/weapons/foice_inverno.tres",
+	"res://content/weapons/punhos_bronze.tres",
+	"res://content/weapons/besta_carcosa.tres",
+	"res://content/weapons/cetro_astronomo.tres",
 ]
 
 const SKILLS := [
@@ -23,6 +28,9 @@ const SKILLS := [
 	"res://content/skills/torreta_vidro.tres",
 	"res://content/skills/espirito_cinza.tres",
 	"res://content/skills/corrente_ferreiro.tres",
+	"res://content/skills/sino_carcosa.tres",
+	"res://content/skills/raiz_viva.tres",
+	"res://content/skills/estrela_cadente.tres",
 ]
 
 # Afixos: modificadores sorteados nas armas que caem (0 a 2 por arma).
@@ -93,6 +101,12 @@ const MUTATIONS := [
 	{"id": "lamina_plena", "title": "Lâmina Plena", "detail": "+20% DE DANO COM A VIDA ACIMA DE 80%"},
 	{"id": "colecionador", "title": "Colecionador", "detail": "+50% DE ESSÊNCIA E OURO DOS INIMIGOS"},
 	{"id": "folego", "title": "Fôlego", "detail": "+1 FRASCO DE CURA NESTA PARTIDA"},
+	{"id": "couraca", "title": "Couraça de Escória", "detail": "-20% DE DANO RECEBIDO"},
+	{"id": "ultimo_folego", "title": "Teimosia", "detail": "UMA VEZ POR ANDAR, FICA COM 1 DE VIDA EM VEZ DE MORRER"},
+	{"id": "sede", "title": "Sede de Batalha", "detail": "CADA ABATE ADIANTA AS HABILIDADES EM 1 S"},
+	{"id": "passo_ligeiro", "title": "Passo do Lobo", "detail": "CORRE 15% MAIS RÁPIDO"},
+	{"id": "barganha", "title": "Língua de Mercador", "detail": "TUDO NO MERCADOR CUSTA 30% MENOS"},
+	{"id": "rastro_brasa", "title": "Rastro de Brasa", "detail": "ROLAR ATRAVÉS DE UM INIMIGO O INCENDEIA"},
 ]
 const MAX_MUTATIONS := 3
 

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "foice_inverno"
+title = "Foice do Inverno"
+category = "melee"
+stat = "vigor"
+crit_rule = "stunned"
+crit_mult = 1.9
+starter = false
+unlock_cost = 50
+color = Color(0.749, 0.902, 1.000, 1)
+moves = [{"startup": 0.14, "active": 0.12, "recover": 0.26, "damage": 15, "knock": 150, "reach": Vector2(30, 24), "lunge": 30, "stop": 0.07, "shake": 3.0, "shape": "spin"}, {"startup": 0.18, "active": 0.14, "recover": 0.36, "damage": 21, "knock": 220, "reach": Vector2(34, 26), "lunge": 50, "stop": 0.09, "shake": 4.0, "shape": "spin", "status": {"stun": 0.5}}]
+shot = {}
+lore = "O ceifeiro dos Salões colhia o trigo que nunca nasceu. Gira para os dois lados, como quem não sabe de onde vem o frio."

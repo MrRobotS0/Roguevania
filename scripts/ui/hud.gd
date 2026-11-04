@@ -187,6 +187,15 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 	if g.is_weapon():
 		var data: WeaponData = g.data
 		match data.category:
+			"bow" when data.shot.get("look", "") == "staff":
+				draw_line(c + Vector2(-5, 6), c + Vector2(3, -2), Palette.WOOD_TOP, 1.0)
+				draw_rect(Rect2(c.x + 2, c.y - 6, 4, 4), col)
+				draw_rect(Rect2(c.x + 3, c.y - 5, 1, 1), Palette.FLASH)
+			"bow" when data.shot.get("look", "") == "crossbow":
+				draw_rect(Rect2(c.x - 6, c.y, 12, 2), Palette.WOOD_TOP)
+				draw_rect(Rect2(c.x + 3, c.y - 5, 1, 11), Palette.UI_DIM)
+				draw_rect(Rect2(c.x - 2, c.y - 2, 6, 1), col)
+				draw_rect(Rect2(c.x - 2, c.y + 3, 6, 1), col)
 			"bow":
 				draw_rect(Rect2(c.x - 3, c.y - 6, 1, 12), Palette.WOOD_TOP)
 				draw_rect(Rect2(c.x - 2, c.y - 7, 2, 1), Palette.WOOD_TOP)
@@ -194,7 +203,20 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 				draw_rect(Rect2(c.x, c.y - 6, 1, 12), Palette.UI_DIM)
 				draw_rect(Rect2(c.x - 3, c.y, 8, 1), col)
 			_:
-				if data.moves.size() > 0 and String(data.moves[0].get("shape", "")) == "smash":
+				var shape := String(data.moves[0].get("shape", "")) if data.moves.size() > 0 else ""
+				if shape == "lash":
+					for i in 6:
+						draw_rect(Rect2(c.x - 6 + i * 2, c.y + 4 - i * 2 + (i % 2), 2, 1), col)
+					draw_rect(Rect2(c.x - 6, c.y + 4, 2, 3), Palette.WOOD_TOP)
+				elif shape == "spin":
+					draw_line(c + Vector2(-4, 6), c + Vector2(2, -5), Palette.WOOD_TOP, 1.0)
+					draw_rect(Rect2(c.x - 1, c.y - 7, 7, 2), col)
+					draw_rect(Rect2(c.x + 5, c.y - 5, 2, 2), col)
+				elif shape == "jab":
+					draw_rect(Rect2(c.x - 5, c.y - 3, 5, 6), col)
+					draw_rect(Rect2(c.x + 1, c.y - 4, 5, 6), col.lightened(0.2))
+					draw_rect(Rect2(c.x + 1, c.y - 4, 5, 1), Palette.FLASH)
+				elif shape == "smash":
 					draw_rect(Rect2(c.x - 1, c.y - 6, 2, 13), Palette.WOOD_TOP)
 					draw_rect(Rect2(c.x - 5, c.y - 6, 5, 6), col)
 				elif data.moves.size() > 0 and String(data.moves[0].get("shape", "")) == "thrust":
@@ -226,6 +248,19 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 				draw_rect(Rect2(c.x - 3, c.y - 4, 6, 7), col)
 				draw_rect(Rect2(c.x - 2, c.y - 6, 4, 2), col.lightened(0.3))
 				draw_rect(Rect2(c.x - 1, c.y + 4, 2, 2), col.darkened(0.3))
+			"bell":
+				draw_rect(Rect2(c.x - 3, c.y - 5, 6, 2), col)
+				draw_rect(Rect2(c.x - 4, c.y - 3, 8, 6), col)
+				draw_rect(Rect2(c.x - 5, c.y + 3, 10, 1), col.darkened(0.3))
+				draw_rect(Rect2(c.x - 1, c.y + 4, 2, 2), Palette.STONE_TOP)
+			"roots":
+				draw_rect(Rect2(c.x - 6, c.y + 4, 12, 2), Palette.WOOD_TOP)
+				for i in 4:
+					draw_rect(Rect2(c.x - 5 + i * 3, c.y - 1 - (i % 2) * 3, 2, 5 + (i % 2) * 3), col)
+			"meteor":
+				draw_line(c + Vector2(-6, -6), c + Vector2(1, 1), col.darkened(0.4), 2.0)
+				draw_rect(Rect2(c.x, c.y - 1, 5, 5), col)
+				draw_rect(Rect2(c.x + 1, c.y, 2, 2), Palette.FLASH)
 			"hook":
 				for i in 5:
 					draw_rect(Rect2(c.x - 6 + i * 2, c.y + 4 - i * 2, 2, 2), col if i % 2 else col.darkened(0.3))

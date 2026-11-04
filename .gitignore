@@ -4,3 +4,4 @@
 *.tmp
 tools/previews/
 __pycache__/
+.claude/

@@ -39,7 +39,7 @@ func interact(p: Player) -> void:
 	var options: Array[Dictionary] = []
 	var items := stock()
 	for o in items:
-		var cost: int = o["cost"]
+		var cost := price(o, p)
 		var label := ""
 		var detail_text := ""
 		match o["kind"]:
@@ -65,10 +65,15 @@ func interact(p: Player) -> void:
 			interact.call_deferred(p))
 
 
+func price(o: Dictionary, p: Player) -> int:
+	var cost: int = o["cost"]
+	return roundi(cost * 0.7) if p.has_mutation("barganha") else cost
+
+
 func _buy(p: Player, o: Dictionary) -> void:
-	if p.gold < int(o["cost"]) or o.get("sold", false):
+	if p.gold < price(o, p) or o.get("sold", false):
 		return
-	p.gold -= int(o["cost"])
+	p.gold -= price(o, p)
 	o["sold"] = true
 	match o["kind"]:
 		"gear":
