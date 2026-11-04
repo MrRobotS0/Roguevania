@@ -54,7 +54,8 @@ void fragment() {
 	float r = pow(abs(sin(a * 9.0 + TIME * 0.12) * sin(a * 15.0 - TIME * 0.07)), 4.0);
 	float fall = clamp(1.0 - length(d) * 0.75, 0.0, 1.0);
 	float k = r * fall * tint.a * 2.2;
-	COLOR = vec4(tint.rgb, step(bayer(px), k) * 0.55);
+	// transparência lisa: o pontilhado (bayer) virava uma peneira de pixels na frente da arte
+	COLOR = vec4(tint.rgb, clamp(k, 0.0, 1.0) * 0.32);
 }
 """
 
@@ -79,7 +80,7 @@ void fragment() {
 	float n = noise(p + vec2(TIME * speed / 90.0, 0.0)) * 0.65 + noise(p * 2.1 - vec2(TIME * speed / 60.0, 0.0)) * 0.35;
 	float band = smoothstep(0.35, 0.95, UV.y) * (1.0 - smoothstep(0.92, 1.0, UV.y) * 0.4);
 	float k = n * band * tint.a * 2.6;
-	COLOR = vec4(tint.rgb, step(bayer(px), k) * 0.6);
+	COLOR = vec4(tint.rgb, smoothstep(0.0, 1.0, clamp(k, 0.0, 1.0)) * 0.42);
 }
 """
 
