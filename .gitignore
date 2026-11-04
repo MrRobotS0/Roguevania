@@ -5,3 +5,4 @@
 tools/previews/
 __pycache__/
 .claude/
+build/
