@@ -2,11 +2,11 @@ class_name RuneAltar
 extends Interactable
 
 # Runas: poderes que ficam para sempre e abrem caminhos em partidas futuras.
-#   asa   Asa de Cinza (pulo duplo)        - Salões do Último Inverno
+#   asa   Asa de Cinza (terceiro pulo no ar)        - Salões do Último Inverno
 #   punho Punho do Ferreiro (quebra parede rachada) - Forja Rubra
 
 const RUNES := {
-	"asa": {"title": "Asa de Cinza", "detail": "PULO DUPLO: APERTE PULAR DE NOVO NO AR"},
+	"asa": {"title": "Asa de Cinza", "detail": "UM TERCEIRO PULO NO AR"},
 	"punho": {"title": "Punho do Ferreiro", "detail": "PAREDES RACHADAS CEDEM AOS SEUS GOLPES"},
 }
 

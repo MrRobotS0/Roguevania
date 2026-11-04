@@ -86,7 +86,7 @@ func _ready() -> void:
 	await _case("pulo sobe ~3 blocos", _jump_height)
 	await _case("soltar o pulo cedo dá pulo curto", _short_hop)
 	await _case("ainda pula logo depois de sair da beirada", _coyote)
-	await _case("não pula no ar depois da tolerância", _no_air_jump)
+	await _case("no ar, depois da tolerância, só sobra o pulo duplo", _no_air_jump)
 	await _case("rolagem deixa invencível", _roll_dodges)
 	await _case("combo da espada tira 10+12+26", _combo_damage)
 	await _case("agarra a beirada e sobe muro de 4 blocos", _ledge_climb)
@@ -138,6 +138,7 @@ func _ready() -> void:
 	await _case("armas novas acertam (a foice dos dois lados)", _new_weapons)
 	await _case("mutações novas: couraça, teimosia, barganha, passo, sede", _new_mutations)
 	await _case("partida salva: sai, fecha e continua do mesmo andar", _save_resume)
+	await _case("esquiva no ar anda reta, pulo emenda a rolagem, mergulho quica", _fluid_moves)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 
 	print("")
@@ -249,9 +250,15 @@ func _coyote() -> void:
 
 
 func _no_air_jump() -> void:
+	Meta.use_path("user://teste.save", true)
 	await _walk_off_cliff(14)
-	var vy := level.player.velocity.y
-	_check(vy > 0.0, "pulou no ar (vy %.0f)" % vy)
+	var p := level.player
+	_check(p.velocity.y < 0.0, "o pulo duplo não saiu (vy %.0f)" % p.velocity.y)
+	while p.velocity.y < 0.0:
+		await get_tree().physics_frame
+	input.clear().then(["right", "jump"], 6)
+	await _frames(3)
+	_check(p.velocity.y > 0.0, "pulou uma terceira vez sem a runa (vy %.0f)" % p.velocity.y)
 
 
 func _roll_dodges() -> void:
@@ -809,25 +816,25 @@ func _blueprints() -> void:
 
 func _double_jump() -> void:
 	Meta.use_path("user://teste.save", true)
-	await _load(FLAT)
-	var p := level.player
-	var ground := p.global_position.y
-	input.then(["jump"], 14).wait(6).then(["jump"], 12).wait(30)
-	var top := ground
-	for i in 62:
-		await get_tree().physics_frame
-		top = minf(top, p.global_position.y)
-	var single := ground - top
-	Meta.add_rune("asa")
-	await _load(FLAT)
-	p = level.player
-	ground = p.global_position.y
-	input.then(["jump"], 14).wait(6).then(["jump"], 12).wait(30)
-	top = ground
-	for i in 62:
-		await get_tree().physics_frame
-		top = minf(top, p.global_position.y)
-	_check(ground - top > single + 20.0, "com a Asa subiu %.0f, sem subiu %.0f" % [ground - top, single])
+	var tall := "#".repeat(12) + "
+" + ("#..........#
+").repeat(30) + "#....P.....#
+" + "#".repeat(12)
+	var heights: Array[float] = []
+	for with_rune in [false, true]:
+		if with_rune:
+			Meta.add_rune("asa")
+		await _load(tall)
+		var p := level.player
+		var ground := p.global_position.y
+		input.then(["jump"], 14).wait(4).then(["jump"], 12).wait(4).then(["jump"], 12).wait(40)
+		var top := ground
+		for i in 90:
+			await get_tree().physics_frame
+			top = minf(top, p.global_position.y)
+		heights.append(ground - top)
+	_check(heights[0] > 80.0, "sem runa já tem pulo duplo: subiu só %.0f" % heights[0])
+	_check(heights[1] > heights[0] + 20.0, "com a Asa subiu %.0f, sem subiu %.0f" % [heights[1], heights[0]])
 	Meta.use_path("user://teste.save", true)
 
 
@@ -1235,3 +1242,38 @@ func _guide() -> void:
 	guide.queue_free()
 	Meta.use_path("user://teste.save", true)
 	Options.reload()
+
+
+func _fluid_moves() -> void:
+	var tall := "#".repeat(40) + "
+" + ("#" + ".".repeat(38) + "#
+").repeat(14) + "#..P" + ".".repeat(35) + "#
+" + "#".repeat(40)
+	await _load(tall)
+	var p := level.player
+	input.then(["jump"], 10).then(["right", "roll"], 2).wait(4)
+	await _frames(12)
+	var y0 := p.global_position.y
+	var x0 := p.global_position.x
+	await _frames(6)
+	_check(p.global_position.x - x0 > 25.0, "a esquiva no ar não andou (%.0f)" % (p.global_position.x - x0))
+	_check(absf(p.global_position.y - y0) < 3.0, "a esquiva no ar caiu (%.0f)" % (p.global_position.y - y0))
+
+	await _load(tall)
+	p = level.player
+	input.then(["right", "roll"], 2).then(["right"], 8).then(["right", "jump"], 10).wait(20)
+	await _frames(16)
+	_check(not p.is_on_floor() and absf(p.velocity.x) > Player.RUN_SPEED, "o pulo não emendou o embalo da rolagem (%.0f)" % p.velocity.x)
+
+	await _load(tall)
+	p = level.player
+	var e := _calm(level.spawn("grunt", p.global_position + Vector2(0, 0)))
+	p.global_position.y -= 90.0
+	input.wait(4).then(["down", "attack1"], 3).wait(20)
+	var bounced := false
+	for i in 40:
+		await get_tree().physics_frame
+		if p.velocity.y < -150.0:
+			bounced = true
+			break
+	_check(bounced and e.hp < e.max_hp, "o mergulho não quicou no inimigo")

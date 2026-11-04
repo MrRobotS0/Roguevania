@@ -8,7 +8,7 @@ signal gear_changed
 enum State { MOVE, ATTACK, SHOOT, BLOCK, ROLL, DIVE, CLIMB, HEAL, HURT, DEAD }
 
 # Movimento. Em pixels/segundo; 1 bloco = 16 px.
-const RUN_SPEED := 150.0
+const RUN_SPEED := 165.0
 const GROUND_ACCEL := 1600.0
 const GROUND_DECEL := 2200.0
 const AIR_ACCEL := 1100.0
@@ -25,6 +25,9 @@ const ROLL_SPEED := 270.0
 const ROLL_TIME := 0.32
 const ROLL_DODGE := 0.27           # invencível durante quase toda a rolagem
 const ROLL_COOLDOWN := 0.12
+const AIR_DASH_SPEED := 320.0
+const AIR_DASH_TIME := 0.18
+const POGO := -290.0                 # quique ao acertar alguém no mergulho
 
 const DIVE_SPEED := 620.0
 const DIVE_DAMAGE := 18.0
@@ -54,6 +57,8 @@ var blueprints: Array[String] = []   # plantas achadas, entregues na próxima Vi
 var curse := 0              # baú maldito: qualquer golpe mata até matar `curse` inimigos
 var last_used := ""         # id da última arma/habilidade usada (estatísticas)
 var _air_jumps := 0
+var _air_dash := true            # uma esquiva no ar por pulo
+var _rolling_in_air := false
 var _rage := 0.0
 var _stubborn_used := false
 var wolf_step := false        # Passo do Lobo: esquivou de um golpe, o próximo é crítico
@@ -230,7 +235,8 @@ func _after_move(falling: float) -> void:
 	var grounded := is_on_floor()
 	if grounded:
 		_coyote = COYOTE_TIME
-		_air_jumps = 1 if Meta.has_rune("asa") else 0
+		_air_jumps = 2 if Meta.has_rune("asa") else 1
+		_air_dash = true
 		if not _was_grounded and falling > 200.0:
 			Fx.dust(global_position, 4 if falling < 380.0 else 8)
 			Sfx.play("land", -8.0)
@@ -268,6 +274,8 @@ func _move_state(delta: float) -> void:
 	var accel := AIR_ACCEL
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
+	elif absf(velocity.x) > RUN_SPEED and signf(velocity.x) == dir:
+		accel = 160.0    # embalo da rolagem segue no ar enquanto segurar a direção
 	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind, accel * delta)
 	_gravity(delta)
 
@@ -303,8 +311,28 @@ func _move_state(delta: float) -> void:
 		if it:
 			it.call("interact", self)
 			return
-	if not is_on_floor() and velocity.y > -60.0 and dir != 0.0 and is_on_wall():
+	if not is_on_floor() and velocity.y > -150.0 and dir != 0.0 and is_on_wall():
 		_try_ledge(int(signf(dir)))
+
+
+# Golpe ou tiro interrompido por um pulo (no chão ou um dos pulos do ar).
+func _cancel_into_jump() -> bool:
+	if is_on_floor() or _coyote > 0.0:
+		_jump()
+	elif _air_jumps > 0:
+		_air_jumps -= 1
+		_jump()
+	else:
+		return false
+	_combo_next = (_move_index + 1) % maxi(current_move_count(), 1)
+	_combo_grace = COMBO_GRACE
+	_enter(State.MOVE)
+	return true
+
+
+func current_move_count() -> int:
+	var g := weapon(_slot)
+	return (g.data as WeaponData).moves.size() if g and g.is_weapon() else 1
 
 
 func _jump() -> void:
@@ -422,9 +450,12 @@ func _attack_state(delta: float) -> void:
 		_start_roll()
 		return
 	if is_on_floor():
-		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
+		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.3, 900.0 * delta)
 	else:
-		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.5, AIR_ACCEL * delta)
+		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.6, AIR_ACCEL * delta)
+	if pad.just("jump") and _state_time >= startup + float(m["active"]) * 0.5:
+		if _cancel_into_jump():
+			return
 
 	if _state_time >= startup and not _swing_started:
 		_swing_started = true
@@ -495,6 +526,8 @@ func _shoot_state(delta: float) -> void:
 	_gravity(delta, 0.5 if velocity.y > 0.0 else 1.0)
 	if pad.just("roll") and _can_roll():
 		_start_roll()
+		return
+	if _shot_fired and pad.just("jump") and _cancel_into_jump():
 		return
 	if not _shot_fired and _state_time >= float(s["draw"]):
 		_shot_fired = true
@@ -698,7 +731,7 @@ func _guard(d: Damage) -> bool:
 # --- esquiva, mergulho, cura ----------------------------------------------------
 
 func _can_roll() -> bool:
-	return _roll_cd <= 0.0 and is_on_floor()
+	return _roll_cd <= 0.0 and (is_on_floor() or _air_dash)
 
 
 func _start_roll() -> void:
@@ -707,16 +740,41 @@ func _start_roll() -> void:
 		facing = int(signf(dir))
 	_dodge = ROLL_DODGE
 	_rolled_through.clear()
+	_rolling_in_air = not is_on_floor()
+	if _rolling_in_air:
+		_air_dash = false
+		_dodge = AIR_DASH_TIME
+		velocity.y = 0.0
+		_ghosts.append([global_position, 0.18, body.frame if body else 0, facing])
 	Fx.dust(global_position, 4)
 	Sfx.play("roll", -10.0)
 	_enter(State.ROLL)
 
 
 func _roll_state(delta: float) -> void:
+	if _rolling_in_air:
+		# esquiva no ar: reta, sem gravidade, e termina mantendo o embalo
+		velocity = Vector2(facing * AIR_DASH_SPEED, 0.0)
+		if _state_time >= AIR_DASH_TIME or is_on_wall():
+			velocity.x = facing * RUN_SPEED
+			_roll_cd = ROLL_COOLDOWN
+			_enter(State.MOVE)
+		elif pad.just("jump") and _air_jumps > 0:
+			_air_jumps -= 1
+			_jump()
+			_enter(State.MOVE)
+		return
 	var k := _state_time / ROLL_TIME
 	var speed := ROLL_SPEED if k < 0.7 else lerpf(ROLL_SPEED, RUN_SPEED * 0.6, (k - 0.7) / 0.3)
 	velocity.x = facing * speed
 	_gravity(delta)
+	# pular no fim da rolagem emenda o embalo no pulo
+	if pad.just("jump") and k >= 0.35 and (is_on_floor() or _coyote > 0.0):
+		_jump()
+		velocity.x = facing * ROLL_SPEED * 0.8
+		_roll_cd = ROLL_COOLDOWN
+		_enter(State.MOVE)
+		return
 	if has_mutation("rastro_brasa"):
 		for e: Actor in get_tree().get_nodes_in_group("enemies"):
 			if e.alive() and not _rolled_through.has(e) and e.hurt_rect().intersects(hurt_rect()):
@@ -739,7 +797,7 @@ func _start_dive() -> void:
 func _dive_state(delta: float) -> void:
 	velocity.x = 0.0
 	if _dive_landed:
-		if _state_time >= 0.2:
+		if _state_time >= 0.12:
 			_enter(State.MOVE)
 		else:
 			_gravity(delta)
@@ -756,6 +814,13 @@ func _dive_state(delta: float) -> void:
 			d.source = self
 			e.hurt(d)
 			Fx.hitstop(0.05)
+			# quica em quem acertou e ganha o ar de volta
+			velocity = Vector2(0.0, POGO)
+			_air_jumps = maxi(_air_jumps, 1)
+			_air_dash = true
+			Fx.burst(global_position, Palette.FLASH, 8, 110.0, 0.25)
+			_enter(State.MOVE)
+			return
 	if is_on_floor():
 		_land_dive()
 
