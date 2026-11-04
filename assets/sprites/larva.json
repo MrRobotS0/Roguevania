@@ -1,0 +1,23 @@
+{
+ "w": 46,
+ "h": 68,
+ "size": 68,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 3,
+   "fps": 6
+  },
+  "hop": {
+   "row": 1,
+   "frames": 1,
+   "fps": 8
+  },
+  "land": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}

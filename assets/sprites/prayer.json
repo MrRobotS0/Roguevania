@@ -1,0 +1,19 @@
+{
+ "w": 172,
+ "h": 175,
+ "size": 175,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 8,
+   "fps": 6
+  },
+  "windup": {
+   "row": 1,
+   "frames": 2,
+   "fps": 8
+  }
+ },
+ "draw_scale": 0.5
+}

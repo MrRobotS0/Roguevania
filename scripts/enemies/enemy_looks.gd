@@ -49,7 +49,8 @@ const TABLE := {
 # `look` é a linha da tabela (uma folha pode ter várias pinturas: o Penitente
 # do gelo usa a folha do Penitente com a paleta "penitent_ice").
 static func palette(look: String, warn := false) -> PackedColorArray:
-	var t: Array = TABLE[look]
+	# folhas em cor cheia (arte pronta) não têm linha: usam a do Dançarino para faíscas e afins
+	var t: Array = TABLE.get(look, TABLE["dancer"])
 	var main := Color(t[0])
 	var sec := Color(t[1])
 	var acc := Color(t[3])

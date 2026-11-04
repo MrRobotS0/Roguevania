@@ -62,6 +62,12 @@ const BIOMES := {
 	"jardim_primordial": "res://content/biomes/jardim_primordial/biome.tres",
 	"carcosa": "res://content/biomes/carcosa/biome.tres",
 	"observatorio": "res://content/biomes/observatorio/biome.tres",
+	"necropole": "res://content/biomes/necropole/biome.tres",
+	"catedral": "res://content/biomes/catedral/biome.tres",
+	"ventre": "res://content/biomes/ventre/biome.tres",
+	"penhascos": "res://content/biomes/penhascos/biome.tres",
+	"cavernas": "res://content/biomes/cavernas/biome.tres",
+	"bosque": "res://content/biomes/bosque/biome.tres",
 }
 
 const STAGE_NAMES := {
@@ -78,6 +84,18 @@ const STAGE_NAMES := {
 	"observatorio": "O Observatório Celeste",
 	"rei_sem_rosto": "O Salão do Rei sem Rosto",
 	"astronomo": "A Cúpula do Último Astrônomo",
+	"necropole": "A Necrópole",
+	"rei_esquecido": "A Cripta do Rei Esquecido",
+	"catedral": "A Catedral Submersa",
+	"o_que_responde": "O Altar do Que Responde",
+	"ventre": "O Ventre",
+	"insaciavel": "A Goela do Insaciável",
+	"penhascos": "Os Penhascos do Sonho",
+	"dragao_sonhado": "O Ninho do Dragão Sonhado",
+	"cavernas": "As Cavernas Fundas",
+	"serpe": "O Fundo da Serpe",
+	"bosque": "O Bosque Errante",
+	"raposa": "A Clareira da Raposa",
 	"trono": "O Trono do Imperador Cego",
 }
 
@@ -88,6 +106,12 @@ const STAGE_HINTS := {
 	"jardim_primordial": "FERAS E ESPINHOS · TUDO CRESCE",
 	"carcosa": "MÁSCARAS QUE SOMEM · O MAIS ESTRANHO",
 	"observatorio": "AUTÔMATOS E ESTRELAS · O MAIS ABERTO",
+	"necropole": "MORTOS QUE LEMBRAM · O MAIS SOMBRIO",
+	"catedral": "ÁGUA E PRECES · CHEIO DE ATIRADORES",
+	"ventre": "CARNE VIVA · O MAIS BRUTO",
+	"penhascos": "SONHO E VENTO · MUITOS VÃOS",
+	"cavernas": "ESCURO E FENDAS · O MAIS FECHADO",
+	"bosque": "ESTRADA SEM FIM · O MAIS RÁPIDO",
 	"trono": "O FIM DA JORNADA",
 }
 

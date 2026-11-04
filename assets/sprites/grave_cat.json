@@ -1,0 +1,33 @@
+{
+ "w": 94,
+ "h": 38,
+ "size": 94,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 2,
+   "fps": 6
+  },
+  "run": {
+   "row": 1,
+   "frames": 4,
+   "fps": 12
+  },
+  "crouch": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  },
+  "lunge": {
+   "row": 3,
+   "frames": 1,
+   "fps": 8
+  },
+  "stun": {
+   "row": 4,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}

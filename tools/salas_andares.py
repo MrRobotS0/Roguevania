@@ -174,9 +174,9 @@ def floor_rooms(biome, hazard_rooms):
 
 
 def passage():
-    r = R("passagem", "passagem", 46, 14, head="A passagem entre dois domínios")
+    r = R("passagem", "passagem", 52, 14, head="A passagem entre dois domínios")
     r.fill(14, 18, 9, 9, "=").fill(27, 31, 9, 9, "=")
-    r.put(3, 12, "P").put(10, 12, "V").put(22, 12, "M").put(36, 12, "X").put(42, 12, "X")
+    r.put(3, 12, "P").put(10, 12, "V").put(22, 12, "M").put(36, 12, "X").put(42, 12, "X").put(48, 12, "X")
     return r
 
 
@@ -204,7 +204,9 @@ if __name__ == "__main__":
 
     for biome, rune, hazard in (("forja_rubra", "punho", True), ("saloes", "asa", True),
                                 ("torre_babel", "", True), ("jardim_primordial", "", True),
-                                ("carcosa", "", True), ("observatorio", "", True)):
+                                ("carcosa", "", True), ("observatorio", "", True),
+                                ("necropole", "", True), ("catedral", "", True), ("ventre", "", True),
+                                ("penhascos", "", True), ("cavernas", "", True), ("bosque", "", True)):
         folder = os.path.join(CONTENT, "biomes", biome, "rooms")
         save(floor_rooms(biome, hazard) + common(biome, rune), folder, ("",))
     print("ok")

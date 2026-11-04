@@ -68,6 +68,7 @@ func _fire() -> void:
 const TINTS := {
 	"glass": Color("bfe6ea"), "light": Color("fff3c4"), "fire": Color("ff9a3c"), "molten": Color("ff9a3c"),
 	"vine": Color("6a9a3a"), "tendril": Color("5a2a7a"), "spore": Color("b8d05a"),
+	"bone": Color("e8e0c8"), "water": Color("8ad0f0"), "bile": Color("c8d040"), "dream": Color("c8a8ff"),
 }
 
 

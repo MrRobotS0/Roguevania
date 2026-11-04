@@ -1,0 +1,82 @@
+{
+ "panel": {
+  "margin": 7,
+  "rect": [
+   0,
+   0,
+   88,
+   32
+  ]
+ },
+ "bar": {
+  "left": 12,
+  "right": 13,
+  "mid": 18,
+  "center": null,
+  "inner": [
+   5,
+   3,
+   6,
+   8
+  ],
+  "rect": [
+   89,
+   0,
+   94,
+   15
+  ]
+ },
+ "boss": {
+  "left": 24,
+  "right": 24,
+  "mid": 24,
+  "center": [
+   33,
+   21
+  ],
+  "inner": [
+   5,
+   3,
+   6,
+   7
+  ],
+  "rect": [
+   184,
+   0,
+   95,
+   17
+  ]
+ },
+ "header": {
+  "left": 16,
+  "right": 16,
+  "mid": 18,
+  "center": null,
+  "rect": [
+   280,
+   0,
+   93,
+   20
+  ]
+ },
+ "slot": {
+  "inner": null,
+  "rect": [
+   374,
+   0,
+   30,
+   30
+  ]
+ },
+ "gem": {
+  "rect": [
+   405,
+   0,
+   10,
+   34
+  ]
+ },
+ "text": "d8dce6",
+ "dim": "4a5068",
+ "accent": "a8c0e8"
+}

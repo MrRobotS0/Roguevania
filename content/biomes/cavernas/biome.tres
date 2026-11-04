@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/biomes/biome_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cavernas"
+title = "As Cavernas Fundas"
+subtitle = "Domínio do deus que se escondia"
+colors = {
+"stone": Color(0.227, 0.227, 0.282, 1),
+"deep": Color(0.071, 0.071, 0.094, 1),
+"top": Color(0.416, 0.416, 0.502, 1),
+"light": Color(0.659, 0.722, 0.784, 1),
+"shadow": Color(0.016, 0.016, 0.024, 1),
+"moss": Color(0.353, 0.541, 0.604, 1),
+"wood": Color(0.165, 0.141, 0.125, 1),
+"wood_top": Color(0.353, 0.290, 0.227, 1),
+"wood_dark": Color(0.071, 0.055, 0.039, 1),
+"vein": Color(0.541, 0.784, 0.910, 1),
+"cloth": Color(0.165, 0.227, 0.290, 1)
+}
+sky = {
+"sky0": Color(0.016, 0.016, 0.024, 1),
+"sky1": Color(0.055, 0.055, 0.086, 1),
+"sky2": Color(0.094, 0.094, 0.133, 1),
+"glow": Color(0.227, 0.416, 0.541, 1),
+"sun": Color(0.722, 0.910, 1.000, 1),
+"accent": Color(0.541, 0.784, 0.910, 1),
+"ambient": Color(0.353, 0.376, 0.439, 1)
+}
+backdrop = "painted"
+layers = "bd_cavernas"
+weather = "dust"
+rooms_dir = "res://content/biomes/cavernas/rooms"
+boss_room = "res://content/arena.txt"
+combat_rooms = 7
+enemies = [{"script": "res://scripts/enemies/blind_lizard.gd", "slot": "e", "weight": 10}, {"script": "res://scripts/enemies/crevice_snake.gd", "slot": "e", "weight": 9}, {"script": "res://scripts/enemies/digger.gd", "slot": "e", "weight": 9}, {"script": "res://scripts/enemies/mason.gd", "slot": "e", "weight": 3}]
+elites = ["res://scripts/enemies/elite_hermit.gd"]
+boss_script = "res://scripts/enemies/boss_wyrm.gd"
+exits = [{"title": "Seguir em frente", "to": "passagem"}]
+lore = ["O deus que se escondia viu o que ia acontecer. Desceu antes de todo mundo.", "Cavou até não ouvir mais nada lá de cima. Os lagartos daqui nunca viram a luz.", "Os escavadores vieram atrás dele. Cavam há tanto tempo que esqueceram por quê.", "Na porta do fundo dorme a serpe. Ele deixou ela ali para ninguém descer mais.", "Riscado na rocha, bem fundo: ELE SABIA. E NÃO CONTOU A NINGUÉM."]
+tier = 5
+hazard_script = "res://scripts/enemies/cave_drip.gd"
+rune = ""
+ink = Color(0.008, 0.008, 0.016, 1)
+recolor = {}

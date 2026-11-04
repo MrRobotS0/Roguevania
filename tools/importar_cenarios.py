@@ -39,6 +39,15 @@ SETS = {
                    "gotthicvania-swamp/**/Evironment/mid-layer-02.png", None], 0, 1.0),
     "bd_carcosa": (["gothicvania-junk-wasteland-environment/**/layers/back.png", "gothicvania-junk-wasteland-environment/**/layers/middle.png",
                     "gothicvania-junk-wasteland-environment/**/layers/near.png", None], -105, 1.1),
+    "bd_necropole": (["gothicvania-cemetery-pack/**/PNG/Environment/background.png", "gothicvania-cemetery-pack/**/PNG/Environment/mountains.png",
+                      "gothicvania-cemetery-pack/**/PNG/Environment/graveyard.png", None], 0, 1.0),
+    "bd_catedral": ([None, None, "gothicvania-church-pack/**/ENVIRONMENT/backgrounds.png", None], -40, 1.2),
+    "bd_ventre": (["living-tissue-background/**/tile-background.png", None, None, None], 140, 1.3),
+    "bd_penhascos": (["magic-cliffs-environment/**/PNG/sky.png", "magic-cliffs-environment/**/PNG/clouds.png",
+                      "magic-cliffs-environment/**/PNG/far-grounds.png", None], 80, 0.9),
+    "bd_cavernas": (["cavern-tile-set/**/layers/background.png", "cavern-tile-set/**/layers/back-walls.png", None, None], 0, 1.0),
+    "bd_bosque": (["forest-background/**/layers/parallax-forest-back-trees.png", "forest-background/**/layers/parallax-forest-lights.png",
+                   "forest-background/**/layers/parallax-forest-middle-trees.png", "forest-background/**/layers/parallax-forest-front-trees.png"], 0, 1.0),
 }
 
 # O espaço vem em peças pequenas: vai em escala 2 (inteira, não borra) e os
@@ -105,6 +114,34 @@ def to_screen(im, width, fill_top):
     return out
 
 
+SCALE2 = {"bd_bosque"}
+
+
+def packed(im):
+    """Os painéis da igreja vêm separados por vãos transparentes: junta lado a lado."""
+    cols = [x for x in range(im.width) if im.crop((x, 0, x + 1, im.height)).getbbox()]
+    runs, start = [], cols[0]
+    for a, b in zip(cols, cols[1:] + [None]):
+        if b is None or b != a + 1:
+            runs.append((start, a + 1))
+            start = b
+    out = Image.new("RGBA", (sum(b - a for a, b in runs), im.height), (0, 0, 0, 0))
+    x = 0
+    for a, b in runs:
+        out.alpha_composite(im.crop((a, 0, b, im.height)), (x, 0))
+        x += b - a
+    return out
+
+
+def wallpaper(im, width):
+    """Textura que repete nas duas direções (a carne do Ventre)."""
+    out = Image.new("RGBA", (width, H), (0, 0, 0, 0))
+    for y in range(H - im.height, -im.height, -im.height):
+        for x in range(0, width, im.width):
+            out.alpha_composite(im, (x, y)) if y >= 0 else out.alpha_composite(im.crop((0, -y, im.width, im.height)), (x, 0))
+    return out
+
+
 def main():
     os.makedirs(PREV, exist_ok=True)
     jobs = list(SETS.items()) + [("bd_observatorio", None)]
@@ -119,7 +156,19 @@ def main():
                     layers[name] = Image.new("RGBA", (W if name == "sky" else LW, H), (0, 0, 0, 0))
                     continue
                 im = shift(find(path), hue, sat)
+                if prefix in SCALE2:
+                    im = im.resize((im.width * 2, im.height * 2), Image.NEAREST)
+                if prefix == "bd_catedral":
+                    im = packed(im)
+                if prefix == "bd_ventre":
+                    layers[name] = wallpaper(im, LW)
+                    continue
                 layers[name] = to_screen(im, W if name == "sky" else LW, fill_top=(name == "sky"))
+            if prefix == "bd_catedral":
+                # a nave escura atrás dos vitrais
+                mid = layers["mid"]
+                tone = mid.getpixel((4, H - 150))
+                layers["sky"] = Image.new("RGBA", (W, H), tone[:3] + (255,))
         for name, im in layers.items():
             im.save(os.path.join(OUT, "%s_cor_%s.png" % (prefix, name)))
         comp = layers["sky"].copy()

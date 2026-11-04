@@ -1,0 +1,23 @@
+{
+ "w": 58,
+ "h": 90,
+ "size": 90,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 8,
+   "fps": 6
+  },
+  "windup": {
+   "row": 1,
+   "frames": 1,
+   "fps": 8
+  },
+  "attack": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}

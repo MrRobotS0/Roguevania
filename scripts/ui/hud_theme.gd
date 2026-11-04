@@ -17,6 +17,12 @@ const THEMES := {
 	"jardim_primordial": {"frame": "4a6a2a", "light": "9cc65a", "dark": "141c0c", "bg": "0e140a", "accent": "c8e07a", "style": "vines"},
 	"carcosa": {"frame": "5a4a24", "light": "e8d070", "dark": "140e06", "bg": "120e08", "accent": "ffd84a", "style": "drips"},
 	"observatorio": {"frame": "1f3a6a", "light": "9fe8ff", "dark": "04070e", "bg": "050a14", "accent": "6fe8ff", "style": "circuit"},
+	"necropole": {"frame": "4a5068", "light": "c8d4e8", "dark": "0c0e16", "bg": "0e1018", "accent": "a8c0e8", "style": "plain"},
+	"catedral": {"frame": "2a4a6a", "light": "8ad0f0", "dark": "08121c", "bg": "0a1622", "accent": "6ab8e8", "style": "ice"},
+	"ventre": {"frame": "6a2028", "light": "e86a6a", "dark": "1a0608", "bg": "1a0a0c", "accent": "c8d040", "style": "drips"},
+	"penhascos": {"frame": "5a4a7a", "light": "e0d0ff", "dark": "120e1c", "bg": "140f20", "accent": "c8a8ff", "style": "circuit"},
+	"cavernas": {"frame": "3a4048", "light": "8ac8d8", "dark": "06080a", "bg": "0a0c10", "accent": "8ac8e8", "style": "rivets"},
+	"bosque": {"frame": "5a4a2a", "light": "d8c890", "dark": "14100a", "bg": "12100a", "accent": "e8d070", "style": "vines"},
 }
 
 

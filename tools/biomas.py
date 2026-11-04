@@ -59,7 +59,9 @@ def biome(bid, title, subtitle, colors, sky, layers, weather, enemy_list, boss, 
 
 
 ELITES = {"torre_babel": "elite_librarian", "jardim_primordial": "elite_thornkeeper",
-          "carcosa": "elite_duelist", "observatorio": "elite_brass"}
+          "carcosa": "elite_duelist", "observatorio": "elite_brass",
+          "necropole": "elite_caller", "catedral": "elite_priestess", "ventre": "elite_glutton",
+          "penhascos": "elite_reverie", "cavernas": "elite_hermit", "bosque": "elite_bull"}
 
 SALOES_FORJA_BOSS = {"saloes": "boss_wolf_king", "forja_rubra": "boss_colossus"}
 
@@ -126,4 +128,89 @@ if __name__ == "__main__":
            "A luneta aponta para um ponto vazio. Lá estava o deus.",
            "No caderno de bordo, a última linha: ELE OLHOU DE VOLTA."],
           "04060c", combat=7)
+
+    # ===================== grande update: os 6 deuses que faltavam =====================
+    biome("necropole", "A Necrópole", "Domínio do deus que lembrava os mortos",
+          dict(stone="4a5068", deep="1a1c28", top="8a92aa", light="d8dce8", shadow="0a0c12", moss="a8b4c8",
+               wood="3a3030", wood_top="6a5a50", wood_dark="1e1818", vein="a8c0e8", cloth="3a2a4a"),
+          dict(sky0="0a0a18", sky1="1e1a34", sky2="2a2444", glow="c84a8a", sun="f0c8e0", accent="a8c0e8", ambient="8088a8"),
+          "bd_necropole", "shadow",
+          [("risen", "e", 10), ("mourner", "e", 9), ("grave_cat", "e", 9), ("grunt", "e", 3)],
+          "boss_forgotten", "grave_hand", 2,
+          ["Aqui o deus guardava o nome de cada morto. Enquanto alguém lembra, ninguém some de vez.",
+           "Ele sumiu na mesma noite que os outros. Desde então os mortos não sabem mais quem foram.",
+           "As carpideiras choram por todos. Não lembram por quem.",
+           "Na lápide maior não há nome. Só a coroa, gasta de tanto ser tocada.",
+           "Escrito por dentro de uma cova aberta: SE VOCÊ LEMBRAR DE MIM, EU VOLTO."],
+          "06060c", combat=7)
+
+    biome("catedral", "A Catedral Submersa", "Domínio do deus que ouvia as preces",
+          dict(stone="3a5068", deep="121c28", top="6a8aa8", light="b8d8f0", shadow="060a10", moss="5a9ab0",
+               wood="2a2a3a", wood_top="4a5a6a", wood_dark="141820", vein="8ad0f0", cloth="5a1a2a"),
+          dict(sky0="040c16", sky1="0e2236", sky2="16304a", glow="3a8ab0", sun="d8f4ff", accent="8ad0f0", ambient="6a90a8"),
+          "bd_catedral", "spores",
+          [("drowned", "e", 10), ("votive", "e", 9), ("prayer", "r", 9), ("archer", "r", 3)],
+          "boss_answer", "geyser", 3,
+          ["Todas as preces do mundo desciam até aqui. O deus ouvia uma por uma.",
+           "Quando ele sumiu, as preces continuaram caindo. Encheram a nave até o teto.",
+           "Os afogados não se afogaram. Desceram rezando e não quiseram subir.",
+           "Alguma coisa no fundo começou a responder. Ninguém pediu isso a ela.",
+           "No banco da frente, gravado com a unha: EU PEDI QUE ELE VOLTASSE. VEIO OUTRO."],
+          "02060c", combat=7)
+
+    biome("ventre", "O Ventre", "Domínio do deus que devorava",
+          dict(stone="5a1a20", deep="1e0608", top="a83a3a", light="f0a090", shadow="0c0204", moss="c8d040",
+               wood="4a2018", wood_top="7a3a28", wood_dark="200a08", vein="c8d040", cloth="2a0a10"),
+          dict(sky0="100204", sky1="2a080c", sky2="3a0e12", glow="c83a3a", sun="ffd0a0", accent="c8d040", ambient="9a6a6a"),
+          "bd_ventre", "embers",
+          [("larva", "e", 10), ("parasite", "e", 9), ("maw_tentacle", "r", 9), ("slag", "e", 3)],
+          "boss_insatiable", "bile_vent", 4,
+          ["O deus que devorava comia o que sobrava do mundo, para o mundo caber nele mesmo.",
+           "Quando os outros sumiram, ele ficou com fome deles. Comeu o próprio domínio por dentro.",
+           "Você está andando por dentro dele. As paredes respiram.",
+           "Os parasitas eram as últimas coisas que ele engoliu. Ainda não foram digeridos.",
+           "Raspado no osso de uma costela: A FOME FICOU. O DEUS FOI EMBORA."],
+          "0a0204", combat=7)
+
+    biome("penhascos", "Os Penhascos do Sonho", "Domínio do deus que sonhava",
+          dict(stone="5a5a7a", deep="20203a", top="8ac88a", light="e0f0d0", shadow="0c0c18", moss="b8e08a",
+               wood="4a3a5a", wood_top="7a6a9a", wood_dark="241a30", vein="c8a8ff", cloth="5a3a8a"),
+          dict(sky0="2a2050", sky1="7a68c0", sky2="b8a8e8", glow="f0d0ff", sun="fff8ff", accent="c8a8ff", ambient="b0a8d8"),
+          "bd_penhascos", "stars",
+          [("sleepwalker", "r", 10), ("nightmare", "e", 9), ("incubus", "e", 9), ("gargoyle", "e", 3)],
+          "boss_dragon", "dream_flash", 5,
+          ["Isto não existe. É o sonho de um deus que dormiu e não acordou mais.",
+           "O mar lá embaixo é o sono dele. Quem cai, sonha junto e esquece de voltar.",
+           "Os pesadelos correm por cima de quem dorme. Aqui, todos dormem.",
+           "Ele sonhou um guarda para não ser acordado. O guarda tem asas.",
+           "Escrito numa nuvem que não se mexe: NÃO ME ACORDE. NO SONHO ELES AINDA ESTÃO AQUI."],
+          "0c0a1a", combat=7)
+
+    biome("cavernas", "As Cavernas Fundas", "Domínio do deus que se escondia",
+          dict(stone="3a3a48", deep="121218", top="6a6a80", light="a8b8c8", shadow="040406", moss="5a8a9a",
+               wood="2a2420", wood_top="5a4a3a", wood_dark="120e0a", vein="8ac8e8", cloth="2a3a4a"),
+          dict(sky0="040406", sky1="0e0e16", sky2="181822", glow="3a6a8a", sun="b8e8ff", accent="8ac8e8", ambient="5a6070"),
+          "bd_cavernas", "dust",
+          [("blind_lizard", "e", 10), ("crevice_snake", "e", 9), ("digger", "e", 9), ("mason", "e", 3)],
+          "boss_wyrm", "cave_drip", 5,
+          ["O deus que se escondia viu o que ia acontecer. Desceu antes de todo mundo.",
+           "Cavou até não ouvir mais nada lá de cima. Os lagartos daqui nunca viram a luz.",
+           "Os escavadores vieram atrás dele. Cavam há tanto tempo que esqueceram por quê.",
+           "Na porta do fundo dorme a serpe. Ele deixou ela ali para ninguém descer mais.",
+           "Riscado na rocha, bem fundo: ELE SABIA. E NÃO CONTOU A NINGUÉM."],
+          "020204", combat=7)
+
+    biome("bosque", "O Bosque Errante", "Domínio do deus que caminhava",
+          dict(stone="4a4a3a", deep="1a1a12", top="7a8a4a", light="d8d0a0", shadow="0a0a06", moss="a8c870",
+               wood="5a3a20", wood_top="8a6a3a", wood_dark="2a1a0e", vein="e8d070", cloth="6a2a1a"),
+          dict(sky0="2a1a0a", sky1="7a4a1a", sky2="c88a3a", glow="ffd890", sun="fff4c8", accent="e8d070", ambient="b09a70"),
+          "bd_bosque", "spores",
+          [("highwayman", "e", 10), ("wanderer", "e", 9), ("frogman", "e", 9), ("wolf", "e", 3)],
+          "boss_fox", "bramble", 5,
+          ["O deus que caminhava nunca parou num lugar. O bosque andava com ele.",
+           "Quando ele sumiu, o bosque continuou andando, sem saber para onde.",
+           "Os andarilhos seguiam o deus. Agora seguem a estrada, que anda em círculo.",
+           "A raposa ia sempre na frente, mostrando o caminho. Ainda vai.",
+           "Numa placa de estrada, apontando para todos os lados: ELE FOI POR AQUI."],
+          "0a0804", recolor={"wolf": "moss_beast"}, combat=7)
     print("ok")

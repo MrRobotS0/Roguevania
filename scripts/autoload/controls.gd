@@ -101,6 +101,19 @@ const PAD_HINTS := {
 
 var pad_mode := false
 
+# Trava de interface: a tecla que abre ou fecha uma tela não pode valer também
+# para a tela que aparece no mesmo quadro (Enter em OPÇÕES ligava a 1ª opção;
+# Esc que fechava as opções confirmava COMEÇAR no título).
+var _ui_lock := 0
+
+
+func lock_ui(frames := 3) -> void:
+	_ui_lock = maxi(_ui_lock, Engine.get_process_frames() + frames)
+
+
+func ui_ready() -> bool:
+	return Engine.get_process_frames() > _ui_lock
+
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton:

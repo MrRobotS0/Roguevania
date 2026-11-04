@@ -39,11 +39,13 @@ func open() -> void:
 	_was_paused = get_tree().paused
 	get_tree().paused = true
 	visible = true
+	Controls.lock_ui()
 	Sfx.play("ui_open", -8.0)
 
 
 func close() -> void:
 	visible = false
+	Controls.lock_ui()
 	get_tree().paused = _was_paused
 	get_tree().call_group("player", "absorb_input")
 	closed.emit()
@@ -100,7 +102,7 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	queue_redraw()
-	if _waiting:
+	if _waiting or not Controls.ui_ready():
 		return
 	var rows := _rows()
 	if Input.is_action_just_pressed("up"):

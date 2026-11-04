@@ -4,16 +4,17 @@ extends RefCounted
 # Textos da história: abertura, final e o bestiário do Códice.
 
 const INTRO := [
-	"Houve um tempo em que sete deuses dividiam o mundo. Cada um tinha um domínio, e cada domínio tinha a cara do seu deus.",
+	"Houve um tempo em que treze deuses dividiam o mundo. Cada um tinha um domínio, e cada domínio tinha a cara do seu deus.",
 	"Numa noite sem nome, todos sumiram. Ao mesmo tempo. Ninguém viu para onde foram.",
-	"Os domínios ficaram. Sem dono, apodreceram do jeito de cada um: a cinza ficou sagrada, o inverno não acabou, a forja não parou.",
+	"Os domínios ficaram. Sem dono, apodreceram do jeito de cada um: a cinza ficou sagrada, o inverno não acabou, a forja não parou, os mortos esqueceram o próprio nome, o sonho virou pesadelo.",
 	"Você acordou na beira do Mar de Cinzas, com um manto que não lembra de ter vestido. A Vigia te chama de Moksha e diz que você já esteve aqui antes. Muitas vezes.",
 	"Em algum lugar, no fim de tudo, está o Trono. Quem senta nele sabe o que aconteceu com os deuses.",
 ]
 
 const ENDING := [
 	"O Imperador Cego caiu. Pela primeira vez em mil anos, o Trono ficou vazio.",
-	"Você se senta. Por um instante, vê o que ele via: sete deuses, de mãos dadas, entrando numa porta de luz.",
+	"Você se senta. Por um instante, vê o que ele via: doze deuses, de mãos dadas, entrando numa porta de luz.",
+	"O décimo terceiro não entrou. O que se escondia viu tudo do fundo da terra e não contou a ninguém.",
 	"Não foram embora. Foram dormir. E o sonho deles é este mundo: cada domínio, um pesadelo de quem sonha.",
 	"Atrás da porta, uma voz que não é de deus nenhum: \"Ainda não. Volte quando a brasa queimar mais.\"",
 	"A Vigia te encontra de novo na beira do Mar de Cinzas. \"Você de novo. Ou outro igual a você.\"",
@@ -21,8 +22,8 @@ const ENDING := [
 
 # Só com as quatro brasas acesas.
 const TRUE_ENDING := [
-	"Com todas as brasas acesas, a porta não resiste. Do outro lado, sete cadeiras vazias.",
-	"E uma oitava, menor, de frente para as outras. Na madeira, alguém gravou o seu nome. Faz muito tempo.",
+	"Com todas as brasas acesas, a porta não resiste. Do outro lado, treze cadeiras vazias.",
+	"E uma décima quarta, menor, de frente para as outras. Na madeira, alguém gravou o seu nome. Faz muito tempo.",
 	"Você entende, enfim, por que a Vigia sempre te reconhece. Você não chegou depois dos deuses. Você é o que eles deixaram para trás.",
 ]
 
@@ -62,6 +63,36 @@ const BESTIARY := {
 	"O REI SEM ROSTO": "Guardião de Carcosa. A máscara caiu; não havia nada embaixo.",
 	"O ÚLTIMO ASTRÔNOMO": "Guardião do Observatório. Contou as estrelas até elas acabarem.",
 	"O IMPERADOR CEGO": "Arrancou os olhos para ver o futuro. Senta no Trono há mil anos.",
+	"CARPIDEIRA": "Chora por todos os mortos da Necrópole. Não lembra por quem. Plana e mergulha gritando.",
+	"MORTO DESPERTO": "Dorme na própria cova até ouvir passos. A terra que se mexe é ele.",
+	"FOME DAS COVAS": "O gato-sombra que come as oferendas. Abaixa antes do bote.",
+	"AFOGADO": "Desceu rezando e não quis subir. Pancada lenta, bem avisada.",
+	"CAVALEIRO VOTIVO": "Jurou guardar a nave da Catedral. O escudo segura a frente; as costas, não.",
+	"PRECE VIVA": "Uma prece que ficou boiando e aprendeu a mirar. O fio trava antes do choque.",
+	"TENTÁCULO FAMINTO": "Raiz de carne do Ventre. Não anda; abre e cospe dentes em arco.",
+	"LARVA DO VENTRE": "Pula atrás de você e queima com ácido. Morta, vira poça.",
+	"PARASITA": "Uma das últimas coisas que o deus engoliu. Ainda não foi digerida. Salta.",
+	"PESADELO": "Corre por cima de quem dorme. Abaixa a cabeça antes de disparar.",
+	"ÍNCUBO": "Some e aparece atrás de você, como num sonho ruim.",
+	"SONÂMBULA": "Atira dormindo. A mira trava um instante antes da flecha.",
+	"LAGARTO CEGO": "Nunca viu a luz. Sente o passo e estica a língua.",
+	"SERPENTE DA FENDA": "Mora na fenda do chão. A poeira que se mexe é ela.",
+	"ESCAVADOR": "Cava atrás do deus escondido há tanto tempo que esqueceu por quê. Acende a bomba quando chega perto.",
+	"SALTEADOR": "Cobra a passagem na estrada do Bosque. Gira a espada e cruza o caminho num corte só.",
+	"ANDARILHO PERDIDO": "Seguiu o deus que caminhava e esqueceu a volta.",
+	"SAPO-HOMEM": "De longe cospe pedra em arco; de perto, bate.",
+	"CHAMADOR DE NOMES": "Elite da Necrópole. Lê o nome dos mortos em voz alta, e eles levantam.",
+	"SACERDOTISA AFOGADA": "Elite da Catedral. Ainda reza a missa; a água obedece.",
+	"GLUTÃO": "Elite do Ventre. O primeiro que o deus engoliu. Ficou lá dentro, comendo.",
+	"LÂMINA DO DEVANEIO": "Elite dos Penhascos. Ela sonha que luta, e você está no sonho dela.",
+	"EREMITA DA FENDA": "Elite das Cavernas. Desceu atrás do deus e não quis mais subir.",
+	"TOURO DA ESTRADA": "Elite do Bosque. Cobra pedágio de quem passa. Ninguém tem com que pagar.",
+	"O REI ESQUECIDO": "Guardião da Necrópole. Lembra de todos os mortos, menos de si mesmo.",
+	"O QUE RESPONDE": "Guardião da Catedral. Alguém ouviu as preces. Não era o deus.",
+	"O INSACIÁVEL": "Guardião do Ventre. O deus que devorava comeu até a própria fome.",
+	"O DRAGÃO SONHADO": "Guardião dos Penhascos. O deus sonhou um guarda para não ser acordado.",
+	"A SERPE DO FUNDO": "Guardiã das Cavernas. Deixada na porta para ninguém descer mais.",
+	"A RAPOSA DE NOVE CAUDAS": "Guardiã do Bosque. Ia sempre na frente do deus que caminhava. Ainda vai.",
 }
 
 

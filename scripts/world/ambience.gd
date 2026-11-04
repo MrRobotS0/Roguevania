@@ -21,6 +21,18 @@ const LOOK := {
 		"motes": "ash", "mote": Color(1.0, 0.92, 0.35)},
 	"observatorio": {"rays": Color(0.7, 0.6, 1.0, 0.08), "ray_at": Vector2(0.15, -0.1), "fog": Color(0.35, 0.25, 0.55, 0.18),
 		"motes": "stars", "mote": Color(0.85, 0.9, 1.0)},
+	"necropole": {"rays": Color(0.75, 0.85, 1.0, 0.10), "ray_at": Vector2(0.78, -0.15), "fog": Color(0.45, 0.5, 0.65, 0.32),
+		"motes": "fireflies", "mote": Color(0.75, 0.95, 1.0)},
+	"catedral": {"rays": Color(0.55, 0.85, 1.0, 0.16), "ray_at": Vector2(0.5, -0.3), "fog": Color(0.2, 0.4, 0.55, 0.3),
+		"motes": "snow", "mote": Color(0.65, 0.9, 1.0)},
+	"ventre": {"rays": Color(1.0, 0.35, 0.35, 0.08), "ray_at": Vector2(0.5, 1.2), "fog": Color(0.55, 0.12, 0.16, 0.32),
+		"motes": "sparks", "mote": Color(1.0, 0.55, 0.5)},
+	"penhascos": {"rays": Color(0.95, 0.8, 1.0, 0.18), "ray_at": Vector2(0.2, -0.2), "fog": Color(0.6, 0.5, 0.8, 0.22),
+		"motes": "stars", "mote": Color(0.95, 0.85, 1.0)},
+	"cavernas": {"rays": Color(0.5, 0.8, 0.9, 0.06), "ray_at": Vector2(0.5, -0.4), "fog": Color(0.15, 0.2, 0.28, 0.35),
+		"motes": "ash", "mote": Color(0.6, 0.85, 0.95)},
+	"bosque": {"rays": Color(1.0, 0.9, 0.6, 0.16), "ray_at": Vector2(0.7, -0.2), "fog": Color(0.35, 0.45, 0.3, 0.26),
+		"motes": "fireflies", "mote": Color(1.0, 0.95, 0.55)},
 }
 
 const RAYS_SHADER := """

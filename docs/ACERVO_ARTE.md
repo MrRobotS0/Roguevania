@@ -87,11 +87,10 @@ Estes ficaram de fora por terem um quadro só (sem animação):
 - gargoyle-0 (dr_corchit, CC0, gárgula de pedra de frente; daria para animar por código);
 - mystery-monk (abaixo do nível).
 
-## Ainda sem arte (desenhar por código, no estilo da arte nova)
+## Desenhados por código / recoloridos (tools/desenhar_personagens.py, importar_inimigos.py)
 
-- **Mãe-Raiz:** não existe árvore ou criatura de raízes em 2D de plataforma gratuita.
-- **Fera-Musgo.**
-- **Gárgula:** só o gargoyle-0 estático.
-- **Estrela Caída.**
-- **Penitente com a clava.**
-- **Guarda da Casa com escudo:** talvez o esqueleto de escudo do Luiz Melo.
+- ✅ **Mãe-Raiz:** desenhada por código (mulher-árvore, cabelo de cipó, semente acesa no peito).
+- ✅ **Estrela Caída:** desenhada por código (astro em brasa com destroços orbitando).
+- ✅ **Fera-Musgo:** Frost Guardian (chierit) recolorido para musgo escuro.
+- ✅ **Gárgula:** morcego do bestiário recolorido para pedra.
+- ✅ **Penitente:** fantasy-warrior dessaturado. **Guarda da Casa:** esqueleto de escudo do Luiz Melo.

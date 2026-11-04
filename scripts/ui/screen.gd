@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	queue_redraw()
-	if _t < 0.6 or _menu_open():
+	if _t < 0.6 or _menu_open() or not Controls.ui_ready():
 		return
 	if mode == "title":
 		if Input.is_action_just_pressed("up"):
@@ -127,7 +127,8 @@ func _process(delta: float) -> void:
 		elif Input.is_action_just_pressed("down"):
 			_index = wrapi(_index + 1, 0, _options.size())
 			Sfx.play("ui_move", -12.0)
-		elif Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("attack1"):
+		elif Input.is_action_just_pressed("confirm"):
+			# só Enter/Espaço/A: o clique do mouse (que só dá foco à janela) não escolhe nada
 			pick(_options[_index][0])
 		return
 	if Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("attack1"):
@@ -137,6 +138,7 @@ func _process(delta: float) -> void:
 # Também usado pelos testes.
 func pick(id: String) -> void:
 	Sfx.play("ui_ok", -6.0)
+	Controls.lock_ui()
 	if id == "start":
 		confirmed.emit()
 	else:

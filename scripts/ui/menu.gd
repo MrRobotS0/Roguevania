@@ -64,6 +64,7 @@ func _show() -> void:
 	_open = true
 	visible = true
 	_opened_at = Engine.get_process_frames()
+	Controls.lock_ui()
 	get_tree().paused = true
 	Sfx.play("ui_open", -8.0)
 
@@ -71,6 +72,7 @@ func _show() -> void:
 func close() -> void:
 	_open = false
 	visible = false
+	Controls.lock_ui()
 	get_tree().paused = false
 	get_tree().call_group("player", "absorb_input")
 
@@ -80,7 +82,7 @@ func _process(delta: float) -> void:
 	if not _open:
 		return
 	queue_redraw()
-	if Engine.get_process_frames() - _opened_at < 2:
+	if Engine.get_process_frames() - _opened_at < 2 or not Controls.ui_ready():
 		return
 	if _mode == "text":
 		var last := maxi(_body.size() - TEXT_ROWS, 0)

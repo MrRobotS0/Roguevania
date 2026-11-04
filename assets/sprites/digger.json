@@ -1,0 +1,18 @@
+{
+ "w": 90,
+ "h": 48,
+ "size": 90,
+ "color": true,
+ "anims": {
+  "walk": {
+   "row": 0,
+   "frames": 8,
+   "fps": 10
+  },
+  "ignite": {
+   "row": 1,
+   "frames": 2,
+   "fps": 8
+  }
+ }
+}

@@ -228,6 +228,54 @@ LOOKS = {
         "panel": (MS + "manaTabE-Sheet", 96, 3, 7), "bar": (MS1 + "barC-Sheet", 95, 0), "boss": (MS1 + "barC-Sheet", 95, 0),
         "header": (DR9 + "ButtonA-Sheet", 100, 0), "slot": DR13 + "EmptyFrame", "gem": (DR11 + "HorizontalCursorB-Sheet", 26, 0),
     },
+    # Necrópole: osso, prata velha e o azul frio dos mortos
+    "necropole": {
+        "dark": ["06070c", "0e1018", "1c2030", "343a52", "4a5068"],
+        "metal": ["3a3a42", "6a6e7a", "a8aeba", "d8dce6", "f6f8ff"],
+        "accent": ["101a2e", "2a3a5e", "5a74a8", "a8c0e8", "e8f0ff"],
+        "panel": (MS + "manaTabA-Sheet", 96, 0, 7), "bar": (MS1 + "barC-Sheet", 95, 0), "boss": (MS1 + "barA-Sheet", 95, 0),
+        "header": (MS1 + "manaSoulButtonA-Sheet", 96, 0), "slot": (MS3 + "emptyFrame-Sheet", 32, 1), "gem": (MS1 + "verticalCursorB-Sheet", 13, 0),
+    },
+    # Catedral Submersa: pedra molhada, vitral azul
+    "catedral": {
+        "dark": ["04080e", "0a1622", "142a3e", "1f405e", "2a4a6a"],
+        "metal": ["2a3a4a", "4a6a8a", "7aa0c0", "b8d8f0", "eef8ff"],
+        "accent": ["06223a", "0e4a6e", "2a8ab8", "6ab8e8", "d0f0ff"],
+        "panel": (MS + "manaTabE-Sheet", 96, 0, 7), "bar": (MS1 + "barC-Sheet", 95, 0), "boss": (MS1 + "barC-Sheet", 95, 0),
+        "header": (MS1 + "manaSoulButtonB-Sheet", 96, 0), "slot": (MS3 + "emptyFrame-Sheet", 32, 0), "gem": (MS1 + "horizontalCursorC-Sheet", 36, 0),
+    },
+    # O Ventre: carne, osso e bile
+    "ventre": {
+        "dark": ["0e0405", "1a0a0c", "3a1216", "5a1a20", "6a2028"],
+        "metal": ["5a2a1a", "8a4a30", "c87a5a", "e8b098", "fff0e8"],
+        "accent": ["3a3a08", "6a6a10", "a8a828", "c8d040", "f0ffa0"],
+        "panel": (MS + "manaTabG-Sheet", 96, 0, 7), "bar": (MS1 + "barB-Sheet", 95, 0), "boss": DR9 + "BarC",
+        "header": (MS1 + "manaSoulButtonC-Sheet", 96, 0), "slot": (MS3 + "emptyFrame-Sheet", 32, 3), "gem": (MS1 + "verticalCursorA-Sheet", 20, 0),
+    },
+    # Penhascos do Sonho: lilás, nuvem e prata
+    "penhascos": {
+        "dark": ["08060e", "140f20", "261c3a", "3e3060", "5a4a7a"],
+        "metal": ["4a4060", "7a6a9a", "b0a0d8", "e0d0ff", "fff8ff"],
+        "accent": ["2a103a", "5a2a7a", "9a5ac8", "c8a8ff", "f4e8ff"],
+        "panel": (MS + "manaTabC-Sheet", 96, 2, 7), "bar": (MS1 + "barA-Sheet", 95, 0), "boss": (MS1 + "barC-Sheet", 95, 0),
+        "header": (DR9 + "ButtonA-Sheet", 100, 0), "slot": DR13 + "EmptyFrame", "gem": (DR11 + "HorizontalCursorB-Sheet", 26, 0),
+    },
+    # Cavernas Fundas: rocha escura, cristal molhado
+    "cavernas": {
+        "dark": ["030405", "0a0c10", "161a20", "262c34", "3a4048"],
+        "metal": ["2a2e34", "4a5058", "7a828c", "aab4be", "e0e8f0"],
+        "accent": ["0a2a32", "1a5060", "3a8aa0", "8ac8e8", "e0f8ff"],
+        "panel": (MS + "manaTabF-Sheet", 96, 2, 7), "bar": (MS1 + "barB-Sheet", 95, 0), "boss": (MS1 + "barA-Sheet", 95, 0),
+        "header": (MS + "manaSoulHeaderA-Sheet", 96, 0), "slot": (MS3 + "emptyFrame-Sheet", 32, 2), "gem": (MS1 + "verticalCursorB-Sheet", 13, 0),
+    },
+    # Bosque Errante: couro, madeira e ouro da estrada
+    "bosque": {
+        "dark": ["080604", "12100a", "241e12", "3a3020", "5a4a2a"],
+        "metal": ["4a3a1a", "7a6030", "b89a5a", "e8d498", "fff8dc"],
+        "accent": ["1a3010", "3a5a1e", "6a8a3a", "a8c870", "e8f8c0"],
+        "panel": (MS + "manaTabB-Sheet", 96, 0, 7), "bar": (MS1 + "barA-Sheet", 95, 0), "boss": (MS1 + "barB-Sheet", 95, 0),
+        "header": (MS1 + "manaSoulButtonA-Sheet", 96, 0), "slot": (MS3 + "emptyFrame-Sheet", 32, 0), "gem": (MS1 + "horizontalCursorC-Sheet", 36, 0),
+    },
 }
 
 

@@ -680,22 +680,26 @@ func _route() -> void:
 	_check(Run.current()["kind"] == "gerada" and Run.stage_id == "mar_de_cinzas", "não começou no Mar")
 	Run.enter_passage()
 	_check(Run.current()["kind"] == "passagem", "não entrou na passagem")
-	_check(Run.next_options() == ["saloes", "forja_rubra"], "saídas da passagem: %s" % [Run.next_options()])
+	_check(Run.next_options() == ["saloes", "forja_rubra", "necropole"], "saídas da passagem: %s" % [Run.next_options()])
 	Run.go("forja_rubra")
 	_check(Run.current()["biome"] == "forja_rubra" and Run.current()["kind"] == "gerada", "não foi para a Forja")
 	Run.go(Run.boss_of("forja_rubra"))
 	_check(Run.current()["kind"] == "chefe", "depois da Forja não veio o guardião")
 	Run.enter_passage()
-	_check(Run.next_options() == ["torre_babel", "jardim_primordial"], "depois do Colosso: %s" % [Run.next_options()])
+	_check(Run.next_options() == ["torre_babel", "jardim_primordial", "catedral"], "depois do Colosso: %s" % [Run.next_options()])
 	Run.go("jardim_primordial")
 	Run.go(Run.boss_of("jardim_primordial"))
 	Run.enter_passage()
 	Run.go("carcosa")
 	Run.go(Run.boss_of("carcosa"))
 	Run.enter_passage()
+	_check(Run.next_options() == ["penhascos", "cavernas", "bosque"], "depois de Carcosa: %s" % [Run.next_options()])
+	Run.go("bosque")
+	Run.go(Run.boss_of("bosque"))
+	Run.enter_passage()
 	Run.go(Run.next_options()[0])
 	_check(Run.stage_id == "trono" and Run.current()["kind"] == "chefe", "a rota não termina no Trono")
-	_check(Run.path.size() == 8, "caminho %s" % [Run.path])
+	_check(Run.path.size() == 10, "caminho %s" % [Run.path])
 
 
 func _generator_floors() -> void:
@@ -732,7 +736,7 @@ func _passage() -> void:
 	await _frames(3)
 	var gates: Array = level.get_children().filter(func(n: Node) -> bool: return n is ExitGate)
 	var dests: Array = gates.map(func(g: ExitGate) -> String: return g.dest)
-	_check(dests == ["saloes", "forja_rubra"], "saídas %s" % [dests])
+	_check(dests == ["saloes", "forja_rubra", "necropole"], "saídas %s" % [dests])
 	_check(level.get_children().any(func(n: Node) -> bool: return n is Keeper), "sem Vigia na passagem")
 	_check(level.get_children().any(func(n: Node) -> bool: return n is MutationAltar), "sem altar de mutação")
 
@@ -996,7 +1000,8 @@ func _affixes() -> void:
 
 func _bosses() -> void:
 	for path in ["boss_wolf_king", "boss_colossus", "boss_architect", "boss_mother_root",
-			"boss_faceless_king", "boss_astronomer", "blind_emperor"]:
+			"boss_faceless_king", "boss_astronomer", "blind_emperor", "boss_forgotten", "boss_answer",
+			"boss_insatiable", "boss_dragon", "boss_wyrm", "boss_fox"]:
 		if level:
 			remove_child(level)
 			level.queue_free()
@@ -1030,7 +1035,10 @@ func _bosses() -> void:
 
 func _domain_enemies() -> void:
 	for name in ["scribe", "gargoyle", "thorn_plant", "moss_beast", "masked", "herald", "automaton", "fallen_star",
-			"mason", "seed_pod", "dancer", "lens"]:
+			"mason", "seed_pod", "dancer", "lens", "mourner", "risen", "grave_cat", "drowned", "votive", "prayer",
+			"maw_tentacle", "larva", "parasite", "nightmare", "incubus", "sleepwalker", "blind_lizard", "crevice_snake",
+			"digger", "highwayman", "wanderer", "frogman", "elite_caller", "elite_priestess", "elite_glutton",
+			"elite_reverie", "elite_hermit", "elite_bull"]:
 		await _load(WIDE)
 		var p := level.player
 		p.max_hp = 9999
@@ -1362,7 +1370,7 @@ func _all_scripts() -> void:
 # A pele de cada domínio carrega, tem todas as peças, a barra tem miolo onde
 # pintar a vida, e o HUD desenha com ela sem erro.
 func _hud_skins() -> void:
-	var ids := ["mar_de_cinzas", "saloes", "forja_rubra", "torre_babel", "jardim_primordial", "carcosa", "observatorio"]
+	var ids: Array = Catalog.BIOMES.keys()
 	var seen := {}
 	for id: String in ids:
 		var s := HudSkin.of(id)

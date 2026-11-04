@@ -65,7 +65,7 @@ func build_passage(b: BiomeData, seed_value: int, with_camera := true) -> void:
 
 func build_boss(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	rng.seed = seed_value + 99
-	tier = b.tier + 1 if Run.stage_id != "trono" else 6
+	tier = b.tier + 1 if Run.stage_id != "trono" else 7
 	kind = "chefe"
 	_make_room(b)
 	is_boss_room = true

@@ -1,0 +1,39 @@
+{
+ "w": 148,
+ "h": 107,
+ "size": 148,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 8,
+   "fps": 6
+  },
+  "walk": {
+   "row": 1,
+   "frames": 8,
+   "fps": 10
+  },
+  "windup": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  },
+  "attack": {
+   "row": 3,
+   "frames": 1,
+   "fps": 8
+  },
+  "cast": {
+   "row": 4,
+   "frames": 2,
+   "fps": 6
+  },
+  "rest": {
+   "row": 5,
+   "frames": 1,
+   "fps": 8
+  }
+ },
+ "draw_scale": 0.55
+}

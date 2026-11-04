@@ -1,0 +1,33 @@
+{
+ "w": 78,
+ "h": 56,
+ "size": 78,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 8,
+   "fps": 6
+  },
+  "walk": {
+   "row": 1,
+   "frames": 8,
+   "fps": 10
+  },
+  "windup": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  },
+  "attack": {
+   "row": 3,
+   "frames": 1,
+   "fps": 8
+  },
+  "stun": {
+   "row": 4,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}

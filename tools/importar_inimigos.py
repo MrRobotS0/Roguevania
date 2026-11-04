@@ -339,6 +339,123 @@ SHEETS.update({
                               seq("lr_sp", [6, 10]), seq("lr_hit", [2])), {}),
 })
 
+# ---------------------------------------------------------------------------
+# Grande update (04/11): 6 domínios novos. Cada criatura escolhida pelo desenho.
+SNK = GROTTO + "Grotto-escape-2-snake/PNG/sprites/"
+FC = IT + "fantasy_creatures_bundle/**/"
+DS = IT + "boss_demon_slime_free_v1.0/**/individual sprites/"
+WP = IT + "elementals_water_priestess_free_v1.1/**/png/"
+MB = IT + "elementals_metal_bladekeeper_free_v1.1/**/PNG animations/"
+CT = IT + "free_cthulu_v1/**/animations/PNG/"
+SOURCES.update({
+    "k1_idle": ("auto", IT + "medieval_king_pack/**/Idle.png"), "k1_run": ("auto", IT + "medieval_king_pack/**/Run.png"),
+    "k1_a1": ("auto", IT + "medieval_king_pack/**/Attack_1.png"), "k1_a2": ("auto", IT + "medieval_king_pack/**/Attack_2.png"),
+    "k1_hit": ("auto", IT + "medieval_king_pack/**/Hit.png"),
+    "mw1_idle": ("auto", IT + "medieval_warrior_pack/**/Idle.png"), "mw1_run": ("auto", IT + "medieval_warrior_pack/**/Run.png"),
+    "mw1_a1": ("auto", IT + "medieval_warrior_pack/**/Attack1.png"), "mw1_a2": ("auto", IT + "medieval_warrior_pack/**/Attack2.png"),
+    "mw2_idle": ("auto", IT + "medieval_warrior_pack_2/**/Idle.png"), "mw2_run": ("auto", IT + "medieval_warrior_pack_2/**/Run.png"),
+    "mw2_a1": ("auto", IT + "medieval_warrior_pack_2/**/Attack1.png"),
+    "hk2_idle": ("auto", IT + "hero_knight_2/**/Idle.png"), "hk2_run": ("auto", IT + "hero_knight_2/**/Run.png"),
+    "hk2_atk": ("auto", IT + "hero_knight_2/**/Attack.png"), "hk2_hit": ("auto", IT + "hero_knight_2/**/Take Hit.png"),
+    "hu2_idle": ("auto", IT + "huntress_2/**/Character/Idle.png"), "hu2_run": ("auto", IT + "huntress_2/**/Character/Run.png"),
+    "hu2_atk": ("auto", IT + "huntress_2/**/Character/Attack.png"),
+    "mh3_idle": ("auto", IT + "martial_hero_3/**/Idle.png"), "mh3_run": ("auto", IT + "martial_hero_3/**/Run.png"),
+    "mh3_a1": ("auto", IT + "martial_hero_3/**/Attack1.png"), "mh3_a3": ("auto", IT + "martial_hero_3/**/Attack3.png"),
+    "mh3_hit": ("auto", IT + "martial_hero_3/**/Take Hit.png"),
+    "gob_run": ("auto", IT + "monsters_creatures_fantasy/**/Goblin/Run.png"),
+    "gob_atk": ("auto", IT + "monsters_creatures_fantasy/**/Goblin/Attack.png"),
+    "snk_idle": ("files", SNK + "idle/*.png"), "snk_walk": ("files", SNK + "walk/*.png"), "snk_atk": ("files", SNK + "attack/*.png"),
+    "snk_spit": ("files", SNK + "shoot/*.png"),
+    "fox_idle": ("strip", FC + "Spirit_Fox/spirit/idle_sheet.png", 8), "fox_run": ("strip", FC + "Spirit_Fox/spirit/run_sheet.png", 8),
+    "fox_pounce": ("strip", FC + "Spirit_Fox/spirit/pounce_sheet.png", 7), "fox_fire": ("strip", FC + "Spirit_Fox/spirit/foxfire_sheet.png", 8),
+    "fox_hurt": ("strip", FC + "Spirit_Fox/spirit/hurt_sheet.png", 4),
+    "drg_idle": ("strip", FC + "Emberwing_Dragon/void/idle_sheet.png", 8), "drg_walk": ("strip", FC + "Emberwing_Dragon/void/walk_sheet.png", 8),
+    "drg_bite": ("strip", FC + "Emberwing_Dragon/void/bite_sheet.png", 7), "drg_breath": ("strip", FC + "Emberwing_Dragon/void/fire_breath_sheet.png", 10),
+    "drg_hurt": ("strip", FC + "Emberwing_Dragon/void/hurt_sheet.png", 4),
+    "jel_idle": ("strip", FC + "Abyss_Jelly/aether/idle_sheet.png", 8), "jel_sting": ("strip", FC + "Abyss_Jelly/aether/sting_sheet.png", 8),
+    "ds_idle": ("files", DS + "01_demon_idle/*.png"), "ds_walk": ("files", DS + "02_demon_walk/*.png"),
+    "ds_cleave": ("files", DS + "03_demon_cleave/*.png"), "ds_hit": ("files", DS + "04_demon_take_hit/*.png"),
+    "wp_idle": ("files", WP + "01_idle/*.png"), "wp_walk": ("files", WP + "02_walk/*.png"), "wp_a1": ("files", WP + "07_1_atk/*.png"),
+    "wp_sp": ("files", WP + "10_sp_atk/*.png"), "wp_hit": ("files", WP + "13_take_hit/*.png"),
+    "mb_idle": ("files", MB + "01_idle/*.png"), "mb_run": ("files", MB + "02_run/*.png"), "mb_a1": ("files", MB + "07_1_atk/*.png"),
+    "mb_sp": ("files", MB + "10_sp_atk/*.png"), "mb_hit": ("files", MB + "12_take_hit/*.png"),
+    "ct_fly": ("files", CT + "fly/*.png"), "ct_a1": ("files", CT + "1atk/*.png"), "ct_a2": ("files", CT + "2atk/*.png"),
+    "ct_hit": ("files", CT + "hurt/*.png"),
+})
+GRAY_BLUE = {"sat": 0.35, "bright": 1.05, "remap": [(0.0, 1.0, 215, 0.6, "=")]}
+NOVAS = {
+    # ===== Necrópole: domínio do deus que lembrava os mortos
+    # Carpideira: espectro de capuz negro que plana e mergulha gritando
+    "mourner": ({"fly": seq("ghost_idle", range(7)), "windup": seq("ghost_shriek", [1]), "dive": seq("ghost_shriek", [3])}, {}),
+    # Morto Desperto: esqueleto vestido que sai da cova (emerge como o assassino)
+    "risen": ({"idle": seq("skel_c", [0, 1]), "walk": seq("skel_c", range(8)), "crouch": seq("rise_c", [1]),
+               "windup": seq("skel_c", [3]), "slash": seq("skel_c", [6])}, {"flip": True}),
+    # Fome das Covas: gato-sombra roxo que salta
+    "grave_cat": ({"idle": seq("gato", [0, 1]), "run": seq("gato", range(4)), "crouch": seq("gato", [0]),
+                   "lunge": seq("gato", [2]), "stun": seq("gato", [3])}, {"flip": True}),
+    # Elite: Chamador de Nomes, necromante de manto roxo
+    "elite_caller": (six(seq("wizard", range(5)), seq("wizard", range(5)), seq("wizard", [8]), seq("wizard", [11]),
+                         seq("wizard", [9, 10]), seq("wizard", [13])), {"flip": True}),
+    # Chefe: O Rei Esquecido, rei de capa, desbotado como quem não lembra o próprio nome
+    "boss_forgotten": (six(seq("k1_idle", range(6)), seq("k1_run", range(8)), seq("k1_a1", [1]), seq("k1_a1", [3]),
+                           seq("k1_a2", [1, 2]), seq("k1_hit", [1])), dict(draw_scale=1.7, **GRAY_BLUE)),
+    # ===== Catedral Submersa: domínio do deus que ouvia as preces
+    "drowned": ({"idle": seq("thing", [0, 1]), "walk": seq("thing", range(6)), "windup": seq("thing", [2]),
+                 "attack": seq("thing", [4]), "stun": seq("thing", [5])}, {"remap": [(0.15, 0.5, 178, 0.8, "=")]}),
+    "votive": ({"idle": seq("hk2_idle", range(11)), "walk": seq("hk2_run", range(8)), "windup": seq("hk2_atk", [1]),
+                "attack": seq("hk2_atk", [3]), "recover": seq("hk2_atk", [5]), "stun": seq("hk2_hit", [1])}, {}),
+    "prayer": ({"idle": seq("jel_idle", range(8)), "windup": seq("jel_sting", [2, 4])}, {"draw_scale": 0.5}),
+    "elite_priestess": (six(seq("wp_idle", range(8)), seq("wp_walk", range(10)), seq("wp_a1", [2]), seq("wp_a1", [5]),
+                            seq("wp_sp", [4, 8]), seq("wp_hit", [1])), {}),
+    "boss_answer": (six(seq("ct_fly", range(6)), seq("ct_fly", range(6)), seq("ct_a1", [2]), seq("ct_a1", [4]),
+                        seq("ct_a2", [3, 6]), seq("ct_hit", [1])), {"draw_scale": 1.6, "flip": True}),
+    # ===== O Ventre: domínio do deus que devorava
+    "maw_tentacle": ({"idle": grid_row("andro", 0, range(8)), "windup": grid_row("andro", 2, [1]),
+                      "attack": grid_row("andro", 2, [4])}, {"remap": [(0.12, 0.45, 345, 0.9, "=")]}),
+    "larva": ({"idle": grid_row("minion", 0, [0, 1, 2]), "hop": grid_row("minion", 0, [3]), "land": grid_row("minion", 0, [1])},
+              {"remap": [(0.45, 0.75, 350, 1.0, "=")]}),
+    "parasite": ({"idle": seq("spider", [0, 1]), "run": seq("spider", range(4)), "crouch": seq("spider", [0]),
+                  "lunge": seq("spider", [2]), "stun": seq("spider", [3])}, {"scale": 2}),
+    "elite_glutton": (six(seq("beast_idle", range(6)), seq("beast_idle", range(6)), seq("beast_breath", [1]),
+                          seq("beast_breath", [3]), seq("beast_burn", [1, 4]), seq("beast_idle", [0])), {"draw_scale": 0.6}),
+    "boss_insatiable": (six(seq("ds_idle", range(6)), seq("ds_walk", range(12)), seq("ds_cleave", [4]), seq("ds_cleave", [9]),
+                            seq("ds_cleave", [6, 7]), seq("ds_hit", [2])), {"flip": True}),
+    # ===== Penhascos do Sonho: domínio do deus que sonhava
+    "nightmare": ({"idle": seq("mare_idle", range(4)), "walk": seq("mare_run", range(4)), "windup": seq("mare_idle", [1]),
+                   "charge": seq("mare_run", range(4))}, {"flip": True, "draw_scale": 0.8}),
+    "incubus": (six(seq("demon_idle", range(6)), seq("demon_idle", range(6)), seq("demon_atk", [2]), seq("demon_atk", [5]),
+                    seq("demon_atk", [0, 1]), seq("demon_idle", [0])), {"flip": True, "remap": [(0.9, 0.1, 270, 0.8, "=")], "draw_scale": 0.7}),
+    "sleepwalker": ({"idle": seq("hu2_idle", range(10)), "walk": seq("hu2_run", range(8)), "aim": seq("hu2_atk", [2]),
+                     "aim_lock": seq("hu2_atk", [4])}, {"remap": [(0.2, 0.45, 265, 0.7, "=")]}),
+    "elite_reverie": (six(seq("mb_idle", range(8)), seq("mb_run", range(8)), seq("mb_a1", [3]), seq("mb_a1", [6]),
+                          seq("mb_sp", [5, 10]), seq("mb_hit", [1])), {}),
+    "boss_dragon": (six(seq("drg_idle", range(8)), seq("drg_walk", range(8)), seq("drg_bite", [2]), seq("drg_bite", [4]),
+                        seq("drg_breath", [3, 6]), seq("drg_hurt", [1])), {}),
+    # ===== Cavernas Fundas: domínio do deus que se escondia
+    "blind_lizard": ({"idle": seq("lizard_idle", range(4)), "walk": seq("lizard_walk", range(6)), "windup": seq("lizard_tongue", [1]),
+                      "attack": seq("lizard_tongue", [3]), "stun": seq("lizard_idle", [0])}, {"flip": True, "sat": 0.55, "scale": 2}),
+    "crevice_snake": ({"idle": seq("snk_idle", range(4)), "walk": seq("snk_walk", range(4)), "crouch": seq("snk_idle", [0]),
+                       "windup": seq("snk_spit", [1]), "slash": seq("snk_atk", [0])}, {"flip": True, "scale": 2}),
+    "digger": ({"walk": seq("gob_run", range(8)), "ignite": seq("gob_atk", [3, 6])}, {}),
+    "elite_hermit": (six(seq("mh3_idle", range(10)), seq("mh3_run", range(8)), seq("mh3_a1", [2]), seq("mh3_a1", [4]),
+                         seq("mh3_a3", [2, 4]), seq("mh3_hit", [1])), {"sat": 0.6, "bright": 0.85}),
+    "boss_wyrm": (six(seq("dragon_idle", range(6)), seq("dragon_idle", range(6)), seq("dragon_breath", [1]),
+                      seq("dragon_breath", [4]), seq("dragon_tail", [3, 6]), seq("dragon_idle", [0])), {"flip": True, "scale": 2}),
+    # ===== Bosque Errante: domínio do deus que caminhava
+    "highwayman": (six(seq("mw1_idle", range(8)), seq("mw1_run", range(8)), seq("mw1_a1", [1]), seq("mw1_a1", [2]),
+                       seq("mw1_a2", [0, 1]), seq("mw1_idle", [0])), {"draw_scale": 0.55}),
+    "wanderer": ({"idle": seq("mw2_idle", range(8)), "walk": seq("mw2_run", range(8)), "windup": seq("mw2_a1", [1]),
+                  "attack": seq("mw2_a1", [3]), "stun": seq("mw2_idle", [0])}, {}),
+    "frogman": ({"idle": grid_row("frog", 0, range(6)), "walk": grid_row("frog", 0, range(6)), "windup": grid_row("frog", 1, [0]),
+                 "attack": grid_row("frog", 1, [2])}, {}),
+    "elite_bull": (six(grid_row("wartaur", 0, range(4)), grid_row("wartaur", 0, range(4)), grid_row("wartaur", 1, [0]),
+                       grid_row("wartaur", 1, [2]), grid_row("wartaur", 1, [1, 2]), grid_row("wartaur", 0, [0])), {}),
+    "boss_fox": (six(seq("fox_idle", range(8)), seq("fox_run", range(8)), seq("fox_pounce", [1]), seq("fox_pounce", [4]),
+                     seq("fox_fire", [3, 6]), seq("fox_hurt", [1])), {}),
+}
+SHEETS.update(NOVAS)
+
+
 FPS = {"idle": 6, "walk": 10, "run": 12, "fly": 10, "cast": 6}
 
 
@@ -359,18 +476,30 @@ def num(path):
 _cache = {}
 
 
+class Frames(dict):
+    """Índice além do fim da tira volta ao começo (avisa uma vez)."""
+    def __missing__(self, i):
+        if not isinstance(i, int) or not self:
+            raise KeyError(i)
+        ints = sorted(k for k in self if isinstance(k, int))
+        print("  aviso: quadro %d não existe (tira com %d)" % (i, len(ints)))
+        return self[ints[i % len(ints)]]
+
+
 def frames(name):
     """{índice: (Image do quadro, âncora x, âncora y)} de uma fonte."""
     if name in _cache:
         return _cache[name]
     spec = SOURCES[name]
-    out = {}
-    if spec[0] in ("strip", "sq", "fw"):
+    out = Frames()
+    if spec[0] in ("strip", "sq", "fw", "auto"):
         im = Image.open(find(spec[1])[0]).convert("RGBA")
         if spec[0] == "strip":
             fw = im.width // spec[2]
         elif spec[0] == "sq":          # quadros quadrados (a altura da tira)
             fw = im.height
+        elif spec[0] == "auto":        # n = largura/altura arredondado (quadros quase quadrados)
+            fw = im.width // max(1, round(im.width / im.height))
         else:                          # largura do quadro informada
             fw = spec[2]
         n = im.width // fw

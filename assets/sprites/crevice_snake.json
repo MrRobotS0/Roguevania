@@ -1,0 +1,33 @@
+{
+ "w": 52,
+ "h": 40,
+ "size": 52,
+ "color": true,
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 4,
+   "fps": 6
+  },
+  "walk": {
+   "row": 1,
+   "frames": 4,
+   "fps": 10
+  },
+  "crouch": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  },
+  "windup": {
+   "row": 3,
+   "frames": 1,
+   "fps": 8
+  },
+  "slash": {
+   "row": 4,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}

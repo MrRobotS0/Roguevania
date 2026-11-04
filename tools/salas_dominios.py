@@ -29,6 +29,12 @@ DOMAINS = {
     "jardim_primordial": (["terracos", "fossos", "varandas", "ilhas", "terracos", "ruela", "ilhas"], "Jardim"),
     "carcosa": (["ruela", "pilares", "terracos", "vertical", "ruela", "pilares", "fossos"], "Carcosa"),
     "observatorio": (["ilhas", "varandas", "vertical", "ilhas", "fossos", "ilhas", "ruela"], "Observatório"),
+    "necropole": (["ruela", "fossos", "terracos", "pilares", "varandas", "fossos", "ruela"], "Necrópole"),
+    "catedral": (["pilares", "varandas", "vertical", "pilares", "terracos", "varandas", "fossos"], "Catedral"),
+    "ventre": (["fossos", "ilhas", "terracos", "fossos", "vertical", "ilhas", "fossos"], "Ventre"),
+    "penhascos": (["ilhas", "vertical", "ilhas", "terracos", "ilhas", "varandas", "vertical"], "Penhascos"),
+    "cavernas": (["pilares", "vertical", "fossos", "pilares", "ruela", "vertical", "terracos"], "Cavernas"),
+    "bosque": (["ruela", "terracos", "fossos", "ruela", "varandas", "terracos", "ruela"], "Bosque"),
 }
 
 HEADS = {

@@ -8,6 +8,9 @@ const HOP_EVERY := 0.9
 const HOP := Vector2(110.0, -230.0)
 const TOUCH := 10.0
 
+var hop_every := HOP_EVERY     # a Larva do Ventre pula mais vezes
+var hop_reach := 1.0
+
 var _hop_clock := 0.5
 var _touch_cd := 0.0
 
@@ -47,9 +50,9 @@ func think(delta: float) -> void:
 				velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
 				_hop_clock -= delta
 				if _hop_clock <= 0.0:
-					_hop_clock = HOP_EVERY
+					_hop_clock = hop_every
 					face_player()
-					velocity = Vector2(facing * HOP.x * clampf(absf(d.x) / 80.0, 0.4, 1.0), HOP.y)
+					velocity = Vector2(facing * HOP.x * hop_reach * clampf(absf(d.x) / 80.0, 0.4, 1.0), HOP.y)
 					Sfx.play("slag_hop", -12.0)
 
 

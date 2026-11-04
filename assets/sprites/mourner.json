@@ -1,0 +1,23 @@
+{
+ "w": 50,
+ "h": 49,
+ "size": 50,
+ "color": true,
+ "anims": {
+  "fly": {
+   "row": 0,
+   "frames": 7,
+   "fps": 10
+  },
+  "windup": {
+   "row": 1,
+   "frames": 1,
+   "fps": 8
+  },
+  "dive": {
+   "row": 2,
+   "frames": 1,
+   "fps": 8
+  }
+ }
+}
