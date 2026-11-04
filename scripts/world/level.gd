@@ -86,6 +86,7 @@ func _make_room(b: BiomeData) -> void:
 	room = Room.new()
 	if b:
 		room.colors = b.room_colors()
+		room.tiles_id = b.id
 	add_child(room)
 
 

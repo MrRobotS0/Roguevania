@@ -567,7 +567,9 @@ func _solidish(x: int, y: int) -> bool:
 const ATLAS_BURIED := 16
 const ATLAS_PLANK := 17
 
-var _atlas: ImageTexture
+var _atlas: Texture2D
+var tiles_id := ""           # domínio: usa assets/sprites/tiles_<id>.png (arte Gothicvania) se existir
+var _real_tiles := false     # arte pronta já traz superfície e borda: sem musgo/cinza desenhados por cima
 
 
 func tile_palette() -> PackedColorArray:
@@ -588,9 +590,15 @@ func tile_palette() -> PackedColorArray:
 
 func _tile(ci: CanvasItem, x: int, y: int, row: int, col: int, tint := Color.WHITE) -> void:
 	if _atlas == null:
-		_atlas = SpriteSheet.texture("tiles", tile_palette())
+		_load_atlas()
 	ci.draw_texture_rect_region(_atlas, Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE)),
 		Rect2(col * TILE, row * TILE, TILE, TILE), tint)
+
+
+func _load_atlas() -> void:
+	var path := "res://assets/sprites/tiles_%s.png" % tiles_id
+	_real_tiles = tiles_id != "" and ResourceLoader.exists(path)
+	_atlas = load(path) if _real_tiles else SpriteSheet.texture("tiles", tile_palette())
 
 
 func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
@@ -616,7 +624,7 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 
 	var mask := (1 if open_up else 0) | (2 if open_right else 0) | (4 if open_down else 0) | (8 if open_left else 0)
 	_tile(ci, x, y, mask, hv % 4)
-	if open_up:
+	if open_up and not _real_tiles:
 		if hv < 110:
 			ci.draw_rect(Rect2(p + Vector2(hv % 11, -1), Vector2(3 + hv % 3, 1)), colors["moss"])
 		# a cinza se acumula no pé das paredes
