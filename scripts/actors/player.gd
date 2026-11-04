@@ -60,6 +60,8 @@ var _air_jumps := 0
 var _air_dash := true            # uma esquiva no ar por pulo
 var _rolling_in_air := false
 var _flip := 0.0
+var _idle_time := 0.0
+var _next_fidget := 5.0
 const FLIP_TIME := 0.3
 var _rage := 0.0
 var _stubborn_used := false
@@ -225,6 +227,10 @@ func _tick(delta: float) -> void:
 		skill_cd[i] = maxf(skill_cd[i] - delta, 0.0)
 	_rage -= delta
 	_flip -= delta
+	if state == State.MOVE and is_on_floor() and absf(velocity.x) < 20.0:
+		_idle_time += delta
+	else:
+		_idle_time = 0.0
 	_squash = move_toward(_squash, 0.0, delta * 6.0)
 	collision_mask = Room.WORLD_LAYER if _drop > 0.0 else Room.WORLD_LAYER | Room.PLATFORM_LAYER
 
@@ -1036,6 +1042,13 @@ func _body_anim() -> Array:
 			if is_on_floor():
 				if absf(velocity.x) > 20.0:
 					return ["run", int(_anim * SpriteSheet.fps(SHEET, "run"))]
+				# parado há um tempo: de vez em quando faz um gesto
+				if _idle_time > _next_fidget:
+					var k := int((_idle_time - _next_fidget) * SpriteSheet.fps(SHEET, "idle_look"))
+					if k < 12:
+						return ["idle_look", k]
+					_idle_time = 0.0
+					_next_fidget = randf_range(4.0, 7.0)
 				return ["idle", int(_anim * SpriteSheet.fps(SHEET, "idle"))]
 			if _flip > 0.0:
 				# o pulo duplo é uma cambalhota
@@ -1267,6 +1280,8 @@ func _update_scarf(delta: float) -> void:
 	for i in range(1, SCARF_LINKS):
 		var rest := _scarf[i - 1] + Vector2(-facing * SCARF_GAP, 0.4)
 		var flutter := Vector2(0, sin(_anim * 13.0 + i * 1.3) * 0.5 * clampf(absf(velocity.x) / RUN_SPEED, 0.2, 1.0))
+		# parado, a ponta do cachecol balança devagar na brisa
+		flutter += Vector2(sin(_anim * 2.3 + i * 0.9), cos(_anim * 1.7 + i)) * 0.35 * i / SCARF_LINKS
 		_scarf[i] = _scarf[i].lerp(rest + drift + flutter, 1.0 - exp(-14.0 * delta))
 		var link := _scarf[i] - _scarf[i - 1]
 		if link.length() > SCARF_GAP:

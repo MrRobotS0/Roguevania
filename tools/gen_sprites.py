@@ -37,7 +37,7 @@ def add(p, q):
 
 
 def hero_frame(bob=0.0, lean=0.0, crouch=0.0, legs=((-0.1, 0.05), (0.1, 0.05)),
-               arms=((-0.2, 0.3), (0.15, 0.3)), flare=0.0, look=0.0, hood_back=0.0):
+               arms=((-0.2, 0.3), (0.15, 0.3)), flare=0.0, look=0.0, hood_back=0.0, blink=False):
     c = Canvas(SIZE, SIZE)
     cape = c.new_part(CLOAK_DK, CLOAK, OUTLINE)
     leg_back = c.new_part(LEG_DK, LEG_DK, OUTLINE)
@@ -95,8 +95,9 @@ def hero_frame(bob=0.0, lean=0.0, crouch=0.0, legs=((-0.1, 0.05), (0.1, 0.05)),
             (head[0] - 2.0, head[1] + 3.2)], hood)
     c.ellipse(head, 4.1, 4.2, hood)
     c.rect(head[0] + 0.6, head[1] - 1.0, 3, 3, face)
-    c.mark(head[0] + 2.0, head[1], EYE)
-    c.mark(head[0] + 3.0, head[1], EYE)
+    if not blink:
+        c.mark(head[0] + 2.0, head[1], EYE)
+        c.mark(head[0] + 3.0, head[1], EYE)
     # cachecol enrolado no pescoço
     c.rect(sh[0] - 3, sh[1] - 1.5, 6.5, 2, scarf)
     c.rect(sh[0] - 4.5, sh[1] - 0.5, 2, 2.5, scarf)
@@ -196,8 +197,26 @@ def swing_frames(shape):
 def hero_anims():
     A = {}
     # parado: respira (sobe e desce 1 px) e o capuz balança de leve
-    A["idle"] = (5, [hero_frame(bob=b, flare=f, arms=((-0.25, 0.35), (0.2, 0.3)))
-                     for b, f in ((0, 0), (0, 0.5), (1, 1), (1, 0.5))])
+    # parado: respira (o corpo desce 1 px na expiração), o peso troca de lado,
+    # a capa e o capuz balançam atrasados, e pisca uma vez no ciclo
+    idle = []
+    for i in range(8):
+        p = i / 8 * math.tau
+        idle.append(hero_frame(bob=round(0.5 - 0.5 * math.cos(p)), lean=0.35 * math.sin(p),
+                               legs=((-0.12 - 0.05 * math.sin(p), 0.08), (0.12 - 0.05 * math.sin(p), 0.08)),
+                               arms=((-0.25 + 0.1 * math.sin(p), 0.35), (0.2 - 0.1 * math.sin(p), 0.3 + 0.05 * math.cos(p))),
+                               flare=0.7 + 0.7 * math.sin(p + 1.2), hood_back=0.45 + 0.45 * math.sin(p + 1.8),
+                               blink=(i == 5)))
+    A["idle"] = (8, idle)
+    # o gesto de vez em quando: olha para trás, para a frente, ajeita os ombros
+    fid = []
+    keys = [(0.0, 0.0, 0), (-0.6, -0.2, 0), (-1.0, -0.4, 0), (-1.0, -0.4, 0), (-1.0, -0.4, 1), (-0.3, 0.0, 0),
+            (0.6, 0.3, 0), (0.9, 0.4, 0), (0.9, 0.4, 0), (0.3, 0.2, 1), (0.0, 0.0, 1), (0.0, 0.0, 0)]
+    for k, (look, lean, shrug) in enumerate(keys):
+        fid.append(hero_frame(bob=shrug, lean=lean, look=look,
+                              arms=((-0.25 - 0.3 * shrug, 0.35 + 0.3 * shrug), (0.2 + 0.3 * shrug, 0.3 + 0.3 * shrug)),
+                              flare=0.6 + 0.4 * math.sin(k), hood_back=0.4 - look * 0.6, blink=(k == 4)))
+    A["idle_look"] = (8, fid)
     # corrida: 8 quadros, inclinado para a frente, braços contrários às pernas
     run = []
     for i in range(8):
