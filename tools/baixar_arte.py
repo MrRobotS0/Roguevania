@@ -25,6 +25,11 @@ PACKS = [
     "forest-background", "industrial-parallax-background", "horror-tile-set", "cavern-tile-set",
     "living-tissue-platform-tileset", "living-tissue-background", "sideview-fantasy-patreon-collection",
     "animated-explosions", "space-background-3", "fort-of-illusion", "magical-road-pixel-art-environment",
+    # kits de interface (HUD por domínio), todos CC0
+    "fantasy-ui-borders", "pixel-ui-pack-750-assets", "1-bit-pack", "golden-ui", "tiny-rpg-dragon-regalia-gui",
+    "tiny-rpg-mana-soul-gui", "pixel-uihud-pack", "pixel-uihud-pack-2", "retropixel-icons-v1-9x9", "pixel-hearts",
+    "scroll-themed-hud-bars", "pixui-asset-pack-1-ctatz", "pixel-ui-kit", "sci-fi-user-interface", "health-orb-11",
+    "retro-pixel-art-guihud-elements-including-dialogue-box", "basic-hud-tiles-alphabet",
 ]
 
 

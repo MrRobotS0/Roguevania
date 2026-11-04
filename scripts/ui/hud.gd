@@ -9,8 +9,8 @@ extends Control
 #   centro alto:             faixas (nome do bioma, chefe, tempestade) e avisos curtos
 #   base:                    barra do chefe
 
-const BAR := Vector2(96, 7)
-const SLOT := 18.0
+const BAR_W := 120.0
+const BOSS_W := 240.0
 
 # Ícones 7x7: "#" cor cheia, "+" tom de dentro.
 const ICONS := {
@@ -37,10 +37,15 @@ var _theme := HudTheme.of("")
 var _theme_from := HudTheme.of("")
 var _theme_to := HudTheme.of("")
 var _theme_k := 1.0
+var _skin := HudSkin.of("")
+var _below_health := 30.0    # onde termina o bloco da vida (frascos e maldição vêm embaixo)
+var _slots_end := 150.0      # onde terminam os slots (a barra do chefe começa depois)
 
 
-# Muda a moldura para a do domínio, com uma troca curta (0,3 s).
+# Troca a pele inteira do HUD pela do domínio (molduras, barras, slots,
+# fitas) e as cores, com uma troca curta (0,3 s) nas cores.
 func use_theme(id: String) -> void:
+	_skin = HudSkin.of(id)
 	_theme_from = _theme
 	_theme_to = HudTheme.of(id)
 	_theme_k = 0.0
@@ -90,8 +95,8 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var size := get_viewport_rect().size
 	if player and is_instance_valid(player):
-		_draw_health(Vector2(8, 8))
-		_draw_flasks(Vector2(8, 23))
+		var left := _draw_health()
+		_draw_flasks(Vector2(left, _below_health))
 		_draw_right(size)
 		_draw_slots(size)
 		_draw_prompt(size)
@@ -103,27 +108,41 @@ func _draw() -> void:
 	_draw_toasts(size)
 
 
-func _draw_health(at: Vector2) -> void:
+# O enfeite do domínio, a moldura da vida e o número ao lado. Devolve o x
+# onde a barra começa (os frascos alinham com ela).
+func _draw_health() -> float:
+	var gem := _skin.part_size("gem")
+	_skin.gem(self, Vector2(5, 4))
+	var at := Vector2(5 + gem.x + 1, 5)
+	var inner := _skin.hbar(self, "bar", at, BAR_W)
 	var ratio := float(player.hp) / player.max_hp
-	HudTheme.panel(self, Rect2(at, BAR), _theme, _t)
-	draw_rect(Rect2(at, Vector2(roundf(BAR.x * _ghost), BAR.y)), Palette.UI_HP_GHOST)
-	draw_rect(Rect2(at, Vector2(roundf(BAR.x * ratio), BAR.y)), Palette.UI_HP)
-	draw_rect(Rect2(at, Vector2(roundf(BAR.x * ratio), 1)), Palette.UI_HP.lightened(0.35))
+	draw_rect(Rect2(inner.position, Vector2(roundf(inner.size.x * _ghost), inner.size.y)), Palette.UI_HP_GHOST)
+	draw_rect(Rect2(inner.position, Vector2(roundf(inner.size.x * ratio), inner.size.y)), Palette.UI_HP)
+	draw_rect(Rect2(inner.position, Vector2(roundf(inner.size.x * ratio), 1)), Palette.UI_HP.lightened(0.35))
 	if _theme["style"] == "circuit":
 		# no Observatório a vida é medida em células
 		var gap: Color = _theme["bg"]
-		for x in range(6, int(BAR.x), 6):
-			draw_rect(Rect2(at.x + x, at.y, 1, BAR.y), gap)
-	PixelFont.draw(self, "%d/%d" % [player.hp, player.max_hp], at + Vector2(BAR.x + 6, 1), Palette.UI_TEXT)
+		for x in range(6, int(inner.size.x), 6):
+			draw_rect(Rect2(inner.position.x + x, inner.position.y, 1, inner.size.y), gap)
+	var bar_h := _skin.height("bar")
+	var text_y := at.y + roundf((bar_h - PixelFont.GLYPH_H) * 0.5)
+	PixelFont.draw(self, "%d/%d" % [player.hp, player.max_hp], Vector2(at.x + BAR_W + 4, text_y), _skin.color("text"))
 	if player.has_status("burn"):
-		PixelFont.draw(self, "QUEIMANDO", at + Vector2(BAR.x + 46, 1), Palette.BURN)
+		PixelFont.draw(self, "QUEIMANDO", Vector2(at.x + BAR_W + 44, text_y), Palette.BURN)
+	_below_health = at.y + bar_h + 3
+	return at.x
+
+
+# x onde a coluna da esquerda começa (depois do enfeite do domínio)
+func _slot_left() -> float:
+	return 5 + _skin.part_size("gem").x + 1
 
 
 func _draw_flasks(at: Vector2) -> void:
 	for i in player.max_flasks:
 		var p := at + Vector2(i * 9, 0)
 		var full := i < player.flasks
-		var glass := Palette.UI_DIM if full else Palette.UI_FRAME
+		var glass := _skin.color("text") if full else _skin.color("dim")
 		draw_rect(Rect2(p + Vector2(2, 0), Vector2(3, 2)), glass)
 		draw_rect(Rect2(p + Vector2(1, 2), Vector2(5, 6)), glass)
 		draw_rect(Rect2(p + Vector2(2, 4), Vector2(3, 3)), Palette.UI_HP if full else Palette.UI_BAR_BG)
@@ -175,15 +194,17 @@ func _draw_right(size: Vector2) -> void:
 func _draw_slots(size: Vector2) -> void:
 	var keys := [Controls.hint("attack1"), Controls.hint("attack2"), Controls.hint("skill1"), Controls.hint("skill2")]
 	var gear := [player.weapon(0), player.weapon(1), player.skill(0), player.skill(1)]
-	var start := Vector2(8, size.y - SLOT - 8)
+	var cell := _skin.part_size("slot")
+	var start := Vector2(6, size.y - cell.y - 5)
 	for i in 4:
-		var p := start + Vector2(i * (SLOT + 4) + (6 if i >= 2 else 0), 0)
+		var p := start + Vector2(i * (cell.x + 2) + (6 if i >= 2 else 0), 0)
 		var g: Gear = gear[i]
-		HudTheme.panel(self, Rect2(p, Vector2(SLOT, SLOT)), _theme, _t, false)
+		var inner := _skin.slot(self, p)
+		var mid := (inner.position + inner.size * 0.5).round()
 		if g:
-			draw_rect(Rect2(p, Vector2(SLOT, SLOT)), Combat.STAT_COLORS[g.stat()].darkened(0.2), false, 1.0)
-		if g:
-			_draw_icon(g, p + Vector2(SLOT, SLOT) * 0.5)
+			# a cor do atributo num traço embaixo do ícone, sem cobrir a moldura
+			draw_rect(Rect2(mid.x - 4, inner.end.y - 2, 8, 1), Combat.STAT_COLORS[g.stat()])
+			_draw_icon(g, mid)
 			if i >= 2:
 				var cd: float = player.skill_cd[i - 2]
 				var data: SkillData = g.data
@@ -191,9 +212,10 @@ func _draw_slots(size: Vector2) -> void:
 					var k := cd / data.cooldown
 					var shade := Palette.UI_SHADOW
 					shade.a = 0.75
-					draw_rect(Rect2(p.x, p.y + SLOT * (1.0 - k), SLOT, SLOT * k), shade)
-					PixelFont.draw_centered(self, "%d" % ceili(cd), p + Vector2(SLOT, SLOT) * 0.5, Palette.UI_TEXT)
-		PixelFont.draw(self, keys[i], p + Vector2(1, -7), Palette.UI_DIM)
+					draw_rect(Rect2(inner.position.x, inner.position.y + inner.size.y * (1.0 - k), inner.size.x, inner.size.y * k), shade)
+					PixelFont.draw_centered(self, "%d" % ceili(cd), mid, Palette.UI_TEXT)
+		PixelFont.draw(self, keys[i], p + Vector2(2, -6), _skin.color("text"))
+		_slots_end = p.x + cell.x
 
 
 func _draw_icon(g: Gear, c: Vector2) -> void:
@@ -293,41 +315,59 @@ func _draw_prompt(size: Vector2) -> void:
 	var title: String = it.call("prompt")
 	var detail: String = it.call("detail")
 	var y := size.y - 56.0
+	if is_instance_valid(boss) and boss.alive():
+		# a barra do chefe tem a fita do nome em cima: o aviso sobe para não cobrir
+		y -= _skin.height("header") + 4.0
 	var key_w := PixelFont.body_width(key) + 6.0
 	var w := maxf(PixelFont.body_width(title) + key_w + 6.0, PixelFont.body_width(detail)) + 14.0
 	var box := Rect2(roundf(size.x * 0.5 - w * 0.5), y - 5, roundf(w), 17.0 if detail == "" else 29.0)
-	HudTheme.panel(self, box, _theme, _t, false)
+	_skin.panel(self, box, 1.0, 3.0)
 	var left := box.position.x + 7.0
-	draw_rect(Rect2(left - 2, y - 2, key_w, 11), _theme["frame"])
-	PixelFont.body(self, key, Vector2(left + 1, y), Palette.GOLD)
+	draw_rect(Rect2(left - 2, y - 2, key_w, 11), _skin.color("dim"))
+	PixelFont.body(self, key, Vector2(left + 1, y), _skin.color("text"))
 	PixelFont.body(self, title, Vector2(left + key_w + 4, y), Palette.UI_TEXT)
 	if detail != "":
 		PixelFont.body(self, detail, Vector2(left, y + 12), Palette.UI_DIM)
 
 
 func _draw_boss(size: Vector2) -> void:
-	var w := 260.0
-	var at := Vector2((size.x - w) * 0.5, size.y - 20.0)
-	PixelFont.body_centered(self, boss.title, Vector2(size.x * 0.5, at.y - 9), Palette.GOLD)
-	HudTheme.panel(self, Rect2(at, Vector2(w, 5)), _theme, _t)
-	draw_rect(Rect2(at, Vector2(w * _boss_shown / boss.max_hp, 5)), Palette.UI_HP_GHOST)
-	draw_rect(Rect2(at, Vector2(w * float(boss.hp) / boss.max_hp, 5)), Color("8f5fd0"))
-	draw_rect(Rect2(at.x + w * 0.5, at.y - 1, 1, 7), Palette.UI_TEXT)
+	var w := BOSS_W
+	var bh := _skin.height("boss")
+	var at := Vector2(maxf(roundf((size.x - w) * 0.5), _slots_end + 12.0), size.y - bh - 4.0)
+	var inner := _skin.hbar(self, "boss", at, w)
+	var iw := inner.size.x
+	draw_rect(Rect2(inner.position, Vector2(roundf(iw * _boss_shown / boss.max_hp), inner.size.y)), Palette.UI_HP_GHOST)
+	draw_rect(Rect2(inner.position, Vector2(roundf(iw * float(boss.hp) / boss.max_hp), inner.size.y)), Color("8f5fd0"))
+	draw_rect(Rect2(inner.position, Vector2(roundf(iw * float(boss.hp) / boss.max_hp), 1)), Color("8f5fd0").lightened(0.35))
+	draw_rect(Rect2(roundf(inner.position.x + iw * 0.5), inner.position.y, 1, inner.size.y), _skin.color("text"))
+	# o nome numa fita do domínio, em cima da barra
+	_title_ribbon(boss.title, Vector2(at.x + w * 0.5, at.y - _skin.height("header") * 0.5 - 1), _skin.color("text"), 1.0)
+
+
+# Fita do domínio atrás de um título; `center` é o meio da fita.
+func _title_ribbon(text: String, center: Vector2, color: Color, alpha: float, scale := 1) -> void:
+	var hp: Dictionary = _skin.meta.get("header", {})
+	var caps := float(hp.get("left", 8)) + float(hp.get("right", 8))
+	var w := roundf(PixelFont.body_width(text, scale) + caps + 8.0)
+	var h := _skin.height("header")
+	_skin.hbar(self, "header", (center - Vector2(w, h) * 0.5).round(), w, alpha)
+	var shadow := Palette.UI_SHADOW
+	shadow.a = alpha
+	color.a = alpha
+	PixelFont.body_centered(self, text, center, color, scale, shadow)
 
 
 func _draw_banner(size: Vector2) -> void:
 	if _banner_t > 3.2:
 		return
 	var a := clampf(minf(_banner_t / 0.3, (3.2 - _banner_t) / 0.6), 0.0, 1.0)
-	var c := Palette.UI_TEXT
-	c.a = a
 	var shadow := Palette.UI_SHADOW
 	shadow.a = a
-	PixelFont.body_centered(self, _banner, Vector2(size.x * 0.5, 52), c, 2, shadow)
+	_title_ribbon(_banner, Vector2(size.x * 0.5, 52), _skin.color("text"), a, 2)
 	if _banner_sub != "":
-		var s := Palette.UI_DIM
+		var s := Palette.UI_TEXT
 		s.a = a
-		PixelFont.body_centered(self, _banner_sub, Vector2(size.x * 0.5, 72), s, 1, shadow)
+		PixelFont.body_centered(self, _banner_sub, Vector2(size.x * 0.5, 52 + _skin.height("header") * 0.5 + 8), s, 1, shadow)
 
 
 func _draw_toasts(size: Vector2) -> void:
@@ -351,8 +391,9 @@ func _draw_status(size: Vector2) -> void:
 		PixelFont.draw(self, split, Vector2(size.x - 8 - PixelFont.width(split), size.y - 11), Palette.UI_DIM)
 	if player.curse > 0:
 		var violet := Color("c08fff")
-		_icon("skull", Vector2(8, 36), violet)
-		PixelFont.body(self, "%d" % player.curse, Vector2(19, 36), violet)
+		var cy := _below_health + 12.0
+		_icon("skull", Vector2(_slot_left(), cy), violet)
+		PixelFont.body(self, "%d" % player.curse, Vector2(_slot_left() + 11, cy), violet)
 	for door: TimedDoor in get_tree().get_nodes_in_group("timed_doors"):
 		if door.is_open:
 			continue

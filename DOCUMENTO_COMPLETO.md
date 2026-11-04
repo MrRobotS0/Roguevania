@@ -1493,12 +1493,13 @@ O desenho gerado por código bateu no teto. Agora o jogo usa arte **profissional
 - A aparência padrão "O Andarilho" tem a capa vermelha da arte.
 - O pacote de skills `gamedev@awesome-gamedev-agent-skills` está instalado (precisa reiniciar o Claude Code). As skills úteis aqui: `create-game-assets`, `game-feel`, `godot-shaders`, `godot-tilemap`, `platformer`, `camera-systems`.
 
+**Feito em 04/11 (tarde):**
+- **Ambiência ligada**: `Ambience` na CanvasLayer -10, depois do fundo; `main._use_biome` chama `ambience.use(b.id)`.
+- **Tremor de tela** (`camera_rig.gd`): agora usa senoides em frequências que não se repetem, em vez de `randf`. A amplitude cai ao quadrado, e cada pedido novo recomeça do pico.
+- **HUD inteiro por domínio, com arte de kits CC0** (ver a seção 26).
+
 **Pendente, nesta ordem:**
-1. **Ambiência.** `scripts/world/ambience.gd` está escrito, mas não está ligado: raios de luz e névoa por shader com pontilhado, mais partículas com brilho por domínio. Falta:
-   - em `main.gd`, criar `Ambience` na CanvasLayer do fundo (layer -10, depois do backdrop);
-   - chamar `ambience.use(b.id)` em `_use_biome`;
-   - rodar os testes.
-2. **Tremor de tela** (pela skill de game feel): em `camera_rig.gd`, trocar `randf_range` por senoide suave com intensidade ao quadrado, para o tremor deixar de "chiar".
+1. ~~Ambiência~~ e 2. ~~Tremor~~ (feitos).
 3. **Blocos do chão:** mapear os tilesets do Gothicvania (16 px, igual ao jogo) para os blocos de cada domínio em `room.gd` (`_draw_stone`, atlas).
 4. **Inimigos e chefes** com a arte nova:
    - Hell Beast, Nightmare, Dark Emperor e o demônio do Bestiary como chefes;
@@ -1516,3 +1517,45 @@ O desenho gerado por código bateu no teto. Agora o jogo usa arte **profissional
 - nunca abrir o jogo com janela; conferir só em headless e por PNG;
 - commit sem "Co-Authored-By: Claude";
 - para ver o site, usar Playwright (`shots.py` no scratchpad) com `python -m http.server`.
+
+---
+
+## 26. HUD por domínio com arte de kits (04/11/2026)
+
+Ele pediu: "mude absolutamente tudo a temática do HUD de acordo com o mapa, tente pegar de graça em algum kit".
+
+**Kits** (todos CC0, baixados por `tools/baixar_arte.py`, que confere a licença):
+- **Tiny RPG Dragon Regalia GUI** e **Mana Soul GUI**, de Gabriel "tiopalada" Lima. São a base, porque estão na escala certa para 480x270.
+- Também foram baixados, para uso futuro: fantasy-ui-borders, pixel-ui-pack e 1-bit-pack (Kenney); golden-ui e sci-fi-user-interface (Buch); pixel-uihud 1 e 2 e pixel-hearts (TokyoGeisha); entre outros.
+- O site do Kenney recusa download automático (403). As cópias no OpenGameArt servem.
+
+**Ferramenta:** `python tools/importar_hud.py`. Para cada domínio, monta seis peças:
+
+| Peça | O que é |
+|---|---|
+| panel | 9 fatias |
+| bar | moldura da vida, com miolo translúcido |
+| boss | moldura da barra do chefe |
+| header | fita atrás dos títulos |
+| slot | moldura de equipamento |
+| gem | enfeite ao lado da vida |
+
+- Recolore separando os pixels pela matiz: ouro e prata viram metal, vermelho e verde viram destaque, o resto vira escuro. Cada classe usa a rampa do domínio.
+- O recheio dos painéis e das fitas vira o escuro do domínio, para o texto ler.
+- Nas abas do Mana Soul, o painel é a metade direita espelhada, porque a esquerda traz a marca de "selecionada".
+- Grava `assets/sprites/hud_<domínio>.png` e `.json`. O `.json` guarda as tampas, a coluna do meio, o enfeite central e o miolo, tudo detectado sozinho.
+
+**Jogo:**
+- `scripts/ui/hud_skin.gd` (`HudSkin.of(id)`) desenha as peças: o painel com `StyleBoxTexture`; barra e fita com tampas, meio esticado de 1 coluna e enfeite central.
+- `hud.gd` usa a pele em tudo:
+  - vida com enfeite e número na cor do domínio;
+  - frascos e teclas na cor do domínio;
+  - slots no tamanho da moldura;
+  - aviso de interação;
+  - barra do chefe com o nome numa fita; a barra começa depois dos slots e o aviso sobe durante o chefe;
+  - faixa do nome do bioma numa fita.
+- O `HudTheme` ficou só com as cores; o desenho antigo das molduras saiu.
+
+**Prévia sem abrir o jogo:** `python tools/previa_hud.py` gera `tools/previews/hud_temas.png`, com os 7 HUDs sobre os fundos de cada domínio.
+
+**Teste:** "HUD: cada domínio tem a sua pele e ela cabe na tela" (62 testes).

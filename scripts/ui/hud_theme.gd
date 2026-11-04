@@ -1,9 +1,9 @@
 class_name HudTheme
 extends RefCounted
 
-# A moldura do HUD muda com o domínio: o lugar continua igual (vida em cima à
-# esquerda, slots embaixo), só a pele troca. A cor da vida não muda nunca:
-# vermelho é vida em qualquer lugar.
+# As cores do HUD por domínio (o "bg" pinta as células da vida no Observatório).
+# As molduras, barras, slots e fitas vêm da arte de kits: ver HudSkin.
+# A cor da vida não muda nunca: vermelho é vida em qualquer lugar.
 #
 #   frame  borda       light  brilho do chanfro    dark  sombra do chanfro
 #   bg     fundo       accent enfeite              style que enfeite desenhar
@@ -34,97 +34,3 @@ static func blend(a: Dictionary, b: Dictionary, k: float) -> Dictionary:
 	for key in ["frame", "light", "dark", "bg", "accent"]:
 		out[key] = (a[key] as Color).lerp(b[key], k)
 	return out
-
-
-# Painel chanfrado com o enfeite do domínio. `t` é o relógio do HUD (anima
-# gotas, cintilação do circuito etc.).
-static func panel(ci: CanvasItem, r: Rect2, th: Dictionary, t: float, ornate := true) -> void:
-	var dark: Color = th["dark"]
-	var frame: Color = th["frame"]
-	var light: Color = th["light"]
-	var bg: Color = th["bg"]
-	ci.draw_rect(r.grow(2), dark)
-	ci.draw_rect(r.grow(1), frame)
-	ci.draw_rect(r, bg)
-	# chanfro: luz em cima, sombra embaixo
-	ci.draw_rect(Rect2(r.position.x - 1, r.position.y - 1, r.size.x + 2, 1), light)
-	ci.draw_rect(Rect2(r.position.x - 1, r.end.y, r.size.x + 2, 1), frame.darkened(0.35))
-	if ornate:
-		ornament(ci, r, th, t)
-
-
-static func ornament(ci: CanvasItem, r: Rect2, th: Dictionary, t: float) -> void:
-	var a: Color = th["accent"]
-	var light: Color = th["light"]
-	var dark: Color = th["dark"]
-	var x0 := r.position.x - 2
-	var x1 := r.end.x + 1
-	var y0 := r.position.y - 2
-	var y1 := r.end.y + 1
-	match String(th["style"]):
-		"sun":
-			# raios de sol nos cantos: o império que adorava o deus que ardeu
-			for c in [Vector2(x0, y0), Vector2(x1, y0)]:
-				ci.draw_rect(Rect2(c - Vector2(1, 1), Vector2(3, 3)), a)
-				ci.draw_rect(Rect2(c + Vector2(0, -3), Vector2(1, 2)), a.darkened(0.2))
-				ci.draw_rect(Rect2(c + Vector2(-3 if c.x == x0 else 2, 0), Vector2(2, 1)), a.darkened(0.2))
-		"ice":
-			# pingentes pendurados embaixo, de tamanhos diferentes
-			var i := 0
-			var x := r.position.x + 3
-			while x < r.end.x - 2:
-				var tall := 1 + (i * 7) % 3
-				ci.draw_rect(Rect2(x, y1 + 1, 1, tall), light if i % 2 == 0 else a)
-				x += 5 + (i % 3)
-				i += 1
-		"rivets":
-			# rebites de ferro e uma costura de brasa que pulsa
-			for c in [Vector2(x0 + 1, y0 + 1), Vector2(x1 - 1, y0 + 1), Vector2(x0 + 1, y1 - 1), Vector2(x1 - 1, y1 - 1)]:
-				ci.draw_rect(Rect2(c - Vector2(1, 1), Vector2(2, 2)), light)
-			var glow := a
-			glow.a = 0.55 + 0.35 * sin(t * 3.0)
-			ci.draw_rect(Rect2(r.position.x + 2, y1 + 1, r.size.x - 4, 1), glow)
-		"glyphs":
-			# letras de mil línguas gravadas na borda de cima
-			var x := r.position.x + 2
-			var i := 0
-			while x < r.end.x - 2:
-				var h := 1 + (i * 5) % 2
-				ci.draw_rect(Rect2(x, y0 - h, 1, h), a if i % 3 else light)
-				x += 3
-				i += 1
-		"vines":
-			# cipó com folhas enroscando a borda
-			var x := r.position.x
-			var i := 0
-			while x < r.end.x:
-				var up := (i % 2) == 0
-				ci.draw_rect(Rect2(x, y1 + (1 if up else 2), 2, 1), a.darkened(0.3))
-				if i % 3 == 0:
-					ci.draw_rect(Rect2(x + 1, y1 + (2 if up else 3), 2, 2), a)
-				x += 4
-				i += 1
-			ci.draw_rect(Rect2(x0 - 1, y0 - 1, 3, 2), a)
-		"drips":
-			# o amarelo escorre devagar
-			for i in 4:
-				var x := r.position.x + 4 + i * (r.size.x - 8) / 3.0
-				var drop := 1.0 + fposmod(t * 0.6 + i * 0.37, 1.0) * 4.0
-				var c := a.darkened(0.15 * (i % 2))
-				ci.draw_rect(Rect2(roundf(x), y1 + 1, 1, roundf(drop)), c)
-				ci.draw_rect(Rect2(roundf(x) - (1 if drop > 3.5 else 0), y1 + roundf(drop), 1 + (1 if drop > 3.5 else 0), 1), c)
-		"circuit":
-			# cantoneiras de vidro e latão, e uma linha de varredura correndo
-			for c in [Vector2(x0, y0), Vector2(x1, y0), Vector2(x0, y1), Vector2(x1, y1)]:
-				var sx := 1.0 if c.x == x0 else -1.0
-				var sy := 1.0 if c.y == y0 else -1.0
-				ci.draw_rect(Rect2(c.x - (0.0 if sx > 0 else 3.0), c.y, 4, 1), a)
-				ci.draw_rect(Rect2(c.x, c.y - (0.0 if sy > 0 else 3.0), 1, 4), a)
-			var scan := fposmod(t * 40.0, r.size.x + 20.0) - 10.0
-			if scan > 0.0 and scan < r.size.x:
-				var s := a
-				s.a = 0.6
-				ci.draw_rect(Rect2(r.position.x + scan, y0, 2, 1), s)
-				ci.draw_rect(Rect2(r.position.x + r.size.x - scan, y1, 2, 1), s)
-			var blink := dark.lerp(a, 0.5 + 0.5 * sin(t * 5.0))
-			ci.draw_rect(Rect2(x1 + 2, y0 + 1, 1, 1), blink)

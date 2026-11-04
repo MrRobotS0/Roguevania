@@ -144,6 +144,7 @@ func _ready() -> void:
 	await _case("atualização: compara versões e fica quieta fora do jogo exportado", _updater)
 	await _case("cromas: trancados, comprados na Vigia, vestidos e salvos", _chromas)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
+	await _case("HUD: cada domínio tem a sua pele e ela cabe na tela", _hud_skins)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -1355,3 +1356,31 @@ func _all_scripts() -> void:
 	_check(main.get("hud") != null and main.get("screen") != null, "a tela principal não montou")
 	main.queue_free()
 	await _frames(2)
+
+
+# A pele de cada domínio carrega, tem todas as peças, a barra tem miolo onde
+# pintar a vida, e o HUD desenha com ela sem erro.
+func _hud_skins() -> void:
+	var ids := ["mar_de_cinzas", "saloes", "forja_rubra", "torre_babel", "jardim_primordial", "carcosa", "observatorio"]
+	var seen := {}
+	for id: String in ids:
+		var s := HudSkin.of(id)
+		_check(s.id == id, "%s caiu na pele padrão" % id)
+		_check(s.tex != null, "%s sem textura" % id)
+		for part: String in ["panel", "bar", "boss", "header", "slot", "gem"]:
+			_check(s.part_size(part).x > 1.0, "%s sem a peça %s" % [id, part])
+		var inner := s.inner_of("bar", Vector2.ZERO, Hud.BAR_W)
+		_check(inner.size.x > Hud.BAR_W * 0.7 and inner.size.y >= 3.0, "%s: miolo da vida pequeno demais %s" % [id, inner])
+		_check(s.part_size("slot").x <= 34.0, "%s: slot largo demais" % id)
+		seen[s.tex.get_rid()] = true
+	_check(seen.size() == ids.size(), "domínios repetindo a mesma pele")
+	_check(HudSkin.of("nao_existe").id == HudSkin.FALLBACK, "domínio sem pele não caiu na padrão")
+	await _load(FLAT)
+	var hud := Hud.new()
+	add_child(hud)
+	hud.bind(level.player)
+	for id: String in ids:
+		hud.use_theme(id)
+		hud.queue_redraw()
+		await _frames(2)
+	hud.queue_free()
