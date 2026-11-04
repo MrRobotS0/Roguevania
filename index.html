@@ -65,7 +65,7 @@
 
   /* capa */
   .hero { position: relative; height: 100vh; min-height: 600px; display: grid; place-items: center; text-align: center; }
-  h1 { margin: 0; font: 700 clamp(70px, 16vw, 190px)/.9 var(--pixel); letter-spacing: .04em; color: var(--gold);
+  h1 { margin: 0; white-space: nowrap; font: 700 clamp(40px, 14vw, 190px)/.9 var(--pixel); letter-spacing: .04em; color: var(--gold);
     text-shadow: -3px 0 0 rgba(217,67,75,.75), 3px 0 0 rgba(143,247,232,.55), 0 8px 0 #5a2a08, 0 16px 0 #1c0c04, 0 0 60px rgba(242,193,78,.4); }
   h1 .ch { display: inline-block; }
   .tagline { font: 400 clamp(17px, 2.4vw, 24px)/1.4 var(--body); margin: 26px auto 40px; max-width: 30ch; text-shadow: 2px 2px 0 var(--bg); }
@@ -146,6 +146,7 @@
   .final .small { color: var(--dim); font-size: 14px; margin-top: 20px; }
   footer { background: var(--bg); padding: 30px 0 46px; color: var(--dim); font-size: 14px; border-top: 2px solid var(--line); }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+  footer .credits { flex: 0 0 100%; box-sizing: border-box; padding-right: max(0px, calc(100% - 75ch)); margin: 8px 0 0; line-height: 1.6; }
 
   .spr { image-rendering: pixelated; background-repeat: no-repeat; }
 
@@ -191,7 +192,7 @@
         <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M7 1h2v8h2l-3 4-3-4h2zM2 13h12v2H2z"/></svg>
         <span data-i18n="download">Download free</span>
       </a>
-      <p class="ver">WINDOWS · V0.1.0 · EN / PT</p>
+      <p class="ver">WINDOWS · V0.3.0 · EN / PT</p>
     </div>
     <div class="runner" aria-hidden="true"></div>
     <div class="cue" aria-hidden="true">SCROLL<i></i></div>
@@ -248,8 +249,13 @@
 
 <footer>
   <div class="wrap">
-    <span>MOKSHA · v0.1.0</span>
+    <span>MOKSHA · v0.3.0</span>
     <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a>
+    <p class="credits"><span data-i18n="credits">Art, with thanks:</span>
+      <a href="https://opengameart.org/users/ansimuz">ansimuz</a> (Gothicvania, CC0; Hell Hound, CC-BY 3.0) ·
+      <a href="https://opengameart.org/content/dark-emperor">TheBlackSword</a> (Dark Emperor, CC-BY 3.0) ·
+      <a href="https://opengameart.org/content/dark-fantasy-platformer-bestiary">Emcee Flesher</a> (bestiary, CC-BY 4.0), with sprites by Stephen “Redshrike” Challener, Evert, Puffalotti, William.Thompsonj, Balmer, Calciumtrice and surt ·
+      <a href="https://opengameart.org/content/tiny-rpg-mana-soul-gui">Gabriel “tiopalada” Lima</a> (interface, CC0)</p>
   </div>
 </footer>
 
@@ -289,6 +295,7 @@
     gEye: "7 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
     dlT: "A cinza <span>lembra de você</span>.",
     dlP: "Grátis. Windows 10/11. Teclado ou controle.",
+    credits: "Arte, com gratidão:",
     smart: "O Windows pode avisar de editor desconhecido: Mais informações → Executar assim mesmo.",
   };
   const EN = {};
