@@ -21,6 +21,12 @@ func follow(who: Player, bounds: Vector2) -> void:
 	reset_smoothing()
 
 
+func snap() -> void:
+	if is_instance_valid(target):
+		global_position = target.global_position + Vector2(0, HEIGHT)
+		reset_smoothing()
+
+
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
 		return

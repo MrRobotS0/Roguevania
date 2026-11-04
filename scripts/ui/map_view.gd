@@ -61,6 +61,8 @@ func _draw() -> void:
 			c = Palette.GOLD.lightened(0.3)
 		elif n is Altar or n is MutationAltar or n is RuneAltar:
 			c = Color("b8f06a")
+		elif n is Portal and n.found:
+			c = Portal.CORE
 		if c.a > 0.0:
 			var cell := (n as Node2D).global_position / Room.TILE
 			if level.seen(int(cell.x), int(cell.y) - 1):
@@ -69,4 +71,19 @@ func _draw() -> void:
 		draw_rect(Rect2(origin + me * scale - Vector2(2, 2), Vector2(4, 4)), Palette.HURT)
 	var title: String = Catalog.STAGE_NAMES.get(Run.stage_id, "") if level.kind != "passagem" else "A Passagem"
 	PixelFont.body_centered(self, String(title).to_upper(), Vector2(size.x * 0.5, 14), Palette.GOLD)
-	PixelFont.draw_centered(self, "VOCÊ   SAÍDA   VIGIA   BAÚ   ALTAR", Vector2(size.x * 0.5, size.y - 12), Palette.UI_DIM)
+	_legend(size)
+
+
+# Legenda com a cor de cada marca ao lado do nome.
+func _legend(size: Vector2) -> void:
+	var items := [["VOCÊ", Palette.HURT], ["SAÍDA", Palette.ESSENCE], ["PORTAL", Portal.CORE],
+		["VIGIA", Palette.GLASS], ["BAÚ", Palette.GOLD], ["ALTAR", Color("b8f06a")]]
+	var total := 0.0
+	for it in items:
+		total += PixelFont.width(it[0]) + 18.0
+	var x := roundf(size.x * 0.5 - total * 0.5)
+	var y := size.y - 14.0
+	for it in items:
+		draw_rect(Rect2(x, y + 1, 4, 4), it[1])
+		PixelFont.draw(self, it[0], Vector2(x + 7, y), Palette.UI_DIM)
+		x += PixelFont.width(it[0]) + 18.0

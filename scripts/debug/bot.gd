@@ -2,7 +2,7 @@ class_name Bot
 extends PlayerInput
 
 # Um jogador de mentira, para medir o jogo sem tela (tests/robo.tscn).
-# Joga como alguém razoável: anda pelo caminho do BotNav, pega item melhor,
+# Joga como alguém razoável: anda pelo caminho do JumpMap, pega item melhor,
 # usa altar e Vigia, luta com quem aparece na frente, rola quando vê o
 # aviso (nem sempre: `reflex` é a chance de reagir) e bebe frasco com a vida
 # baixa. Os menus quem responde é o robo.gd, que roda mesmo com o jogo
@@ -14,7 +14,7 @@ const STUCK_SKIP := 11.0
 
 var player: Player
 var level: Level
-var nav := BotNav.new()
+var nav := JumpMap.new()
 var reflex := 0.75
 var rng := RandomNumberGenerator.new()
 var stuck_events: Array = []     # [andar, célula] onde precisou ser empurrado
@@ -286,7 +286,7 @@ func _on_track(here: Vector2i) -> bool:
 func _follow(step: Array) -> void:
 	var cell: Vector2i = step[0]
 	var kind: String = step[1]
-	var at := BotNav.center_of(cell)
+	var at := JumpMap.center_of(cell)
 	var dx := at.x - player.global_position.x
 	var below := player.global_position.y - at.y     # > 0: o alvo está acima
 	match kind:
@@ -324,7 +324,7 @@ func _watch_progress(delta: float, here: Vector2i) -> void:
 	if _progress_clock > STUCK_SKIP and not _path.is_empty():
 		# preso: anota onde foi e empurra o herói para o próximo passo
 		stuck_events.append([level.kind, here, _path.slice(0, 3), player.global_position.round(), "%s estado %d %s" % [_goal.name if _goal else "", player.state, _why]])
-		player.global_position = BotNav.center_of(_path[0][0])
+		player.global_position = JumpMap.center_of(_path[0][0])
 		player.velocity = Vector2.ZERO
 		_progress_clock = 0.0
 		_best_left = 999999

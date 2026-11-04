@@ -93,7 +93,7 @@ def rooms():
 
     r = R("elite_arena", "elite", 40, 16, head="Pátio de julgamento das Casas")
     r.door("L", 11, 4).door("R", 11, 4).fill(8, 12, 10, 10, "=").fill(27, 31, 10, 10, "=")
-    r.put(20, 14, "E").put(3, 14, "L")
+    r.put(20, 14, "E").put(3, 14, "L").door("B", 34, 3)
     out.append(r)
 
     r = R("tesouro_alto", "tesouro", 16, 12, head="Câmara acima do poço")

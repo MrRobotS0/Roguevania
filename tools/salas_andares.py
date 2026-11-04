@@ -77,9 +77,10 @@ def common(biome, rune):
     """Peças que todo andar tem (inclusive o Mar de Cinzas)."""
     out = []
     r = R("saida_relogio", "saida", 42, 14, head="A saída; atrás da Porta do Relógio, o que fica para quem tem pressa")
-    r.door("L", 9, 4).fill(34, 34, 1, 9)
+    r.door("L", 9, 4).door("T", 19, 3).door("B", 5, 3).fill(34, 34, 1, 9)
     r.put(10, 12, "L").put(26, 12, "X").put(34, 12, "T").put(37, 12, "c").put(39, 12, "i")
-    r.fill(14, 18, 9, 9, "=")
+    r.fill(14, 18, 10, 10, "=")
+    top_ladders(r)
     out.append(r)
 
     out += branch_variants("loja", "loja", 22, 11,
@@ -162,7 +163,7 @@ def floor_rooms(biome, hazard_rooms):
 
     r = R("elite_salao", "elite", 40, 16, head="Salão do guardião do andar")
     r.door("L", 11, 4).door("R", 11, 4).fill(8, 12, 12, 12, "=").fill(27, 31, 12, 12, "=")
-    r.fill(14, 22, 9, 9, "=").put(20, 14, "E").put(19, 8, "i").door("T", 30, 3)
+    r.fill(14, 22, 9, 9, "=").put(20, 14, "E").put(19, 8, "i").door("T", 30, 3).door("B", 3, 3)
     out.append(r)
 
     out += branch_variants("tesouro", "tesouro", 18, 11, lambda r: r.put(4, 9, "i").put(13, 9, "c"))

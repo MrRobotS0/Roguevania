@@ -22,6 +22,7 @@ from validar_salas import Room, check_rows
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 
 DOMAINS = {
+    "mar_de_cinzas": (["vertical", "fossos", "varandas", "vertical", "ilhas", "terracos", "vertical"], "Mar de Cinzas"),
     "saloes": (["pilares", "fossos", "varandas", "pilares", "ruela", "terracos", "varandas"], "Salões"),
     "forja_rubra": (["fossos", "terracos", "vertical", "fossos", "ruela", "fossos", "pilares"], "Forja"),
     "torre_babel": (["vertical", "vertical", "terracos", "varandas", "ruela", "vertical", "ilhas"], "Torre"),

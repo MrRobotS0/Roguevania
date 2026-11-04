@@ -98,6 +98,7 @@ func _populate(with_camera: bool) -> void:
 
 	for m in room.markers:
 		_spawn_marker(m)
+	_name_portals()
 	for spot in room.brazier_spots:
 		var fire := Brazier.new()
 		fire.position = spot
@@ -185,10 +186,40 @@ func _spawn_marker(m: Dictionary) -> void:
 			door.limit = TIMED_LIMIT + 30.0 * tier
 			door.position = at
 			add_child(door)
+		"O":
+			_place(Portal.new(), at)
 		"U":
 			var altar := RuneAltar.new()
 			altar.rune = biome.rune if biome and biome.rune != "" else "asa"
 			_place(altar, at)
+
+
+# Nome de cada portal pelo lugar: o do começo, o da saída e os do caminho.
+func _name_portals() -> void:
+	var list: Array[Portal] = []
+	for n in get_children():
+		if n is Portal:
+			list.append(n)
+	if list.is_empty():
+		return
+	var exits := room.markers_of("X")
+	var goal: Vector2 = exits[0]["pos"] if not exits.is_empty() else room.size_px()
+	var first := list[0]
+	var last := list[0]
+	for p in list:
+		if p.position.distance_to(room.player_spawn) < first.position.distance_to(room.player_spawn):
+			first = p
+		if p.position.distance_to(goal) < last.position.distance_to(goal):
+			last = p
+	first.label = "O COMEÇO"
+	first.found = true
+	if last != first:
+		last.label = "PERTO DA SAÍDA"
+	var n := 0
+	for p in list:
+		if p.label == "":
+			n += 1
+			p.label = "PEDRA %s" % ["I", "II", "III", "IV", "V", "VI"][mini(n - 1, 5)]
 
 
 func _spawn_exit(at: Vector2) -> void:

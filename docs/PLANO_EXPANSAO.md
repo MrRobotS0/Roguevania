@@ -31,3 +31,30 @@ Regra: não abrir o jogo com janela. Arte conferida em PNG gerado (tools/preview
 - [x] **7. Elite próprio por domínio** — um elite novo em cada um dos 6 domínios.
 - [x] **8. Sons novos** — chefes, habilidades novas, inimigos novos.
 - [x] **10. História** — abertura curta, final de verdade, códice (inscrições lidas + bestiário).
+
+# Terceira rodada (04/11: "vamos melhorar o jogo" e o que ele pediu jogando)
+
+Feito:
+- [x] **Variedade** — 5 armas (chicote, foice, punhos, besta, cetro), 3 habilidades
+      (sino, raiz, estrela), 6 mutações (Couraça e Passo do Lobo viraram mecânica),
+      4 inimigos próprios (pedreiro, broto, dançarino, lente), 24 salas feitas à mão
+      nos domínios novos, Jardim orgânico, 7 nichos secretos.
+- [x] **Salvar no meio** — cada andar grava; CONTINUAR no título; SALVAR E SAIR na pausa.
+- [x] **Primeira partida guiada** — só a tecla de cada comando, uma vez, na hora certa.
+- [x] **Robô que joga sozinho** — `tests/robo.tscn` (relatório em docs/ROBO.md).
+- [x] **Verificador de salas honesto** — não atravessa parede no ar; entrada L/T
+      chega a todas as portas. 7 salas que travavam corrigidas. 2 bugs do jogo.
+- [x] **Menos texto na cara** — sem subtítulo no título, sem aviso na morte.
+- [x] **Movimento fluido** — pulo duplo para todos, esquiva no ar, rolagem emenda
+      no pulo, golpe cancela em pulo, mergulho quica.
+- [x] **Inimigos fluidos (1ª passada)** — aceleração, pulam degrau, descem plataforma.
+- [x] **Fases não lineares** — o gerador sabe que portas de cada sala se ligam
+      (pulo real) e segue para os 4 lados; desvios de 1 a 3 salas; portais.
+
+Fila (todos pedidos por ele):
+- [ ] Inimigos mais vivos (2ª passada): investidas, tempos variados, perseguição real.
+- [ ] HUD temático por domínio (cada domínio com a sua moldura).
+- [ ] Pixel art do jogo inteiro no máximo (herói, inimigos, blocos, fundos, objetos).
+- [ ] Inglês e português, com o seletor nas opções.
+- [ ] Robô + equilíbrio medido.
+- [ ] Exportar .exe e página (landing page) para o GitHub Pages com o botão de download.

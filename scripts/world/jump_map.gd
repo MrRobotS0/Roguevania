@@ -1,19 +1,19 @@
-class_name BotNav
+class_name JumpMap
 extends RefCounted
 
 # Mapa de onde o herói pode ficar em pé e como ir de um lugar ao outro, com
 # o mesmo alcance do verificador de salas (tools/validar_salas.py): anda,
 # cai, desce da plataforma, pula até 3 blocos e agarra a beirada no 4º.
-# Usado só pelo robô que joga sozinho.
+# O gerador usa para saber que portas de cada sala se ligam; o robô, para andar.
 
 const JUMP_UP := 3
 const LEDGE_UP := 4
 
-var room: Room
+var room          # Room ou RoomTemplate.Grid: precisa de cols, rows, cell() e is_solid()
 var _edges := {}      # Vector2i -> Array[[Vector2i, tipo]]
 
 
-func build(r: Room) -> void:
+func build(r) -> void:
 	room = r
 	_edges.clear()
 	for y in room.rows:
@@ -29,7 +29,7 @@ func open_at(x: int, y: int) -> bool:
 func stand(x: int, y: int) -> bool:
 	if x < 0 or y < 1 or x >= room.cols or y >= room.rows - 1:
 		return false
-	var below := room.cell(x, y + 1)
+	var below: String = room.cell(x, y + 1)
 	return open_at(x, y) and open_at(x, y - 1) and (below == Room.SOLID or below == Room.CRACKED or below == Room.PLATFORM)
 
 
@@ -142,6 +142,27 @@ func path(from: Vector2i, goal: Vector2i, near := 1) -> Array:
 		out.push_front([c, how[c]])
 		c = came[c]
 	return out
+
+
+func fall_from(x: int, y: int) -> Variant:
+	return _fall(x, y)
+
+
+# Tudo que se alcança saindo de `starts`.
+func reach(starts: Array) -> Dictionary:
+	var seen := {}
+	var todo: Array = []
+	for s in starts:
+		if _edges.has(s) and not seen.has(s):
+			seen[s] = true
+			todo.append(s)
+	while not todo.is_empty():
+		var c: Vector2i = todo.pop_back()
+		for e: Array in _edges[c]:
+			if not seen.has(e[0]):
+				seen[e[0]] = true
+				todo.append(e[0])
+	return seen
 
 
 static func center_of(c: Vector2i) -> Vector2:
