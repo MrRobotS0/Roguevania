@@ -8,6 +8,7 @@ var hud: Hud
 var menu: Menu
 var screen: Screen
 var backdrop: Backdrop
+var ambience: Ambience
 var weather: Weather
 var foreground: Foreground
 var curtain: Curtain
@@ -26,6 +27,9 @@ func _ready() -> void:
 	# o fundo fica mais apagado que o mundo jogável, que é iluminado
 	backdrop.modulate = Color(0.7, 0.66, 0.72)
 	back.add_child(backdrop)
+	# o ar do domínio (raios, névoa, partículas) fica entre o fundo e o mundo
+	ambience = Ambience.new()
+	back.add_child(ambience)
 
 	var front_scenery := CanvasLayer.new()
 	front_scenery.layer = 4
@@ -105,6 +109,7 @@ func _use_biome(b: BiomeData) -> void:
 	backdrop.style = b.backdrop
 	backdrop.sky = b.sky
 	backdrop.layers = b.layers
+	ambience.use(b.id)
 	foreground.style = b.backdrop
 	foreground.ink = b.ink
 

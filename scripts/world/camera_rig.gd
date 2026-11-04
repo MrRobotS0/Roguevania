@@ -36,6 +36,30 @@ func _physics_process(delta: float) -> void:
 	global_position.x = lerpf(global_position.x, goal.x, 1.0 - exp(-6.0 * delta))
 	global_position.y = lerpf(global_position.y, goal.y, 1.0 - exp(-9.0 * delta))
 
+	_shake(delta)
+
+
+# Tremor: o pedido (Fx.shake) é o pico em pixels. A amplitude cai ao quadrado
+# (forte no impacto, some rápido) e o desvio vem de senoides em frequências
+# que não se repetem, então a tela balança em vez de chiar quadro a quadro.
+var _peak := 0.0
+var _clock := 0.0
+var _last := 0.0
+
+func _shake(delta: float) -> void:
 	var s := Fx.shake
-	offset = Vector2(randf_range(-s, s), randf_range(-s, s)).round()
-	Fx.shake = move_toward(Fx.shake, 0.0, 28.0 * delta)
+	if s > _last:
+		_peak = s          # pedido novo (até no meio de outro): recomeça do pico
+	if s <= 0.0 or _peak <= 0.0:
+		_last = 0.0
+		_peak = 0.0
+		offset = Vector2.ZERO
+		return
+	_clock += delta
+	var k := s / _peak
+	var amp := _peak * k * k
+	var t := _clock * 38.0
+	var wob := Vector2(sin(t) * 0.6 + sin(t * 2.31 + 1.7) * 0.4, sin(t * 1.13 + 0.4) * 0.6 + sin(t * 2.71 + 2.9) * 0.4)
+	offset = (wob * amp).round()
+	Fx.shake = move_toward(s, 0.0, 28.0 * delta)
+	_last = Fx.shake
