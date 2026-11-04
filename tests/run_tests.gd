@@ -1394,7 +1394,7 @@ func _credits() -> void:
 	_check(ids.size() <= 8, "o menu do título voltou a crescer: %d itens" % ids.size())
 	for f in ["res://content/creditos.txt", "res://content/creditos_en.txt"]:
 		var text := FileAccess.get_file_as_string(f)
-		for who in ["ANSIMUZ", "THEBLACKSWORD", "REDSHRIKE", "EMCEE FLESHER", "BALMER", "CALCIUMTRICE", "TIOPALADA"]:
+		for who in ["ANSIMUZ", "THEBLACKSWORD", "REDSHRIKE", "EMCEE FLESHER", "BALMER", "CALCIUMTRICE", "TIOPALADA", "CHIERIT", "LUIZ MELO", "PULSARCP", "CRAFTPIX"]:
 			_check(text.contains(who), "%s sem crédito para %s" % [f, who])
 	# todo inimigo com arte nova tem a folha colorida e os nomes que o script pede
 	for sheet in ["penitent", "emperor", "colossus", "mother_root", "architect", "faceless_king", "astronomer", "wolf_king"]:

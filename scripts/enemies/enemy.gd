@@ -41,6 +41,7 @@ var _white: ImageTexture
 var _warn: ImageTexture
 var _frame_size := Vector2i(32, 32)
 var _pal := PackedColorArray()
+var _draw_scale := 1.0        # arte pequena desenhada maior (chefes): vem do .json da folha
 
 
 func _ready() -> void:
@@ -85,6 +86,7 @@ func _setup_sprite() -> void:
 	_white = SpriteSheet.texture(sheet, pal, true)
 	var m := SpriteSheet.meta(sheet)
 	_frame_size = Vector2i(int(m.get("w", 32)), int(m.get("h", 32)))
+	_draw_scale = float(m.get("draw_scale", 1))
 	body = Sprite2D.new()
 	body.centered = false
 	body.region_enabled = true
@@ -109,7 +111,7 @@ func _update_sprite() -> void:
 	body.region_rect = Rect2(i * fw, int(a["row"]) * fh, fw, fh - cut)
 	body.offset = Vector2(-fw * 0.5, -fh + 2 + cut)
 	body.flip_h = facing < 0
-	body.scale = _pose()
+	body.scale = _pose() * _draw_scale
 	if flash > 0.0 and Options.flashes():
 		body.texture = _white
 	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
@@ -133,7 +135,8 @@ func sprite_parts() -> Array:
 			var lx := body.offset.x + x
 			if body.flip_h:
 				lx = -lx - 2.0
-			out.append([Rect2(global_position + Vector2(lx, body.offset.y + y), Vector2(2, 2)), c])
+			var k := _draw_scale
+			out.append([Rect2(global_position + Vector2(lx, body.offset.y + y) * k, Vector2(2, 2) * k), c])
 	return out
 
 

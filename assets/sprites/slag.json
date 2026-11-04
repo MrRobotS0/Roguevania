@@ -1,12 +1,12 @@
 {
- "w": 32,
- "h": 31,
- "size": 32,
+ "w": 58,
+ "h": 56,
+ "size": 58,
  "color": true,
  "anims": {
   "idle": {
    "row": 0,
-   "frames": 3,
+   "frames": 9,
    "fps": 6
   },
   "hop": {

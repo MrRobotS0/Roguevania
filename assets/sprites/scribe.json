@@ -1,17 +1,17 @@
 {
- "w": 76,
- "h": 52,
- "size": 76,
+ "w": 162,
+ "h": 122,
+ "size": 162,
  "color": true,
  "anims": {
   "idle": {
    "row": 0,
-   "frames": 5,
+   "frames": 6,
    "fps": 6
   },
   "walk": {
    "row": 1,
-   "frames": 5,
+   "frames": 8,
    "fps": 10
   },
   "windup": {

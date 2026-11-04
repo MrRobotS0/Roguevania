@@ -190,6 +190,142 @@ SHEETS = {
                               seq("spider", [0, 2]), seq("spider", [0])), {"hue": 90, "scale": 2}),
 }
 
+# ---------------------------------------------------------------------------
+# Garimpo de 04/11 (itch.io, baixados pelo Chrome dele; ver docs/ACERVO_ARTE.md).
+# Cada troca foi escolhida pelo que o desenho mostra x a frase do personagem.
+IT = "itch/"
+LM = {  # Luiz Melo, CC0 — uma tira por animação
+    "king_idle": ("fw", IT + "medieval_king_pack_2/**/Idle.png", 160), "king_run": ("fw", IT + "medieval_king_pack_2/**/Run.png", 160),
+    "king_a1": ("fw", IT + "medieval_king_pack_2/**/Attack1.png", 160), "king_a3": ("fw", IT + "medieval_king_pack_2/**/Attack3.png", 160),
+    "king_hit": ("fw", IT + "medieval_king_pack_2/**/Take Hit.png", 160),
+    "ew2_idle": ("sq", IT + "evil_wizard_2/**/Idle.png"), "ew2_run": ("sq", IT + "evil_wizard_2/**/Run.png"),
+    "ew2_a1": ("sq", IT + "evil_wizard_2/**/Attack1.png"), "ew2_a2": ("sq", IT + "evil_wizard_2/**/Attack2.png"),
+    "ew2_hit": ("sq", IT + "evil_wizard_2/**/Take hit.png"),
+    "ew3_idle": ("sq", IT + "evil_wizard_3/**/Idle.png"), "ew3_walk": ("sq", IT + "evil_wizard_3/**/Walk.png"),
+    "ew3_atk": ("sq", IT + "evil_wizard_3/**/Attack.png"), "ew3_hit": ("sq", IT + "evil_wizard_3/**/Get hit.png"),
+    "wiz_idle": ("fw", IT + "wizard_pack/**/Idle.png", 231), "wiz_run": ("fw", IT + "wizard_pack/**/Run.png", 231),
+    "wiz_a1": ("fw", IT + "wizard_pack/**/Attack1.png", 231), "wiz_a2": ("fw", IT + "wizard_pack/**/Attack2.png", 231),
+    "wiz_hit": ("fw", IT + "wizard_pack/**/Hit.png", 231),
+    "ew_idle": ("sq", IT + "evil_wizard/**/Idle.png"), "ew_move": ("sq", IT + "evil_wizard/**/Move.png"),
+    "ew_atk": ("sq", IT + "evil_wizard/**/Attack.png"),
+    "hk_idle": ("sq", IT + "hero_knight/**/Idle.png"), "hk_run": ("sq", IT + "hero_knight/**/Run.png"),
+    "hk_a1": ("sq", IT + "hero_knight/**/Attack1.png"), "hk_a2": ("sq", IT + "hero_knight/**/Attack2.png"),
+    "hk_jump": ("sq", IT + "hero_knight/**/Jump.png"),
+    "hu_idle": ("sq", IT + "huntress/**/Idle.png"), "hu_run": ("sq", IT + "huntress/**/Run.png"),
+    "hu_a1": ("sq", IT + "huntress/**/Attack1.png"), "hu_a3": ("sq", IT + "huntress/**/Attack3.png"),
+    "hu_hit": ("sq", IT + "huntress/**/Take hit.png"),
+    "mh2_idle": ("sq", IT + "martial_hero_2/**/Idle.png"), "mh2_run": ("sq", IT + "martial_hero_2/**/Run.png"),
+    "mh2_a1": ("sq", IT + "martial_hero_2/**/Attack1.png"), "mh2_a2": ("sq", IT + "martial_hero_2/**/Attack2.png"),
+    "mh2_hit": ("sq", IT + "martial_hero_2/**/Take hit.png"),
+    "mh_idle": ("sq", IT + "martial_hero/**/Idle.png"), "mh_run": ("sq", IT + "martial_hero/**/Run.png"),
+    "mh_a1": ("sq", IT + "martial_hero/**/Attack1.png"), "mh_a2": ("sq", IT + "martial_hero/**/Attack2.png"),
+    "mh_hit": ("sq", IT + "martial_hero/**/Take Hit.png"),
+    "fw_idle": ("sq", IT + "fire_worm/**/Idle.png"), "fw_atk": ("sq", IT + "fire_worm/**/Attack.png"),
+    "fw_hit": ("sq", IT + "fire_worm/**/Get Hit.png"),
+    "mush_idle": ("sq", IT + "monsters_creatures_fantasy/**/Mushroom/Idle.png"),
+    "mush_run": ("sq", IT + "monsters_creatures_fantasy/**/Mushroom/Run.png"),
+    "mush_atk": ("sq", IT + "monsters_creatures_fantasy/**/Mushroom/Attack.png"),
+    "eye_fly": ("sq", IT + "monsters_creatures_fantasy/**/Flying eye/Flight.png"),
+    "eye_atk": ("sq", IT + "monsters_creatures_fantasy/**/Flying eye/Attack.png"),
+    "sk_idle": ("sq", IT + "monsters_creatures_fantasy/**/Skeleton/Idle.png"), "sk_walk": ("sq", IT + "monsters_creatures_fantasy/**/Skeleton/Walk.png"),
+    "sk_atk": ("sq", IT + "monsters_creatures_fantasy/**/Skeleton/Attack.png"), "sk_shield": ("sq", IT + "monsters_creatures_fantasy/**/Skeleton/Shield.png"),
+    "sk_hit": ("sq", IT + "monsters_creatures_fantasy/**/Skeleton/Take Hit.png"),
+    "mw3_idle": ("sq", IT + "medieval_warrior_pack_3/**/Idle.png"), "mw3_run": ("sq", IT + "medieval_warrior_pack_3/**/Run.png"),
+    "mw3_a1": ("sq", IT + "medieval_warrior_pack_3/**/Attack1.png"), "mw3_hit": ("sq", IT + "medieval_warrior_pack_3/**/Get Hit.png"),
+    "fwr_idle": ("sq", IT + "fantasy_warrior/**/Idle.png"), "fwr_run": ("sq", IT + "fantasy_warrior/**/Run.png"),
+    "fwr_a1": ("sq", IT + "fantasy_warrior/**/Attack1.png"), "fwr_hit": ("sq", IT + "fantasy_warrior/**/Take hit.png"),
+}
+CH = IT + "elementals_"
+EL = {  # chierit, CC-BY 4.0 — um arquivo por quadro
+    "cm_idle": ("files", CH + "crystal_mauler*/**/PNG/idle/*.png"), "cm_run": ("files", CH + "crystal_mauler*/**/PNG/run/*.png"),
+    "cm_a1": ("files", CH + "crystal_mauler*/**/PNG/1_atk/*.png"), "cm_hit": ("files", CH + "crystal_mauler*/**/PNG/take_hit/*.png"),
+    "gm_idle": ("files", CH + "ground_monk*/**/png/idle/*.png"), "gm_run": ("files", CH + "ground_monk*/**/png/run/*.png"),
+    "gm_a2": ("files", CH + "ground_monk*/**/png/2_atk/*.png"), "gm_sp": ("files", CH + "ground_monk*/**/png/sp_atk/*.png"),
+    "gm_hit": ("files", CH + "ground_monk*/**/png/take_hit/*.png"),
+    "fk_idle": ("files", CH + "fire_knight*/**/01_idle/*.png"), "fk_run": ("files", CH + "fire_knight*/**/02_run/*.png"),
+    "fk_a1": ("files", CH + "fire_knight*/**/05_1_atk/*.png"), "fk_sp": ("files", CH + "fire_knight*/**/08_sp_atk/*.png"),
+    "fk_hit": ("files", CH + "fire_knight*/**/10_take_hit/*.png"),
+    "wh_idle": ("files", CH + "wind_hashashin*/**/PNG/idle/*.png"), "wh_run": ("files", CH + "wind_hashashin*/**/PNG/run/*.png"),
+    "wh_a2": ("files", CH + "wind_hashashin*/**/PNG/2_atk/*.png"), "wh_a3": ("files", CH + "wind_hashashin*/**/PNG/3_atk/*.png"),
+    "wh_hit": ("files", CH + "wind_hashashin*/**/PNG/take_hit/*.png"),
+    "lr_idle": ("files", CH + "leaf_ranger*/**/PNG/idle/*.png"), "lr_run": ("files", CH + "leaf_ranger*/**/PNG/run/*.png"),
+    "lr_a1": ("files", CH + "leaf_ranger*/**/PNG/1_atk/*.png"), "lr_sp": ("files", CH + "leaf_ranger*/**/PNG/sp_atk/*.png"),
+    "lr_hit": ("files", CH + "leaf_ranger*/**/PNG/take_hit/*.png"),
+}
+RG = IT + "fantasy_creatures_bundle/**/Rune_Golem/crystal/"
+PC = {  # PulsarCP, CC0
+    "rg_idle": ("fw", RG + "idle_sheet.png", 208), "rg_walk": ("fw", RG + "walk_sheet.png", 208),
+    "rg_slam": ("fw", RG + "slam_sheet.png", 208), "rg_beam": ("fw", RG + "beam_sheet.png", 208),
+    "rg_hurt": ("fw", RG + "hurt_sheet.png", 208),
+}
+SOURCES.update(LM)
+SOURCES.update(EL)
+SOURCES.update(PC)
+BLUE_TO_YELLOW = [(0.5, 0.75, -165, 1.0)]
+SHEETS.update({
+    # Rei sem Rosto: "a máscara caiu; não havia nada embaixo" — rei de coroa (Luiz Melo), rosto vazio;
+    # a capa azul vira amarela: o Rei de Amarelo de Carcosa
+    "faceless_king": (six(seq("king_idle", range(8)), seq("king_run", range(8)), seq("king_a1", [1]), seq("king_a1", [2]),
+                          seq("king_a3", [0, 1]), seq("king_hit", [1])), {"draw_scale": 2, "void_face": True, "remap": [(0.5, 0.78, 48, 1.1, "=")]}),
+    # Arquiteto Mudo: "ergueu a torre e esqueceu a própria língua" — golem coberto de runas (PulsarCP);
+    # os cristais rosados viram glifos dourados da Torre
+    "architect": (six(seq("rg_idle", range(8)), seq("rg_walk", range(8)), seq("rg_slam", [2]), seq("rg_slam", [5]),
+                      seq("rg_beam", [2, 4]), seq("rg_hurt", [1])), {"remap": [(0.42, 0.6, 44, 1.0, "=")]}),
+    # Último Astrônomo: "contou as estrelas até elas acabarem" — mago de capuz com o orbe escuro
+    "astronomer": (six(seq("ew2_idle", range(8)), seq("ew2_run", range(8)), seq("ew2_a1", [2]), seq("ew2_a1", [5]),
+                       seq("ew2_a2", [2, 4]), seq("ew2_hit", [1])), {"draw_scale": 2}),
+    # Bibliotecário Cego: mago pálido com cajado de caveira
+    "elite_librarian": (six(seq("ew3_idle", range(10)), seq("ew3_walk", range(8)), seq("ew3_atk", [3]), seq("ew3_atk", [7]),
+                            seq("ew3_atk", [4, 5]), seq("ew3_hit", [1])), {}),
+    # Escriba Mudo: mago de túnica
+    "scribe": (six(seq("wiz_idle", range(6)), seq("wiz_run", range(8)), seq("wiz_a1", [2]), seq("wiz_a1", [5]),
+                   seq("wiz_a2", [2, 4]), seq("wiz_hit", [1])), {}),
+    # Atirador de Vidro: mago que arremessa; o fogo vira lasca de vidro
+    "archer": ({"idle": seq("ew_idle", range(8)), "walk": seq("ew_move", range(8)), "aim": seq("ew_atk", [3]),
+                "aim_lock": seq("ew_atk", [5])}, {"remap": [(0.95, 0.15, 175, 0.9)]}),
+    # Inquisidor Profeta: "salta e cai onde você está" — cavaleiro que salta
+    "inquisitor": ({"idle": seq("hk_idle", range(11)), "walk": seq("hk_run", range(8)), "windup": seq("hk_a1", [1]),
+                    "slash": seq("hk_a1", [3]), "crouch": seq("hk_a2", [0]), "leap": seq("hk_jump", [1])}, {}),
+    # Caçador do Inverno: lanças de gelo — caçadora de lança, puxada para o gelo
+    "elite_hunter": (six(seq("hu_idle", range(8)), seq("hu_run", range(8)), seq("hu_a1", [1]), seq("hu_a1", [3]),
+                         seq("hu_a3", [2, 4]), seq("hu_hit", [1])), {"remap": [(0.12, 0.45, 200, 0.7, "=")], "bright": 1.15}),
+    # Mascarado: "em Carcosa todos usam máscara" — samurai de máscara vermelha, túnica amarela
+    "masked": (six(seq("mh2_idle", range(4)), seq("mh2_run", range(8)), seq("mh2_a1", [1]), seq("mh2_a1", [2]),
+                   seq("mh2_a2", [1, 2]), seq("mh2_hit", [1])), {"remap": [(0.5, 0.85, 48, 1.1, "=")]}),
+    # Duelista Amarelo: "rápido, some, aparece, corta" — espadachim de chapéu, em amarelo
+    "elite_duelist": (six(seq("mh_idle", range(8)), seq("mh_run", range(8)), seq("mh_a1", [1]), seq("mh_a1", [3]),
+                          seq("mh_a2", [2, 3]), seq("mh_hit", [1])), {"remap": [(0.88, 0.04, 46, 1.1, "="), (0.55, 0.88, 50, 0.9, "=")]}),
+    # Escória Viva: "o metal que não quis virar arma; pula, queima e vira poça" — verme de fogo
+    "slag": ({"idle": seq("fw_idle", range(9)), "hop": seq("fw_atk", [6]), "land": seq("fw_hit", [1])}, {}),
+    # Broto Espinhento: "finca as raízes e incha" — cogumelo
+    "seed_pod": ({"idle": seq("mush_idle", range(4)), "walk": seq("mush_run", range(8)), "windup": seq("mush_atk", [3, 4]),
+                  "attack": seq("mush_atk", [6])}, {}),
+    # Lente Viva: "um olho que mira de qualquer ângulo" — olho voador
+    "lens": ({"idle": seq("eye_fly", range(8)), "windup": seq("eye_atk", [2, 4]), "attack": seq("eye_atk", [6])}, {}),
+    # Guarda da Casa: "o escudo protege a frente; as costas, ninguém" — esqueleto de escudo (Luiz Melo),
+    # soldado do império morto do Mar de Cinzas; recupera atrás do escudo
+    "guard": ({"idle": seq("sk_idle", range(4)), "walk": seq("sk_walk", range(4)), "windup": seq("sk_atk", [3]),
+               "attack": seq("sk_atk", [6]), "recover": seq("sk_shield", [1]), "stun": seq("sk_hit", [1])}, {}),
+    # Penitente: "peregrinos que juraram carregar a culpa do mundo" — peregrino de capuz, em cinza
+    "penitent": ({"idle": seq("fwr_idle", range(10)), "walk": seq("fwr_run", range(8)), "windup": seq("fwr_a1", [2]),
+                  "attack": seq("fwr_a1", [4]), "stun": seq("fwr_hit", [1])}, {"sat": 0.45}),
+    # Ferreiro Cativo: anão de marreta; o cristal vira brasa
+    "smith": ({"idle": seq("cm_idle", range(8)), "walk": seq("cm_run", range(8)), "windup": seq("cm_a1", [2]),
+               "slam": seq("cm_a1", [4]), "stun": seq("cm_hit", [2])}, {"remap": [(0.42, 0.72, 28, 0.35, "=")]}),
+    # Pedreiro da Torre: monge da terra (arremessa pedra, bate de perto)
+    "mason": (six(seq("gm_idle", range(6)), seq("gm_run", range(8)), seq("gm_a2", [3]), seq("gm_a2", [6]),
+                  seq("gm_sp", [5, 10]), seq("gm_hit", [2])), {}),
+    # Mestre-Ferreiro: "a martelada solta ondas pelo chão" — cavaleiro de fogo com espadão
+    "elite_forgemaster": (six(seq("fk_idle", range(8)), seq("fk_run", range(8)), seq("fk_a1", [3]), seq("fk_a1", [6]),
+                              seq("fk_sp", [6, 10]), seq("fk_hit", [2])), {}),
+    # Dançarino Amarelo: "gira e atravessa a sala num rodopio" — assassino do vento
+    "dancer": (six(seq("wh_idle", range(8)), seq("wh_run", range(8)), seq("wh_a2", [3]), seq("wh_a2", [8]),
+                   seq("wh_a3", [10, 14]), seq("wh_hit", [2])), {"remap": [(0.4, 0.6, -140, 1.1)]}),
+    # Guardiã de Espinhos: "faz o chão crescer contra você" — patrulheira de folhas
+    "elite_thornkeeper": (six(seq("lr_idle", range(12)), seq("lr_run", range(10)), seq("lr_a1", [3]), seq("lr_a1", [6]),
+                              seq("lr_sp", [6, 10]), seq("lr_hit", [2])), {}),
+})
+
 FPS = {"idle": 6, "walk": 10, "run": 12, "fly": 10, "cast": 6}
 
 
@@ -216,10 +352,15 @@ def frames(name):
         return _cache[name]
     spec = SOURCES[name]
     out = {}
-    if spec[0] == "strip":
+    if spec[0] in ("strip", "sq", "fw"):
         im = Image.open(find(spec[1])[0]).convert("RGBA")
-        n = spec[2]
-        fw = im.width // n
+        if spec[0] == "strip":
+            fw = im.width // spec[2]
+        elif spec[0] == "sq":          # quadros quadrados (a altura da tira)
+            fw = im.height
+        else:                          # largura do quadro informada
+            fw = spec[2]
+        n = im.width // fw
         cells = {i: im.crop((i * fw, 0, (i + 1) * fw, im.height)) for i in range(n)}
     elif spec[0] == "grid":
         im = Image.open(find(spec[1])[0]).convert("RGBA")
@@ -272,6 +413,49 @@ def recolor(im, hue, sat, bright):
     return im
 
 
+def remap(im, rules):
+    """Recolore só os pixels numa faixa de matiz: [(h0, h1, graus, sat), ...] (h em 0-1)."""
+    im = im.copy()
+    px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if s < 0.12:
+                continue
+            for rule in rules:
+                h0, h1, deg, sat = rule[:4]
+                inside = h0 <= h <= h1 if h0 <= h1 else (h >= h0 or h <= h1)
+                if inside:
+                    # 5º item "=": deg é a matiz de destino (0-360), não um deslocamento
+                    nh = (deg / 360.0) if len(rule) > 4 and rule[4] == "=" else (h + deg / 360.0) % 1.0
+                    r2, g2, b2 = colorsys.hsv_to_rgb(nh % 1.0, min(1.0, s * sat), v)
+                    px[x, y] = (round(r2 * 255), round(g2 * 255), round(b2 * 255), a)
+                    break
+    return im
+
+
+def void_face(im):
+    """Rei sem Rosto: a pele no alto do corpo vira vazio (quase preto, sem traço)."""
+    box = im.getbbox()
+    if not box:
+        return im
+    im = im.copy()
+    px = im.load()
+    top = box[1] + (box[3] - box[1]) * 0.42
+    for y in range(box[1], int(top)):
+        for x in range(box[0], box[2]):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if 0.0 <= h <= 0.13 and 0.15 <= s <= 0.75 and v >= 0.42:
+                px[x, y] = (10, 8, 16, a)
+    return im
+
+
 def build(name, anims, opt):
     scale = opt.get("scale", 1)
     key = opt.get("key")
@@ -301,11 +485,17 @@ def build(name, anims, opt):
     cols = max(len(s) for s in anims.values())
     sheet = Image.new("RGBA", (cols * cw, len(anims) * ch), (0, 0, 0, 0))
     meta = {"w": cw, "h": ch, "size": max(cw, ch), "color": True, "anims": {}}
+    if opt.get("draw_scale"):
+        meta["draw_scale"] = opt["draw_scale"]   # o jogo amplia na hora de desenhar (textura menor)
     for r, (anim, seq_) in enumerate(anims.items()):
         for c, (src, i) in enumerate(seq_):
             im = clean(frames(src)[i], key)
             if opt.get("flip"):
                 im = im.transpose(Image.FLIP_LEFT_RIGHT)
+            if opt.get("void_face"):
+                im = void_face(im)
+            if opt.get("remap"):
+                im = remap(im, opt["remap"])
             im = recolor(im, opt.get("hue", 0), opt.get("sat", 1.0), opt.get("bright", 1.0))
             ox = half - im.width / 2
             oy = int(up) - foot[src]
