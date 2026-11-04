@@ -90,6 +90,10 @@ static func set_frame(s: Sprite2D, sheet: String, anim: String, index: int) -> V
 	return Vector2(hand[0], hand[1])
 
 
+static func has_anim(sheet: String, anim: String) -> bool:
+	return meta(sheet)["anims"].has(anim)
+
+
 static func fps(sheet: String, anim: String) -> float:
 	return float(meta(sheet)["anims"].get(anim, {}).get("fps", 8))
 

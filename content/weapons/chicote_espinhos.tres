@@ -13,6 +13,6 @@ crit_mult = 1.9
 starter = false
 unlock_cost = 45
 color = Color(0.612, 0.776, 0.353, 1)
-moves = [{"startup": 0.1, "active": 0.08, "recover": 0.2, "damage": 11, "knock": 80, "reach": Vector2(62, 10), "lunge": 30, "stop": 0.05, "shake": 1.5, "shape": "lash"}, {"startup": 0.12, "active": 0.09, "recover": 0.26, "damage": 14, "knock": 140, "reach": Vector2(66, 12), "lunge": 40, "stop": 0.06, "shake": 2.0, "shape": "lash", "status": {"stun": 0.3}}]
+moves = [{"startup": 0.1, "active": 0.08, "recover": 0.2, "damage": 11, "knock": 80, "reach": Vector2(62, 10), "lunge": 30, "stop": 0.05, "shake": 1.5, "shape": "lash"}, {"startup": 0.1, "active": 0.08, "recover": 0.22, "damage": 12, "knock": 100, "reach": Vector2(62, 14), "lunge": 30, "stop": 0.05, "shake": 1.5, "shape": "up"}, {"startup": 0.12, "active": 0.09, "recover": 0.26, "damage": 14, "knock": 140, "reach": Vector2(66, 12), "lunge": 40, "stop": 0.06, "shake": 2.0, "shape": "lash", "status": {"stun": 0.3}}, {"startup": 0.14, "active": 0.14, "recover": 0.32, "damage": 16, "knock": 180, "reach": Vector2(34, 22), "lunge": 20, "stop": 0.07, "shake": 3.0, "shape": "spin"}]
 shot = {}
 lore = "Trançado com um galho que ainda cresce. Cada vez que estala, fica um pouco mais comprido."

@@ -13,6 +13,6 @@ crit_mult = 1.9
 starter = false
 unlock_cost = 50
 color = Color(0.749, 0.902, 1.000, 1)
-moves = [{"startup": 0.14, "active": 0.12, "recover": 0.26, "damage": 15, "knock": 150, "reach": Vector2(30, 24), "lunge": 30, "stop": 0.07, "shake": 3.0, "shape": "spin"}, {"startup": 0.18, "active": 0.14, "recover": 0.36, "damage": 21, "knock": 220, "reach": Vector2(34, 26), "lunge": 50, "stop": 0.09, "shake": 4.0, "shape": "spin", "status": {"stun": 0.5}}]
+moves = [{"startup": 0.1, "active": 0.1, "recover": 0.22, "damage": 13, "knock": 120, "reach": Vector2(34, 22), "lunge": 50, "stop": 0.06, "shake": 2.5, "shape": "down"}, {"startup": 0.14, "active": 0.12, "recover": 0.26, "damage": 15, "knock": 150, "reach": Vector2(30, 24), "lunge": 30, "stop": 0.07, "shake": 3.0, "shape": "spin"}, {"startup": 0.18, "active": 0.14, "recover": 0.36, "damage": 21, "knock": 220, "reach": Vector2(34, 26), "lunge": 50, "stop": 0.09, "shake": 4.0, "shape": "spin", "status": {"stun": 0.5}}]
 shot = {}
 lore = "O ceifeiro dos Salões colhia o trigo que nunca nasceu. Gira para os dois lados, como quem não sabe de onde vem o frio."

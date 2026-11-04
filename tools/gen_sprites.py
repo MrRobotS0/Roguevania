@@ -139,6 +139,60 @@ def dead_frame():
     return c, [(4, -2)]
 
 
+# --- golpes: poses-chave por formato de golpe, interpoladas -------------------------
+
+NEUTRAL = dict(lean=0.5, crouch=0.0, legs=((-0.35, 0.25), (0.35, 0.3)), arms=((-0.3, 0.3), (0.3, 0.3)),
+               flare=1.0, hood_back=0.0, look=0.0, bob=0.0)
+
+
+def pose(**k):
+    p = dict(NEUTRAL)
+    p.update(k)
+    return p
+
+
+def mix(a, b, t):
+    if isinstance(a, tuple):
+        return tuple(mix(x, y, t) for x, y in zip(a, b))
+    return a + (b - a) * t
+
+
+def tween(a, b, t):
+    return {k: mix(a[k], b[k], t) for k in a}
+
+
+# preparo, impacto, fim do movimento
+SWINGS = {
+    "down": (pose(lean=-1.0, legs=((-0.35, 0.4), (0.35, 0.2)), arms=((-0.6, 0.2), (-2.6, 0.3))),
+             pose(lean=2.0, crouch=1, legs=((-0.7, 0.3), (0.75, 0.6)), arms=((-0.8, 0.2), (1.55, 0.05)), flare=3.0, hood_back=1.5),
+             pose(lean=1.5, crouch=1.5, legs=((-0.7, 0.4), (0.7, 0.7)), arms=((-0.6, 0.2), (0.6, 0.1)), flare=2.0, hood_back=1.0)),
+    "up": (pose(lean=-0.5, crouch=1.5, legs=((-0.5, 0.5), (0.5, 0.6)), arms=((-0.5, 0.2), (0.25, 0.1))),
+           pose(lean=1.5, crouch=-1, legs=((-0.6, 0.2), (0.6, 0.3)), arms=((-1.2, 0.2), (2.5, -0.1)), flare=2.5, hood_back=1.0),
+           pose(lean=0.8, crouch=-0.5, legs=((-0.5, 0.3), (0.5, 0.3)), arms=((-0.8, 0.2), (2.9, -0.1)), flare=1.5)),
+    "thrust": (pose(lean=-1.2, legs=((-0.6, 0.3), (0.3, 0.5)), arms=((-0.4, 0.2), (-1.0, 1.6))),
+               pose(lean=2.6, crouch=1, legs=((-0.9, 0.2), (0.8, 0.8)), arms=((-1.0, 0.2), (1.57, 0.0)), flare=3.5, hood_back=2.0),
+               pose(lean=1.8, crouch=1, legs=((-0.8, 0.3), (0.7, 0.7)), arms=((-0.8, 0.2), (1.45, 0.1)), flare=2.5, hood_back=1.0)),
+    "smash": (pose(lean=-1.5, crouch=-1, legs=((-0.4, 0.3), (0.3, 0.3)), arms=((-2.8, 0.1), (-2.9, 0.2)), flare=0.5),
+              pose(lean=2.2, crouch=2.5, legs=((-0.8, 0.6), (0.8, 0.9)), arms=((0.9, 0.1), (1.0, 0.0)), flare=3.0, hood_back=1.5),
+              pose(lean=2.0, crouch=3, legs=((-0.8, 0.7), (0.8, 1.0)), arms=((0.5, 0.1), (0.6, 0.0)), flare=1.5)),
+    "jab": (pose(lean=0.5, legs=((-0.5, 0.3), (0.5, 0.4)), arms=((1.0, 0.8), (0.9, 1.4))),
+            pose(lean=2.0, legs=((-0.7, 0.3), (0.6, 0.5)), arms=((0.9, 1.2), (1.57, 0.0)), flare=2.0),
+            pose(lean=1.5, legs=((-0.6, 0.3), (0.6, 0.5)), arms=((1.57, 0.0), (1.0, 1.0)), flare=1.5)),
+    "lash": (pose(lean=-1.0, legs=((-0.4, 0.3), (0.4, 0.3)), arms=((-0.5, 0.2), (-2.2, 0.6))),
+             pose(lean=1.8, legs=((-0.7, 0.3), (0.7, 0.5)), arms=((-0.9, 0.2), (1.75, -0.2)), flare=2.5, hood_back=1.0),
+             pose(lean=1.0, legs=((-0.6, 0.3), (0.6, 0.4)), arms=((-0.6, 0.2), (1.3, 0.2)), flare=1.5)),
+    "spin": (pose(lean=-0.5, crouch=1, legs=((-0.6, 0.4), (0.6, 0.4)), arms=((1.4, 0.2), (-1.4, 0.2)), flare=2.0),
+             pose(lean=0.0, crouch=1.5, legs=((-0.7, 0.4), (0.7, 0.4)), arms=((-1.57, 0.0), (1.57, 0.0)), flare=4.0, hood_back=2.0),
+             pose(lean=0.5, crouch=1, legs=((-0.6, 0.4), (0.6, 0.4)), arms=((-1.0, 0.2), (1.2, 0.2)), flare=2.5)),
+}
+
+
+def swing_frames(shape):
+    w, s, f = SWINGS[shape]
+    keys = [tween(NEUTRAL, w, 0.55), w, tween(w, s, 0.6), s, f, tween(f, NEUTRAL, 0.5)]
+    return [hero_frame(**k) for k in keys]
+
+
 def hero_anims():
     A = {}
     # parado: respira (sobe e desce 1 px) e o capuz balança de leve
@@ -183,6 +237,24 @@ def hero_anims():
     A["dive"] = (1, [hero_frame(crouch=-1, legs=((-0.2, 1.6), (0.3, 1.8)), arms=((-0.4, 0.0), (0.1, 0.0)),
                                 flare=-1.0, hood_back=-1.0)])
     A["dead"] = (1, [dead_frame()])
+    for shape in SWINGS:
+        A["atk_" + shape] = (1, swing_frames(shape))
+    draw = pose(lean=-0.5, legs=((-0.45, 0.2), (0.4, 0.2)), arms=((1.45, 0.0), (1.6, -0.3)), flare=0.5)
+    A["shoot"] = (1, [hero_frame(**tween(NEUTRAL, draw, 0.6)), hero_frame(**draw),
+                      hero_frame(**pose(lean=-1.2, legs=((-0.5, 0.2), (0.4, 0.2)), arms=((1.45, 0.0), (1.2, 0.6)), flare=1.0))])
+    A["dash"] = (12, [hero_frame(lean=3.0, crouch=1, legs=((-1.4, 0.3), (-1.0, 0.6)), arms=((-1.6, 0.0), (1.2, 0.3)),
+                                 flare=5.0, hood_back=3.0),
+                      hero_frame(lean=3.0, crouch=1, legs=((-1.5, 0.3), (-1.1, 0.5)), arms=((-1.7, 0.0), (1.3, 0.3)),
+                                 flare=5.5, hood_back=3.5)])
+    A["flip"] = (20, [roll_frame(i, 6) for i in range(6)])
+    A["hurt"] = (12, [hero_frame(lean=-2.0, legs=((-0.4, 0.4), (0.2, 0.6)), arms=((-2.0, 0.4), (2.3, 0.5)),
+                                 flare=2.0, look=-0.5),
+                      hero_frame(lean=-1.0, legs=((-0.4, 0.4), (0.3, 0.5)), arms=((-1.2, 0.4), (1.5, 0.5)),
+                                 flare=1.5, look=-0.3)])
+    A["dive"] = (12, [hero_frame(crouch=-1, legs=((-0.2, 1.6), (0.3, 1.8)), arms=((-0.4, 0.0), (0.1, 0.0)),
+                                 flare=-1.0, hood_back=-1.0),
+                      hero_frame(crouch=-1, legs=((-0.1, 1.7), (0.2, 1.9)), arms=((-0.3, 0.0), (0.0, 0.0)),
+                                 flare=-1.5, hood_back=-1.5)])
     return A
 
 

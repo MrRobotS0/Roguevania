@@ -13,6 +13,6 @@ crit_mult = 1.9
 starter = false
 unlock_cost = 30
 color = Color(0.788, 0.702, 0.541, 1)
-moves = [{"startup": 0.08, "active": 0.09, "recover": 0.18, "damage": 13, "knock": 120, "reach": Vector2(46, 10), "lunge": 90, "stop": 0.05, "shake": 2.0, "shape": "thrust"}, {"startup": 0.1, "active": 0.1, "recover": 0.26, "damage": 17, "knock": 180, "reach": Vector2(50, 12), "lunge": 140, "stop": 0.07, "shake": 3.0, "shape": "thrust"}]
+moves = [{"startup": 0.08, "active": 0.09, "recover": 0.18, "damage": 13, "knock": 120, "reach": Vector2(46, 10), "lunge": 90, "stop": 0.05, "shake": 2.0, "shape": "thrust"}, {"startup": 0.09, "active": 0.1, "recover": 0.2, "damage": 11, "knock": 100, "reach": Vector2(40, 22), "lunge": 60, "stop": 0.05, "shake": 2.0, "shape": "up"}, {"startup": 0.1, "active": 0.1, "recover": 0.26, "damage": 17, "knock": 180, "reach": Vector2(50, 12), "lunge": 140, "stop": 0.07, "shake": 3.0, "shape": "thrust"}]
 shot = {}
 lore = "Os peregrinos caminham até o centro do deserto apoiados nela. Poucos voltam. As lanças sempre voltam."

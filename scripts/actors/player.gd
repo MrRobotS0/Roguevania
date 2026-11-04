@@ -59,6 +59,8 @@ var last_used := ""         # id da última arma/habilidade usada (estatísticas
 var _air_jumps := 0
 var _air_dash := true            # uma esquiva no ar por pulo
 var _rolling_in_air := false
+var _flip := 0.0
+const FLIP_TIME := 0.3
 var _rage := 0.0
 var _stubborn_used := false
 var wolf_step := false        # Passo do Lobo: esquivou de um golpe, o próximo é crítico
@@ -222,6 +224,7 @@ func _tick(delta: float) -> void:
 	for i in skill_cd.size():
 		skill_cd[i] = maxf(skill_cd[i] - delta, 0.0)
 	_rage -= delta
+	_flip -= delta
 	_squash = move_toward(_squash, 0.0, delta * 6.0)
 	collision_mask = Room.WORLD_LAYER if _drop > 0.0 else Room.WORLD_LAYER | Room.PLATFORM_LAYER
 
@@ -292,6 +295,7 @@ func _move_state(delta: float) -> void:
 		elif _air_jumps > 0 and pad.just("jump"):
 			_air_jumps -= 1
 			_jump()
+			_flip = FLIP_TIME
 			Fx.burst(global_position, Palette.ESSENCE, 10, 70.0, 0.35, 60.0)
 			_ghosts.append([global_position, 0.18, body.frame if body else 0, facing])
 
@@ -1033,30 +1037,46 @@ func _body_anim() -> Array:
 				if absf(velocity.x) > 20.0:
 					return ["run", int(_anim * SpriteSheet.fps(SHEET, "run"))]
 				return ["idle", int(_anim * SpriteSheet.fps(SHEET, "idle"))]
+			if _flip > 0.0:
+				# o pulo duplo é uma cambalhota
+				return ["flip", int((FLIP_TIME - _flip) / FLIP_TIME * 6.0)]
 			if velocity.y < 0.0:
 				return ["jump", 0 if velocity.y < -150.0 else 1]
 			return ["fall", int(_anim * SpriteSheet.fps(SHEET, "fall"))]
 		State.ATTACK:
+			# cada golpe do combo tem a sua animação: preparo (0-1), impacto (2-3), volta (4-5)
 			var m := current_move()
-			if m.is_empty() or _state_time < float(m["startup"]):
+			if m.is_empty():
 				return ["windup", 0]
-			if _state_time < float(m["startup"]) + float(m["active"]):
-				return ["strike", 0]
-			return ["recover", 0]
+			var anim := "atk_" + String(m.get("shape", "down"))
+			if not SpriteSheet.has_anim(SHEET, anim):
+				anim = "atk_down"
+			var startup := float(m["startup"])
+			var active := float(m["active"])
+			var recover := float(m["recover"])
+			if _state_time < startup:
+				return [anim, 0 if _state_time < startup * 0.5 else 1]
+			if _state_time < startup + active:
+				return [anim, 2 if _state_time < startup + active * 0.4 else 3]
+			return [anim, 4 if _state_time < startup + active + recover * 0.5 else 5]
 		State.SHOOT:
-			return ["shoot", 0]
+			var g := weapon(_slot)
+			var draw_time := float((g.data as WeaponData).shot.get("draw", 0.2)) if g and g.is_weapon() else 0.2
+			return ["shoot", 2 if _shot_fired else (0 if _state_time < draw_time * 0.5 else 1)]
 		State.BLOCK:
 			return ["block", 0]
 		State.ROLL:
+			if _rolling_in_air:
+				return ["dash", int(_state_time * 12.0)]
 			return ["roll", int(_state_time / ROLL_TIME * 6.0)]
 		State.DIVE:
-			return ["dive", 0]
+			return ["dive", int(_state_time * 12.0)]
 		State.CLIMB:
 			return ["climb", int(_state_time / CLIMB_TIME * 2.0)]
 		State.HEAL:
 			return ["heal", int(_anim * SpriteSheet.fps(SHEET, "heal"))]
 		State.HURT:
-			return ["hurt", 0]
+			return ["hurt", 0 if _state_time < 0.1 else 1]
 		State.DEAD:
 			return ["dead", 0]
 	return ["idle", 0]
