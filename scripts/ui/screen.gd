@@ -7,6 +7,7 @@ extends Control
 signal confirmed
 signal title_option(id: String)
 
+# Menu do título: só o essencial. O resto mora em EXTRAS (main.gd abre a lista).
 const TITLE_OPTIONS := [
 	["update", "ATUALIZAR AGORA"],
 	["continue", "CONTINUAR"],
@@ -14,12 +15,23 @@ const TITLE_OPTIONS := [
 	["daily", "DESAFIO DO DIA"],
 	["skins", "APARÊNCIA"],
 	["options", "OPÇÕES"],
+	["extras", "EXTRAS"],
+	["quit", "SAIR"],
+]
+const EXTRAS := [
 	["codex", "CÓDICE"],
 	["stats", "ESTATÍSTICAS"],
 	["controls", "COMANDOS"],
 	["credits", "CRÉDITOS"],
-	["quit", "SAIR"],
 ]
+
+# ouro do título, em degraus: contorno, relevo e as duas faces da letra
+const INK := Color("1a0b04")
+const BRONZE := Color("6b3410")
+const GOLD_DEEP := Color("d27c22")
+const GOLD_FACE := Color("ffd866")
+const MENU_X := 34.0
+const MENU_STEP := 15.0
 
 var mode := ""
 var lines: Array = []       # [[texto, cor]]
@@ -133,51 +145,104 @@ func pick(id: String) -> void:
 
 func _draw() -> void:
 	var size := get_viewport_rect().size
-	var veil := Palette.UI_SHADOW
-	veil.a = 0.92 if mode != "title" else 0.5
-	draw_rect(Rect2(Vector2.ZERO, size), veil)
 	var mid := size.x * 0.5
+	if mode == "title":
+		_draw_title(size)
+		return
+	var veil := Palette.UI_SHADOW
+	veil.a = 0.92
+	draw_rect(Rect2(Vector2.ZERO, size), veil)
 	match mode:
-		"title":
-			_embers(size)
-			PixelFont.body_centered(self, "MOKSHA", Vector2(mid, 62), Palette.GOLD, 4)
-			_title_menu(Vector2(mid, 118))
-			var tag := "V" + Updater.version + (("  ·  ATUALIZAÇÃO %s PRONTA" % Updater.pending) if Updater.pending != "" else "")
-			PixelFont.draw(self, tag, Vector2(size.x - 8 - PixelFont.width(tag), size.y - 12), Palette.UI_DIM)
 		"death":
 			PixelFont.body_centered(self, "VOCÊ MORREU", Vector2(mid, 74), Palette.HURT, 3)
 		"victory":
 			PixelFont.body_centered(self, "A JORNADA TERMINOU", Vector2(mid, 70), Palette.GOLD, 2)
-	var y := size.y - 28.0 if mode == "title" else 106.0
+	var y := 106.0
 	for l in lines:
 		PixelFont.body_centered(self, l[0], Vector2(mid, y), l[1])
 		y += PixelFont.BODY_LINE
-	if mode != "title" and _t > 0.6 and int(_t * 2.0) % 2 == 0:
+	if _t > 0.6 and int(_t * 2.0) % 2 == 0:
 		PixelFont.body_centered(self, "%s  NOVA PARTIDA" % Controls.hint("confirm"), Vector2(mid, size.y - 36), Palette.UI_TEXT)
+
+
+# Título: uma coluna à esquerda (logo, menu, rodapé) sobre um degradê escuro
+# que some para a direita, onde o cenário aparece limpo.
+func _draw_title(size: Vector2) -> void:
+	var dark := Palette.UI_SHADOW
+	var clear := dark
+	dark.a = 0.82
+	clear.a = 0.0
+	var edge := 250.0
+	draw_rect(Rect2(0, 0, 150, size.y), dark)
+	draw_polygon(PackedVector2Array([Vector2(150, 0), Vector2(edge, 0), Vector2(edge, size.y), Vector2(150, size.y)]),
+		PackedColorArray([dark, clear, clear, dark]))
+	var logo_w := _logo(Vector2(MENU_X - 4, 26))
+	_sigil(Vector2(MENU_X - 2, 72), logo_w)
+	_title_menu(Vector2(MENU_X, 98))
+	# rodapé: partida salva, dica de teclas e versão, pequenos e apagados
+	var foot := size.y - 14.0
+	var hint := "%s ESCOLHER   %s CONFIRMAR" % [Controls.hint("move"), Controls.hint("confirm")]
+	PixelFont.draw(self, hint, Vector2(MENU_X, foot), Palette.UI_DIM)
+	if not lines.is_empty():
+		PixelFont.draw(self, String(lines[0][0]), Vector2(MENU_X, foot - 11), Color(lines[0][1]).darkened(0.15))
+	var tag := "V" + Updater.version
+	PixelFont.draw(self, tag, Vector2(size.x - 8 - PixelFont.width(tag), foot), Palette.UI_DIM)
+
+
+# MOKSHA em ouro: contorno escuro, relevo em bronze, face funda embaixo e face
+# clara em cima. Cada camada sai duas vezes, 2 px para o lado: a fonte de texto
+# tem traço de 1 pixel e, em 4x, o logo ficava fino.
+func _logo(at: Vector2) -> float:
+	for d in [Vector2(0, 10), Vector2(0, 8), Vector2(0, 6)]:
+		_bold(at + d, BRONZE if d.y < 10 else INK)
+	for d in [Vector2(-2, 0), Vector2(2, 0), Vector2(0, -2), Vector2(-2, -2), Vector2(2, -2), Vector2(-2, 4), Vector2(2, 4)]:
+		_bold(at + d, INK)
+	_bold(at + Vector2(0, 2), GOLD_DEEP)
+	_bold(at, GOLD_FACE)
+	return float(PixelFont.body_width("MOKSHA", 4) + 2)
+
+
+func _bold(at: Vector2, color: Color) -> void:
+	var none := Color(0, 0, 0, 0)
+	PixelFont.body(self, "MOKSHA", at, color, 4, none)
+	PixelFont.body(self, "MOKSHA", at + Vector2(2, 0), color, 4, none)
+
+
+# Selo de pixel embaixo do logo: linha, olho, linha.
+func _sigil(at: Vector2, w: float) -> void:
+	var gold := Palette.GOLD
+	var c := at + Vector2(w * 0.5, 0)
+	var line := gold
+	line.a = 0.7
+	draw_rect(Rect2(at.x, at.y, w * 0.5 - 12, 1), line)
+	draw_rect(Rect2(c.x + 12, at.y, w * 0.5 - 12, 1), line)
+	draw_rect(Rect2(c.x - 9, at.y - 2, 18, 1), gold)
+	draw_rect(Rect2(c.x - 9, at.y + 2, 18, 1), gold)
+	draw_rect(Rect2(c.x - 11, at.y - 1, 2, 3), gold)
+	draw_rect(Rect2(c.x + 9, at.y - 1, 2, 3), gold)
+	draw_rect(Rect2(c.x - 2, at.y - 1, 4, 3), gold)
+	draw_rect(Rect2(c.x - 1, at.y, 2, 1), INK)
 
 
 func _title_menu(top: Vector2) -> void:
 	for i in _options.size():
 		var label: String = _options[i][1]
-		var y := top.y + i * 12.0
+		var y := top.y + i * MENU_STEP
 		var selected := i == _index
+		var x := top.x
 		if selected:
-			var w := PixelFont.body_width(label) + 24.0
-			var hl := Palette.UI_FRAME
-			hl.a = 0.7
-			draw_rect(Rect2(roundf(top.x - w * 0.5), y - 6, roundf(w), 13), hl)
-			var bob := 1.0 if int(_t * 4.0) % 2 == 0 else 0.0
-			PixelFont.body(self, ">", Vector2(roundf(top.x - w * 0.5) + 4 + bob, y - 3), Palette.GOLD)
-		PixelFont.body_centered(self, label, Vector2(top.x, y), Palette.UI_TEXT if selected else Palette.UI_DIM)
+			# marcador: um losango de 5 px que respira; o item escolhido anda 3 px
+			var bob := 1.0 if int(_t * 3.0) % 2 == 0 else 0.0
+			var mx := top.x - 13.0 + bob
+			draw_rect(Rect2(mx + 2, y - 3, 1, 1), Palette.GOLD)
+			draw_rect(Rect2(mx + 1, y - 2, 3, 1), Palette.GOLD)
+			draw_rect(Rect2(mx, y - 1, 5, 1), Palette.GOLD)
+			draw_rect(Rect2(mx + 1, y, 3, 1), Palette.GOLD)
+			draw_rect(Rect2(mx + 2, y + 1, 1, 1), Palette.GOLD)
+			x += 3.0
+		var color := Palette.GOLD if selected else Palette.UI_DIM
+		if _options[i][0] == "update":
+			color = Palette.ESSENCE if not selected else Palette.GOLD
+		PixelFont.body(self, label, Vector2(x, y - 4), color)
 
 
-# Brasas subindo devagar: o deserto ainda queima.
-func _embers(size: Vector2) -> void:
-	for i in 36:
-		var speed := 10.0 + (i * 7) % 13
-		var life := fposmod(_t * speed / size.y + i * 0.137, 1.0)
-		var x := fposmod(i * 83.0 + sin(_t * 0.7 + i) * 12.0, size.x)
-		var y := size.y + 6.0 - life * (size.y + 12.0)
-		var c := Palette.BURN if i % 3 else Palette.DANGER
-		c.a = sin(life * PI) * 0.8
-		draw_rect(Rect2(floorf(x), floorf(y), 1 if i % 4 else 2, 1 if i % 4 else 2), c)

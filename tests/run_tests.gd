@@ -639,7 +639,7 @@ func _skins() -> void:
 
 
 func _font_covers_text() -> void:
-	var texts: Array[String] = ["ÁÀÂÃÉÊÍÓÔÕÚÇ ÇÃO NÍVEL FÚRIA ASTÚCIA ESSÊNCIA", Screen.TITLE_OPTIONS.map(func(o: Array) -> String: return o[1]).reduce(func(a: String, b: String) -> String: return a + b, "")]
+	var texts: Array[String] = ["ÁÀÂÃÉÊÍÓÔÕÚÇ ÇÃO NÍVEL FÚRIA ASTÚCIA ESSÊNCIA", (Screen.TITLE_OPTIONS + Screen.EXTRAS).map(func(o: Array) -> String: return o[1]).reduce(func(a: String, b: String) -> String: return a + b, "")]
 	var b := Catalog.biome("mar_de_cinzas")
 	texts.append(b.title)
 	texts.append(b.subtitle)
@@ -1389,7 +1389,9 @@ func _hud_skins() -> void:
 
 func _credits() -> void:
 	var ids := Screen.TITLE_OPTIONS.map(func(o: Array) -> String: return String(o[0]))
-	_check(ids.has("credits"), "o título não tem CRÉDITOS")
+	var extras := Screen.EXTRAS.map(func(o: Array) -> String: return String(o[0]))
+	_check(ids.has("extras") and extras.has("credits"), "CRÉDITOS não está em EXTRAS no título")
+	_check(ids.size() <= 8, "o menu do título voltou a crescer: %d itens" % ids.size())
 	for f in ["res://content/creditos.txt", "res://content/creditos_en.txt"]:
 		var text := FileAccess.get_file_as_string(f)
 		for who in ["ANSIMUZ", "THEBLACKSWORD", "REDSHRIKE", "EMCEE FLESHER", "BALMER", "CALCIUMTRICE", "TIOPALADA"]:

@@ -96,6 +96,8 @@ func _show_title() -> void:
 	Run.active = false
 	_clear_level()
 	_load_backdrop_preview()
+	# no título o ar do domínio fica de leve: o menu é o que importa
+	ambience.modulate.a = 0.35
 	screen.show_title()
 	Music.play("titulo")
 
@@ -173,6 +175,13 @@ func _on_title_option(id: String) -> void:
 			options_screen.open()
 		"stats":
 			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
+		"extras":
+			# o que saiu do menu principal: uma lista curta à parte
+			var options: Array[Dictionary] = []
+			for o in Screen.EXTRAS:
+				options.append({"label": o[1], "detail": ""})
+			menu.open_choice("EXTRAS", "", options, func(i: int) -> void:
+				_on_title_option.call_deferred(String(Screen.EXTRAS[i][0])))
 		"codex":
 			open_codex()
 		"credits":
@@ -295,6 +304,7 @@ func start_run(seed_value := -1, heat := 0) -> void:
 
 
 func _load_stage() -> void:
+	ambience.modulate.a = 1.0
 	_clear_level()
 	Engine.time_scale = 1.0
 	Fx.shake = 0.0
