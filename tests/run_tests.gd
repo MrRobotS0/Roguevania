@@ -141,6 +141,7 @@ func _ready() -> void:
 	await _case("esquiva no ar anda reta, pulo emenda a rolagem, mergulho quica", _fluid_moves)
 	await _case("inglês: textos fixos, com número e montados; fonte cobre tudo", _english)
 	await _case("atualização: compara versões e fica quieta fora do jogo exportado", _updater)
+	await _case("cromas: trancados, comprados na Vigia, vestidos e salvos", _chromas)
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 
 	print("")
@@ -1307,3 +1308,26 @@ func _updater() -> void:
 	_check(not Updater.newer("0.1.0", "0.1.0") and not Updater.newer("0.1.0", "0.2.0"), "versão igual ou mais velha passou por nova")
 	_check(Updater.version == String(ProjectSettings.get_setting("application/config/version")), "versão do pacote não lida")
 	_check(Updater.pending == "" and Updater.get_child_count() == 0, "o atualizador foi à rede nos testes")
+
+
+func _chromas() -> void:
+	Meta.use_path("user://teste.save", true)
+	var s := Catalog.skin("andarilho")
+	_check(s.chromas.size() == 4, "andarilho sem os 4 cromas")
+	_check(Meta.has_chroma(s, "") and not Meta.has_chroma(s, "geada"), "croma veio liberado de graça")
+	Meta.wear("andarilho", "geada")
+	_check(Meta.chroma_of(s) == "", "vestiu croma que não tinha")
+	await _load(FLAT)
+	var keeper := Keeper.new()
+	var offered := keeper._offers().map(func(o: Dictionary) -> String: return String(o["id"]))
+	_check(offered.has("andarilho:geada"), "a Vigia não vende o croma")
+	_check(not offered.has("manto_cinza:geada"), "a Vigia vende croma de aparência que não tem")
+	keeper.free()
+	Meta.unlock("andarilho:geada")
+	Meta.wear("andarilho", "geada")
+	Meta.use_path("user://teste.save")
+	var look := Meta.current_look()
+	var near := func(a: Color, b: Color) -> bool: return absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b) < 0.02
+	_check(near.call(look["cloak"], Color("#9fc4dc")) and near.call(look["eye"], s.eye), "a cor do croma não chegou ao herói (ou trocou o olho)")
+	_check(Meta.current_look()["closed_eyes"] == s.closed_eyes, "o croma mexeu no que não é cor")
+	Meta.use_path("user://teste.save", true)

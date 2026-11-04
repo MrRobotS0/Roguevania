@@ -21,11 +21,25 @@ extends Resource
 @export var cost := 0
 @export var feat := ""
 @export var feat_text := ""
+# variações de cor (como cromas): {id, title, cloak, cloak_dark, hood, eye, scarf, cost}
+@export var chromas: Array = []
 
 
-func colors() -> Dictionary:
-	return {"cloak": cloak, "cloak_dark": cloak_dark, "hood": hood, "eye": eye,
+func colors(chroma := "") -> Dictionary:
+	var out := {"cloak": cloak, "cloak_dark": cloak_dark, "hood": hood, "eye": eye,
 		"scarf": scarf, "closed_eyes": closed_eyes}
+	var c := chroma_data(chroma)
+	for k in ["cloak", "cloak_dark", "hood", "eye", "scarf"]:
+		if c.has(k):
+			out[k] = Color(String(c[k]))
+	return out
+
+
+func chroma_data(chroma: String) -> Dictionary:
+	for c: Dictionary in chromas:
+		if c["id"] == chroma:
+			return c
+	return {}
 
 
 func how_to_get() -> String:

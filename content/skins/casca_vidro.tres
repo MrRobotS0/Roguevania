@@ -14,3 +14,4 @@ hood = Color(0.141, 0.278, 0.310, 1)
 eye = Color(1.000, 1.000, 1.000, 1)
 scarf = Color(0.749, 0.902, 0.918, 1)
 lore = "Um fulgurante tentou te engolir. Ficou com a forma."
+chromas = [{"id": "brasa", "title": "Brasa", "cloak": "#8a2a1a", "cloak_dark": "#5d1c11", "hood": "#272c30", "eye": "#ffffff", "scarf": "#ff8a3a", "cost": 25}, {"id": "astral", "title": "Astral", "cloak": "#2a3a7a", "cloak_dark": "#1c2752", "hood": "#192e40", "eye": "#ffffff", "scarf": "#9fe8ff", "cost": 25}, {"id": "carcosa", "title": "Carcosa", "cloak": "#c8a830", "cloak_dark": "#887220", "hood": "#273430", "eye": "#ffffff", "scarf": "#5a1a2a", "cost": 25}, {"id": "cinza", "title": "Cinza", "cloak": "#6a6662", "cloak_dark": "#484542", "hood": "#243436", "eye": "#ffffff", "scarf": "#9a948c", "cost": 25}]

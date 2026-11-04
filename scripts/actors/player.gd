@@ -1024,7 +1024,7 @@ var _hand := Vector2(4, -12)
 
 
 func _setup_look() -> void:
-	var pal := HeroLook.palette(skin.colors())
+	var pal := HeroLook.palette(skin.colors(Meta.chroma_of(skin)))
 	_tex = SpriteSheet.texture(SHEET, pal)
 	_white = SpriteSheet.texture(SHEET, pal, true)
 	body = SpriteSheet.make_sprite(SHEET)

@@ -13,3 +13,4 @@ hood = Color(0.102, 0.165, 0.271, 1)
 eye = Color(0.561, 0.969, 0.910, 1)
 scarf = Color(0.910, 0.639, 0.239, 1)
 lore = "Você acordou com ele. Ninguém lembra de costurar."
+chromas = [{"id": "geada", "title": "Geada", "cloak": "#9fc4dc", "cloak_dark": "#6c8595", "hood": "#223250", "eye": "#8ff7e8", "scarf": "#e8f2fa", "cost": 25}, {"id": "brasa", "title": "Brasa", "cloak": "#8a2a1a", "cloak_dark": "#5d1c11", "hood": "#221e2a", "eye": "#8ff7e8", "scarf": "#ff8a3a", "cost": 25}, {"id": "musgo", "title": "Musgo", "cloak": "#4a6a2a", "cloak_dark": "#32481c", "hood": "#1c2a2c", "eye": "#8ff7e8", "scarf": "#c84a6a", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#101828", "eye": "#8ff7e8", "scarf": "#3a2a4a", "cost": 25}]

@@ -193,9 +193,31 @@ func open_skins() -> void:
 			"color": Palette.GOLD if s == current else Palette.UI_TEXT})
 	menu.open_choice("APARÊNCIA", "SÓ MUDA O VISUAL. VALE PARA A PRÓXIMA PARTIDA.", options,
 		func(i: int) -> void:
-			Meta.wear(list[i].id)
-			open_skins.call_deferred())
+			open_chromas.call_deferred(list[i]))
 	menu.select(list.find(current))
+
+
+# Cromas de uma aparência: a original e as variações de cor.
+func open_chromas(s: SkinData) -> void:
+	var ids: Array[String] = [""]
+	for c: Dictionary in s.chromas:
+		ids.append(String(c["id"]))
+	var worn := Meta.current_skin() == s
+	var now := Meta.chroma_of(s)
+	var options: Array[Dictionary] = []
+	for id in ids:
+		var owned := Meta.has_chroma(s, id)
+		var c := s.chroma_data(id)
+		var title := "Original" if id == "" else String(c["title"])
+		var label := title + ("  ·  EM USO" if worn and id == now else "")
+		options.append({"label": label, "figure": s.colors(id), "disabled": not owned,
+			"detail": "" if owned else "COMPRE COM A VIGIA · %d DE ESSÊNCIA" % int(c.get("cost", 0)),
+			"color": Palette.GOLD if worn and id == now else Palette.UI_TEXT})
+	menu.open_choice(s.title.to_upper(), "CROMAS: A MESMA APARÊNCIA EM OUTRAS CORES.", options,
+		func(i: int) -> void:
+			Meta.wear(s.id, ids[i])
+			open_skins.call_deferred())
+	menu.select(maxi(ids.find(now), 0) if worn else 0)
 
 
 # Na primeira partida, antes de tudo, a abertura.

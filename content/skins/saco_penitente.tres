@@ -15,3 +15,4 @@ hood = Color(0.227, 0.192, 0.133, 1)
 eye = Color(1.000, 0.353, 0.290, 1)
 scarf = Color(0.604, 0.541, 0.416, 1)
 lore = "Dez vezes na cinza. Agora você começa a ouvir."
+chromas = [{"id": "musgo", "title": "Musgo", "cloak": "#4a6a2a", "cloak_dark": "#32481c", "hood": "#2c2e1b", "eye": "#ff5a4a", "scarf": "#c84a6a", "cost": 25}, {"id": "carcosa", "title": "Carcosa", "cloak": "#c8a830", "cloak_dark": "#887220", "hood": "#322819", "eye": "#ff5a4a", "scarf": "#5a1a2a", "cost": 25}, {"id": "astral", "title": "Astral", "cloak": "#2a3a7a", "cloak_dark": "#1c2752", "hood": "#242229", "eye": "#ff5a4a", "scarf": "#9fe8ff", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#201c16", "eye": "#ff5a4a", "scarf": "#3a2a4a", "cost": 25}]

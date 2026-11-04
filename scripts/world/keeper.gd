@@ -55,6 +55,16 @@ func _offers() -> Array[Dictionary]:
 			continue
 		out.append({"id": s.id, "title": "Aparência: " + s.title, "cost": s.cost,
 			"detail": "SÓ MUDA O VISUAL · ESCOLHA NO TÍTULO", "figure": s.colors()})
+	# cromas das aparências que o jogador já tem
+	for s in Catalog.skins():
+		if not Meta.has_skin(s):
+			continue
+		for c: Dictionary in s.chromas:
+			var key := s.id + ":" + String(c["id"])
+			if Meta.is_unlocked(key) or int(c.get("cost", 0)) == 0:
+				continue
+			out.append({"id": key, "title": "Croma %s: %s" % [s.title, c["title"]], "cost": int(c["cost"]),
+				"detail": "OUTRA COR PARA ESTA APARÊNCIA · ESCOLHA NO TÍTULO", "figure": s.colors(String(c["id"]))})
 	for b: Dictionary in Catalog.BLESSINGS:
 		if Meta.is_unlocked(b["id"]):
 			continue

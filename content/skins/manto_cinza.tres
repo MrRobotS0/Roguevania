@@ -14,3 +14,4 @@ hood = Color(0.231, 0.220, 0.212, 1)
 eye = Color(1.000, 0.702, 0.420, 1)
 scarf = Color(0.784, 0.271, 0.184, 1)
 lore = "Tecido com a cinza do deus que ardeu. Ainda morno."
+chromas = [{"id": "geada", "title": "Geada", "cloak": "#9fc4dc", "cloak_dark": "#6c8595", "hood": "#323948", "eye": "#ffb36b", "scarf": "#e8f2fa", "cost": 25}, {"id": "astral", "title": "Astral", "cloak": "#2a3a7a", "cloak_dark": "#1c2752", "hood": "#242633", "eye": "#ffb36b", "scarf": "#9fe8ff", "cost": 25}, {"id": "carcosa", "title": "Carcosa", "cloak": "#c8a830", "cloak_dark": "#887220", "hood": "#322c23", "eye": "#ffb36b", "scarf": "#5a1a2a", "cost": 25}, {"id": "abismo", "title": "Abismo", "cloak": "#141018", "cloak_dark": "#0d0a10", "hood": "#211f20", "eye": "#ffb36b", "scarf": "#3a2a4a", "cost": 25}]

@@ -93,9 +93,31 @@ func current_skin() -> SkinData:
 	return s if has_skin(s) else Catalog.skin("andarilho")
 
 
-func wear(id: String) -> void:
+func wear(id: String, chroma := "") -> void:
 	data["skin"] = id
+	var picks: Dictionary = data.get("chroma", {})
+	picks[id] = chroma
+	data["chroma"] = picks
 	save()
+
+
+# Croma em uso de uma aparência ("" = cores originais).
+func chroma_of(s: SkinData) -> String:
+	var c := String(data.get("chroma", {}).get(s.id, ""))
+	return c if has_chroma(s, c) else ""
+
+
+func has_chroma(s: SkinData, chroma: String) -> bool:
+	if chroma == "":
+		return true
+	var c := s.chroma_data(chroma)
+	return not c.is_empty() and (int(c.get("cost", 0)) == 0 or is_unlocked(s.id + ":" + chroma))
+
+
+# Cores do herói agora: aparência + croma.
+func current_look() -> Dictionary:
+	var s := current_skin()
+	return s.colors(chroma_of(s))
 
 
 # --- runas (poderes que ficam para sempre) e plantas -------------------------------

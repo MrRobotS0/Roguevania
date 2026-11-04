@@ -172,6 +172,45 @@ SKINS = [
          lore="Dez vezes na cinza. Agora você começa a ouvir."),
 ]
 
+# Cromas: a mesma aparência pintada com as cores de um domínio.
+# (manto, capuz, olho, cachecol); o tom escuro do manto sai do manto.
+CHROMA_THEMES = {
+    "geada": ("Geada", "#9fc4dc", "#2a3a5a", "#dff6ff", "#e8f2fa"),
+    "brasa": ("Brasa", "#8a2a1a", "#2a1210", "#ffb050", "#ff8a3a"),
+    "musgo": ("Musgo", "#4a6a2a", "#1e2a14", "#d8f07a", "#c84a6a"),
+    "carcosa": ("Carcosa", "#c8a830", "#2a2010", "#ffffff", "#5a1a2a"),
+    "astral": ("Astral", "#2a3a7a", "#0e1430", "#b48cff", "#9fe8ff"),
+    "babel": ("Ouro de Babel", "#d8c890", "#3a3a6a", "#ffd84a", "#e0b04a"),
+    "cinza": ("Cinza", "#6a6662", "#24201e", "#ff6a4a", "#9a948c"),
+    "abismo": ("Abismo", "#141018", "#07060b", "#ff3a4a", "#3a2a4a"),
+}
+CHROMAS_OF = {
+    "andarilho": ["geada", "brasa", "musgo", "abismo"],
+    "manto_cinza": ["geada", "astral", "carcosa", "abismo"],
+    "herdeiro_vesper": ["babel", "geada", "musgo", "abismo"],
+    "casca_vidro": ["brasa", "astral", "carcosa", "cinza"],
+    "olhos_fechados": ["babel", "brasa", "geada", "cinza"],
+    "saco_penitente": ["musgo", "carcosa", "astral", "abismo"],
+}
+
+
+def dark(hexs, k=0.32):
+    h = hexs.lstrip("#")
+    return "#" + "".join("%02x" % int(int(h[i:i + 2], 16) * (1 - k)) for i in (0, 2, 4))
+
+
+def blend(a, b, t=0.5):
+    a, b = a.lstrip("#"), b.lstrip("#")
+    return "#" + "".join("%02x" % round(int(a[i:i + 2], 16) * (1 - t) + int(b[i:i + 2], 16) * t) for i in (0, 2, 4))
+
+
+# o croma troca manto e cachecol; o capuz fica no meio do caminho entre o da
+# aparência e o do tema, e o olho segue o da aparência: ela continua sendo ela
+for k in SKINS:
+    k["chromas"] = [dict(id=c, title=CHROMA_THEMES[c][0], cloak=CHROMA_THEMES[c][1], cloak_dark=dark(CHROMA_THEMES[c][1]),
+                         hood=blend(k["hood"], CHROMA_THEMES[c][2]), eye=k["eye"], scarf=CHROMA_THEMES[c][4], cost=25)
+                    for c in CHROMAS_OF.get(k["id"], [])]
+
 for w in WEAPONS:
     write("weapons", "res://scripts/combat/weapon_data.gd", "WeaponData", w)
 for s in SKILLS:

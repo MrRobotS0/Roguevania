@@ -16,3 +16,4 @@ eye = Color(0.420, 0.357, 0.533, 1)
 scarf = Color(0.949, 0.757, 0.306, 1)
 closed_eyes = true
 lore = "O futuro se vê de olhos fechados. Ele tinha razão."
+chromas = [{"id": "babel", "title": "Ouro de Babel", "cloak": "#d8c890", "cloak_dark": "#928861", "hood": "#282544", "eye": "#6b5b88", "scarf": "#e0b04a", "cost": 25}, {"id": "brasa", "title": "Brasa", "cloak": "#8a2a1a", "cloak_dark": "#5d1c11", "hood": "#201118", "eye": "#6b5b88", "scarf": "#ff8a3a", "cost": 25}, {"id": "geada", "title": "Geada", "cloak": "#9fc4dc", "cloak_dark": "#6c8595", "hood": "#20253c", "eye": "#6b5b88", "scarf": "#e8f2fa", "cost": 25}, {"id": "cinza", "title": "Cinza", "cloak": "#6a6662", "cloak_dark": "#484542", "hood": "#1c181e", "eye": "#6b5b88", "scarf": "#9a948c", "cost": 25}]

@@ -57,8 +57,9 @@ func _load(path: String) -> void:
 			at = m.get_end()
 		pattern += _escape(key.substr(at)) + "$"
 		literal += key.length() - at
-		_templates.append([RegEx.create_from_string(pattern), en, literal])
-	_templates.sort_custom(func(a: Array, b: Array) -> bool: return a[2] > b[2])
+		_templates.append([RegEx.create_from_string(pattern), en, literal, _hole.search_all(key).size()])
+	# mais texto fixo primeiro; empate: menos lacunas (senão "%S DE %S%S" engole "%S DE %S")
+	_templates.sort_custom(func(a: Array, b: Array) -> bool: return a[2] > b[2] or (a[2] == b[2] and a[3] < b[3]))
 
 
 static func _escape(s: String) -> String:
