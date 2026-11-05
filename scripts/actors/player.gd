@@ -136,6 +136,7 @@ func recompute_max_hp() -> void:
 	max_hp = BASE_HP + 10 * (levels["furia"] + levels["astucia"]) + 20 * levels["vigor"]
 	if Run.advantage == "cinza_dura":
 		max_hp = roundi(max_hp * 1.2)
+	max_hp = roundi(max_hp * Run.max_hp_mult())
 	hp = clampi(hp + max_hp - before, 1, max_hp)
 	health_changed.emit(hp, max_hp)
 
@@ -276,7 +277,7 @@ func _separate_from_enemies() -> void:
 
 func _gravity(delta: float, scale := 1.0) -> void:
 	var g := GRAVITY_UP if velocity.y < 0.0 else GRAVITY_DOWN
-	velocity.y = minf(velocity.y + g * scale * delta, MAX_FALL)
+	velocity.y = minf(velocity.y + g * scale * Run.gravity_mult() * delta, MAX_FALL)
 
 
 # --- estados ------------------------------------------------------------------
@@ -872,7 +873,7 @@ func _heal_state(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
 	_gravity(delta)
 	if _state_time >= FLASK_TIME:
-		heal(roundi(max_hp * FLASK_HEAL_RATIO * (1.3 if has_mutation("prece_atendida") else 1.0)))
+		heal(roundi(max_hp * FLASK_HEAL_RATIO * (1.3 if has_mutation("prece_atendida") else 1.0) * Run.flask_heal_mult()))
 		_enter(State.MOVE)
 
 
@@ -901,8 +902,14 @@ func add_mutation(id: String) -> void:
 		return
 	mutations.append(id)
 	if id == "folego":
-		max_flasks += 1
-		flasks += 1
+		max_flasks += Run.flask_gain()
+		flasks += Run.flask_gain()
+	gear_changed.emit()
+
+
+func gain_flask() -> void:
+	max_flasks += Run.flask_gain()
+	flasks += Run.flask_gain()
 	gear_changed.emit()
 
 
@@ -932,6 +939,8 @@ func on_kill(e: Node) -> void:
 		Run.note_kill(e.title, last_used)
 	if has_mutation("sangue_quente") and alive():
 		heal(maxi(2, roundi(max_hp * 0.03)))
+	if Run.has_rule("vampiro") and alive():
+		heal(4)
 	_hunger += 1
 	if has_mutation("luto") and _mourned < 25 and alive():
 		_mourned += 1
@@ -996,6 +1005,8 @@ func hurt(d: Damage) -> bool:
 		Fx.toast("A CINZA VOLTOU")
 		Fx.burst(center(), Palette.ESSENCE, 24, 130.0, 0.6, -60.0)
 	_rage = 3.0
+	if Run.has_rule("brasa"):
+		d.status["burn"] = 2.0
 	apply_statuses(d)
 	_invuln = HURT_IFRAMES
 	flash = 0.1

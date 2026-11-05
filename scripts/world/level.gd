@@ -9,11 +9,13 @@ extends Node2D
 signal exit_used(dest: String)
 signal boss_defeated
 signal station_used(kind: String)
+signal guardian_appeared(guardian: Enemy)
 
 const AMBIENT := Color(0.56, 0.52, 0.6)
 const PASSAGE_ROOM := "res://content/passagem.txt"
 const HALL_ROOM := "res://content/sala_treze.txt"
 const BEIRA_ROOM := "res://content/beira.txt"
+const WAVES_ROOM := "res://content/ondas.txt"
 const STATIONS := {"1": "mantos", "2": "poco", "3": "carroca", "4": "marcas", "5": "braseiro"}
 const TIMED_LIMIT := 150.0
 const BLUEPRINT_CHANCE := 0.035
@@ -33,6 +35,7 @@ var _after_boss: Array[Node2D] = []
 var _exit_index := 0
 var _explore_clock := 0.0
 var seats: Array[GodSeat] = []
+var director: WaveDirector
 static var _beira_named := false
 
 
@@ -92,6 +95,39 @@ func build_beira(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	if not _beira_named:
 		_beira_named = true
 		Fx.banner("A BEIRA", "ONDE A CINZA VIRA VOCÊ DE NOVO")
+
+
+# Modo Waves: a arena cabe na tela, e quem manda nela é o diretor.
+func build_waves(b: BiomeData, seed_value: int, block: int, with_camera := true) -> void:
+	rng.seed = seed_value
+	tier = mini(block, 6)
+	kind = "ondas"
+	_make_room(b)
+	room.load_file(WAVES_ROOM)
+	_populate(with_camera)
+	director = WaveDirector.new()
+	director.level = self
+	add_child(director)
+
+
+# O guardião do domínio, do lado oposto ao herói.
+func spawn_guardian() -> void:
+	var left := player.global_position.x > room.size_px().x * 0.5
+	var at := Vector2(64.0 if left else room.size_px().x - 64.0, (room.rows - 4) * Room.TILE)
+	boss = spawn_script(biome.boss_script, at)
+	boss.set("arena", Rect2(Vector2(16, 0), room.size_px() - Vector2(32, 0)))
+	boss.killed.connect(_on_boss_killed, CONNECT_DEFERRED)
+	var sub: String = boss.get("subtitle") if boss.get("subtitle") else "O QUE VIU O FIM DE TUDO"
+	Fx.banner(boss.title, sub)
+	guardian_appeared.emit(boss)
+
+
+func place_gate(title: String, dest: String, at: Vector2) -> void:
+	var gate := ExitGate.new()
+	gate.title = title
+	gate.dest = dest
+	gate.used.connect(func(d: String) -> void: exit_used.emit(d))
+	_place(gate, at)
 
 
 func seats_left() -> int:
@@ -174,7 +210,9 @@ func _spawn_marker(m: Dictionary) -> void:
 			if biome:
 				var path := biome.pick_enemy(m["ch"], rng)
 				if path != "":
-					spawn_script(path, at, Run.plus > 0 and rng.randf() < Run.plus_elite_chance())
+					spawn_script(path, at, rng.randf() < Run.plus_elite_chance())
+					if Run.has_rule("horda"):
+						spawn_script(path, at + Vector2(-12.0 if rng.randf() < 0.5 else 12.0, 0.0))
 		"E":
 			if biome and not biome.elites.is_empty():
 				var e := spawn_script(biome.elites[rng.randi_range(0, biome.elites.size() - 1)], at, true)
@@ -384,7 +422,7 @@ func drop_orbs(pos: Vector2, n: int, what: String) -> void:
 
 
 func drop_gold(pos: Vector2, n: int) -> void:
-	drop_orbs(pos, roundi(n * _drop_mult()), "gold")
+	drop_orbs(pos, roundi(n * _drop_mult() * (2.0 if Run.has_rule("fortuna") else 1.0)), "gold")
 
 
 func drop_blueprint(pos: Vector2) -> bool:

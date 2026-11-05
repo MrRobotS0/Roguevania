@@ -59,6 +59,12 @@ func _ready() -> void:
 		_banner_t = 0.0)
 
 
+# O guardião do Modo Waves chega com a arena já montada.
+func show_boss(boss_node: Enemy) -> void:
+	boss = boss_node
+	_boss_shown = float(boss.hp)
+
+
 func bind(who: Player, boss_node: Enemy = null) -> void:
 	player = who
 	boss = boss_node
@@ -139,14 +145,33 @@ func _slot_left() -> float:
 
 
 func _draw_flasks(at: Vector2) -> void:
+	if Run.mode == Run.WAVES:
+		_draw_wave_flasks(at)
+		return
 	for i in player.max_flasks:
-		var p := at + Vector2(i * 9, 0)
-		var full := i < player.flasks
-		var glass := _skin.color("text") if full else _skin.color("dim")
-		draw_rect(Rect2(p + Vector2(2, 0), Vector2(3, 2)), glass)
-		draw_rect(Rect2(p + Vector2(1, 2), Vector2(5, 6)), glass)
-		draw_rect(Rect2(p + Vector2(2, 4), Vector2(3, 3)), Palette.UI_HP if full else Palette.UI_BAR_BG)
+		_draw_flask(at + Vector2(i * 9, 0), 3 if i < player.flasks else 0)
 	PixelFont.body(self, Controls.hint("heal"), at + Vector2(player.max_flasks * 9 + 3, 1), Palette.UI_DIM)
+
+
+# Modo Waves: cada frasco tem dois usos. O que já foi usado uma vez fica pela metade;
+# o vazio some, senão a fila só cresce.
+func _draw_wave_flasks(at: Vector2) -> void:
+	var count := ceili(player.flasks / float(Run.FLASK_USES))
+	for i in count:
+		var half := i == count - 1 and player.flasks % Run.FLASK_USES == 1
+		_draw_flask(at + Vector2(i * 9, 0), 1 if half else 3)
+	if count > 0:
+		PixelFont.body(self, Controls.hint("heal"), at + Vector2(count * 9 + 3, 1), Palette.UI_DIM)
+
+
+# Quanto de líquido aparece: 0 = vazio, 1 = pela metade, 3 = cheio.
+func _draw_flask(p: Vector2, liquid: int) -> void:
+	var glass := _skin.color("text") if liquid > 0 else _skin.color("dim")
+	draw_rect(Rect2(p + Vector2(2, 0), Vector2(3, 2)), glass)
+	draw_rect(Rect2(p + Vector2(1, 2), Vector2(5, 6)), glass)
+	draw_rect(Rect2(p + Vector2(2, 4), Vector2(3, 3)), Palette.UI_BAR_BG)
+	if liquid > 0:
+		draw_rect(Rect2(p + Vector2(2, 7 - liquid), Vector2(3, liquid)), Palette.UI_HP)
 
 
 func _icon(kind: String, at: Vector2, color: Color) -> void:
@@ -393,6 +418,10 @@ func _draw_toasts(size: Vector2) -> void:
 
 # Maldição (abaixo dos frascos) e a contagem da Porta do Relógio (no alto).
 func _draw_status(size: Vector2) -> void:
+	if Run.mode == Run.WAVES and Run.wave > 0:
+		PixelFont.body_centered(self, "WAVE %d" % Run.wave, Vector2(size.x * 0.5, 7), Palette.GOLD)
+		if Run.wave_left > 0:
+			PixelFont.draw(self, "RESTAM %d" % Run.wave_left, Vector2(size.x * 0.5 - PixelFont.width("RESTAM %d" % Run.wave_left) * 0.5, 19), Palette.UI_DIM)
 	if Options.get_value("timer"):
 		var t := Run.time
 		var clock := "%d:%02d.%d" % [int(t) / 60, int(t) % 60, int(t * 10.0) % 10]

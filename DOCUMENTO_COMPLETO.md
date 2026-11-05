@@ -1703,3 +1703,18 @@ Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, 
 **O que muda na web.** Não há atualizador nem a opção SAIR (`OS.has_feature("web")`). O save fica no IndexedDB daquele navegador e não conversa com o do `.exe`. Sem controles de toque, não serve para celular.
 
 **Medir sem janela.** Playwright com `channel="chrome"`, `--headless=new` e `--use-angle=d3d11`. O script injetado pelo Kaspersky aparece como erro de COEP no console: não é do jogo.
+
+## 33. Modo Waves e Desafio da Semana (v0.7.0)
+
+Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela Beira.
+
+**Modo Waves.** `Run.new_waves`, `Level.build_waves` e `WaveDirector`. A arena é `content/ondas.txt`, com 30 por 17 células: cabe na tela e a câmera não anda.
+- **Frasco:** a cada 5 waves, com 2 usos (`Run.FLASK_USES`). O herói começa sem nenhum. A Vigia não enche e o mercador não vende cura. O HUD mostra o frasco pela metade depois do primeiro gole.
+- **Guardião:** a cada 10 waves. Depois dele vêm a parada e a porta para o domínio seguinte (`Run.next_block`).
+- **Ordem dos domínios:** `Run.WAVE_ROUTE`, a mesma dificuldade da rota normal. O Imperador é o 5º bloco, e depois recomeça com tudo mais forte.
+- **Rede de segurança:** com mais de 60 s de wave, os que restam definham. Inimigo preso não trava o modo.
+- **O que o robô mostrou:** o primeiro desenho matava na wave 4, antes do primeiro frasco. O começo foi suavizado: menos gente em campo, só inimigos do domínio até a wave 5, e elite de verdade só a partir da 8. Em 12 partidas, a mediana passou de 4 para 6, e uma chegou ao guardião. Ele joga pior que uma pessoa: serve para comparar, não para dizer se está fácil.
+
+**Desafio da Semana.** `Run.new_weekly`. Semente e duas regras saem do número da semana, que vira na segunda-feira (`Run.this_week`, `Run.week_rules`). `Run.RULE_CLASHES` lista os pares que não vêm juntos. O bônus de dano é calculado em `Enemy.hurt` sem alterar o pacote `Damage`, porque o mesmo golpe pode passar por vários inimigos.
+
+**Recordes.** `Meta.data["best_wave"]` e `Meta.data["weekly"]`, locais. O ranking online ainda não existe.

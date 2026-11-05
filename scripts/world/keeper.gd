@@ -41,7 +41,8 @@ func interact(p: Player) -> void:
 		p.blueprints.clear()
 		Sfx.play("unlock", -4.0)
 		Fx.toast("A VIGIA GUARDOU %d PLANTA%s" % [fresh, "S" if fresh != 1 else ""])
-	if not refilled:
+	# no Modo Waves frasco só vem de wave vencida
+	if not refilled and Run.mode != Run.WAVES and p.max_flasks > 0:
 		refilled = true
 		p.flasks = p.max_flasks
 		p.gear_changed.emit()

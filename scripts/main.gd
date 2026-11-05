@@ -175,14 +175,58 @@ func _on_title_option(id: String) -> void:
 		"credits":
 			var file := "res://content/creditos%s.txt" % ("_en" if Lang.lang == "en" else "")
 			menu.open_text("CRÉDITOS", FileAccess.get_file_as_string(file))
+		"modes":
+			open_modes()
 		"daily":
 			if _abandon_saved_first(_on_title_option.bind("daily")):
 				return
 			screen.close()
 			Run.new_daily()
 			_load_stage()
+		"weekly":
+			open_weekly()
+		"weekly_go":
+			if _abandon_saved_first(_on_title_option.bind("weekly_go")):
+				return
+			screen.close()
+			Run.new_weekly()
+			_load_stage()
+			var names: Array = Run.rules.map(func(id: String) -> String: return String(Run.rule(id)["title"]).to_upper())
+			Fx.banner("DESAFIO DA SEMANA", "   ·   ".join(PackedStringArray(names)))
+		"waves":
+			if _abandon_saved_first(_on_title_option.bind("waves")):
+				return
+			screen.close()
+			Run.new_waves()
+			_load_stage()
 		"quit":
 			get_tree().quit()
+
+
+# O que não é a partida normal. Nada aqui passa pela Beira: as regras são as mesmas para todos.
+func open_modes() -> void:
+	var best := int(Meta.data.get("best_wave", 0))
+	var options: Array[Dictionary] = [
+		{"label": "DESAFIO DO DIA", "detail": "O MESMO MAPA PARA TODOS, SÓ HOJE"},
+		{"label": "DESAFIO DA SEMANA", "detail": "DUAS REGRAS QUE VIRAM O JOGO. MUDAM TODA SEGUNDA"},
+		{"label": "MODO WAVES", "price": ("WAVE %d" % best) if best > 0 else "", "price_color": Palette.GOLD,
+			"detail": "ARENA FECHADA. FRASCO A CADA 5 WAVES, GUARDIÃO A CADA 10"},
+	]
+	menu.open_choice("MODOS", "", options, _on_modes_pick)
+
+
+func _on_modes_pick(i: int) -> void:
+	_on_title_option.call_deferred(["daily", "weekly", "waves"][i])
+
+
+func open_weekly() -> void:
+	var list := Run.week_rules(Run.this_week())
+	var options: Array[Dictionary] = [{"label": "COMEÇAR", "detail": "O MESMO MAPA E AS MESMAS REGRAS PARA TODOS ATÉ SEGUNDA"}]
+	for id: String in list:
+		var r := Run.rule(id)
+		options.append({"label": r["title"], "detail": r["detail"], "color": Palette.BURN})
+	menu.open_choice("DESAFIO DA SEMANA", "", options, func(i: int) -> void:
+		_on_title_option.call_deferred("weekly_go" if i == 0 else "weekly"))
 
 
 # Escolha de aparência. As trancadas aparecem apagadas, dizendo como ganhar.
@@ -495,6 +539,15 @@ func _load_stage() -> void:
 			weather.kind = b.weather
 			Music.play("passagem")
 			level.station_used.connect(_on_station)
+		"ondas":
+			level.build_waves(b, Run.stage_seed(), Run.wave_block)
+			foreground.style = ""
+			weather.kind = b.weather
+			Music.play(b.id)
+			level.guardian_appeared.connect(func(g: Enemy) -> void:
+				hud.show_boss(g)
+				Music.play("chefe_final" if b.id == "mar_de_cinzas" else "chefe"))
+			level.boss_defeated.connect(func() -> void: Music.play(b.id))
 		_:
 			level.build_generated(b, Run.stage_seed())
 			weather.kind = b.weather
@@ -583,6 +636,8 @@ func _on_exit(dest: String) -> void:
 			return
 		"passagem":
 			Run.enter_passage()
+		"ondas":
+			Run.next_block()
 		"boss":
 			Run.go(Run.boss_of(Run.stage_id))
 		_:
@@ -596,12 +651,17 @@ func _on_player_died() -> void:
 	_playing = false
 	Run.active = false
 	Run.discard_saved()
+	var best_before := int(Meta.data.get("best_wave", 0))
 	Meta.record_run(false, level.player.kills)
 	Meta.record_stats(false)
 	var place := level.biome.title if level.biome else "TREINO"
 	if level.is_boss_room:
 		place = "O Trono do Imperador Cego"
+	if Run.mode == Run.WAVES:
+		place = "WAVE %d" % Run.wave
 	screen.show_death(level.player, place)
+	if Run.mode == Run.WAVES:
+		screen.lines.append(["NOVO RECORDE" if Run.wave > best_before else "RECORDE: WAVE %d" % best_before, Palette.GOLD])
 	Music.stop()
 
 
@@ -637,6 +697,8 @@ func _pause() -> void:
 		info += ("   ·   " if info != "" else "") + "BRASAS: %d" % Run.heat
 	if Run.plus > 0:
 		info += "   ·   CICLO %d" % Run.plus
+	for id: String in Run.rules:
+		info += ("   ·   " if info != "" else "") + String(Run.rule(id)["title"]).to_upper()
 	menu.open_choice("PAUSA", info, options, _on_pause_pick)
 
 

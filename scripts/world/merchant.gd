@@ -30,8 +30,10 @@ func stock() -> Array[Dictionary]:
 			var g := Catalog.random_gear(lv.rng, lv.tier + 1, taken)
 			taken.append(g.data.id)
 			_stock.append({"kind": "gear", "gear": g, "cost": 55 + 30 * g.tier + 10 * lv.tier})
-		_stock.append({"kind": "heal", "cost": 40 + 10 * lv.tier})
-		_stock.append({"kind": "flask", "cost": 75 + 15 * lv.tier})
+		if Run.mode != Run.WAVES:
+			_stock.append({"kind": "heal", "cost": 40 + 10 * lv.tier})
+		if Run.flasks_for_sale():
+			_stock.append({"kind": "flask", "cost": 75 + 15 * lv.tier})
 	return _stock
 
 

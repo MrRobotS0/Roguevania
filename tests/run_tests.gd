@@ -127,6 +127,9 @@ func _ready() -> void:
 	await _case("brasas: inimigo mais forte e bate mais", _heat)
 	await _case("final verdadeiro: as cadeiras, o desfecho e o Novo Jogo+", _true_ending)
 	await _case("a Beira: renasce nela, escolhe, e só o arco começa a partida", _beira)
+	await _case("Modo Waves: arena na tela, frasco de 2 usos, guardião e próximo domínio", _waves)
+	await _case("Modo Waves: todo guardião e todo inimigo funcionam na arena", _waves_cast)
+	await _case("Desafio da Semana: regras iguais para todos e cada uma vale", _weekly)
 	await _case("mercador vende e o item aparece", _merchant)
 	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
 	await _case("jato de fogo e estalactite machucam", _hazards)
@@ -1162,6 +1165,301 @@ func _beira() -> void:
 	Run.active = false
 	Meta.use_path("user://teste.save", true)
 	await _frames(2)
+
+
+func _waves() -> void:
+	Meta.use_path("user://teste.save", true)
+	Meta.data["intro_seen"] = true
+	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _frames(5)
+	var ids: Array = main.screen._options.map(func(o: Array) -> String: return String(o[0]))
+	_check(ids.has("modes"), "o título não tem MODOS: %s" % [ids])
+	main.open_modes()
+	await _frames(2)
+	_check(main.menu.is_open(), "MODOS não abriu")
+	main.menu.close()
+	await _frames(2)
+	main._on_title_option("waves")
+	await _frames(5)
+	_check(Run.mode == Run.WAVES and main.level.kind == "ondas", "o Modo Waves não abriu: " + main.level.kind)
+	# a arena inteira cabe na tela: nada para a câmera percorrer
+	var view: Vector2 = main.get_viewport().get_visible_rect().size
+	var arena: Vector2 = main.level.room.size_px()
+	_check(arena.x <= view.x and arena.y <= view.y + Room.TILE, "a arena não cabe na tela: %s em %s" % [arena, view])
+	var hero: Player = main.level.player
+	hero.max_hp = 999999
+	hero.hp = 999999
+	var flasks_start := hero.flasks
+	_check(flasks_start == 0, "o herói já começou com frasco: %d" % flasks_start)
+
+	# uma wave de cada vez até a 9, e o frasco só nas múltiplas de 5
+	var d: WaveDirector = main.level.director
+	for target in range(1, 10):
+		await _next_wave(d, target)
+		_check(Run.wave == target and d.state == "fight", "não chegou à wave %d: %d %s" % [target, Run.wave, d.state])
+		_check(not d.is_guardian_wave(target), "guardião fora de hora na wave %d" % target)
+		await _clear_field(d)
+		_check(d.state == "wait", "a wave %d não terminou" % target)
+		var want := 2 if target >= 5 else 0
+		_check(hero.flasks == want, "wave %d: %d usos de frasco, esperava %d" % [target, hero.flasks, want])
+
+	# cada frasco serve duas vezes, e não mais
+	hero.hp = 500
+	hero._start_heal()
+	_check(hero.flasks == 1, "o primeiro gole gastou errado")
+	await _frames(45)
+	_check(hero.pad != null and hero.hp > 500, "o frasco não curou")
+	hero._start_heal()
+	await _frames(45)
+	_check(hero.flasks == 0, "o frasco serviu mais de duas vezes")
+
+	# na wave 10, o guardião
+	await _next_wave(d, 10)
+	_check(d.state == "guardian" and is_instance_valid(main.level.boss), "o guardião não veio na wave 10")
+	_check(main.hud.boss == main.level.boss, "o HUD não mostra o guardião")
+	var guardian: Enemy = main.level.boss
+	await _frames(5)
+	guardian._die()
+	await _frames(5)
+	_check(d.state == "stop", "vencer o guardião não abriu a parada")
+	_check(hero.flasks == 2, "a wave 10 não deu frasco: %d" % hero.flasks)
+	var kinds: Array = main.level.get_children().map(func(n: Node) -> String: return n.get_class() if n.get_script() == null else String((n.get_script() as Script).get_global_name()))
+	for k in ["Keeper", "Merchant", "MutationAltar", "ExitGate"]:
+		_check(kinds.has(k), "falta na parada: " + k)
+
+	# nada na parada enche frasco nem vende frasco
+	var keeper: Keeper = main.level.get_children().filter(func(n: Node) -> bool: return n is Keeper)[0]
+	hero.flasks = 0
+	keeper.interact(hero)
+	await _frames(2)
+	_check(hero.flasks == 0, "a Vigia encheu o frasco no Modo Waves")
+	main.menu.close()
+	await _frames(2)
+	var shop: Merchant = main.level.get_children().filter(func(n: Node) -> bool: return n is Merchant)[0]
+	_check(not shop.stock().any(func(o: Dictionary) -> bool: return o["kind"] == "flask" or o["kind"] == "heal"), "o mercador vende cura no Modo Waves")
+	hero.flasks = 3
+
+	# a porta leva ao domínio seguinte, com o que o herói tinha, e a contagem continua
+	var before: String = main.level.biome.id
+	main._on_exit("ondas")
+	await _frames(5)
+	_check(Run.wave_block == 1 and main.level.kind == "ondas", "não passou de bloco")
+	_check(main.level.biome.id != before, "o domínio não mudou")
+	_check(Run.WAVE_ROUTE[1].has(main.level.biome.id), "domínio fora da ordem: " + main.level.biome.id)
+	_check(main.level.player.flasks == 3, "os frascos não passaram: %d" % main.level.player.flasks)
+	await _next_wave(main.level.director, 11)
+	_check(Run.wave == 11, "a contagem não continuou: %d" % Run.wave)
+	var hp_now := Run.enemy_hp_mult()
+	_check(hp_now > 1.4, "os inimigos não cresceram: %f" % hp_now)
+
+	# salvar e continuar volta ao começo do bloco, no mesmo domínio
+	var biome_now: String = main.level.biome.id
+	var saved: Dictionary = Run.saved()
+	_check(not saved.is_empty() and saved["mode"] == Run.WAVES, "a partida não foi salva")
+	main._show_title()
+	await _frames(2)
+	main.continue_run()
+	await _frames(5)
+	_check(Run.mode == Run.WAVES and Run.wave_block == 1 and Run.wave == 10, "continuar errou: %d %d" % [Run.wave_block, Run.wave])
+	_check(main.level.biome.id == biome_now, "continuar mudou o domínio")
+
+	# morrer guarda o recorde e volta à Beira
+	Run.wave = 14
+	main.level.player.hp = 0
+	main._on_player_died()
+	_check(int(Meta.data["best_wave"]) == 14, "o recorde não ficou: %d" % int(Meta.data["best_wave"]))
+	_check(main.screen.mode == "death" and Run.saved().is_empty(), "a morte não contou")
+	main._on_screen_confirmed()
+	await _frames(5)
+	_check(Run.stage_id == Run.BEIRA and Run.mode == "", "não voltou à Beira depois das waves")
+	_check(Meta.check_feats() != null, "conquistas quebraram")
+
+	main.free()
+	Run.active = false
+	Meta.use_path("user://teste.save", true)
+	await _frames(2)
+
+
+func _next_wave(d: WaveDirector, target: int) -> void:
+	for i in 900:
+		if Run.wave == target:
+			return
+		d._clock = minf(d._clock, 0.0)
+		await get_tree().physics_frame
+
+
+func _clear_field(d: WaveDirector) -> void:
+	for i in 3000:
+		if d.state != "fight":
+			return
+		d._spawn_clock = 0.0
+		for e in d._field:
+			if is_instance_valid(e) and e.alive():
+				e._die()
+		await get_tree().physics_frame
+
+
+# Arena menor que a de chefe e com inimigos de todos os domínios: ninguém pode quebrar,
+# escapar da sala ou travar a wave.
+func _waves_cast() -> void:
+	Meta.use_path("user://teste.save", true)
+	Run.new_waves()
+	var bounds := Rect2(Vector2(-64, -96), Vector2(480 + 128, 272 + 192))
+	var scripts := {}
+	for group: Array in Run.WAVE_ROUTE:
+		for id: String in group:
+			var b := Catalog.biome(id)
+			_check(b != null and b.boss_script != "", "domínio sem guardião: " + id)
+			var lv := Level.new()
+			add_child(lv)
+			lv.build_waves(b, 7, 0, false)
+			lv.director.set_physics_process(false)
+			lv.player.max_hp = 999999
+			lv.player.hp = 999999
+			lv.player.set_physics_process(false)
+			lv.spawn_guardian()
+			await _frames(150)
+			_check(is_instance_valid(lv.boss) and lv.boss.alive(), "%s sumiu na arena" % b.boss_script)
+			if is_instance_valid(lv.boss):
+				_check(bounds.has_point(lv.boss.global_position), "%s saiu da arena: %s" % [b.boss_script, lv.boss.global_position])
+				lv.boss._die()
+			await _frames(3)
+			for e: Dictionary in b.enemies:
+				scripts[e["script"]] = true
+			lv.queue_free()
+			await _frames(2)
+
+	# todo inimigo comum, no pior caso: junto com os outros, e a rede de segurança limpa a wave
+	var b := Catalog.biome("mar_de_cinzas")
+	var lv := Level.new()
+	add_child(lv)
+	lv.build_waves(b, 7, 0, false)
+	lv.player.max_hp = 999999
+	lv.player.hp = 999999
+	lv.player.set_physics_process(false)
+	var d := lv.director
+	d.set_physics_process(false)
+	d._field.clear()
+	var at := 0
+	for path: String in scripts:
+		var e := lv.spawn_script(path, d._spots[at % d._spots.size()])
+		d._field.append(e)
+		at += 7
+	await _frames(120)
+	_check(d._field.size() == scripts.size(), "faltam inimigos na arena")
+	d.state = "fight"
+	Run.wave = 1
+	d.fight_time = WaveDirector.STALL + 1.0
+	d.set_physics_process(true)
+	for i in 900:
+		if d.state != "fight":
+			break
+		await get_tree().physics_frame
+	_check(d.state == "wait", "a rede de segurança não destravou a wave: %d restam" % d._field.size())
+	lv.queue_free()
+	Run.mode = ""
+	Run.wave = 0
+	Run.active = false
+	await _frames(2)
+
+
+func _weekly() -> void:
+	Meta.use_path("user://teste.save", true)
+	# a mesma semana dá as mesmas regras; nunca um par proibido
+	_check(Run.week_rules("S3000") == Run.week_rules("S3000"), "a regra da semana muda sozinha")
+	var seen := {}
+	for n in 400:
+		var pair := Run.week_rules("S%d" % n)
+		_check(pair.size() == 2 and pair[0] != pair[1], "regras repetidas: %s" % [pair])
+		_check(not Run.RULE_CLASHES.any(func(c: Array) -> bool: return c.has(pair[0]) and c.has(pair[1])), "par proibido: %s" % [pair])
+		seen[pair[0]] = true
+		seen[pair[1]] = true
+	_check(seen.size() == Run.RULES.size(), "alguma regra nunca sai: %d" % seen.size())
+	Lang.use("en")
+	for r: Dictionary in Run.RULES + [{"title": "Modo Waves", "detail": "ARENA FECHADA. FRASCO A CADA 5 WAVES, GUARDIÃO A CADA 10"}]:
+		for k in ["title", "detail"]:
+			var t := String(r[k]).to_upper()
+			_check(Lang.t(t) != t or t == "ARSENAL", "sem inglês: " + t)    # Arsenal se escreve igual
+	Lang.use("pt")
+
+	# o desafio é da semana inteira: mesma semente até virar
+	Run.new_weekly()
+	var seed_one := Run.seed_value
+	_check(Run.week == Run.this_week() and Run.rules.size() == 2, "o desafio da semana não começou")
+	Run.new_weekly()
+	_check(Run.seed_value == seed_one, "a semente da semana mudou")
+
+	# cada regra faz o que diz
+	var base_hp := 1.0
+	var effect := func(rules: Array) -> void:
+		Run.new_run(5)
+		Run.rules = rules
+	effect.call(["vidro"])
+	_check(is_equal_approx(Run.hero_damage_mult(), 2.0) and is_equal_approx(Run.enemy_damage_mult(), 2.0), "vidro")
+	effect.call(["brasa"])
+	_check(is_equal_approx(Run.hero_damage_mult(), 1.3), "brasa")
+	effect.call(["cacada"])
+	_check(is_equal_approx(Run.plus_elite_chance(), 0.25), "caçada")
+	effect.call(["horda"])
+	_check(is_equal_approx(Run.enemy_hp_mult(), 0.6 * base_hp), "horda")
+	effect.call(["fortuna"])
+	_check(is_equal_approx(Run.enemy_hp_mult(), 1.3), "fortuna")
+	effect.call(["lua"])
+	_check(is_equal_approx(Run.gravity_mult(), 0.6), "lua")
+	effect.call(["vampiro"])
+	_check(is_equal_approx(Run.flask_heal_mult(), 0.5), "vampiro")
+
+	var lv := Level.new()
+	add_child(lv)
+	effect.call(["seca"])
+	lv.build(FLAT, false)
+	Run.load_player(lv.player)
+	_check(lv.player.flasks == 0 and lv.player.max_hp == Player.BASE_HP * 2, "seca: %d frascos, %d vida" % [lv.player.flasks, lv.player.max_hp])
+	_check(not Run.flasks_for_sale(), "seca vende frasco")
+	lv.queue_free()
+	await _frames(1)
+
+	lv = Level.new()
+	add_child(lv)
+	effect.call(["mutante", "arsenal"])
+	lv.build(FLAT, false)
+	Run.load_player(lv.player)
+	_check(lv.player.mutations.size() == Catalog.MAX_MUTATIONS, "mutante: %d" % lv.player.mutations.size())
+	_check(lv.player.weapons[0].data != lv.player.weapons[1].data, "arsenal deu a mesma arma")
+	var first_pick: Array = [lv.player.weapons[0].data.id, lv.player.mutations.duplicate()]
+	lv.queue_free()
+	await _frames(1)
+	lv = Level.new()
+	add_child(lv)
+	effect.call(["mutante", "arsenal"])
+	lv.build(FLAT, false)
+	Run.load_player(lv.player)
+	_check(first_pick == [lv.player.weapons[0].data.id, lv.player.mutations], "o sorteio da regra muda entre jogadores")
+
+	# golpe que passa por vários não acumula o bônus
+	Run.rules = ["vidro"]
+	var e := lv.spawn("grunt", Vector2(100, 100))
+	await _frames(2)
+	var hit := Damage.make(10.0)
+	var hp_before := e.hp
+	e.hurt(hit)
+	_check(hp_before - e.hp == 20 and hit.value() == 10, "vidro acumulou no pacote: %d" % (hp_before - e.hp))
+	lv.queue_free()
+	await _frames(1)
+
+	# salvar e continuar mantém as regras, e o recorde da semana fica separado
+	Run.new_weekly()
+	var kept := Run.rules.duplicate()
+	var s := Run.snapshot()
+	Run.new_run(1)
+	Run.restore(s)
+	_check(Run.rules == kept and Run.week == Run.this_week(), "continuar perdeu as regras")
+	Meta.record_stats(false)
+	_check(int(Meta.data["weekly"][Run.week]["tries"]) == 1, "tentativa da semana não contou")
+	Run.new_run(1)
+	Run.active = false
+	Meta.use_path("user://teste.save", true)
 
 
 func _options() -> void:

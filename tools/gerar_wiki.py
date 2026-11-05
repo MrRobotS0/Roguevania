@@ -620,7 +620,7 @@ def main():
                                   ("guardioes", "Guardiões", "Guardians", c["boss"]), ("criaturas", "Criaturas", "Creatures", n_creatures)]),
               ("Equipamento", "Gear", [("armas", "Armas", "Weapons", c["weap"]), ("habilidades", "Habilidades", "Skills", c["skill"]),
                                        ("mutacoes", "Mutações", "Mutations", c["mut"]), ("aparencias", "Aparências", "Skins", c["skin"])]),
-              ("Consulta", "Reference", [("beira", "A Beira", "The Shore", None), ("progresso", "Progresso", "Progression", None), ("comandos", "Comandos", "Controls", None)])]
+              ("Consulta", "Reference", [("beira", "A Beira", "The Shore", None), ("modos", "Modos", "Modes", None), ("progresso", "Progresso", "Progression", None), ("comandos", "Comandos", "Controls", None)])]
     nav = ""
     for gp, ge, items in groups:
         head = "<span>%s</span>" % bi(gp, ge) if gp else ""
@@ -633,6 +633,7 @@ def main():
             ("habilidades", "Habilidades", "Skills", c["skill"], "O que fazem e quanto demoram a recarregar", "What they do and how long they recharge"),
             ("mutacoes", "Mutações", "Mutations", c["mut"], "Bônus do altar que valem até você morrer", "Altar bonuses that last until you die"),
             ("beira", "A Beira", "The Shore", None, "Onde você renasce e escolhe o que levar", "Where you are reborn and choose what to take"),
+            ("modos", "Modos", "Modes", None, "Modo Waves e Desafio da Semana", "Waves Mode and Weekly Challenge"),
             ("progresso", "Progresso", "Progression", None, "O que fica para sempre e a dificuldade", "What you keep forever, and difficulty"),
             ("comandos", "Comandos", "Controls", None, "Teclado e controle", "Keyboard and gamepad")]
     hub = "".join('<a href="#%s"><b>%s%s</b><span>%s</span></a>' % (

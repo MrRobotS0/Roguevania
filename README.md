@@ -10,6 +10,12 @@ Dá para jogar em português ou inglês (Opções > Idioma).
 
 A Wiki tem tudo: história, deuses, criaturas, armas e aparências.
 
+## Modos
+
+- **Partida normal:** da Beira, passando pelo arco, por dez andares até o Imperador Cego.
+- **Modo Waves:** arena fechada e sem fim, com um frasco de 2 usos a cada 5 waves e um guardião a cada 10.
+- **Desafio do Dia e Desafio da Semana:** mesmo mapa para todos. O da semana traz duas regras que viram o jogo.
+
 ## Controles
 
 | Ação | Teclado | Controle |

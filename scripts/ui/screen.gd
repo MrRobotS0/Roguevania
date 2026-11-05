@@ -12,7 +12,7 @@ const TITLE_OPTIONS := [
 	["update", "ATUALIZAR AGORA"],
 	["continue", "CONTINUAR"],
 	["start", "COMEÇAR"],
-	["daily", "DESAFIO DO DIA"],
+	["modes", "MODOS"],
 	["options", "OPÇÕES"],
 	["extras", "EXTRAS"],
 	["quit", "SAIR"],
@@ -72,7 +72,7 @@ func show_death(p: Player, place: String) -> void:
 	mode = "death"
 	lines = [
 		[place.to_upper(), Palette.UI_DIM],
-		["%d INIMIGOS DERROTADOS   ·   %s" % [p.kills, _clock(Run.time)], Palette.UI_TEXT],
+		[("1 INIMIGO DERROTADO   ·   %s" % _clock(Run.time)) if p.kills == 1 else ("%d INIMIGOS DERROTADOS   ·   %s" % [p.kills, _clock(Run.time)]), Palette.UI_TEXT],
 		["%d DE ESSÊNCIA SE PERDEU NA CINZA" % p.essence, Palette.ESSENCE],
 	]
 	_open()

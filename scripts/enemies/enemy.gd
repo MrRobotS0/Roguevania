@@ -46,7 +46,7 @@ var _draw_scale := 1.0        # arte pequena desenhada maior (chefes): vem do .j
 
 func _ready() -> void:
 	setup_body(4)
-	max_hp = roundi(max_hp * (Run.enemy_hp_mult() if tier_scaling else (1.0 + 0.4 * Run.heat) * Run.plus_hp_mult()))
+	max_hp = roundi(max_hp * (Run.enemy_hp_mult() if tier_scaling else (1.0 + 0.4 * Run.heat) * Run.plus_hp_mult() * Run.guardian_mult()))
 	hp = max_hp
 	_shown_hp = hp
 	z_index = 4
@@ -158,11 +158,13 @@ func hurt(d: Damage) -> bool:
 	if not d.over_time and guard(d):
 		d.blocked = true
 		return false
-	hp -= d.value()
+	# conta à parte: o mesmo golpe pode passar por vários inimigos
+	var dealt := maxi(1, roundi(d.value() * Run.hero_damage_mult()))
+	hp -= dealt
 	flash = 0.1
 	_hp_visible = 2.5
 	apply_statuses(d)
-	Fx.number(center() + Vector2(0, -h * 0.5 - 4), d.value(), d.crit)
+	Fx.number(center() + Vector2(0, -h * 0.5 - 4), dealt, d.crit)
 	if not d.over_time:
 		velocity.x = d.dir * d.knock / weight
 		if d.lift > 0.0:

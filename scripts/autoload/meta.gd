@@ -24,7 +24,7 @@ func use_path(p: String, wipe := false) -> void:
 func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
 		"blueprints": [], "runes": [], "heat": 0,
-		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false,
+		"stats": {}, "daily": {}, "weekly": {}, "best_wave": 0, "best_time": 0.0, "lore": [], "intro_seen": false,
 		"hints": [], "awake": false, "plus": 0,
 		"feats": [], "mutations_seen": [], "pick_mutation": "", "pick_advantage": "", "pick_heat": 0, "pick_plus": 0}
 
@@ -296,6 +296,15 @@ func record_stats(won: bool) -> bool:
 		if won and (float(day["best_time"]) <= 0.0 or Run.time < float(day["best_time"])):
 			day["best_time"] = Run.time
 		data["daily"][Run.daily] = day
+	if Run.week != "":
+		var w: Dictionary = data["weekly"].get(Run.week, {"tries": 0, "best_depth": 0, "best_time": 0.0})
+		w["tries"] = int(w["tries"]) + 1
+		w["best_depth"] = maxi(int(w["best_depth"]), Run.path.size())
+		if won and (float(w["best_time"]) <= 0.0 or Run.time < float(w["best_time"])):
+			w["best_time"] = Run.time
+		data["weekly"][Run.week] = w
+	if Run.mode == Run.WAVES:
+		data["best_wave"] = maxi(int(data["best_wave"]), Run.wave)
 	save()
 	return record
 
@@ -328,6 +337,12 @@ func stats_text() -> String:
 		lines.append("")
 		lines.append("DESAFIO DE HOJE: %d TENTATIVAS · MAIS FUNDO %d%s" % [today["tries"], today["best_depth"],
 			(" · VENCEU EM " + clock.call(float(today["best_time"]))) if float(today["best_time"]) > 0.0 else ""])
+	var week: Dictionary = data["weekly"].get(Run.this_week(), {})
+	if not week.is_empty():
+		lines.append("DESAFIO DA SEMANA: %d TENTATIVAS · MAIS FUNDO %d%s" % [week["tries"], week["best_depth"],
+			(" · VENCEU EM " + clock.call(float(week["best_time"]))) if float(week["best_time"]) > 0.0 else ""])
+	if int(data["best_wave"]) > 0:
+		lines.append("MODO WAVES: CHEGOU À WAVE %d" % int(data["best_wave"]))
 	return "\n".join(lines)
 
 

@@ -117,6 +117,7 @@ const BIOMES := {
 
 const STAGE_NAMES := {
 	"beira": "A Beira",
+	"ondas": "Modo Waves",
 	"sala_dos_treze": "A Sala dos Treze",
 	"mar_de_cinzas": "O Mar de Cinzas",
 	"saloes": "Os Salões do Último Inverno",
