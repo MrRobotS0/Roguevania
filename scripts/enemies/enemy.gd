@@ -61,6 +61,9 @@ func _ready() -> void:
 		Glow.attach(self, Palette.DANGER, 46.0, 0.45, Vector2(0, -h * 0.5))
 	if sheet != "":
 		_setup_sprite()
+	var bar := EnemyBar.new()
+	bar.enemy = self
+	add_child(bar)
 
 
 func _setup_sprite() -> void:
@@ -332,18 +335,10 @@ func _draw() -> void:
 	end_tint()
 	draw_set_transform(Vector2.ZERO)
 	draw_statuses(_anim)
-	if telegraphing() and int(state_time * 12.0) % 2 == 0:
-		PixelFont.draw_centered(self, "!", Vector2(0, -h - 9), Palette.DANGER, 2)
 	if elite and int(_anim * 12.0) % 3 == 0:
 		var spark := Palette.DANGER
 		spark.a = 0.8
 		Fx.burst(global_position + Vector2(randf_range(-w * 0.5, w * 0.5), -randf_range(0, h)), spark, 1, 10.0, 0.6, -40.0, 1.0)
-	if _hp_visible > 0.0 and alive():
-		var bw := 16.0 if not elite else 26.0
-		var y := -h - 5.0
-		draw_rect(Rect2(-bw * 0.5 - 1, y - 1, bw + 2, 4), Palette.UI_SHADOW)
-		draw_rect(Rect2(-bw * 0.5, y, bw * _shown_hp / max_hp, 2), Palette.UI_HP_GHOST)
-		draw_rect(Rect2(-bw * 0.5, y, bw * float(hp) / max_hp, 2), Palette.UI_HP)
 	if Fx.debug:
 		draw_rect(Rect2(-w * 0.5, -h, w, h), Color(1, 0.8, 0.2, 0.8), false)
 		PixelFont.draw(self, state, Vector2(-10, -h - 18), Palette.UI_TEXT)
@@ -351,3 +346,62 @@ func _draw() -> void:
 
 func draw_body() -> void:
 	pass
+
+
+# Texto curto sobre a cabeça ("" = nada): desenhado pela EnemyBar, por cima de tudo.
+func overhead_text() -> String:
+	return ""
+
+
+func hp_bar_visible() -> bool:
+	return _hp_visible > 0.0
+
+
+func shown_hp() -> float:
+	return _shown_hp
+
+
+func sprite_top() -> float:
+	return EnemyBar.sprite_height(_tex, sheet, _frame_size, _draw_scale) if _tex != null else 0.0
+
+
+# --- golpes prontos para os inimigos ------------------------------------------
+
+func make_hazard(style: String, x: float, delay: float, damage: float, width := 18.0, height := 40.0, quiet := false) -> Hazard:
+	var hz := Hazard.new()
+	hz.player = player
+	hz.style = style
+	hz.source = self
+	hz.delay = delay
+	hz.damage = damage
+	hz.width = width
+	hz.height = height
+	hz.quiet = quiet
+	hz.position = Vector2(x, global_position.y)
+	get_parent().add_child(hz)
+	return hz
+
+
+func shoot(style: String, from: Vector2, vel: Vector2, damage: float, color: Variant = null, gravity := 0.0, homing := 0.0, life := 3.0) -> Projectile:
+	var p := Projectile.new()
+	p.room = room
+	p.team = "enemy"
+	p.style = style
+	if color != null:
+		p.color = color
+	p.source = self
+	p.position = from
+	p.velocity = vel
+	p.gravity = gravity
+	p.homing = homing
+	p.life = life
+	p.damage = Damage.make(damage, facing, 110.0)
+	p.damage.source = self
+	get_parent().add_child(p)
+	return p
+
+
+# Arco que cai no ponto `target` depois de `fly` segundos.
+func lob(style: String, from: Vector2, target: Vector2, fly: float, damage: float, color: Variant = null, gravity := 420.0) -> Projectile:
+	var vel := Vector2((target.x - from.x) / fly, (target.y - from.y) / fly - 0.5 * gravity * fly)
+	return shoot(style, from, vel, damage, color, gravity, 0.0, fly + 1.5)

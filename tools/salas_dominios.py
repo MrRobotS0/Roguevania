@@ -95,6 +95,9 @@ def terracos(rng, name):
     while x < w - 10:
         wide = rng.randint(4, 7)
         level = max(0, min(3, level + rng.choice([-1, 1, 1])))
+        # perto do fim o terraço desce: atrás de um degrau alto ninguém fica preso
+        if x + wide >= w - 10 - level * 8:
+            level = max(0, level - 1)
         if level > 0:
             r.fill(x, x + wide, h - 1 - level * 3, h - 2)
         x += wide + 1

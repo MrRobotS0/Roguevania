@@ -162,7 +162,7 @@ func _door_exit_ok(d: Dictionary, seen: Dictionary, map: JumpMap) -> bool:
 			return f != null and seen.has(f)
 		"T":
 			for c: Vector2i in seen:
-				if c.y <= 2 and c.x >= s - 2 and c.x <= e + 2:
+				if c.y <= 1 and c.x >= s and c.x <= e:
 					return true
 			return false
 	for c: Vector2i in seen:

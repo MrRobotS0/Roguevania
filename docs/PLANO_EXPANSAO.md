@@ -69,4 +69,6 @@ Fila (todos pedidos por ele):
 - [x] trilha nova no clima da trilha de Duna (composição original)
 - [x] menu sem tecla vazando entre telas
 - [x] Wiki no site, gerada dos dados do jogo
-- [ ] salas feitas à mão para os 6 domínios novos (hoje: conjunto base + 7 geradas cada)
+- [x] salas desenhadas para os 6 domínios novos: 5 por domínio (`tools/salas_especiais.py`, rodar depois de `salas_andares.py`)
+- [x] golpe próprio para os 18 inimigos novos e mecânica própria para os 6 guardiões novos
+- [x] nenhum lugar sem saída: `tools/validar_salas.py` exige voltar a todas as portas de qualquer ponto, e `tools/validar_mapas.py` confere os mapas montados

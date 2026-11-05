@@ -16,6 +16,7 @@ var height := 34.0
 var damage := 18.0
 var linger := 0.35
 var source: Node
+var quiet := false            # rastro: sem som nem tremor (são muitos em seguida)
 
 var _t := 0.0
 var _fired := false
@@ -28,7 +29,8 @@ func _ready() -> void:
 	z_index = 3
 	if style == "light":
 		_light = Glow.attach(self, Palette.SLASH, maxf(width * 3.0, 60.0), 0.0, Vector2(0, -20))
-	Sfx.play("omen" if style == "light" else "crack", -8.0)
+	if not quiet:
+		Sfx.play("omen" if style == "light" else "crack", -8.0)
 	if style == "fire":
 		_light = Glow.attach(self, Palette.BURN, 70.0, 0.0, Vector2(0, -20))
 
@@ -61,8 +63,9 @@ func _fire() -> void:
 		player.hurt(d)
 	var color := _tint()
 	Fx.burst(global_position + Vector2(0, -height * 0.5), color, 12, 150.0, 0.4, 300.0, 2.0, 60.0)
-	Fx.add_shake(2.0)
-	Sfx.play("spike" if style == "glass" else "pillar", -4.0)
+	if not quiet:
+		Fx.add_shake(2.0)
+		Sfx.play("spike" if style == "glass" else "pillar", -4.0)
 
 
 const TINTS := {

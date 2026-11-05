@@ -1641,3 +1641,19 @@ Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, 
 **Wiki:** `tools/gerar_wiki.py` + `tools/wiki_modelo.html` geram `site/wiki.html` direto dos arquivos do jogo (história, 13 deuses, rota, domínios com inscrições e criaturas animadas, guardiões, armas/habilidades com ícone, aparências com o herói recolorido, mutações, bênçãos, brasas, comandos), PT/EN, busca. Botão **Wiki** no topo do site.
 
 **Testes:** 63 casos (agora cobrindo as 30 criaturas e 6 chefes acertando o herói, as 25 armas novas machucando, ícones de todo o equipamento, mutações novas, trava do menu).
+
+## 29. Rodada de correção e variedade (v0.4.3)
+
+**Lugares sem saída:** o verificador olhava cada sala sozinha e contava com todas as portas, mas porta sem ligação vira parede na fase montada. Agora `tools/validar_salas.py` exige que, de qualquer lugar onde se pode parar, dê para voltar a todas as portas (menos a do chão), e `tools/validar_mapas.py` percorre os mapas montados pelo gerador do início à saída (`tests/dump_mapas.tscn` grava os mapas). Porta no teto ganhou uma pilha de plataformas bem embaixo do vão (`tools/consertar_teto.py`): de lado, o herói batia a cabeça antes de entrar.
+
+**Pulo:** subia 3,4 blocos para degraus de 3, e o tempo acima do degrau era curto. Agora sobe 3,9 (`JUMP_VELOCITY` -335). Um teste sobe a pilha de plataformas com a física de verdade, um pulo por degrau.
+
+**Barra de vida:** virou o nó `EnemyBar`, desenhado por cima de todos e acima da parte mais alta do sprite (mede os pixels da folha), com o aviso "!" e os textos sobre a cabeça.
+
+**Inimigos novos:** cada um dos 18 ganhou um comportamento próprio (lamento da Carpideira, Morto Desperto que levanta uma vez, segundo bote do Fome das Covas, água do Afogado, atropelo do Votivo, luzes da Prece Viva, varrida do Tentáculo, Larva que se divide, Parasita que gruda, rastro do Pesadelo, dois sumiços do Íncubo, três flechas da Sonâmbula, Lagarto Cego que só sente quem se mexe, veneno da Serpente, bomba do Escavador, três golpes e esquecimento do Andarilho, saltos do Sapo-Homem, Salteador que rouba ouro e foge).
+
+**Guardiões novos:** golpe do tipo `custom` em `boss.gd`. Rei Esquecido (mortos de pé o protegem), O Que Responde (revida depois de 6 golpes ou do frasco), Insaciável (inspira e come as larvas), Dragão Sonhado (some e cai do alto), Serpe (cava e sai numa coluna, depois fica exausta), Raposa (ilusões e caudas que viram fogo).
+
+**Salas:** `tools/salas_especiais.py` desenha 5 salas por domínio novo (30 no total). Rodar depois de `salas_andares.py`, que limpa a pasta.
+
+**Testes:** 67 casos. Ninguém jogou os domínios novos com tela; o robô ainda morre no Mar de Cinzas, então estas mecânicas foram verificadas só pelos testes.

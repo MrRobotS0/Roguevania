@@ -16,6 +16,7 @@ extends Enemy
 #   teleport{reach}                               some e reaparece atrás, com golpe
 #   beam    {}                                    raio horizontal na altura do herói
 #   wave    {speed}                               ondas que correm pelo chão
+#   custom  {...}                                 golpe só dele: custom_start / custom_update
 
 signal phase_changed(phase: int)
 
@@ -68,6 +69,7 @@ func hurt(d: Damage) -> bool:
 		Fx.add_shake(6.0)
 		Fx.toast(title + " SE ENFURECE")
 		Sfx.play("boss_phase")
+		custom_abort()
 		set_state("idle")
 	return hit
 
@@ -192,6 +194,8 @@ func _act_start() -> void:
 	match m["type"]:
 		"melee":
 			pass
+		"custom":
+			custom_start(m)
 		"leap":
 			var dx := clampf(player.global_position.x - global_position.x, -260.0, 260.0)
 			velocity = Vector2(dx / 0.7, -360.0)
@@ -240,9 +244,25 @@ func _act_start() -> void:
 			Fx.add_shake(5.0)
 
 
+# A mecânica própria de cada chefe. custom_update devolve true quando termina.
+func custom_start(_m: Dictionary) -> void:
+	pass
+
+
+func custom_update(_m: Dictionary, _delta: float) -> bool:
+	return true
+
+
+func custom_abort() -> void:
+	pass
+
+
 func _act_update(delta: float) -> void:
 	var m := _move
 	match m["type"]:
+		"custom":
+			if custom_update(m, delta):
+				set_state("recover")
 		"melee":
 			if not _hit_done:
 				_hit_done = true
@@ -357,6 +377,5 @@ func sprite_anim() -> Array:
 	return ["idle", int(_anim * 2.0)]
 
 
-func draw_body() -> void:
-	if state == "rest":
-		PixelFont.draw_centered(self, "EXAUSTO", Vector2(0, -h - 10), Palette.DANGER)
+func overhead_text() -> String:
+	return "EXAUSTO" if state == "rest" else ""

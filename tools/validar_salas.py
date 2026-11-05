@@ -6,8 +6,8 @@ O teste antigo do gerador só via se as salas se ligam pelo ar. Aqui o herói
 anda, cai, pula até 3 blocos (4 agarrando a beirada) e atravessa plataforma
 por baixo. Para cada sala:
   - de cada porta dá para chegar em todas as outras portas;
-  - porta no TETO: precisa de chão a até 1 bloco abaixo dela (senão não se
-    sobe por ali, e quem caiu na sala de cima fica preso);
+  - porta no TETO: precisa de degrau bem embaixo do vão, a 3 blocos do chão de
+    cima (senão não se sobe por ali, e quem caiu na sala de cima fica preso);
   - todo marcador importante (saída, item, baú, altar, Vigia...) é alcançável.
 Marcadores alcançáveis só com pulo duplo (nichos de runa) entram como aviso.
 """
@@ -156,8 +156,9 @@ def door_exit_ok(room, side, run, reach):
         f = room.fall(x, y)
         return f in reach
     if side == "T":
-        # sobe pelo teto: de pé a até 1 bloco abaixo, perto da abertura
-        return any(p[1] <= 2 and min(xs) - 2 <= p[0] <= max(xs) + 2 for p in reach)
+        # sobe pelo teto: de pé bem embaixo do vão, a 3 blocos do chão de cima;
+        # de lado, o herói bate a cabeça antes de entrar
+        return any(p[1] <= 1 and min(xs) <= p[0] <= max(xs) for p in reach)
     # desce pelo chão: chegar ao lado do buraco e cair
     return any(p[1] == room.h - 2 and min(xs) - 1 <= p[0] <= max(xs) + 1 for p in reach)
 
@@ -205,6 +206,27 @@ def check_rows(rows):
         if not any(door_exit_ok(room, s2, r2, r) for s2, r2 in outs) and not any(
                 rows[y][x] == "X" for (x, y) in r):
             problems.append("quem entra por %s%s fica preso" % (side, run[0]))
+    # porta sem ligação vira parede na fase montada: de QUALQUER lugar onde se pode
+    # parar tem que dar para chegar a todas as portas, senão esse lugar pode virar
+    # um poço sem saída (o bolsão atrás de um terraço alto, por exemplo)
+    every = room.reach([e for es in entries.values() for e in es] + list(starts) or primary)
+    back = {}
+    for p in every:
+        for q in room.moves(*p):
+            back.setdefault(q, []).append(p)
+    for side, run in ds:
+        if side == "B":
+            continue
+        ok = {p for p in every if door_exit_ok(room, side, run, {p})}
+        todo = deque(ok)
+        while todo:
+            for q in back.get(todo.popleft(), []):
+                if q not in ok:
+                    ok.add(q)
+                    todo.append(q)
+        stuck = sorted(every - ok)
+        if stuck:
+            problems.append("de %s não se volta à porta %s%s" % (stuck[0], side, run[0]))
     flying = room.reach(primary, up_limit=7)
     for y, r in enumerate(rows):
         for x, ch in enumerate(r):
@@ -220,7 +242,7 @@ def check_rows(rows):
 
 def all_rooms():
     out = []
-    base = os.path.join(ROOT, "content")
+    base = os.path.join(ROOT, "content", "biomes")
     for dirpath, _, files in os.walk(base):
         for f in sorted(files):
             if f.endswith(".txt"):

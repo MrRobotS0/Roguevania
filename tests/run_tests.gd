@@ -84,7 +84,7 @@ func _ready() -> void:
 	Sfx.muted = true
 
 	await _case("todo script compila e a tela principal abre", _all_scripts)
-	await _case("pulo sobe ~3 blocos", _jump_height)
+	await _case("pulo sobe ~3,9 blocos", _jump_height)
 	await _case("soltar o pulo cedo dá pulo curto", _short_hop)
 	await _case("ainda pula logo depois de sair da beirada", _coyote)
 	await _case("no ar, depois da tolerância, só sobra o pulo duplo", _no_air_jump)
@@ -131,7 +131,11 @@ func _ready() -> void:
 	await _case("opções: volume, tremor e troca de tecla", _options)
 	await _case("armadilha, torreta, espírito e corrente acertam", _new_skills)
 	await _case("afixos: afiada dá mais dano, vampira cura", _affixes)
+	await _case("sobe degrau de 3 blocos só com o pulo simples, e sai pelo vão do teto", _climb_stack)
 	await _case("os 7 guardiões lutam e acertam o herói", _bosses)
+	await _case("cada inimigo novo faz o que só ele faz", _new_behaviors)
+	await _case("cada guardião novo tem a sua mecânica", _boss_mechanics)
+	await _case("a barra de vida fica por cima e acima do desenho", _enemy_bar)
 	await _case("inimigos dos domínios novos acertam", _domain_enemies)
 	await _case("desafio do dia, estatísticas e recorde", _extras)
 	await _case("os 6 elites dos domínios atacam e acertam", _elites)
@@ -220,7 +224,7 @@ func _jump_height() -> void:
 		await get_tree().physics_frame
 		top = minf(top, p.global_position.y)
 	var rise := ground - top
-	_check(rise > 46.0 and rise < 58.0, "subiu %.1f px (esperado 46-58)" % rise)
+	_check(rise > 58.0 and rise < 64.0, "subiu %.1f px (esperado 58-64)" % rise)
 
 
 func _short_hop() -> void:
@@ -1022,6 +1026,14 @@ func _bosses() -> void:
 				hit_at = i
 				break
 		_check(hit_at >= 0, "%s ficou 15 s sem acertar o herói" % path)
+		# sem ajudantes e fora do golpe próprio (invisível não apanha; com os mortos de pé, quase não sente)
+		for e in level.enemies():
+			if e != boss:
+				e.queue_free()
+		await _frames(2)
+		if boss is Boss:
+			boss.custom_abort()
+			boss.set_state("idle")
 		var hp0: int = boss.hp
 		boss.hurt(Damage.make(boss.max_hp * 0.55, 1, 0))
 		await _frames(60)
@@ -1050,6 +1062,210 @@ func _domain_enemies() -> void:
 			if p.hp < p.max_hp:
 				break
 		_check(p.hp < p.max_hp, "%s não acertou o herói" % name)
+
+
+# A física de verdade, não o verificador: pilha de plataformas de 3 em 3 blocos
+# (como as escadas das salas), um pulo por degrau, sem gastar o pulo duplo.
+const STACK := """
+##########
+#........#
+#........#
+####..####
+####..####
+#........#
+#...==...#
+#........#
+#........#
+#...==...#
+#........#
+#........#
+#...==...#
+#........#
+#...P....#
+##########
+"""
+
+
+func _climb_stack() -> void:
+	await _load(STACK)
+	var p := level.player
+	p.global_position.x = 4.5 * Room.TILE + 4.0
+	for i in 3:
+		await get_tree().physics_frame
+	var rows := [12, 9, 6]
+	for top: int in rows:
+		input.clear().then(["jump"], 30).wait(14)
+		for i in 44:
+			await get_tree().physics_frame
+		_check(p.is_on_floor(), "não pousou no degrau da linha %d" % top)
+		_check(absf(p.global_position.y - top * Room.TILE) < 2.0, "não chegou na linha %d (y = %.1f)" % [top, p.global_position.y])
+	# do último degrau, um pulo só passa pelo vão de 2 blocos e pousa na sala de cima
+	input.clear().then(["jump"], 8).then(["jump", "right"], 22).then(["right"], 10)
+	for i in 60:
+		await get_tree().physics_frame
+	_check(p.is_on_floor() and absf(p.global_position.y - 3 * Room.TILE) < 2.0, "não saiu pelo vão do teto (y = %.1f)" % p.global_position.y)
+
+
+func _hit_enemy(e: Enemy, amount: float) -> void:
+	var d := Damage.make(amount, 1, 0.0)
+	e.hurt(d)
+
+
+func _new_behaviors() -> void:
+	# Morto Desperto: a primeira morte não conta
+	await _load(WIDE)
+	var p := level.player
+	p.max_hp = 9999
+	p.hp = 9999
+	var risen := level.spawn_script("res://scripts/enemies/risen.gd", p.global_position + Vector2(60, 0))
+	for i in 3:
+		await get_tree().physics_frame
+	risen.ghost = false
+	_hit_enemy(risen, 9999.0)
+	_check(is_instance_valid(risen) and risen.alive() and risen.hp > 0, "o morto não levantou")
+	risen.ghost = false
+	_hit_enemy(risen, 9999.0)
+	await get_tree().physics_frame
+	_check(not is_instance_valid(risen) or not risen.alive(), "o morto não morreu na segunda vez")
+
+	# Larva: vira duas pequenas, e as pequenas não se dividem
+	await _load(WIDE)
+	p = level.player
+	var larva := level.spawn_script("res://scripts/enemies/larva.gd", p.global_position + Vector2(100, 0))
+	for i in 3:
+		await get_tree().physics_frame
+	_hit_enemy(larva, 9999.0)
+	for i in 3:
+		await get_tree().physics_frame
+	var kids := get_tree().get_nodes_in_group("larvas").filter(func(n: Node) -> bool: return is_instance_valid(n) and not n.is_queued_for_deletion())
+	_check(kids.size() == 2, "a larva virou %d" % kids.size())
+	for k in kids:
+		_hit_enemy(k, 9999.0)
+	for i in 3:
+		await get_tree().physics_frame
+	kids = get_tree().get_nodes_in_group("larvas").filter(func(n: Node) -> bool: return is_instance_valid(n) and not n.is_queued_for_deletion())
+	_check(kids.is_empty(), "larva pequena se dividiu")
+
+	# Parasita: gruda e rolar solta
+	await _load(WIDE)
+	p = level.player
+	p.max_hp = 9999
+	p.hp = 9999
+	var par := level.spawn_script("res://scripts/enemies/parasite.gd", p.global_position + Vector2(70, 0))
+	par.facing = -1
+	var stuck := false
+	for i in 300:
+		await get_tree().physics_frame
+		if par.state == "latched":
+			stuck = true
+			break
+	_check(stuck, "a parasita não grudou")
+	for i in 30:
+		await get_tree().physics_frame
+	_check(par.state == "latched", "a parasita soltou sozinha")
+	input.then(["roll"], 3)
+	for i in 30:
+		await get_tree().physics_frame
+	_check(par.state != "latched", "rolar não soltou a parasita")
+	input.clear()
+
+	# Salteador: leva ouro, e matar devolve
+	await _load(WIDE)
+	p = level.player
+	p.max_hp = 9999
+	p.hp = 9999
+	p.gold = 100
+	var thief := level.spawn_script("res://scripts/enemies/highwayman.gd", p.global_position + Vector2(90, 0))
+	thief.facing = -1
+	for i in 480:
+		await get_tree().physics_frame
+		if p.gold < 100:
+			break
+	_check(p.gold < 100, "o salteador não roubou")
+	_check(thief.state == "flee", "o salteador não fugiu")
+	_hit_enemy(thief, 9999.0)
+	_check(p.gold == 100, "o ouro não voltou (%d)" % p.gold)
+
+	# Lagarto Cego: quem fica parado longe não existe
+	await _load(WIDE)
+	p = level.player
+	var liz := level.spawn_script("res://scripts/enemies/blind_lizard.gd", p.global_position + Vector2(120, 0))
+	liz.set_state("chase")
+	for i in 90:
+		await get_tree().physics_frame
+		if liz.state == "idle":
+			break
+	_check(liz.state == "idle", "o lagarto cego viu quem estava parado")
+
+
+func _boss_mechanics() -> void:
+	for name in ["boss_forgotten", "boss_answer", "boss_insatiable", "boss_dragon", "boss_wyrm", "boss_fox"]:
+		await _load(WIDE)
+		var p := level.player
+		p.max_hp = 9999
+		p.hp = 9999
+		var b: Boss = level.spawn_script("res://scripts/enemies/%s.gd" % name, p.global_position + Vector2(120, 0))
+		b.set_state("idle")
+		var custom := {}
+		for m: Dictionary in b.moves:
+			if m["type"] == "custom":
+				custom = m
+		if not custom.is_empty():
+			b._move = custom
+			b.set_state("windup")
+			var acted := false
+			for i in 600:
+				await get_tree().physics_frame
+				if b.state == "act":
+					acted = true
+				if acted and b.state != "act" and b.state != "windup":
+					break
+			_check(acted and b.state != "act", "%s ficou preso no golpe próprio (%s)" % [name, b.state])
+			_check(b._alpha >= 0.99, "%s terminou invisível" % name)
+			_check(not b.ghost, "%s terminou intocável" % name)
+			_check(b.uses_gravity, "%s terminou sem gravidade" % name)
+			_check(p.inhale == 0.0, "%s não soltou o herói" % name)
+	# Rei Esquecido: com mortos de pé, quase não sente
+	await _load(WIDE)
+	var pl := level.player
+	var king: Boss = level.spawn_script("res://scripts/enemies/boss_forgotten.gd", pl.global_position + Vector2(160, 0))
+	king.set_state("idle")
+	var hp0 := king.hp
+	_hit_enemy(king, 100.0)
+	var alone := hp0 - king.hp
+	level.spawn_script("res://scripts/enemies/mourner.gd", pl.global_position + Vector2(-80, -30))
+	hp0 = king.hp
+	_hit_enemy(king, 100.0)
+	_check(hp0 - king.hp < alone, "os mortos não protegeram o rei")
+	# O Que Responde: depois de 6 golpes, a resposta
+	await _load(WIDE)
+	pl = level.player
+	var ans: Boss = level.spawn_script("res://scripts/enemies/boss_answer.gd", pl.global_position + Vector2(160, 0))
+	ans.set_state("idle")
+	for i in 6:
+		_hit_enemy(ans, 1.0)
+	await get_tree().physics_frame
+	_check(ans.state == "windup" and ans._move.get("radial", false), "ele não respondeu")
+
+
+func _enemy_bar() -> void:
+	await _load(WIDE)
+	var p := level.player
+	for name in ["boss_wyrm", "maw_tentacle", "grave_cat", "penitent"]:
+		var path := "res://scripts/enemies/%s.gd" % name
+		if not ResourceLoader.exists(path):
+			path = "res://scripts/enemies/grunt.gd"
+		var e: Enemy = level.spawn_script(path, p.global_position + Vector2(200, 0))
+		await get_tree().physics_frame
+		var bar: EnemyBar = null
+		for c in e.get_children():
+			if c is EnemyBar:
+				bar = c
+		_check(bar != null, "%s sem barra" % name)
+		_check(bar.z_index > e.body.z_index, "a barra de %s fica atrás do sprite" % name)
+		_check(bar.get_index() > e.body.get_index(), "a barra de %s é desenhada antes do sprite" % name)
+		_check(e.sprite_top() >= 8.0, "altura de %s não medida" % name)
+		e.queue_free()
 
 
 func _extras() -> void:

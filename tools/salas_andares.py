@@ -17,6 +17,8 @@ Regras de quem desenha salas aqui:
 """
 import os
 
+from consertar_teto import rungs
+
 from salas_mar_de_cinzas import R
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -24,24 +26,9 @@ CONTENT = os.path.join(ROOT, "content")
 
 
 def ladder(r, door_x, door_w=3):
-    """Plataformas de 3 em 3 blocos, alternando os lados, do chão até logo
-    abaixo de uma porta no teto (é por ali que se sobe; e quem caiu de cima
-    precisa conseguir voltar)."""
-    # plataforma se atravessa por baixo: dá para empilhar todas do mesmo lado
-    side = -1 if door_x - 6 >= 1 else 1
-    x0 = door_x - 5 if side < 0 else door_x + door_w + 1
-    probe = x0 + 1
-    stand = 1
-    while stand < r.h - 2 and r.g[stand + 1][probe] not in "#=":
-        stand += 1
-    # de cima para baixo: o degrau mais alto deixa a cabeça a 1 bloco do teto
-    for top in range(2, stand, 3):
-        row = top + 1
-        if row > stand:
-            break
-        for x in range(max(1, x0), min(r.w - 2, x0 + 3) + 1):
-            if r.g[row][x] == ".":
-                r.g[row][x] = "="
+    """Pilha de plataformas bem embaixo de uma porta no teto (é por ali que se
+    sobe; e quem caiu de cima precisa conseguir voltar)."""
+    rungs(r.g, list(range(door_x, door_x + door_w)))
     return r
 
 

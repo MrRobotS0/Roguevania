@@ -15,7 +15,7 @@ const AIR_ACCEL := 1100.0
 const GRAVITY_UP := 950.0
 const GRAVITY_DOWN := 1500.0
 const MAX_FALL := 430.0
-const JUMP_VELOCITY := -315.0      # ~3,3 blocos de altura
+const JUMP_VELOCITY := -335.0      # ~3,9 blocos: passa com folga do degrau de 3
 const JUMP_CUT := 0.45             # soltar o pulo cedo = pulo curto
 const COYOTE_TIME := 0.1           # ainda pula logo depois de sair da beirada
 const JUMP_BUFFER := 0.12          # pulo apertado um pouco antes de tocar o chão vale
@@ -51,6 +51,7 @@ var flasks := BASE_FLASKS
 var essence := 0
 var kills := 0
 var wind := 0.0             # empurrão da tempestade (px/s)
+var inhale := 0.0           # puxão do Insaciável (px/s)
 var gold := 0               # ouro: gasto na partida (mercador); some ao morrer
 var mutations: Array[String] = []
 var blueprints: Array[String] = []   # plantas achadas, entregues na próxima Vigia
@@ -287,7 +288,7 @@ func _move_state(delta: float) -> void:
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
 	elif absf(velocity.x) > RUN_SPEED and signf(velocity.x) == dir:
 		accel = 160.0    # embalo da rolagem segue no ar enquanto segurar a direção
-	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind, accel * delta)
+	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind + inhale, accel * delta)
 	_gravity(delta)
 
 	if pad.just("jump"):
