@@ -9,6 +9,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  // telas grandes: a página inteira cresce junto (1x até 1600x900, limitado pela altura no ultrawide)
+  (function () {
+    function z() { document.documentElement.style.zoom = Math.max(1, Math.min(innerWidth / 1600, innerHeight / 900, 2)); }
+    z(); addEventListener("resize", z);
+  })();
+</script>
 <style>
   :root {
     --bg: #07060b; --panel: #100d17; --panel2: #171320; --line: #2b2438; --text: #f2ecff; --dim: #b3a8cc;
@@ -45,7 +52,7 @@
   .btn:active { transform: translateY(3px); box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a, 0 1px 0 var(--gold-dk); }
 
   /* índice: chips com rolagem no celular, coluna fixa no computador */
-  .layout { width: min(1240px, 100% - 32px); margin-inline: auto; }
+  .layout { width: min(1700px, 100% - 32px); margin-inline: auto; }
   .toc { display: flex; gap: 6px; overflow-x: auto; padding: 12px 0; scrollbar-width: thin; }
   .toc a { flex: none; font: 400 13px var(--pixel); color: var(--dim); text-decoration: none; padding: 10px 12px; min-height: 44px;
     display: inline-flex; align-items: center; border: 2px solid var(--line); background: var(--panel); }
@@ -89,7 +96,7 @@
   .chip:hover { border-color: var(--c); }
 
   .domain { margin-top: 28px; border: 2px solid var(--line); background: var(--panel); }
-  .banner { position: relative; aspect-ratio: 16 / 5; background: center / cover no-repeat; image-rendering: pixelated; }
+  .banner { position: relative; aspect-ratio: 16 / 5; max-height: 340px; width: 100%; background: center / cover no-repeat; image-rendering: pixelated; }
   .banner .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,6,11,.92) 0%, rgba(7,6,11,.55) 55%, rgba(7,6,11,.1) 100%); }
   .ban-text { position: relative; padding: 18px 20px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
   .num { font: 400 12px var(--pixel); color: var(--c); letter-spacing: .12em; margin: 0; }
@@ -134,6 +141,7 @@
   .scroll { overflow-x: auto; }
   .hidden { display: none !important; }
   .none { color: var(--dim); padding: 12px 0; }
+  footer .by { color: var(--text); font-weight: 600; }
   footer { border-top: 2px solid var(--line); padding: 24px 16px; color: var(--dim); font-size: 14px; text-align: center; }
 
   @media (max-width: 640px) {
@@ -254,7 +262,7 @@
     </section>
   </main>
 </div>
-<footer>MOKSHA · v{{VERSION}} · <span lang="pt">gerada a partir do jogo por tools/gerar_wiki.py</span><span lang="en">generated from the game by tools/gerar_wiki.py</span> · <a href="./">MOKSHA</a> · <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a></footer>
+<footer>MOKSHA · v{{VERSION}} · <span lang="pt">desenvolvido por</span><span lang="en">developed by</span> <b class="by">Guilherme Belinelo</b> · <span lang="pt">gerada a partir do jogo por tools/gerar_wiki.py</span><span lang="en">generated from the game by tools/gerar_wiki.py</span> · <a href="./">MOKSHA</a> · <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a></footer>
 <script>
   const root = document.documentElement;
   const q = document.getElementById("q");
