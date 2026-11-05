@@ -37,7 +37,6 @@
   a { color: var(--gold); }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   .wrap { width: min(calc(1180 * var(--u)), 100% - 32px); margin-inline: auto; }
-  .wrap.wide { width: min(calc(1700 * var(--u)), 100% - 32px); }
 
   #stage { position: fixed; inset: 0 0 auto 0; width: 100%; height: 100vh; height: 100lvh; z-index: -3; image-rendering: pixelated;
     background: #120c0e url("img/mar.png") center / cover; }
@@ -126,27 +125,15 @@
   .rail button::before { content: ""; position: absolute; inset: -15px; }
   .rail button.on { background: var(--accent); border-color: var(--accent); transform: scale(1.4); }
 
-  /* blocos sólidos */
-  .block { position: relative; background: var(--bg); padding: clamp(72px, 12vh, calc(120 * var(--u))) 0; }
-  .block::before { content: ""; position: absolute; inset: -120px 0 auto 0; height: 120px; background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none; }
+  /* títulos das seções */
   .eyebrow { font: 400 calc(14 * var(--u)) var(--pixel); color: var(--blood); letter-spacing: .3em; margin: 0 0 calc(10 * var(--u)); }
   h2.big { font: 700 clamp(32px, 7vw, calc(88 * var(--u)))/.95 var(--pixel); margin: 0 0 calc(48 * var(--u)); color: var(--text); }
   h2.big span { color: var(--gold); }
 
-  /* moveset */
-  /* 1, 2, 3 ou 6 colunas: sempre fileiras completas, sem cartão sobrando */
-  .moves { display: grid; grid-template-columns: 1fr; gap: 2px; background: var(--line); border: 2px solid var(--line); }
-  @media (min-width: 560px) { .moves { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 760px) { .moves { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1800px) { .moves { grid-template-columns: repeat(6, 1fr); } }
-  .move { position: relative; min-width: 0; background: var(--ink); padding: calc(24 * var(--u)) calc(24 * var(--u)) calc(22 * var(--u)); display: grid; grid-template-rows: calc(190 * var(--u)) auto; row-gap: calc(18 * var(--u)); overflow: hidden; }
-  .move .stage { display: flex; align-items: flex-end; justify-content: center; border-bottom: 2px dashed var(--line); padding-bottom: 6px; }
-  .move h3 { font: 700 calc(20 * var(--u)) var(--pixel); margin: 0 0 calc(4 * var(--u)); letter-spacing: .04em; }
-  .move kbd { font: 400 calc(12 * var(--u)) var(--pixel); color: var(--gold); border: 2px solid var(--gold-dk); padding: calc(2 * var(--u)) calc(8 * var(--u)); background: #1a1206; }
-  .move:hover { background: #120e1a; }
-
   /* guardiões: rolagem horizontal presa */
   .g-wrap { position: relative; height: 300vh; background: var(--bg); }
+  /* os cenários dos mapas somem no escuro antes dos guardiões */
+  .g-wrap::before { content: ""; position: absolute; inset: -120px 0 auto 0; height: 120px; background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none; }
   .guardians { --txt: calc(150 * var(--u)); position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); background:
       radial-gradient(ellipse at 50% 120%, rgba(217,67,75,.22), transparent 55%), var(--bg); }
   .guardians .head { padding: calc(84 * var(--u)) 16px 0 max(16px, 6vw); position: relative; z-index: 2; }
@@ -277,7 +264,7 @@
         <span data-i18n="download">Download free</span>
       </a>
       <p class="dl-note" role="status" aria-live="polite" hidden></p>
-      <p class="ver">WINDOWS · V0.4.3 · EN / PT</p>
+      <p class="ver">WINDOWS · V0.5.0 · EN / PT</p>
     </div>
     <div class="runner" aria-hidden="true"></div>
     <div class="cue" aria-hidden="true">SCROLL<i></i></div>
@@ -292,14 +279,6 @@
         <blockquote id="d-lore">A god burned here. No one knows which. Each House claims it was theirs.</blockquote>
       </article>
       <div class="rail" id="rail" role="group" aria-label="Domains"></div>
-    </div>
-  </section>
-
-  <section class="block" aria-labelledby="moves-t">
-    <div class="wrap wide">
-      <p class="eyebrow">MOVESET</p>
-      <h2 class="big" id="moves-t" data-i18n-html="movesT">Never <span>stop</span> moving.</h2>
-      <div class="moves" id="moves"></div>
     </div>
   </section>
 
@@ -337,7 +316,7 @@
   <div class="wrap">
     <div class="foot-top">
       <div>
-        <p class="foot-name">MOKSHA · v0.4.3</p>
+        <p class="foot-name">MOKSHA · v0.5.0</p>
         <p class="foot-by"><span data-i18n="madeBy">Developed by</span> <strong>Guilherme Belinelo</strong></p>
       </div>
       <nav class="foot-links" aria-label="Links">
@@ -380,14 +359,6 @@
     { accent: "#8ac8e8", en: ["The Deep Caverns", "Where a god hid", "Scratched in the rock, very deep: he knew. And told no one."], pt: ["As Cavernas Fundas", "Onde um deus se escondia", "Riscado na rocha, bem fundo: ele sabia. E não contou a ninguém."] },
     { accent: "#e8d070", en: ["The Wandering Forest", "Where a god walked", "On a road sign pointing every way: he went this way."], pt: ["O Bosque Errante", "Onde um deus caminhava", "Numa placa de estrada, apontando para todos os lados: ele foi por aqui."] },
   ];
-  const MOVES = [
-    ["hero_combo", ["Combo", "Combo"], "J J J", 12],
-    ["hero_flip", ["Double jump", "Pulo duplo"], "SPACE ×2", 14],
-    ["hero_dash", ["Air dash", "Esquiva no ar"], "SHIFT", 12],
-    ["hero_roll", ["Roll", "Rolagem"], "SHIFT", 16],
-    ["hero_smash", ["Heavy", "Golpe pesado"], "K", 10],
-    ["hero_idle", ["Breathe", "Respire"], "—", 8],
-  ];
   const BOSSES = [
     ["boss_emperor", "#f2c14e", ["The Blind Emperor", "O Imperador Cego"], ["Tore out his eyes to see the future.", "Arrancou os olhos para ver o futuro."], ["THE THRONE", "O TRONO"]],
     ["boss_wolf_king", "#9fe8ff", ["The Long Night Wolf", "O Lobo da Longa Noite"], ["He howls and the pack answers.", "Uiva e a matilha responde."], ["THE HALLS", "OS SALÕES"]],
@@ -406,7 +377,6 @@
   const PT = {
     get: "Jogar grátis", download: "Baixar grátis",
     tagline: "Treze deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
-    movesT: "Nunca <span>pare</span> de se mexer.",
     gEye: "13 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
     dlT: "A cinza <span>lembra de você</span>.",
     dlP: "Grátis. Windows 10/11. Teclado ou controle.",
@@ -461,28 +431,6 @@
   document.body.appendChild(unitProbe);
   const U = () => unitProbe.getBoundingClientRect().width || 1;
 
-  function buildMoves() {
-    const box = document.getElementById("moves");
-    box.innerHTML = "";
-    const u = U();
-    // a largura real da coluna: o herói cabe no cartão com 1, 2, 3 ou 6 colunas
-    const col = parseFloat(getComputedStyle(box).gridTemplateColumns) - 48 * u;
-    // a mesma escala em todos os cartões: o herói tem o mesmo tamanho em todos
-    const k = Math.min(...MOVES.map(([n]) => fit(n, col, 170 * u, 2 * u)));
-    for (const [name, label, key, fps] of MOVES) {
-      const m = document.createElement("div");
-      m.className = "move";
-      const stage = document.createElement("div");
-      stage.className = "stage";
-      stage.appendChild(sprite(name, k, fps));
-      m.appendChild(stage);
-      const t = document.createElement("div");
-      t.innerHTML = `<h3>${label[L()]}</h3><kbd>${key}</kbd>`;
-      m.appendChild(t);
-      box.appendChild(m);
-    }
-  }
-
   function buildGuardians() {
     const tr = document.getElementById("track");
     tr.innerHTML = "";
@@ -528,7 +476,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el => { if (table[el.dataset.i18n]) el.textContent = table[el.dataset.i18n]; });
     document.querySelectorAll("[data-i18n-html]").forEach(el => { if (table[el.dataset.i18nHtml]) el.innerHTML = table[el.dataset.i18nHtml]; });
     document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === code)));
-    if (Object.keys(ANIM).length) { buildMoves(); buildGuardians(); if (window.refitMotion) window.refitMotion(); }
+    if (Object.keys(ANIM).length) { buildGuardians(); if (window.refitMotion) window.refitMotion(); }
     showDomain(current, true);
     try { localStorage.setItem("moksha-lang", code); } catch (e) {}
   }
@@ -607,7 +555,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     fetch("img/anim/anim.json").then(r => r.json()).then(data => {
       ANIM = data;
-      buildMoves();
       buildGuardians();
       buildBeasts();
       setupMotion();
@@ -650,12 +597,11 @@
       wait = setTimeout(() => {
         if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 130) return;
         lastW = innerWidth; lastH = innerHeight;
-        buildMoves(); buildGuardians(); buildBeasts(); pace();
+        buildGuardians(); buildBeasts(); pace();
         window.refitMotion();
       }, 200);
     });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => window.refitMotion());
-    if (!still) gsap.utils.toArray(".move").forEach((m, i) => gsap.from(m, { opacity: 0, y: 40, duration: .5, delay: (i % 3) * .08, ease: "power3.out", scrollTrigger: { trigger: m, start: "top 90%" } }));
   }
 </script>
 
