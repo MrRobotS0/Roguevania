@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MOKSHA · Wiki</title>
-<meta name="description" content="MOKSHA wiki: the story, the 13 gods, every domain, guardian, creature, weapon, skill and skin.">
+<meta name="description" content="MOKSHA wiki: quick reference for domains, guardians, creatures, weapons, skills, mutations and controls.">
 <link rel="icon" href="img/heroi.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@700&family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
 <script>
+  // sem JavaScript a página mostra todas as seções, uma embaixo da outra
+  document.documentElement.classList.add("js");
   // telas grandes: a página inteira cresce junto (1x até 1600x900, limitado pela altura no ultrawide)
   (function () {
     function z() { document.documentElement.style.zoom = Math.max(1, Math.min(innerWidth / 1600, innerHeight / 900, 2)); }
@@ -18,143 +20,218 @@
 </script>
 <style>
   :root {
-    --bg: #07060b; --panel: #100d17; --panel2: #171320; --line: #2b2438; --text: #f2ecff; --dim: #b3a8cc;
+    --bg: #07060b; --panel: #100d17; --panel2: #171320; --line: #2b2438; --text: #f2ecff; --dim: #b9afd0;
     --gold: #f2c14e; --gold-dk: #7a4a10; --focus: #8ff7e8;
-    --pixel: "Silkscreen", monospace; --body: "Pixelify Sans", system-ui, sans-serif;
+    --pixel: "Silkscreen", monospace; --body: "Chakra Petch", system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: 76px; }
-  body { margin: 0; color: var(--text); font: 400 17px/1.6 var(--body); overflow-x: hidden;
-    background: radial-gradient(1200px 500px at 70% -10%, #2a1a10 0%, transparent 60%), var(--bg); }
+  html { background: var(--bg); scroll-padding-top: 84px; }
+  body { margin: 0; color: var(--text); font: 400 17px/1.55 var(--body); }
   html[data-lang="pt"] [lang="en"], html[data-lang="en"] [lang="pt"] { display: none; }
   img { image-rendering: pixelated; }
-  a { color: var(--gold); }
-  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-  h1, h2, h3, h4 { font-family: var(--pixel); line-height: 1.2; margin: 0; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  a:hover { color: #ffe08a; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  h1, h2, h3 { margin: 0; line-height: 1.2; }
   .skip { position: absolute; left: -999px; top: 8px; background: var(--gold); color: #1a0f04; padding: 10px 14px; z-index: 99; }
   .skip:focus { left: 8px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* barra */
   .bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
-    background: rgba(7,6,11,.92); border-bottom: 2px solid var(--line); backdrop-filter: blur(4px); }
-  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .12em; white-space: nowrap; }
-  .brand small { color: var(--dim); font-size: 12px; letter-spacing: .1em; margin-left: 6px; }
-  .bar .sp { flex: 1; }
-  .search { min-height: 44px; width: min(260px, 38vw); font: 400 15px var(--body); color: var(--text); background: var(--panel);
+    background: #0a0810; border-bottom: 2px solid var(--line); }
+  .brand { font: 700 18px var(--pixel); color: var(--gold); text-decoration: none; letter-spacing: .1em; white-space: nowrap; }
+  .brand small { color: var(--dim); font-size: 12px; margin-left: 6px; }
+  .search { flex: 1 1 auto; max-width: 560px; min-height: 44px; margin-inline: auto; font: 400 16px var(--body); color: var(--text); background: var(--panel);
     border: 2px solid var(--line); padding: 8px 12px; }
-  .search::placeholder { color: #8a7fa3; }
+  .search:focus { border-color: var(--gold); outline: none; }
+  .search::placeholder { color: #9d92b6; }
   .lang { display: flex; }
-  .lang button { font: 400 13px var(--pixel); color: var(--dim); cursor: pointer; background: var(--panel); border: 2px solid var(--line);
-    min-height: 44px; min-width: 46px; }
+  .lang button { font: 700 14px var(--body); color: var(--dim); cursor: pointer; background: var(--panel); border: 2px solid var(--line); min-height: 44px; min-width: 46px; }
   .lang button[aria-pressed="true"] { color: #1a0f04; background: var(--gold); border-color: var(--gold); }
-  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; font: 700 13px var(--pixel); color: #1a0f04;
-    background: var(--gold); text-decoration: none; box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a, 0 4px 0 var(--gold-dk); }
-  .btn:active { transform: translateY(3px); box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a, 0 1px 0 var(--gold-dk); }
+  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; font: 700 15px var(--body); color: #1a0f04; white-space: nowrap;
+    background: var(--gold); text-decoration: none; box-shadow: inset -3px -3px 0 #c08a24, inset 3px 3px 0 #ffe08a; }
+  .btn:hover { color: #1a0f04; filter: brightness(1.08); }
 
-  /* índice: chips com rolagem no celular, coluna fixa no computador */
-  .layout { width: min(1700px, 100% - 32px); margin-inline: auto; }
-  .toc { display: flex; gap: 6px; overflow-x: auto; padding: 12px 0; scrollbar-width: thin; }
-  .toc a { flex: none; font: 400 13px var(--pixel); color: var(--dim); text-decoration: none; padding: 10px 12px; min-height: 44px;
-    display: inline-flex; align-items: center; border: 2px solid var(--line); background: var(--panel); }
-  .toc a:hover, .toc a.on { color: var(--gold); border-color: var(--gold); }
+  /* menu lateral (computador) e fita de atalhos (celular) */
+  .layout { width: min(1360px, 100% - 32px); margin-inline: auto; }
+  .toc { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
+  .toc .group { display: contents; }
+  .toc .group > span { display: none; }
+  .toc a { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 8px 12px; font-size: 15px; color: var(--dim); text-decoration: none;
+    border: 2px solid var(--line); background: var(--panel); }
+  .toc a small { font-size: 13px; opacity: .8; }
+  .toc a:hover { color: var(--text); }
+  .toc a[aria-current="page"] { color: #1a0f04; background: var(--gold); border-color: var(--gold); font-weight: 700; }
+  main { min-width: 0; padding-bottom: 48px; }
   @media (min-width: 1000px) {
-    .layout { display: grid; grid-template-columns: 210px 1fr; gap: 32px; }
-    .toc { position: sticky; top: 76px; align-self: start; flex-direction: column; overflow: visible; padding: 24px 0; }
-    .toc a { justify-content: flex-start; }
+    .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; }
+    .toc { position: sticky; top: 66px; align-self: start; max-height: calc(100vh - 66px); flex-direction: column; gap: 2px; overflow: auto; padding: 20px 0; }
+    .toc .group { display: block; margin-bottom: 14px; }
+    .toc .group > span { display: block; padding: 0 12px 4px; font-size: 13px; font-weight: 700; color: #958aad; letter-spacing: .04em; }
+    .toc a { border-color: transparent; background: none; min-height: 40px; }
+    .toc a:hover { background: var(--panel); }
   }
-  main { min-width: 0; padding-bottom: 64px; }
 
-  .hero { padding: 40px 0 16px; }
-  .hero h1 { font-size: clamp(34px, 7vw, 64px); color: var(--gold); letter-spacing: .06em;
-    text-shadow: 3px 3px 0 #3a1a04, 6px 6px 0 #1a0b04; }
-  .hero p { max-width: 62ch; color: var(--dim); }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 20px; }
-  .stats div { background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; color: var(--dim); font-size: 14px; }
-  .stats b { display: block; font: 700 28px var(--pixel); color: var(--gold); }
+  /* cada assunto é uma página */
+  html.js .view { display: none; }
+  html.js .view.on { display: block; }
+  .view { padding-top: 22px; }
+  .view + .view { margin-top: 32px; }
+  html.js .view + .view { margin-top: 0; }
+  h1 { font: 700 clamp(30px, 4vw, 44px) var(--pixel); color: var(--gold); letter-spacing: .05em; }
+  h2.title { font: 700 clamp(26px, 3vw, 34px) var(--body); color: var(--gold); }
+  h3.sub { margin: 28px 0 10px; font-size: 19px; font-weight: 700; }
+  .lead { max-width: 68ch; margin: 8px 0 18px; color: var(--dim); }
+  .prose { max-width: 66ch; }
+  .prose p { margin: 0 0 12px; }
 
-  section.top { padding-top: 48px; }
-  h2 { font-size: clamp(22px, 3.4vw, 32px); color: var(--gold); margin-bottom: 6px; }
-  .eyebrow { font: 400 12px var(--pixel); letter-spacing: .14em; color: var(--dim); margin: 0 0 4px; }
-  .lead { color: var(--dim); max-width: 70ch; margin: 0 0 18px; }
+  /* início */
+  .hub { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; margin: 18px 0 8px; }
+  .hub a { display: block; padding: 14px 16px; text-decoration: none; color: var(--text); background: var(--panel); border: 2px solid var(--line); }
+  .hub a:hover { border-color: var(--gold); color: var(--text); }
+  .hub b { display: block; color: var(--gold); font-size: 18px; }
+  .hub b i { font-style: normal; color: var(--dim); font-weight: 400; font-size: 15px; margin-left: 4px; }
+  .hub span span { color: var(--dim); font-size: 15px; }
+  .faq { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 8px 28px; margin: 0; }
+  .faq div { padding: 12px 0; border-top: 2px solid var(--line); }
+  .faq dt { font-weight: 700; }
+  .faq dd { margin: 4px 0 0; color: var(--dim); }
 
-  .story p { max-width: 70ch; }
-  details { border: 2px solid var(--line); background: var(--panel); padding: 12px 16px; margin-top: 14px; }
-  summary { cursor: pointer; font: 400 14px var(--pixel); color: var(--gold); min-height: 32px; }
+  /* filtros */
+  .chips { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 0 16px 12px 0; vertical-align: top; }
+  .view > h2.title + .chips { margin-top: 14px; }
+  .chips button { min-height: 40px; padding: 4px 12px; font: 400 15px var(--body); color: var(--dim); background: var(--panel); border: 2px solid var(--line); cursor: pointer; }
+  .chips button:hover { color: var(--text); }
+  .chips button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); font-weight: 700; }
 
-  .gods { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
-  .gods a { display: block; height: 100%; padding: 12px 14px; text-decoration: none; color: var(--text); background: var(--panel);
-    border: 2px solid var(--line); border-left: 6px solid var(--c); }
-  .gods a:hover { background: var(--panel2); }
-  .gods b { display: block; font: 400 15px var(--body); }
-  .gods span { font: 400 13px var(--pixel); color: var(--c); }
+  /* linhas: o essencial à vista, o resto abre */
+  .rows { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--line); }
+  .rows > li { border-bottom: 1px solid var(--line); }
+  .rows-head { display: none; }
+  .row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 18px; gap: 4px 12px; align-items: center; padding: 10px 6px; min-height: 60px; }
+  summary.row { cursor: pointer; list-style: none; }
+  summary.row::-webkit-details-marker { display: none; }
+  summary.row:hover { background: var(--panel); }
+  summary.row::after { content: "+"; grid-column: 3; grid-row: 1 / span 2; font: 700 20px var(--body); color: var(--dim); justify-self: end; }
+  details[open] > summary.row::after { content: "\2212"; color: var(--gold); }
+  details[open] > summary.row { background: var(--panel); }
+  .row .name { font-weight: 700; min-width: 0; }
+  .row img, .row .thumb { width: 48px; height: 48px; grid-row: 1 / span 2; }
+  .row img { background: #0b0910; border: 1px solid var(--line); }
+  .meta { grid-column: 2; display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 15px; color: var(--dim); min-width: 0; }
+  .more { margin: 0; padding: 4px 42px 14px 66px; color: var(--dim); font-size: 16px; font-style: italic; background: var(--panel); }
+  .lab { color: #958aad; }
+  .stat { color: var(--s); font-weight: 700; }
+  @media (min-width: 900px) {
+    .rows-head, .tabular .row { display: grid; grid-template-columns: var(--cols); gap: 14px; }
+    .rows-head { padding: 0 6px 6px; font-size: 14px; font-weight: 700; color: #958aad; }
+    .rows-head span:first-child { grid-column: 1 / span 2; }
+    .rows-head::after { content: ""; }
+    .tabular .row .meta { display: contents; }
+    .tabular .row .meta > span { min-width: 0; color: var(--dim); font-size: 15px; }
+    .tabular .row .lab { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .tabular .row img { grid-row: auto; }
+    .tabular summary.row::after { grid-column: auto; grid-row: auto; }
+    .weapons { --cols: 48px minmax(0, 1.5fr) minmax(0, 1fr) 84px 64px minmax(0, 1.3fr) minmax(0, 1fr) 18px; }
+    .skills { --cols: 48px minmax(0, 1.2fr) minmax(0, 1.7fr) 84px 74px minmax(0, 1fr) 18px; }
+  }
 
-  .route { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .route .step { display: flex; flex-direction: column; gap: 6px; }
-  .route .arrow { font: 700 26px var(--pixel); color: var(--line); }
-  .chip { font: 400 13px var(--pixel); text-decoration: none; color: var(--text); padding: 8px 10px; min-height: 44px; display: flex;
-    align-items: center; background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--c); }
-  .chip:hover { border-color: var(--c); }
-
-  .domain { margin-top: 28px; border: 2px solid var(--line); background: var(--panel); }
-  .banner { position: relative; aspect-ratio: 16 / 5; max-height: 340px; width: 100%; background: center / cover no-repeat; image-rendering: pixelated; }
-  .banner .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,6,11,.92) 0%, rgba(7,6,11,.55) 55%, rgba(7,6,11,.1) 100%); }
-  .ban-text { position: relative; padding: 18px 20px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
-  .num { font: 400 12px var(--pixel); color: var(--c); letter-spacing: .12em; margin: 0; }
-  .banner h3 { font-size: clamp(20px, 3.2vw, 30px); color: #fff; text-shadow: 2px 2px 0 #000; }
-  .god { margin: 2px 0 0; color: var(--c); font-size: 16px; }
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--line); border-top: 2px solid var(--line); }
-  .facts div { background: var(--panel); padding: 10px 14px; font-size: 15px; }
-  .k { display: block; font: 400 11px var(--pixel); color: var(--c); letter-spacing: .1em; }
-  .lore { margin: 0; padding: 14px 18px 14px 40px; border-top: 2px solid var(--line); color: #ded5f0; }
-  .lore li { margin: 4px 0; font-style: italic; }
-  .lore li::marker { color: var(--c); font: 400 12px var(--pixel); }
-
-  .grid { display: grid; gap: 8px; }
-  .cards3 { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding: 12px; border-top: 2px solid var(--line); }
-  .cards { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-  .card { background: var(--panel2); border: 2px solid var(--line); padding: 12px; display: flex; gap: 12px; align-items: flex-start; }
-  .card h4 { font-size: 14px; color: var(--text); margin-bottom: 4px; }
-  .card p { margin: 0 0 4px; font-size: 15px; color: #d6cce8; }
-  .creature { flex-direction: column; }
-  .creature .stage { width: 100%; height: 160px; display: grid; place-items: end center; background:
-    linear-gradient(transparent 82%, rgba(255,255,255,.05) 82%), radial-gradient(60% 70% at 50% 85%, color-mix(in srgb, var(--c, #e8a33d) 22%, transparent), transparent); }
-  .role { font: 400 11px var(--pixel) !important; letter-spacing: .1em; color: var(--c, var(--gold)) !important; }
-  .spr { overflow: hidden; }
-  .film { height: 100%; animation: film var(--d) steps(var(--n)) infinite; }
+  /* criaturas */
+  .creature .row { grid-template-columns: 64px minmax(0, 1fr); padding: 8px 6px; }
+  .creature .thumb { width: 64px; height: 56px; display: grid; place-items: end center; overflow: hidden; }
+  .creature p { grid-column: 2; margin: 0; font-size: 16px; color: var(--dim); }
+  .role { font-size: 14px; font-weight: 400; color: var(--c, var(--gold)); margin-left: 8px; }
+  .where { grid-column: 2; font-size: 14px; color: #958aad; }
+  .spr { overflow: hidden; flex: none; }
+  .film { height: 100%; background-repeat: no-repeat; }
+  .live .film { animation: film var(--d) steps(var(--n)) infinite; }
   @keyframes film { to { transform: translateX(-100%); } }
-  .gear img { flex: none; background: #0b0910; border: 2px solid var(--line); }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px !important; }
-  .tags > span { border: 1px solid var(--line); padding: 1px 6px; color: var(--dim); }
-  .tags .stat { color: var(--s); border-color: var(--s); }
-  .unlock { font-size: 13px !important; color: var(--gold) !important; }
-  .skin .fig { flex: none; width: 96px; height: 120px; display: grid; place-items: end center; background: #0b0910; border: 2px solid var(--line); }
-  .skin .fig img { max-width: 92px; max-height: 116px; width: auto; height: auto; }
 
-  .list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
-  .list li { background: var(--panel); border: 2px solid var(--line); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
-  .list b { font: 400 14px var(--pixel); color: var(--text); }
-  .list span { color: var(--dim); font-size: 15px; }
-  .list em { font-style: normal; color: var(--gold); font-size: 13px; }
-  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 2px solid var(--line); }
-  td { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 15px; vertical-align: top; }
-  kbd { font: 400 13px var(--pixel); background: #0b0910; border: 1px solid var(--line); padding: 2px 6px; color: var(--gold); }
+  /* domínios */
+  /* etapas numeradas: uma por linha no celular, lado a lado no computador */
+  .route { display: grid; gap: 10px; margin: 0 0 22px; counter-reset: etapa; }
+  .route .arrow { display: none; }
+  .route .step { counter-increment: etapa; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px 6px; align-items: start; }
+  .route .step::before { content: counter(etapa); grid-row: 1 / span 3; font-weight: 700; color: var(--gold); line-height: 40px; }
+  .route .chip { grid-column: 2; }
+  @media (min-width: 1100px) {
+    .route { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+    .route .step { grid-template-columns: minmax(0, 1fr); align-content: start; }
+    .route .step::before { grid-row: auto; line-height: 1.4; }
+    .route .chip { grid-column: auto; }
+  }
+  .chip { display: flex; align-items: center; min-height: 40px; padding: 4px 8px; font-size: 15px; line-height: 1.25; text-decoration: none; color: var(--text); background: var(--panel); border: 2px solid var(--line); border-left: 5px solid var(--c); }
+  .chip:hover { border-color: var(--c); color: var(--text); }
+  .dom summary.row { grid-template-columns: 112px minmax(0, 1fr) 18px; }
+  .dom summary.row img { width: 112px; height: 63px; object-fit: cover; grid-row: 1 / span 2; border: 0; border-left: 5px solid var(--c); }
+  .dom .name small { font-weight: 400; color: var(--c); margin-right: 6px; }
+  .dom { scroll-margin-top: 84px; }
+  .dom-body { padding: 4px 14px 16px; background: var(--panel); }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 8px 20px; margin: 0 0 12px; }
+  .facts dt { font-size: 14px; color: #958aad; }
+  .facts dd { margin: 0; font-size: 16px; }
+  .dom-body .rows { margin-bottom: 12px; }
+  .lore-box summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; color: var(--gold); }
+  .lore-box ol { margin: 0; padding-left: 22px; color: var(--dim); font-style: italic; }
+  .lore-box li { margin: 4px 0; max-width: 66ch; }
+
+  /* guardiões */
+  .bosses { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 8px; }
+  .boss { padding: 12px; background: var(--panel); border: 2px solid var(--line); border-top: 4px solid var(--c); }
+  .boss .stage { height: 112px; display: grid; place-items: end center; overflow: hidden; margin-bottom: 8px; }
+  .boss h3 { font-size: 18px; }
+  .boss p { margin: 4px 0 0; font-size: 16px; color: var(--dim); }
+  .boss .where { font-size: 14px; }
+
+  /* listas simples e aparências */
+  .list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 0 28px; }
+  .list li { padding: 10px 0; border-top: 1px solid var(--line); }
+  .list b { display: block; }
+  .list span span { color: var(--dim); font-size: 16px; }
+  .list em { font-style: normal; color: var(--gold); font-size: 15px; display: block; }
+  .skin { display: flex; gap: 12px; align-items: center; }
+  .skin .fig { flex: none; width: 56px; height: 72px; display: grid; place-items: end center; background: #0b0910; border: 1px solid var(--line); }
+  .skin .fig img { max-width: 52px; max-height: 68px; width: auto; height: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 14px; color: #958aad; padding: 0 12px 6px 0; }
+  td { padding: 10px 12px 10px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  kbd { font: 600 15px var(--body); background: #0b0910; border: 1px solid var(--line); padding: 2px 6px; color: var(--gold); white-space: nowrap; }
   .scroll { overflow-x: auto; }
-  .hidden { display: none !important; }
-  .none { color: var(--dim); padding: 12px 0; }
-  footer .by { color: var(--text); font-weight: 600; }
-  footer { border-top: 2px solid var(--line); padding: 24px 16px; color: var(--dim); font-size: 14px; text-align: center; }
+  .spoiler { max-width: 66ch; border: 2px solid var(--line); padding: 10px 14px; margin-top: 8px; }
+  .spoiler summary { cursor: pointer; min-height: 32px; color: var(--gold); }
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; padding-top: 14px; border-top: 2px solid var(--line); }
+  .pager a { display: inline-flex; align-items: center; min-height: 44px; }
+
+  /* busca: mostra só o que bateu, de todas as seções */
+  #achados { margin: 18px 0 0; font-weight: 700; }
+  body.busca .view { display: none; padding-top: 16px; }
+  body.busca .view.tem { display: block; }
+  body.busca .nobusca { display: none !important; }
+  .fora { display: none !important; }
+  body.busca .view > .title { font-size: 20px; margin-bottom: 8px; }
+
+  footer { border-top: 2px solid var(--line); padding: 22px 16px; color: var(--dim); font-size: 15px; text-align: center; }
+  footer .by { color: var(--text); }
 
   @media (max-width: 640px) {
-    .bar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
-    .brand small { display: none; }
-    .lang button { min-width: 44px; }
-    .btn { padding: 8px 10px; font-size: 12px; }
-    .search { order: 5; width: 100%; }
-    .banner { aspect-ratio: 16 / 7; }
+    /* no celular a busca fica no topo e o que gruda é a fita de atalhos */
+    .bar { position: static; flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
+    .brand { flex: 1; font-size: 16px; }
+    .search { order: 5; flex-basis: 100%; max-width: none; }
+    .bar .btn { display: none; }
+    .layout { width: 100%; }
+    .toc { position: sticky; top: 0; z-index: 20; padding: 8px 12px; background: var(--bg); border-bottom: 2px solid var(--line); }
+    main { padding-inline: 12px; }
+    html { scroll-padding-top: 72px; }
+    .dom { scroll-margin-top: 72px; }
+    .dom summary.row { grid-template-columns: 72px minmax(0, 1fr) 18px; }
+    .dom summary.row img { width: 72px; height: 54px; }
+    .more { padding: 4px 14px 14px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    .film { animation: none; }
+    .live .film { animation: none; }
   }
 </style>
 </head>
@@ -162,8 +239,7 @@
 <a class="skip" href="#conteudo"><span lang="pt">Pular para o conteúdo</span><span lang="en">Skip to content</span></a>
 <header class="bar">
   <a class="brand" href="./">MOKSHA<small>WIKI</small></a>
-  <span class="sp"></span>
-  <input class="search" id="q" type="search" placeholder="Buscar arma, criatura..." aria-label="Buscar / Search">
+  <input class="search" id="q" type="search" placeholder="Buscar em toda a wiki..." aria-label="Buscar / Search">
   <div class="lang" role="group" aria-label="Idioma / Language">
     <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
     <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
@@ -172,130 +248,195 @@
 </header>
 
 <div class="layout">
-  <nav class="toc" aria-label="Índice">{{NAV}}</nav>
+  <nav class="toc" aria-label="Assuntos / Topics">{{NAV}}</nav>
   <main id="conteudo">
-    <section class="hero">
-      <p class="eyebrow">WIKI · V{{VERSION}}</p>
+    <p id="achados" role="status" aria-live="polite" hidden></p>
+
+    <section class="view nobusca" id="inicio">
       <h1>MOKSHA</h1>
-      <p><span lang="pt">Tudo sobre o jogo, tirado direto dos arquivos dele: a história, os treze deuses, cada domínio, guardião e criatura, e todo o equipamento.</span><span lang="en">Everything about the game, taken straight from its files: the story, the thirteen gods, every domain, guardian and creature, and all the gear.</span></p>
-      <div class="stats">{{STATS}}</div>
+      <p class="lead"><span lang="pt">Consulta rápida do jogo. Busque lá em cima ou escolha um assunto.</span><span lang="en">A quick reference for the game. Search above or pick a topic.</span></p>
+      <div class="hub">{{HUB}}</div>
+      <h3 class="sub"><span lang="pt">Perguntas comuns</span><span lang="en">Common questions</span></h3>
+      <dl class="faq">{{FAQ}}</dl>
     </section>
 
-    <section class="top story" id="historia">
-      <p class="eyebrow">LORE</p>
-      <h2><span lang="pt">A história</span><span lang="en">The story</span></h2>
-      {{INTRO}}
-      <details><summary><span lang="pt">O final (spoiler)</span><span lang="en">The ending (spoiler)</span></summary>{{ENDING}}</details>
-      <details><summary><span lang="pt">O final verdadeiro, com as 4 brasas (spoiler)</span><span lang="en">The true ending, with all 4 embers (spoiler)</span></summary>{{TRUE_ENDING}}</details>
+    <section class="view nobusca" id="historia">
+      <h2 class="title"><span lang="pt">História</span><span lang="en">Story</span></h2>
+      <div class="prose" style="margin-top:14px">{{INTRO}}</div>
+      <details class="spoiler"><summary><span lang="pt">O final (spoiler)</span><span lang="en">The ending (spoiler)</span></summary>{{ENDING}}</details>
+      <details class="spoiler"><summary><span lang="pt">O final verdadeiro (spoiler)</span><span lang="en">The true ending (spoiler)</span></summary>{{TRUE_ENDING}}</details>
     </section>
 
-    <section class="top" id="deuses">
-      <p class="eyebrow">PANTHEON</p>
-      <h2><span lang="pt">Os 13 deuses</span><span lang="en">The 13 gods</span></h2>
-      <p class="lead"><span lang="pt">Numa noite sem nome, todos sumiram. Cada um deixou um domínio, que apodreceu do seu jeito.</span><span lang="en">On a nameless night, all of them vanished. Each left a domain behind, rotting in its own way.</span></p>
-      <ul class="gods">{{GODS}}</ul>
+    <section class="view" id="dominios">
+      <h2 class="title"><span lang="pt">Domínios</span><span lang="en">Domains</span></h2>
+      <p class="lead nobusca"><span lang="pt">Um por deus. Depois do Mar de Cinzas, cada um termina no guardião; aí, na passagem, você escolhe entre três caminhos. Morreu, volta ao Mar de Cinzas.</span><span lang="en">One per god. After the Sea of Ash, each ends with its guardian; then, in the passage, you pick one of three paths. Die, and you wake on the Sea of Ash.</span></p>
+      <h3 class="sub nobusca" style="margin-top:0"><span lang="pt">A rota de uma partida</span><span lang="en">The route of a run</span></h3>
+      <div class="nobusca">{{ROUTE}}</div>
+      <ul class="rows">{{DOMAINS}}</ul>
     </section>
 
-    <section class="top" id="rota">
-      <p class="eyebrow">ROUTE</p>
-      <h2><span lang="pt">A rota de uma partida</span><span lang="en">The route of a run</span></h2>
-      <p class="lead"><span lang="pt">Dez andares. Depois de cada domínio vem o guardião dele; depois, a passagem, onde você escolhe um entre três caminhos. Morreu, volta ao Mar de Cinzas.</span><span lang="en">Ten floors. Each domain ends with its guardian; then comes the passage, where you choose one of three paths. Die, and you wake on the Sea of Ash again.</span></p>
-      {{ROUTE}}
+    <section class="view" id="guardioes">
+      <h2 class="title"><span lang="pt">Guardiões</span><span lang="en">Guardians</span></h2>
+      <p class="lead nobusca"><span lang="pt">Todo golpe é avisado. A cada três golpes eles param, exaustos: é a sua janela. Com metade da vida, mudam de fase.</span><span lang="en">Every attack is telegraphed. Every third attack they stop, exhausted: that is your window. At half health, they change phase.</span></p>
+      <div class="bosses">{{GUARDIANS}}</div>
     </section>
 
-    <section class="top" id="dominios">
-      <p class="eyebrow">DOMAINS</p>
-      <h2><span lang="pt">Os domínios</span><span lang="en">The domains</span></h2>
-      <p class="lead"><span lang="pt">Inscrições, clima, perigo, criaturas, elite e guardião de cada lugar.</span><span lang="en">Inscriptions, weather, hazard, creatures, elite and guardian of each place.</span></p>
-      {{DOMAINS}}
+    <section class="view" id="criaturas">
+      <h2 class="title"><span lang="pt">Criaturas</span><span lang="en">Creatures</span></h2>
+      <div class="chips nobusca" data-group="role">
+        <button type="button" data-v="" aria-pressed="true"><span lang="pt">Todas</span><span lang="en">All</span></button>
+        <button type="button" data-v="enemy" aria-pressed="false"><span lang="pt">Inimigos</span><span lang="en">Enemies</span></button>
+        <button type="button" data-v="elite" aria-pressed="false"><span lang="pt">Elites</span><span lang="en">Elites</span></button>
+      </div>
+      <ul class="rows">{{CREATURES}}</ul>
     </section>
 
-    <section class="top" id="guardioes">
-      <p class="eyebrow">BOSSES</p>
-      <h2><span lang="pt">Os guardiões</span><span lang="en">The guardians</span></h2>
-      <p class="lead"><span lang="pt">Todo golpe é avisado. A cada três golpes eles param, exaustos: é a sua janela. Com metade da vida, mudam de fase.</span><span lang="en">Every attack is telegraphed. Every third attack they stop, exhausted: that is your window. At half health, they change phase.</span></p>
-      <div class="grid cards">{{GUARDIANS}}</div>
+    <section class="view" id="armas">
+      <h2 class="title"><span lang="pt">Armas</span><span lang="en">Weapons</span></h2>
+      <p class="lead nobusca"><span lang="pt">Duas por vez. As que caem podem vir com afixos (brasa, geada, vampira...). Planta entregue à Vigia faz a arma aparecer nas partidas.</span><span lang="en">Two at a time. Drops may roll affixes (ember, frost, vampiric...). Deliver a blueprint to the Watcher and the weapon starts showing up in runs.</span></p>
+      <div class="chips nobusca" data-group="stat">{{STAT_CHIPS}}</div>
+      <div class="chips nobusca" data-group="cat">
+        <button type="button" data-v="" aria-pressed="true"><span lang="pt">Todas</span><span lang="en">All</span></button>
+        <button type="button" data-v="melee" aria-pressed="false"><span lang="pt">Corpo a corpo</span><span lang="en">Melee</span></button>
+        <button type="button" data-v="ranged" aria-pressed="false"><span lang="pt">À distância</span><span lang="en">Ranged</span></button>
+      </div>
+      <div class="tabular weapons">
+        <div class="rows-head nobusca" aria-hidden="true"><span lang="pt">Arma</span><span lang="en">Weapon</span><span lang="pt">Tipo</span><span lang="en">Type</span><span lang="pt">Atributo</span><span lang="en">Stat</span><span lang="pt">Dano</span><span lang="en">Damage</span><span lang="pt">Crítico</span><span lang="en">Crit</span><span lang="pt">Como obter</span><span lang="en">How to get</span></div>
+        <ul class="rows">{{WEAPONS}}</ul>
+      </div>
     </section>
 
-    <section class="top" id="armas">
-      <p class="eyebrow">WEAPONS</p>
-      <h2><span lang="pt">Armas</span><span lang="en">Weapons</span></h2>
-      <p class="lead"><span lang="pt">Duas por vez. As que caem podem vir com afixos (brasa, geada, vampira...). Planta entregue à Vigia faz a arma passar a aparecer nas partidas.</span><span lang="en">Two at a time. Dropped weapons may roll affixes (ember, frost, vampiric...). Deliver a blueprint to the Watcher and the weapon starts showing up in runs.</span></p>
-      <div class="grid cards" data-filter>{{WEAPONS}}</div>
+    <section class="view" id="habilidades">
+      <h2 class="title"><span lang="pt">Habilidades</span><span lang="en">Skills</span></h2>
+      <div class="chips nobusca" data-group="stat" style="margin-top:14px">{{STAT_CHIPS}}</div>
+      <div class="tabular skills">
+        <div class="rows-head nobusca" aria-hidden="true"><span lang="pt">Habilidade</span><span lang="en">Skill</span><span lang="pt">O que faz</span><span lang="en">What it does</span><span lang="pt">Atributo</span><span lang="en">Stat</span><span lang="pt">Recarga</span><span lang="en">Cooldown</span><span lang="pt">Como obter</span><span lang="en">How to get</span></div>
+        <ul class="rows">{{SKILLS}}</ul>
+      </div>
     </section>
 
-    <section class="top" id="habilidades">
-      <p class="eyebrow">SKILLS</p>
-      <h2><span lang="pt">Habilidades</span><span lang="en">Skills</span></h2>
-      <div class="grid cards" data-filter>{{SKILLS}}</div>
-    </section>
-
-    <section class="top" id="aparencias">
-      <p class="eyebrow">SKINS</p>
-      <h2><span lang="pt">Aparências</span><span lang="en">Skins</span></h2>
-      <p class="lead"><span lang="pt">Só mudam o visual. Cada uma tem cromas, outras cores com as tintas dos domínios.</span><span lang="en">Cosmetic only. Each one has chromas: other colorways in the domains' palettes.</span></p>
-      <div class="grid cards" data-filter>{{SKINS}}</div>
-    </section>
-
-    <section class="top" id="mutacoes">
-      <p class="eyebrow">MUTATIONS</p>
-      <h2><span lang="pt">Mutações</span><span lang="en">Mutations</span></h2>
-      <p class="lead"><span lang="pt">No altar de cada passagem. Até três por partida; valem até você morrer.</span><span lang="en">At the altar in each passage. Up to three per run; they last until you die.</span></p>
+    <section class="view" id="mutacoes">
+      <h2 class="title"><span lang="pt">Mutações</span><span lang="en">Mutations</span></h2>
+      <p class="lead nobusca"><span lang="pt">No altar de cada passagem. Até três por partida; valem até você morrer.</span><span lang="en">At the altar in each passage. Up to three per run; they last until you die.</span></p>
       <ul class="list">{{MUTATIONS}}</ul>
     </section>
 
-    <section class="top" id="progresso">
-      <p class="eyebrow">PROGRESSION</p>
-      <h2><span lang="pt">O que fica para sempre</span><span lang="en">What you keep forever</span></h2>
-      <p class="lead"><span lang="pt">Ouro e o que você carrega se perdem na morte. Essência entregue à Vigia, plantas, bênçãos, aparências e runas ficam.</span><span lang="en">Gold and what you carry are lost on death. Essence spent at the Watcher, blueprints, blessings, skins and runes stay.</span></p>
-      <h3 style="margin:18px 0 8px;font-size:16px"><span lang="pt">Bênçãos da Vigia</span><span lang="en">The Watcher's blessings</span></h3>
-      <ul class="list">{{BLESSINGS}}</ul>
-      <h3 style="margin:22px 0 8px;font-size:16px"><span lang="pt">Brasas do Deus (dificuldade)</span><span lang="en">God's Embers (difficulty)</span></h3>
-      <div class="scroll"><table>{{HEAT}}</table></div>
+    <section class="view" id="aparencias">
+      <h2 class="title"><span lang="pt">Aparências</span><span lang="en">Skins</span></h2>
+      <p class="lead nobusca"><span lang="pt">Só mudam o visual. Cromas são outras cores da mesma aparência.</span><span lang="en">Cosmetic only. Chromas are other colorways of the same skin.</span></p>
+      <ul class="list">{{SKINS}}</ul>
     </section>
 
-    <section class="top" id="comandos">
-      <p class="eyebrow">CONTROLS</p>
-      <h2><span lang="pt">Comandos</span><span lang="en">Controls</span></h2>
-      <div class="scroll"><table>{{CONTROLS}}</table></div>
-      <p class="none" id="nada" hidden><span lang="pt">Nada encontrado.</span><span lang="en">Nothing found.</span></p>
+    <section class="view" id="progresso">
+      <h2 class="title"><span lang="pt">Progresso</span><span lang="en">Progression</span></h2>
+      <p class="lead nobusca"><span lang="pt">Ouro e o que você carrega se perdem na morte. Essência entregue à Vigia, plantas, bênçãos, aparências e runas ficam.</span><span lang="en">Gold and what you carry are lost on death. Essence spent at the Watcher, blueprints, blessings, skins and runes stay.</span></p>
+      <h3 class="sub"><span lang="pt">Bênçãos da Vigia</span><span lang="en">The Watcher's blessings</span></h3>
+      <ul class="list">{{BLESSINGS}}</ul>
+      <h3 class="sub nobusca"><span lang="pt">Brasas do Deus (dificuldade)</span><span lang="en">God's Embers (difficulty)</span></h3>
+      <div class="scroll nobusca"><table>{{HEAT}}</table></div>
+    </section>
+
+    <section class="view nobusca" id="comandos">
+      <h2 class="title"><span lang="pt">Comandos</span><span lang="en">Controls</span></h2>
+      <div class="scroll" style="margin-top:14px"><table>
+        <tr><th><span lang="pt">Ação</span><span lang="en">Action</span></th><th><span lang="pt">Teclado</span><span lang="en">Keyboard</span></th><th><span lang="pt">Controle</span><span lang="en">Gamepad</span></th></tr>
+        {{CONTROLS}}</table></div>
     </section>
   </main>
 </div>
-<footer>MOKSHA · v{{VERSION}} · <span lang="pt">desenvolvido por</span><span lang="en">developed by</span> <b class="by">Guilherme Belinelo</b> · <span lang="pt">gerada a partir do jogo por tools/gerar_wiki.py</span><span lang="en">generated from the game by tools/gerar_wiki.py</span> · <a href="./">MOKSHA</a> · <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a></footer>
+<footer>MOKSHA · v{{VERSION}} · <span lang="pt">Desenvolvido por</span><span lang="en">Developed by</span> <b class="by">Guilherme Belinelo</b> · <a href="./"><span lang="pt">Site do jogo</span><span lang="en">Game site</span></a> · <a href="https://github.com/MrRobotS0/Roguevania">GitHub</a></footer>
 <script>
   const root = document.documentElement;
   const q = document.getElementById("q");
-  const PH = { pt: "Buscar arma, criatura...", en: "Search weapon, creature..." };
+  const PH = { pt: "Buscar em toda a wiki...", en: "Search the whole wiki..." };
+  const VIEWS = [...document.querySelectorAll(".view")];
+  const links = [...document.querySelectorAll(".toc a")];
+  const ORDER = links.map(a => a.getAttribute("href").slice(1));
+  const ALIAS = { deuses: "dominios", rota: "dominios" };
+  const tr = (pt, en) => root.dataset.lang === "en" ? en : pt;
+
   function setLang(code) {
     root.dataset.lang = code;
     root.lang = code === "pt" ? "pt-BR" : "en";
     q.placeholder = PH[code];
     document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === code)));
     try { localStorage.setItem("moksha-lang", code); } catch (e) {}
+    apply();
   }
+
+  // anterior / próximo no fim de cada assunto
+  function label(id) { const a = links.find(l => l.getAttribute("href") === "#" + id); return a.firstElementChild.outerHTML; }
+  VIEWS.forEach(v => {
+    const i = ORDER.indexOf(v.id);
+    const p = document.createElement("nav");
+    p.className = "pager nobusca";
+    p.setAttribute("aria-label", "Anterior e próximo / Previous and next");
+    p.innerHTML = (i > 0 ? `<a href="#${ORDER[i - 1]}">‹ ${label(ORDER[i - 1])}</a>` : "<span></span>")
+      + (i < ORDER.length - 1 ? `<a href="#${ORDER[i + 1]}">${label(ORDER[i + 1])} ›</a>` : "<span></span>");
+    v.appendChild(p);
+  });
+
+  // abre o assunto do endereço; #d-xxx abre o domínio dentro de Domínios
+  function route(fromLoad) {
+    const h = location.hash.slice(1);
+    const dom = h.startsWith("d-") ? document.getElementById(h) : null;
+    const id = dom ? "dominios" : (ALIAS[h] || (ORDER.includes(h) ? h : "inicio"));
+    if (q.value) { q.value = ""; apply(); }
+    VIEWS.forEach(v => v.classList.toggle("on", v.id === id));
+    links.forEach(a => {
+      const on = a.getAttribute("href") === "#" + id;
+      if (on) { a.setAttribute("aria-current", "page"); a.scrollIntoView({ block: "nearest", inline: "center" }); }
+      else a.removeAttribute("aria-current");
+    });
+    if (dom) { dom.open = true; dom.scrollIntoView(); }
+    else if (!fromLoad || !h) scrollTo(0, 0);
+    else scrollTo(0, 0);
+  }
+  addEventListener("hashchange", () => route(false));
+
+  // busca e filtros passam pelo mesmo lugar
+  const norm = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  const filters = {};
+  function apply() {
+    const t = norm(q.value);
+    document.body.classList.toggle("busca", !!t);
+    let shown = 0;
+    VIEWS.forEach(v => {
+      const f = filters[v.id] || {};
+      let here = 0;
+      v.querySelectorAll("[data-q]").forEach(el => {
+        const tags = (el.dataset.tags || "").split(" ");
+        const ok = t ? el.dataset.q.includes(t) : Object.values(f).every(x => !x || tags.includes(x));
+        el.classList.toggle("fora", !ok);
+        here += ok;
+      });
+      v.classList.toggle("tem", !!t && here > 0);
+      if (t) shown += here;
+    });
+    const out = document.getElementById("achados");
+    out.hidden = !t;
+    if (t) out.textContent = shown ? tr(`${shown} resultado${shown > 1 ? "s" : ""}`, `${shown} result${shown > 1 ? "s" : ""}`)
+      : tr("Nada encontrado. Tente outra palavra.", "Nothing found. Try another word.");
+  }
+  q.addEventListener("input", () => { apply(); scrollTo(0, 0); });
+  addEventListener("keydown", e => {
+    if (e.key === "Escape" && q.value) { q.value = ""; apply(); }
+    if (e.key === "/" && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+  });
+  document.querySelectorAll(".chips").forEach(box => box.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    box.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    const id = box.closest(".view").id;
+    (filters[id] = filters[id] || {})[box.dataset.group] = b.dataset.v;
+    apply();
+  }));
+
   document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang)));
   let saved = null;
   try { saved = localStorage.getItem("moksha-lang"); } catch (e) {}
   setLang(saved || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"));
-
-  // busca: filtra os cartões de criatura e de equipamento
-  const cards = [...document.querySelectorAll(".card[data-q]")];
-  q.addEventListener("input", () => {
-    const t = q.value.trim().toLowerCase();
-    let shown = 0;
-    cards.forEach(c => { const ok = !t || c.dataset.q.includes(t); c.classList.toggle("hidden", !ok); shown += ok; });
-    document.querySelectorAll(".domain").forEach(d => d.classList.toggle("hidden", !!t && !d.querySelector(".card:not(.hidden)")));
-    document.getElementById("nada").hidden = shown > 0;
-    if (t && shown) { const first = cards.find(c => !c.classList.contains("hidden")); first && first.scrollIntoView({ block: "center" }); }
-  });
-
-  // índice: marca a seção em que você está
-  const links = [...document.querySelectorAll(".toc a")];
-  const seen = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
-  }), { rootMargin: "-40% 0px -55% 0px" });
-  document.querySelectorAll("main section.top").forEach(s => seen.observe(s));
+  route(true);
 </script>
 </body>
 </html>

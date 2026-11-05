@@ -14,6 +14,7 @@ import html
 import json
 import os
 import re
+import unicodedata
 
 from PIL import Image
 
@@ -79,7 +80,8 @@ def pt_title(t):
     """Títulos do jogo vêm em maiúsculas (O REI SEM ROSTO): vira O Rei sem Rosto."""
     small = {"de", "da", "do", "das", "dos", "e", "sem", "que", "a", "o", "em"}
     words = t.lower().split()
-    return " ".join(w if (i and w in small) else w[:1].upper() + w[1:] for i, w in enumerate(words))
+    cap = lambda w: "-".join(p[:1].upper() + p[1:] for p in w.split("-"))
+    return " ".join(w if (i and w in small) else cap(w) for i, w in enumerate(words))
 
 
 # ---------------------------------------------------------------- dados do jogo
@@ -117,12 +119,26 @@ def dict_block(text):
 
 # criaturas: script -> (título, folha)
 CREATURES = {}
+_own_sheet, _parent, _class_file = {}, {}, {}
 for f in glob.glob(os.path.join(ROOT, "scripts", "enemies", "*.gd")):
     s = open(f, encoding="utf-8").read()
+    key = os.path.basename(f)[:-3]
     t = re.search(r'\btitle = "([^"]+)"', s)
     sh = re.search(r'\bsheet = "([^"]+)"', s)
+    cn = re.search(r"^class_name (\w+)", s, re.M)
+    ex = re.search(r"^extends (\w+)", s, re.M)
+    _own_sheet[key] = sh.group(1) if sh else ""
+    _parent[key] = ex.group(1) if ex else ""
+    if cn:
+        _class_file[cn.group(1)] = key
     if t:
-        CREATURES[os.path.basename(f)[:-3]] = (t.group(1), sh.group(1) if sh else "")
+        CREATURES[key] = t.group(1)
+for key, title in list(CREATURES.items()):
+    # quem não define folha herda a da classe mãe (a Sentinela de Gelo é um Arqueiro)
+    k = key
+    while k and not _own_sheet.get(k):
+        k = _class_file.get(_parent.get(k, ""))
+    CREATURES[key] = (title, _own_sheet.get(k, "") if k else "")
 
 story = read("scripts", "combat", "story.gd")
 BEST = dict(re.findall(r'^\t"([^"]+)": "((?:[^"\\]|\\.)*)",$', story, re.M))
@@ -188,16 +204,16 @@ def strip_of(sheet, boss=False):
     return "enemy_" + sheet
 
 
-def sprite(name, box_w, box_h, most=1.5, label=""):
+def sprite(name, box_w, box_h, most=1.5, label="", live=False):
     a = anim.get(name)
     if not a:
         return '<div class="spr empty" aria-hidden="true"></div>'
-    k = max(.5, int(min(most, box_w / a["w"], box_h / a["h"]) * 2) / 2)
+    k = min(most, box_w / a["w"], box_h / a["h"])
     w, h = round(a["w"] * k), round(a["h"] * k)
-    return ('<div class="spr" role="img" aria-label="%s" style="width:%dpx;height:%dpx;--n:%d;--d:%.2fs">'
+    return ('<div class="spr%s" role="img" aria-label="%s" style="width:%dpx;height:%dpx;--n:%d;--d:%.2fs">'
             '<div class="film" style="width:%dpx;height:%dpx;background-image:url(img/anim/%s.png);'
-            'background-size:%dpx %dpx"></div></div>') % (esc(label), w, h, a["n"], a["n"] / 7.0, w * a["n"], h,
-                                                           name, w * a["n"], h)
+            'background-size:%dpx %dpx"></div></div>') % (" live" if live else "", esc(label), w, h, a["n"], a["n"] / 7.0,
+                                                           w * a["n"], h, name, w * a["n"], h)
 
 
 # ---------------------------------------------------------------- aparências: o herói recolorido
@@ -233,11 +249,11 @@ def skin_figure(skin):
 
 
 # ---------------------------------------------------------------- seções
-STAT = {"furia": ("Fúria", "Fury", "#e0503f"), "astucia": ("Astúcia", "Cunning", "#5fa8e8"),
-        "vigor": ("Vigor", "Vigor", "#6fc27a")}
-CRIT = {"behind": ("Crítico pelas costas", "Crit from behind"), "burning": ("Crítico em alvo queimando", "Crit on burning targets"),
-        "far": ("Crítico de longe", "Crit from afar"), "stunned": ("Crítico em alvo atordoado", "Crit on stunned targets"),
-        "airborne": ("Crítico no ar", "Crit while airborne"), "tip": ("Crítico com a ponta", "Crit with the tip")}
+STAT = {"furia": ("Fúria", "Fury", "#ff7a66"), "astucia": ("Astúcia", "Cunning", "#7dbcf0"),
+        "vigor": ("Vigor", "Vigor", "#7fd48a")}
+CRIT = {"behind": ("Pelas costas", "From behind"), "burning": ("Alvo queimando", "Burning target"),
+        "far": ("De longe", "From afar"), "stunned": ("Alvo atordoado", "Stunned target"),
+        "airborne": ("No ar", "Airborne"), "tip": ("Com a ponta", "With the tip")}
 KIND = {"bomb": ("Arremesso que explode e queima", "Thrown, explodes and burns"),
         "shield": ("Segure para defender; na hora certa, apara", "Hold to block; perfect timing parries"),
         "javelin": ("Projétil que atravessa inimigos", "Projectile that pierces enemies"),
@@ -247,15 +263,55 @@ KIND = {"bomb": ("Arremesso que explode e queima", "Thrown, explodes and burns")
         "meteor": ("Cai no inimigo mais perto", "Falls on the nearest enemy")}
 
 
-def creature_card(script, role_pt, role_en, boss=False, size=(290, 150)):
+def norm(*parts):
+    """Texto de busca: minúsculo e sem acento, nos dois idiomas."""
+    t = " ".join(p for p in parts if p).lower()
+    return esc("".join(ch for ch in unicodedata.normalize("NFD", t) if not unicodedata.combining(ch)))
+
+
+def script_of(path):
+    return path.rsplit("/", 1)[1][:-3]
+
+
+def enemies_of(bid):
+    out = []
+    enemies = BIOMES[bid].get("enemies")
+    for e in enemies if isinstance(enemies, list) else []:
+        sc = script_of(e["script"])
+        if sc not in out:
+            out.append(sc)
+    return out
+
+
+def elite_of(bid):
+    elites = BIOMES[bid].get("elites")
+    return script_of(elites[0]) if isinstance(elites, list) and elites else ""
+
+
+def dom_name(bid):
+    return bi(BIOMES[bid]["title"], en(BIOMES[bid]["title"], "title"), "title")
+
+
+def creature_text(script):
     title, sheet = CREATURES.get(script, (script, ""))
-    name = pt_title(title)
-    desc = BEST.get(title, "")
-    return ('<article class="card creature" data-q="%s"><div class="stage">%s</div>'
-            '<div><p class="role">%s</p><h4>%s</h4><p>%s</p></div></article>') % (
-        esc((name + " " + en(title, "title") + " " + desc).lower()),
-        sprite(strip_of(sheet, boss), size[0], size[1], 2.0 if not boss else 1.0, name),
-        bi(role_pt, role_en), bi(name, en(title, "title"), "title"), bi(desc) if desc else "")
+    return title, sheet, pt_title(title), en(title, "title"), BEST.get(title, "")
+
+
+ROLE = {"enemy": ("Inimigo", "Enemy"), "elite": ("Elite", "Elite"), "boss": ("Guardião", "Guardian")}
+
+
+def creature_row(script, role, where=None, searchable=True):
+    title, sheet, name, name_en, desc = creature_text(script)
+    place = ""
+    extra = ""
+    if where:
+        place = '<span class="where">%s</span>' % " · ".join('<a href="#d-%s">%s</a>' % (d, dom_name(d)) for d in where)
+        extra = " ".join(BIOMES[d]["title"] + " " + en(BIOMES[d]["title"], "title") for d in where)
+    attrs = ' data-q="%s" data-tags="%s"' % (norm(name, name_en, desc, en(title) if desc else "", ROLE[role][0], ROLE[role][1], extra), role) if searchable else ""
+    return ('<li class="creature"%s><div class="row"><div class="thumb">%s</div><div class="name">%s<span class="role">%s</span></div>'
+            '%s%s</div></li>') % (
+        attrs, sprite(strip_of(sheet, role == "boss"), 64, 56, 2.0, name), bi(name, name_en, "title"), bi(*ROLE[role]),
+        '<p>%s</p>' % bi(desc) if desc else "", place)
 
 
 def domain_section(i, bid):
@@ -264,37 +320,41 @@ def domain_section(i, bid):
     god = b["subtitle"].replace("Domínio do deus que ", "")
     god_en = en(b["subtitle"]).replace("Domain of the god who ", "")
     site_id = SITE_ID.get(bid, bid)
-    enemies = []
-    for e in b.get("enemies", []) if isinstance(b.get("enemies"), list) else []:
-        sc = e["script"].rsplit("/", 1)[1][:-3]
-        if sc not in enemies:
-            enemies.append(sc)
-    elite = b["elites"][0].rsplit("/", 1)[1][:-3] if isinstance(b.get("elites"), list) and b["elites"] else ""
-    boss = b["boss_script"].rsplit("/", 1)[1][:-3]
+    enemies = enemies_of(bid)
+    elite = elite_of(bid)
+    # o Mar de Cinzas não tem guardião: quem está no boss_script dele é o chefe do Trono, que usa o mesmo cenário
+    boss = script_of(b["boss_script"]) if STAGES[bid].get("boss") else ""
     weather = WEATHER.get(b.get("weather", ""), ("", ""))
     hz = HAZARD.get(b.get("hazard_script", "").rsplit("/", 1)[-1][:-3], ("", ""))
     lore = "".join("<li>%s</li>" % bi(t) for t in b.get("lore", []))
-    cards = "".join(creature_card(s, "Inimigo", "Enemy") for s in enemies)
-    cards += creature_card(elite, "Elite", "Elite") if elite else ""
-    cards += creature_card(boss, "Guardião", "Guardian", boss=True, size=(290, 150))
-    tier = b.get("tier", 0)
-    return '''
-<section class="domain" id="d-%s" style="--c:%s">
-  <div class="banner" style="background-image:url(img/%s.png)"><div class="shade"></div>
-    <div class="ban-text"><p class="num">%02d · %s</p><h3>%s</h3><p class="god">%s</p></div></div>
-  <div class="facts">
-    <div><span class="k">%s</span>%s</div>
-    <div><span class="k">%s</span>%s</div>
-    <div><span class="k">%s</span>%s</div>
+    rows = creature_row(boss, "boss", searchable=False) if boss else ""
+    rows += creature_row(elite, "elite", searchable=False) if elite else ""
+    rows += "".join(creature_row(e, "enemy", searchable=False) for e in enemies)
+    boss_pt, boss_en = creature_text(boss)[2:4] if boss else ("", "")
+    keeper = (bi("Guardião:", "Guardian:") + " " + bi(boss_pt, boss_en, "title")) if boss else bi("Sem guardião: é o começo da partida", "No guardian: this is where runs begin")
+    hint = HINTS.get(bid, "")
+    q = norm(b["title"], en(b["title"], "title"), god, god_en, boss_pt, boss_en, weather[0], weather[1], hz[0], hz[1])
+    return """
+<li data-q="%s" style="--c:%s"><details class="dom" id="d-%s">
+  <summary class="row"><img src="img/%s.png" alt="" loading="lazy" width="112" height="63">
+    <span class="name"><small>%02d</small>%s</span>
+    <span class="meta"><span>%s</span><span>%s</span></span></summary>
+  <div class="dom-body">
+    <dl class="facts">
+      <div><dt>%s</dt><dd>%s</dd></div>
+      <div><dt>%s</dt><dd>%s</dd></div>
+      <div><dt>%s</dt><dd>%s</dd></div>
+    </dl>
+    <ul class="rows">%s</ul>
+    <details class="lore-box"><summary>%s</summary><ol>%s</ol></details>
   </div>
-  <ol class="lore">%s</ol>
-  <div class="grid cards3">%s</div>
-</section>''' % (bid, acc, site_id, i + 1, bi("Profundidade %d" % tier, "Depth %d" % tier),
-                 bi(b["title"], en(b["title"], "title"), "title"),
-                 bi("O deus que " + god, "The god who " + god_en),
-                 bi("Clima", "Weather"), bi(*weather), bi("Perigo", "Hazard"), bi(*hz),
-                 bi("Como é", "What it's like"), bi(HINTS.get(bid, "").capitalize(), sentence(EN.get(HINTS.get(bid, ""), HINTS.get(bid, "")))),
-                 lore, cards)
+</details></li>""" % (q, acc, bid, site_id, i + 1, bi(b["title"], en(b["title"], "title"), "title"),
+                      bi("O deus que " + god, "The god who " + god_en),
+                      keeper,
+                      bi("Perigo", "Hazard"), bi(*hz), bi("Clima", "Weather"), bi(*weather),
+                      bi("Como é", "What it's like"),
+                      bi(hint.capitalize(), sentence(EN.get(hint, hint))),
+                      rows, bi("Inscrições (%d)" % len(b.get("lore", [])), "Inscriptions (%d)" % len(b.get("lore", []))), lore)
 
 
 def route_section():
@@ -320,39 +380,70 @@ def route_section():
         chips = []
         for s in c:
             name = STAGE_NAMES.get(s, s)
-            chips.append('<a class="chip" href="#d-%s" style="--c:%s">%s</a>' % (
-                s if s in BIOMES else "trono", ACCENT.get(s, "#f2c14e"), bi(name, en(name, "title"), "title")))
+            # o Trono não é domínio: o link leva a quem espera lá
+            chips.append('<a class="chip" href="#%s" style="--c:%s">%s</a>' % (
+                "d-" + s if s in BIOMES else "guardioes", ACCENT.get(s, "#f2c14e"), bi(name, en(name, "title"), "title")))
         out.append('<div class="step">%s</div>' % "".join(chips))
     return '<div class="route">%s</div>' % '<span class="arrow" aria-hidden="true">›</span>'.join(out)
 
 
-def gear_cards(kind):
+def damage_range(g):
+    vals = sorted({int(x) for x in re.findall(r"damage\W+(\d+)", str(g.get("moves", "")) + str(g.get("shot", "")) + str(g.get("damage", "")))})
+    if not vals:
+        return "–"
+    return str(vals[0]) if len(vals) == 1 else "%d–%d" % (vals[0], vals[-1])
+
+
+def lab(pt, en_text):
+    return '<span class="lab">%s:</span> ' % bi(pt, en_text)
+
+
+def stat_chips():
+    out = ['<button type="button" data-v="" aria-pressed="true">%s</button>' % bi("Todos", "All")]
+    out += ['<button type="button" data-v="%s" aria-pressed="false">%s</button>' % (k, bi(v[0], v[1])) for k, v in STAT.items()]
+    return "".join(out)
+
+
+def gear_rows(kind):
     folder = os.path.join(ROOT, "content", kind)
     order = re.findall(r'"res://content/%s/(\w+)\.tres"' % kind, catalog)
     out = []
     for gid in order:
         g = tres(os.path.join(folder, gid + ".tres"))
-        st = STAT.get(g.get("stat", ""), ("", "", "#999"))
+        st = STAT.get(g.get("stat", ""), ("–", "–", "#999"))
+        stat_cell = '<span class="stat" style="--s:%s">%s</span>' % (st[2], bi(st[0], st[1]))
+        if g.get("starter"):
+            get_pt, get_en = "Inicial", "Starter"
+        else:
+            get_pt, get_en = "%d de essência" % g.get("unlock_cost", 0), "%d essence" % g.get("unlock_cost", 0)
+        title_en = en(g["title"], "title")
+        lore = g.get("lore", "")
         if kind == "weapons":
             what = ("Corpo a corpo", "Melee") if g.get("category") == "melee" else ("À distância", "Ranged")
-            rule = CRIT.get(g.get("crit_rule", ""), ("", ""))
-            extra = bi(*rule) if rule[0] else ""
+            rule = CRIT.get(g.get("crit_rule", ""), ("Último golpe", "Last hit"))
+            mult = g.get("crit_mult", 0)
+            crit_pt = "%s ×%s" % (rule[0], str(mult).replace(".", ",")) if mult else rule[0]
+            crit_en = "%s ×%s" % (rule[1], mult) if mult else rule[1]
+            cells = ("<span>%s%s</span><span>%s%s</span><span>%s%s</span><span>%s%s</span><span>%s%s</span>" % (
+                lab("Tipo", "Type"), bi(*what), lab("Atributo", "Stat"), stat_cell, lab("Dano", "Damage"), damage_range(g),
+                lab("Crítico", "Crit"), bi(crit_pt, crit_en), lab("Como obter", "How to get"), bi(get_pt, get_en)))
+            tags = "%s %s" % (g.get("stat", ""), "melee" if g.get("category") == "melee" else "ranged")
+            q = norm(g["title"], title_en, what[0], what[1], st[0], st[1], rule[0], rule[1], lore)
         else:
-            what = KIND.get(g.get("kind", ""), ("", ""))
+            what = KIND.get(g.get("kind", ""), ("–", "–"))
             cd = g.get("cooldown", 0)
-            extra = bi("Recarga %ds" % cd, "Cooldown %ds" % cd) if cd else ""
-        unlock = bi("Inicial", "Starter") if g.get("starter") else bi("%d de essência na Vigia" % g.get("unlock_cost", 0),
-                                                                        "%d essence at the Watcher" % g.get("unlock_cost", 0))
-        out.append('''<article class="card gear" data-q="%s"><img src="img/icons/%s.png" width="64" height="64" alt="" loading="lazy">
-  <div><h4>%s</h4><p class="tags"><span class="stat" style="--s:%s">%s</span><span>%s</span>%s</p>
-  <p>%s</p><p class="unlock">%s</p></div></article>''' % (
-            esc((g["title"] + " " + en(g["title"], "title") + " " + g.get("lore", "")).lower()), gid,
-            bi(g["title"], en(g["title"], "title"), "title"), st[2], bi(st[0], st[1]), bi(*what),
-            ('<span>%s</span>' % extra) if extra else "", bi(g.get("lore", "")), unlock))
+            cells = ("<span>%s</span><span>%s%s</span><span>%s%s</span><span>%s%s</span>" % (
+                bi(*what), lab("Atributo", "Stat"), stat_cell, lab("Recarga", "Cooldown"), "%ds" % cd if cd else "–",
+                lab("Como obter", "How to get"), bi(get_pt, get_en)))
+            tags = g.get("stat", "")
+            q = norm(g["title"], title_en, what[0], what[1], st[0], st[1], lore)
+        out.append('<li data-q="%s" data-tags="%s"><details><summary class="row"><img src="img/icons/%s.png" width="48" height="48" alt="" loading="lazy">'
+                   '<span class="name">%s</span><span class="meta">%s</span></summary><p class="more">%s</p></details></li>' % (
+                       q, tags, gid, bi(g["title"], title_en, "title"), cells, bi(lore)))
     return "".join(out)
 
 
-def skin_cards():
+def skin_rows():
     order = re.findall(r'"res://content/skins/(\w+)\.tres"', catalog)
     out = []
     for sid in order:
@@ -362,26 +453,28 @@ def skin_cards():
         if s.get("unlock") == "starter":
             how = bi("Já vem liberada", "Unlocked from the start")
         elif s.get("unlock") == "essence":
-            how = bi("%d de essência na Vigia" % s.get("cost", 0), "%d essence at the Watcher" % s.get("cost", 0))
+            how = bi("%d de essência" % s.get("cost", 0), "%d essence" % s.get("cost", 0))
         else:
-            how = bi(s.get("feat_text", ""))
+            how = bi(s.get("feat_text", "").capitalize(), sentence(EN.get(s.get("feat_text", ""), s.get("feat_text", ""))))
         chromas = len(re.findall(r'"id": ', open(os.path.join(ROOT, "content", "skins", sid + ".tres"), encoding="utf-8").read().split("chromas = ")[-1]))
-        out.append('''<article class="card skin" data-q="%s"><div class="fig"><img src="img/skins/%s.png" width="%d" height="%d" alt="" loading="lazy"></div>
-  <div><h4>%s</h4><p>%s</p><p class="unlock">%s%s</p></div></article>''' % (
-            esc((s["title"] + " " + en(s["title"], "title")).lower()), sid, w, h,
-            bi(s["title"], en(s["title"], "title"), "title"), bi(s.get("lore", "")), how,
-            (" · " + bi("%d cromas" % chromas, "%d chromas" % chromas)) if chromas else ""))
+        out.append('<li class="skin" data-q="%s"><div class="fig"><img src="img/skins/%s.png" width="%d" height="%d" alt="" loading="lazy"></div>'
+                   '<div><b>%s</b><span>%s</span><em>%s</em></div></li>' % (
+                       norm(s["title"], en(s["title"], "title"), s.get("lore", "")), sid, w, h,
+                       bi(s["title"], en(s["title"], "title"), "title"), how,
+                       bi("%d cromas" % chromas, "%d chromas" % chromas) if chromas else ""))
     return "".join(out)
 
 
 def mutation_rows():
-    return "".join('<li><b>%s</b><span>%s</span></li>' % (bi(m["title"], en(m["title"], "title"), "title"),
-                                                            bi(m["detail"].capitalize(), sentence(EN.get(m["detail"], m["detail"]))))
-                   for m in MUTATIONS)
+    return "".join('<li data-q="%s"><b>%s</b><span>%s</span></li>' % (
+        norm(m["title"], en(m["title"], "title"), m["detail"], EN.get(m["detail"], "")),
+        bi(m["title"], en(m["title"], "title"), "title"),
+        bi(m["detail"].capitalize(), sentence(EN.get(m["detail"], m["detail"])))) for m in MUTATIONS)
 
 
 def blessing_rows():
-    return "".join('<li><b>%s</b><span>%s</span><em>%s</em></li>' % (
+    return "".join('<li data-q="%s"><b>%s</b><span>%s</span><em>%s</em></li>' % (
+        norm(m["title"], en(m["title"], "title"), m["detail"], EN.get(m["detail"], "")),
         bi(m["title"], en(m["title"], "title"), "title"), bi(m["detail"].capitalize(), sentence(EN.get(m["detail"], m["detail"]))),
         bi("%d de essência" % m["cost"], "%d essence" % m["cost"])) for m in BLESSINGS)
 
@@ -390,26 +483,46 @@ def pages(lst):
     return "".join("<p>%s</p>" % bi(t) for t in lst)
 
 
+def boss_card(script, place_html, place_q, color):
+    title, sheet, name, name_en, desc = creature_text(script)
+    return ('<article class="boss" data-q="%s" style="--c:%s"><div class="stage">%s</div><h3>%s</h3>'
+            '<div class="where">%s</div><p>%s</p></article>') % (
+        norm(name, name_en, desc, en(title) if desc else "", place_q), color,
+        sprite(strip_of(sheet, True), 220, 112, 1.0, name, live=True), bi(name, name_en, "title"), place_html, bi(desc) if desc else "")
+
+
 def guardians():
     out = []
     for bid in ORDER:
         b = BIOMES[bid]
-        boss = b["boss_script"].rsplit("/", 1)[1][:-3]
-        out.append(creature_card(boss, b["title"], en(b["title"], "title"), boss=True, size=(290, 150)))
-    out.append(creature_card("blind_emperor", "O Trono", "The Throne", boss=True, size=(290, 150)))
+        if not STAGES[bid].get("boss"):
+            continue
+        out.append(boss_card(script_of(b["boss_script"]), '<a href="#d-%s">%s</a>' % (bid, dom_name(bid)),
+                             b["title"] + " " + en(b["title"], "title"), ACCENT.get(bid, "#e8a33d")))
+    out.append(boss_card("blind_emperor", bi("O Trono", "The Throne"), "O Trono The Throne", "#f2c14e"))
     return "".join(out)
+
+
+def creature_list():
+    """Bestiário: cada criatura uma vez, com os domínios onde aparece."""
+    where, roles = {}, {}
+    for bid in ORDER:
+        for e in enemies_of(bid):
+            where.setdefault(e, []).append(bid)
+            roles[e] = "enemy"
+        el = elite_of(bid)
+        if el:
+            where.setdefault(el, []).append(bid)
+            roles.setdefault(el, "elite")
+    names = sorted(where, key=lambda s: norm(creature_text(s)[2]))
+    return "".join(creature_row(s, roles[s], where[s]) for s in names), len(names)
 
 
 def counts():
     n_weap = len(re.findall(r'"res://content/weapons/', catalog))
     n_skill = len(re.findall(r'"res://content/skills/', catalog))
     n_skin = len(re.findall(r'"res://content/skins/', catalog))
-    commons = set()
-    for b in BIOMES.values():
-        for e in b.get("enemies", []):
-            commons.add(e["script"])
-    return dict(dom=len(ORDER), boss=len(ORDER) + 1, enemies=len(commons), elites=len(ORDER),
-                weap=n_weap, skill=n_skill, skin=n_skin, mut=len(MUTATIONS))
+    return dict(dom=len(ORDER), boss=sum(1 for b in ORDER if STAGES[b].get("boss")) + 1, weap=n_weap, skill=n_skill, skin=n_skin, mut=len(MUTATIONS), bless=len(BLESSINGS))
 
 
 CONTROLS = [("Andar", "Move", "A / D · ←/→", "Analógico", "Stick"),
@@ -428,37 +541,66 @@ HEAT = [("Nenhuma", "None", "Como da primeira vez", "Like the first time"),
         ("3", "3", "+120% de vida, +75% de dano, um frasco a menos", "+120% health, +75% damage, one flask fewer"),
         ("4", "4", "+160% de vida, +100% de dano, um frasco a menos · libera o final verdadeiro",
          "+160% health, +100% damage, one flask fewer · unlocks the true ending")]
+FAQ = [("O que perco quando morro?", "What do I lose when I die?",
+        "Ouro e o que você carrega. Essência entregue à Vigia, plantas, bênçãos, aparências e runas ficam.",
+        "Gold and what you carry. Essence spent at the Watcher, blueprints, blessings, skins and runes stay.", "progresso", "Progresso", "Progression"),
+       ("Como funciona uma partida?", "How does a run work?",
+        "Dez andares. Cada domínio termina no guardião; na passagem você escolhe um entre três caminhos.",
+        "Ten floors. Each domain ends with its guardian; in the passage you pick one of three paths.", "dominios", "Ver a rota", "See the route"),
+       ("Como venço um guardião?", "How do I beat a guardian?",
+        "Todo golpe é avisado. A cada três golpes ele para, exausto: é a sua janela. Com metade da vida, muda de fase.",
+        "Every attack is telegraphed. Every third attack it stops, exhausted: that is your window. At half health, it changes phase.", "guardioes", "Guardiões", "Guardians"),
+       ("Como ganho armas novas?", "How do I get new weapons?",
+        "Entregue a planta à Vigia: a arma passa a aparecer nas partidas.",
+        "Deliver the blueprint to the Watcher: the weapon starts showing up in runs.", "armas", "Armas", "Weapons"),
+       ("Onde pego mutações?", "Where do I get mutations?",
+        "No altar de cada passagem. Até três por partida; valem até você morrer.",
+        "At the altar in each passage. Up to three per run; they last until you die.", "mutacoes", "Mutações", "Mutations"),
+       ("Como libero o final verdadeiro?", "How do I unlock the true ending?",
+        "Suba as Brasas do Deus, a dificuldade, até 4.",
+        "Raise the God's Embers, the difficulty, to 4.", "progresso", "Brasas do Deus", "God's Embers")]
 
 
 def main():
     c = counts()
+    creatures, n_creatures = creature_list()
     version = re.search(r'config/version="([^"]+)"', read("project.godot")).group(1)
-    toc = [("historia", "História", "Story"), ("deuses", "Os 13 deuses", "The 13 gods"), ("rota", "A rota", "The route"),
-           ("dominios", "Domínios", "Domains"), ("guardioes", "Guardiões", "Guardians"), ("armas", "Armas", "Weapons"),
-           ("habilidades", "Habilidades", "Skills"), ("aparencias", "Aparências", "Skins"), ("mutacoes", "Mutações", "Mutations"),
-           ("progresso", "Progresso", "Progression"), ("comandos", "Comandos", "Controls")]
-    nav = "".join('<a href="#%s">%s</a>' % (a, bi(p, e)) for a, p, e in toc)
-    gods = "".join('<li style="--c:%s"><a href="#d-%s"><b>%s</b><span>%s</span></a></li>' % (
-        ACCENT.get(b, "#e8a33d"), b, bi(BIOMES[b]["subtitle"].replace("Domínio do deus que ", "O deus que "),
-                                         en(BIOMES[b]["subtitle"]).replace("Domain of the god who ", "The god who ")),
-        bi(BIOMES[b]["title"], en(BIOMES[b]["title"], "title"), "title")) for b in ORDER)
+    groups = [("", "", [("inicio", "Início", "Home", None)]),
+              ("Mundo", "World", [("historia", "História", "Story", None), ("dominios", "Domínios", "Domains", c["dom"]),
+                                  ("guardioes", "Guardiões", "Guardians", c["boss"]), ("criaturas", "Criaturas", "Creatures", n_creatures)]),
+              ("Equipamento", "Gear", [("armas", "Armas", "Weapons", c["weap"]), ("habilidades", "Habilidades", "Skills", c["skill"]),
+                                       ("mutacoes", "Mutações", "Mutations", c["mut"]), ("aparencias", "Aparências", "Skins", c["skin"])]),
+              ("Consulta", "Reference", [("progresso", "Progresso", "Progression", None), ("comandos", "Comandos", "Controls", None)])]
+    nav = ""
+    for gp, ge, items in groups:
+        head = "<span>%s</span>" % bi(gp, ge) if gp else ""
+        nav += '<div class="group">%s%s</div>' % (head, "".join(
+            '<a href="#%s"><span>%s</span>%s</a>' % (a, bi(p, e), "<small>%d</small>" % n if n else "") for a, p, e, n in items))
+    hubs = [("dominios", "Domínios", "Domains", c["dom"], "Onde cada caminho leva e o que espera lá", "Where each path leads and what waits there"),
+            ("guardioes", "Guardiões", "Guardians", c["boss"], "Quem você enfrenta no fim de cada domínio", "Who you face at the end of each domain"),
+            ("criaturas", "Criaturas", "Creatures", n_creatures, "O que cada uma faz e onde aparece", "What each one does and where it appears"),
+            ("armas", "Armas", "Weapons", c["weap"], "Dano, crítico e como conseguir", "Damage, crits and how to get them"),
+            ("habilidades", "Habilidades", "Skills", c["skill"], "O que fazem e quanto demoram a recarregar", "What they do and how long they recharge"),
+            ("mutacoes", "Mutações", "Mutations", c["mut"], "Bônus do altar que valem até você morrer", "Altar bonuses that last until you die"),
+            ("progresso", "Progresso", "Progression", None, "O que fica para sempre e a dificuldade", "What you keep forever, and difficulty"),
+            ("comandos", "Comandos", "Controls", None, "Teclado e controle", "Keyboard and gamepad")]
+    hub = "".join('<a href="#%s"><b>%s%s</b><span>%s</span></a>' % (
+        a, bi(p, e), "<i>%d</i>" % n if n else "", bi(dp, de)) for a, p, e, n, dp, de in hubs)
+    faq = "".join('<div><dt>%s</dt><dd>%s <a href="#%s">%s</a></dd></div>' % (bi(qp, qe), bi(ap, ae), link, bi(lp, le))
+                  for qp, qe, ap, ae, link, lp, le in FAQ)
     domains = "".join(domain_section(i, b) for i, b in enumerate(ORDER))
     heat = "".join("<tr><td>%s</td><td>%s</td></tr>" % (bi(a, b), bi(x, y)) for a, b, x, y in HEAT)
     ctrl = "".join("<tr><td>%s</td><td><kbd>%s</kbd></td><td><kbd>%s</kbd></td></tr>" % (bi(a, b), esc(k), esc(p))
                    for a, b, k, p, _ in CONTROLS)
-    stats = [(c["dom"], "domínios", "domains"), (c["boss"], "guardiões", "guardians"),
-             (c["enemies"] + c["elites"], "criaturas", "creatures"), (c["weap"], "armas", "weapons"),
-             (c["skill"], "habilidades", "skills"), (c["skin"], "aparências", "skins"), (c["mut"], "mutações", "mutations")]
-    statbar = "".join('<div><b>%d</b>%s</div>' % (n, bi(p, e)) for n, p, e in stats)
     page = TEMPLATE
-    for k, v in dict(NAV=nav, GODS=gods, ROUTE=route_section(), DOMAINS=domains, GUARDIANS=guardians(),
-                     WEAPONS=gear_cards("weapons"), SKILLS=gear_cards("skills"), SKINS=skin_cards(),
+    for k, v in dict(NAV=nav, HUB=hub, FAQ=faq, ROUTE=route_section(), DOMAINS=domains, GUARDIANS=guardians(), CREATURES=creatures,
+                     WEAPONS=gear_rows("weapons"), SKILLS=gear_rows("skills"), SKINS=skin_rows(), STAT_CHIPS=stat_chips(),
                      MUTATIONS=mutation_rows(), BLESSINGS=blessing_rows(), HEAT=heat, CONTROLS=ctrl,
-                     INTRO=pages(INTRO), ENDING=pages(ENDING), TRUE_ENDING=pages(TRUE_ENDING), STATS=statbar,
+                     INTRO=pages(INTRO), ENDING=pages(ENDING), TRUE_ENDING=pages(TRUE_ENDING),
                      VERSION=version).items():
         page = page.replace("{{%s}}" % k, v)
     open(os.path.join(SITE, "wiki.html"), "w", encoding="utf-8", newline="\n").write(page)
-    print("wiki.html", len(page) // 1024, "KB ·", c)
+    print("wiki.html", len(page) // 1024, "KB ·", c, "criaturas", n_creatures)
 
 
 TEMPLATE = open(os.path.join(os.path.dirname(__file__), "wiki_modelo.html"), encoding="utf-8").read()
