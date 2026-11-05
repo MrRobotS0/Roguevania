@@ -97,6 +97,15 @@ const KEEPER_AWAKE := [
 	"A ESSÊNCIA AGORA É SUA. O MANTO SÓ GUARDA.",
 ]
 
+# O que a Vigia diz na Beira, antes de cada partida.
+const BEIRA_LINES := [
+	"ACORDOU. A CINZA AINDA ESTAVA MORNA. DEMOREI MENOS DESTA VEZ.",
+	"DO ARCO PARA LÁ, NADA É IGUAL DUAS VEZES. DO ARCO PARA CÁ, NADA MUDA.",
+	"PEGUE O QUE QUISER DA CARROÇA. QUEM A DEIXOU NÃO VOLTA.",
+	"O POÇO LEMBRA DE TUDO QUE VOCÊ JÁ BEBEU. EU TAMBÉM.",
+	"AS LÁPIDES SÃO SUAS. NÃO PERGUNTE COMO EU SEI.",
+]
+
 const BESTIARY := {
 	"PENITENTE": "Peregrinos que juraram carregar a culpa do mundo. A clava é a culpa.",
 	"GUARDA DA CASA": "Soldados das Casas do Mar de Cinzas. O escudo protege a frente; as costas, ninguém.",

@@ -25,10 +25,17 @@ func prompt() -> String:
 
 
 func detail() -> String:
-	return "TROCA ESSÊNCIA POR DESBLOQUEIOS PERMANENTES"
+	return "ELA ESTAVA AQUI QUANDO VOCÊ ACORDOU" if level and level.kind == "beira" else "TROCA ESSÊNCIA POR DESBLOQUEIOS PERMANENTES"
 
 
 func interact(p: Player) -> void:
+	# na Beira ela só conversa: a essência vem da partida
+	if level.kind == "beira":
+		var pool: Array = Story.KEEPER_AWAKE if Meta.awake() else Story.BEIRA_LINES
+		var line: String = pool[int(Meta.data["runs"]) % pool.size()]
+		var bye: Array[Dictionary] = [{"label": "SAIR", "detail": ""}]
+		menu().open_choice("A VIGIA", line, bye, func(_i: int) -> void: pass)
+		return
 	if not p.blueprints.is_empty():
 		var fresh := Meta.learn(p.blueprints)
 		p.blueprints.clear()
@@ -54,7 +61,7 @@ func _offers() -> Array[Dictionary]:
 		if s.unlock != "essence" or Meta.is_unlocked(s.id):
 			continue
 		out.append({"id": s.id, "title": "Aparência: " + s.title, "cost": s.cost,
-			"detail": "SÓ MUDA O VISUAL · ESCOLHA NO TÍTULO", "figure": s.colors()})
+			"detail": "SÓ MUDA O VISUAL · ESCOLHA NA BEIRA", "figure": s.colors()})
 	# cromas das aparências que o jogador já tem
 	for s in Catalog.skins():
 		if not Meta.has_skin(s):
@@ -64,7 +71,7 @@ func _offers() -> Array[Dictionary]:
 			if Meta.is_unlocked(key) or int(c.get("cost", 0)) == 0:
 				continue
 			out.append({"id": key, "title": "Croma %s: %s" % [s.title, c["title"]], "cost": int(c["cost"]),
-				"detail": "OUTRA COR PARA ESTA APARÊNCIA · ESCOLHA NO TÍTULO", "figure": s.colors(String(c["id"]))})
+				"detail": "OUTRA COR PARA ESTA APARÊNCIA · ESCOLHA NA BEIRA", "figure": s.colors(String(c["id"]))})
 	for b: Dictionary in Catalog.BLESSINGS:
 		if Meta.is_unlocked(b["id"]):
 			continue

@@ -8,10 +8,13 @@ extends Node2D
 
 signal exit_used(dest: String)
 signal boss_defeated
+signal station_used(kind: String)
 
 const AMBIENT := Color(0.56, 0.52, 0.6)
 const PASSAGE_ROOM := "res://content/passagem.txt"
 const HALL_ROOM := "res://content/sala_treze.txt"
+const BEIRA_ROOM := "res://content/beira.txt"
+const STATIONS := {"1": "mantos", "2": "poco", "3": "carroca", "4": "marcas", "5": "braseiro"}
 const TIMED_LIMIT := 150.0
 const BLUEPRINT_CHANCE := 0.035
 
@@ -30,6 +33,7 @@ var _after_boss: Array[Node2D] = []
 var _exit_index := 0
 var _explore_clock := 0.0
 var seats: Array[GodSeat] = []
+static var _beira_named := false
 
 
 func build(room_text: String, with_camera := true) -> void:
@@ -74,6 +78,20 @@ func build_hall(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	room.load_file(HALL_ROOM)
 	_populate(with_camera)
 	Fx.banner("A SALA DOS TREZE", "CADA BRASA É UM DEUS QUE NÃO CONSEGUE MORRER")
+
+
+# Onde o herói renasce. Sem inimigos e sem relógio: a partida só começa no arco.
+func build_beira(b: BiomeData, seed_value: int, with_camera := true) -> void:
+	rng.seed = seed_value
+	tier = 0
+	kind = "beira"
+	_make_room(b)
+	room.load_file(BEIRA_ROOM)
+	_populate(with_camera)
+	# o nome do lugar só na primeira vez que o jogo abre: aqui se volta toda hora
+	if not _beira_named:
+		_beira_named = true
+		Fx.banner("A BEIRA", "ONDE A CINZA VIRA VOCÊ DE NOVO")
 
 
 func seats_left() -> int:
@@ -231,6 +249,29 @@ func _spawn_marker(m: Dictionary) -> void:
 				_place(seat, at)
 		"Z":
 			_place(LastSeat.new(), at)
+		"1", "2", "3", "4", "5":
+			var station := Station.new()
+			station.kind = STATIONS[m["ch"]]
+			_place(station, at)
+		"6":
+			_place(Threshold.new(), at)
+		"7":
+			_scenery("poste", at, Color(1.0, 0.74, 0.4), Vector2(0, -92))
+		"8":
+			_scenery("estatua", at)
+		"9":
+			_scenery("cinzas", at)
+
+
+# Cenário solto da Beira, atrás do herói.
+func _scenery(anim: String, at: Vector2, glow := Color.TRANSPARENT, glow_at := Vector2.ZERO) -> void:
+	var n := Node2D.new()
+	n.position = at
+	n.z_index = -1
+	add_child(n)
+	n.add_child(SpriteSheet.region_sprite("beira", PackedColorArray(), anim))
+	if glow.a > 0.0:
+		Glow.attach(n, glow, 70.0, 0.8, glow_at)
 
 
 # Nome de cada portal pelo lugar: o do começo, o da saída e os do caminho.

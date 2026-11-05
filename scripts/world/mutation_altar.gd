@@ -50,6 +50,7 @@ func interact(p: Player) -> void:
 	menu().open_choice("MUTAÇÃO", "O QUE O DEUS DEIXOU NO FUNDO DO CÁLICE. VALE ATÉ VOCÊ MORRER.", options,
 		func(i: int) -> void:
 			p.add_mutation(picks[i]["id"])
+			Meta.note_mutation(picks[i]["id"])
 			used = true
 			Sfx.play("mutation")
 			Fx.burst(global_position + Vector2(0, -16), Color("b8f06a"), 18, 100.0, 0.6, -40.0)

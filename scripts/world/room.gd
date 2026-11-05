@@ -17,7 +17,7 @@ const SOLID := "#"
 const PLATFORM := "="
 const FAKE := "F"
 const CRACKED := "K"
-const MARKERS := "PeErBifLXVwgaMc$TUOYZ"
+const MARKERS := "PeErBifLXVwgaMc$TUOYZ123456789"
 const WORLD_LAYER := 1
 const PLATFORM_LAYER := 8
 const CHUNK := 16

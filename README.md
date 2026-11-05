@@ -2,7 +2,7 @@
 
 Um jogo de ação em pixel art onde morrer faz parte do caminho.
 
-Você atravessa os domínios de 13 deuses até o Trono do Imperador Cego. Cada partida monta mapas novos e tem 10 andares. Depois de cada guardião, você escolhe entre três caminhos, então uma partida raramente se parece com a outra. Quando você morre, recomeça do zero, mas o que desbloqueou fica para sempre.
+Você atravessa os domínios de 13 deuses até o Trono do Imperador Cego. Cada partida monta mapas novos e tem 10 andares. Depois de cada guardião, você escolhe entre três caminhos, então uma partida raramente se parece com a outra. Quando você morre, renasce na Beira, onde escolhe aparência, mutação e vantagem antes de atravessar o arco de novo. O que desbloqueou fica para sempre.
 
 Dá para jogar em português ou inglês (Opções > Idioma).
 

@@ -126,6 +126,7 @@ func _ready() -> void:
 	await _case("parede rachada só cede com o Punho", _cracked_wall)
 	await _case("brasas: inimigo mais forte e bate mais", _heat)
 	await _case("final verdadeiro: as cadeiras, o desfecho e o Novo Jogo+", _true_ending)
+	await _case("a Beira: renasce nela, escolhe, e só o arco começa a partida", _beira)
 	await _case("mercador vende e o item aparece", _merchant)
 	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
 	await _case("jato de fogo e estalactite machucam", _hazards)
@@ -954,8 +955,7 @@ func _true_ending() -> void:
 		main.cutscene.advance()
 	_check(main.screen.mode == "victory" and main.screen.to_title, "o desfecho não fechou na vitória")
 	_check(Meta.has_skin(Catalog.skin("desperto")), "a aparência não liberou")
-	main.screen.show_title()
-	_check(main.screen._options.any(func(o: Array) -> bool: return o[0] == "plus"), "o título não oferece o Novo Jogo+")
+	_check(main.brazier_options().any(func(o: Dictionary) -> bool: return int(o["plus"]) == 1), "o braseiro não oferece o Novo Jogo+")
 
 	# Novo Jogo+: herói e inimigos mais fortes, e o ciclo fica salvo
 	Run.new_run(9, 0, 0)
@@ -1053,6 +1053,115 @@ func _hazards() -> void:
 			if p.hp < p.max_hp:
 				break
 		_check(p.hp < p.max_hp, "%s não machucou quem ficou parado" % path.get_file())
+
+
+func _beira() -> void:
+	Meta.use_path("user://teste.save", true)
+	Meta.data["intro_seen"] = true
+	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _frames(5)
+
+	# do título, COMEÇAR leva à Beira, e nela não há partida nem relógio
+	var ids: Array = main.screen._options.map(func(o: Array) -> String: return String(o[0]))
+	_check(not ids.has("skins") and not ids.has("plus"), "o título ainda tem o que mora na Beira: %s" % [ids])
+	main.screen.pick("start")
+	await _frames(5)
+	_check(Run.stage_id == Run.BEIRA and main.level.kind == "beira", "COMEÇAR não levou à Beira: " + Run.stage_id)
+	_check(not Run.active and Run.path.is_empty() and Run.saved().is_empty(), "a Beira contou como partida")
+	await _frames(30)
+	_check(is_zero_approx(Run.time), "o relógio correu na Beira: %f" % Run.time)
+	_check(main.level.get_children().filter(func(n: Node) -> bool: return n is Enemy).is_empty(), "tem inimigo na Beira")
+
+	# as cinco estações, a Vigia e o arco estão de pé e cada menu abre
+	var stations: Array = main.level.get_children().filter(func(n: Node) -> bool: return n is Station)
+	_check(stations.size() == 5, "estações: %d" % stations.size())
+	var hero: Player = main.level.player
+	for s: Station in stations:
+		_check(s.prompt() != "" and s.detail() != "", "estação sem texto: " + s.kind)
+		s.interact(hero)
+		await _frames(2)
+		_check(main.menu.is_open(), "o menu não abriu: " + s.kind)
+		main.menu.close()
+		await _frames(2)
+	var vigia: Keeper = main.level.get_children().filter(func(n: Node) -> bool: return n is Keeper)[0]
+	vigia.interact(hero)
+	await _frames(2)
+	_check(main.menu.is_open(), "a Vigia não falou")
+	main.menu.close()
+	await _frames(2)
+
+	# cada coisa se alcança a pé, sem pular: esse é o caminho de toda partida
+	for s: Station in stations:
+		hero.global_position.x = s.global_position.x - s.reach + 8.0
+		await _frames(1)
+		_check(hero.nearest_interactable() == s, "não dá para usar: " + s.kind)
+	hero.global_position.x = main.level.room.player_spawn.x
+
+	# trancado não se escolhe; conquista destranca, e vale para quem já tinha jogado
+	_check(not Meta.has_advantage("lamina_afiada"), "vantagem veio aberta")
+	_check(Meta.has_advantage("saco_moedas"), "vantagem básica trancada")
+	_check(Meta.start_mutations().size() == 3 and not Meta.start_mutations().has("frieza"), "poço: %s" % [Meta.start_mutations()])
+	Meta.note_mutation("frieza")
+	_check(Meta.start_mutations().has("frieza"), "o poço não lembrou da mutação")
+	Meta.data["stats"]["kills_by"] = {"O LOBO DA LONGA NOITE": 1}
+	Meta.data["deaths"] = 1
+	var fresh := Meta.check_feats()
+	_check(fresh.size() == 2 and Meta.check_feats().is_empty(), "conquistas novas: %d" % fresh.size())
+	_check(Meta.has_advantage("lamina_afiada"), "a conquista não liberou a vantagem")
+	_check(Catalog.GUARDIANS.size() == 13, "guardiões: %d" % Catalog.GUARDIANS.size())
+	for a: Dictionary in Catalog.ADVANTAGES:
+		_check(not a.has("needs") or not Catalog.feat(a["needs"]).is_empty(), "vantagem presa a conquista que não existe: " + String(a["id"]))
+	Lang.use("en")
+	for f: Dictionary in Catalog.FEATS + Catalog.ADVANTAGES:
+		for k in ["title", "detail"]:
+			var t := String(f[k]).to_upper()
+			_check(Lang.t(t) != t, "sem inglês: " + t)
+	for line: String in Story.BEIRA_LINES:
+		_check(Lang.t(line) != line, "sem inglês: " + line)
+	Lang.use("pt")
+
+	# escolhe e anda até o arco de verdade: a partida começa ao passar, sem botão
+	Run.advantage = "lamina_afiada"
+	Run.start_mutation = "frieza"
+	Meta.pick("pick_advantage", "lamina_afiada")
+	Meta.pick("pick_mutation", "frieza")
+	var walker := ScriptedInput.new()
+	hero.pad = walker
+	walker.then(["right"], 900)
+	for i in 900:
+		await get_tree().physics_frame
+		if Run.stage_id != Run.BEIRA:
+			break
+	walker.clear()
+	_check(Run.stage_id == Run.FIRST, "andar até o arco não atravessou")
+	await _frames(5)
+	_check(Run.stage_id == Run.FIRST and main.level.kind == "gerada", "o mapa sorteado não veio: " + Run.stage_id)
+	_check(Run.active and Run.path == [Run.FIRST], "a contagem não começou")
+	await _frames(30)
+	_check(Run.time > 0.0, "o relógio não correu depois do arco")
+	_check(not Run.saved().is_empty(), "a partida não foi salva")
+	hero = main.level.player
+	_check(hero.has_mutation("frieza"), "a mutação do poço não veio")
+	_check(hero.weapons[0].tier == 1, "a vantagem da carroça não veio")
+
+	# morreu: renasce na Beira, com as escolhas de pé
+	main._on_player_died()
+	_check(main.screen.mode == "death" and Run.saved().is_empty(), "não contou a morte")
+	main._on_screen_confirmed()
+	await _frames(5)
+	_check(Run.stage_id == Run.BEIRA and main.level.kind == "beira", "não renasceu na Beira: " + Run.stage_id)
+	_check(Run.advantage == "lamina_afiada" and Run.start_mutation == "frieza", "as escolhas sumiram")
+	_check(is_zero_approx(Run.time), "o relógio da partida anterior ficou")
+
+	# desafio do dia é igual para todos: direto, sem o que se escolhe na Beira
+	Run.new_daily()
+	_check(Run.advantage == "" and Run.start_mutation == "", "o desafio do dia levou as escolhas")
+
+	main.free()
+	Run.active = false
+	Meta.use_path("user://teste.save", true)
+	await _frames(2)
 
 
 func _options() -> void:

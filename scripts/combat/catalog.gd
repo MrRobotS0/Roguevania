@@ -116,6 +116,7 @@ const BIOMES := {
 }
 
 const STAGE_NAMES := {
+	"beira": "A Beira",
 	"sala_dos_treze": "A Sala dos Treze",
 	"mar_de_cinzas": "O Mar de Cinzas",
 	"saloes": "Os Salões do Último Inverno",
@@ -185,6 +186,46 @@ const MUTATIONS := [
 	{"id": "ultima_prece", "title": "Última Prece", "detail": "+35% DE DANO COM MENOS DE 30% DE VIDA"},
 ]
 const MAX_MUTATIONS := 3
+const STARTER_MUTATIONS := ["sangue_quente", "pes_leves", "prece_atendida"]
+
+# O que se leva da carroça da Beira: uma por partida. As com "needs" saem de uma conquista.
+const ADVANTAGES := [
+	{"id": "saco_moedas", "title": "Saco de Moedas", "detail": "COMEÇA COM +80 DE OURO"},
+	{"id": "frasco_reserva", "title": "Frasco de Reserva", "detail": "+1 FRASCO DE CURA"},
+	{"id": "olho_coletor", "title": "Olho de Coletor", "detail": "+25% DE ESSÊNCIA", "needs": "cinza_na_boca"},
+	{"id": "cinza_dura", "title": "Cinza Dura", "detail": "+20% DE VIDA MÁXIMA", "needs": "mao_pesada"},
+	{"id": "lamina_afiada", "title": "Lâmina Afiada", "detail": "AS ARMAS INICIAIS VÊM UM NÍVEL ACIMA", "needs": "caiu_o_primeiro"},
+	{"id": "bolso_fundo", "title": "Bolso Fundo", "detail": "COMEÇA COM UMA SEGUNDA HABILIDADE AO ACASO", "needs": "longe_de_casa"},
+	{"id": "cinza_que_volta", "title": "Cinza que Volta", "detail": "UMA VEZ POR PARTIDA, VOLTA COM METADE DA VIDA EM VEZ DE MORRER", "needs": "trono_vazio"},
+]
+
+const GUARDIANS := ["O LOBO DA LONGA NOITE", "O COLOSSO DA BIGORNA", "O REI ESQUECIDO", "O ARQUITETO MUDO", "A MÃE-RAIZ", "O QUE RESPONDE",
+	"O REI SEM ROSTO", "O ÚLTIMO ASTRÔNOMO", "O INSACIÁVEL", "O DRAGÃO SONHADO", "A SERPE DO FUNDO", "A RAPOSA DE NOVE CAUDAS", "O IMPERADOR CEGO"]
+
+# Conquistas: what = o que medir (Meta.feat_value), n = quanto. "secret" esconde até sair.
+const FEATS := [
+	{"id": "cinza_na_boca", "title": "Cinza na Boca", "detail": "MORRA PELA PRIMEIRA VEZ", "what": "deaths", "n": 1},
+	{"id": "outro_igual", "title": "Outro Igual a Você", "detail": "MORRA 10 VEZES", "what": "deaths", "n": 10},
+	{"id": "cinquenta_cinzas", "title": "Cinquenta Cinzas", "detail": "MORRA 50 VEZES", "what": "deaths", "n": 50},
+	{"id": "mao_pesada", "title": "Mão Pesada", "detail": "DERROTE 100 INIMIGOS", "what": "kills", "n": 100},
+	{"id": "carrasco", "title": "Carrasco", "detail": "DERROTE 1000 INIMIGOS", "what": "kills", "n": 1000},
+	{"id": "caiu_o_primeiro", "title": "Caiu o Primeiro", "detail": "DERROTE UM GUARDIÃO", "what": "guardians", "n": 1},
+	{"id": "cinco_portas", "title": "Cinco Portas", "detail": "DERROTE 5 GUARDIÕES DIFERENTES", "what": "guardians", "n": 5},
+	{"id": "todas_as_portas", "title": "Todas as Portas", "detail": "DERROTE OS 13 GUARDIÕES", "what": "guardians", "n": 13},
+	{"id": "longe_de_casa", "title": "Longe de Casa", "detail": "CHEGUE AO QUINTO ANDAR", "what": "deepest", "n": 5},
+	{"id": "trono_vazio", "title": "O Trono Vazio", "detail": "VENÇA O IMPERADOR CEGO", "what": "wins", "n": 1},
+	{"id": "antes_do_sino", "title": "Antes do Sino", "detail": "VENÇA EM MENOS DE 30 MINUTOS", "what": "quick", "n": 1},
+	{"id": "brasa_viva", "title": "Brasa Viva", "detail": "VENÇA COM 2 BRASAS", "what": "embers", "n": 3},
+	{"id": "quem_le_pedra", "title": "Quem Lê Pedra", "detail": "LEIA 10 INSCRIÇÕES", "what": "lore", "n": 10},
+	{"id": "bestiario", "title": "Bestiário", "detail": "DERROTE 30 CRIATURAS DIFERENTES", "what": "creatures", "n": 30},
+	{"id": "mao_de_ferreiro", "title": "Mão de Ferreiro", "detail": "ENTREGUE 10 PLANTAS À VIGIA", "what": "blueprints", "n": 10},
+	{"id": "o_que_fica", "title": "O Que Fica", "detail": "CONSIGA UMA RUNA", "what": "runes", "n": 1},
+	{"id": "calice_cheio", "title": "Cálice Cheio", "detail": "BEBA 10 MUTAÇÕES DIFERENTES", "what": "mutations", "n": 10},
+	{"id": "guarda_roupa", "title": "Guarda-Roupa", "detail": "TENHA 5 APARÊNCIAS", "what": "skins", "n": 5},
+	{"id": "soltar", "title": "Soltar", "detail": "COMPLETE O FINAL VERDADEIRO", "what": "awake", "n": 1, "secret": true},
+	{"id": "outra_volta", "title": "Outra Volta", "detail": "VENÇA UM CICLO DO NOVO JOGO+", "what": "plus", "n": 2, "secret": true},
+	{"id": "cinco_voltas", "title": "Cinco Voltas", "detail": "CHEGUE AO ÚLTIMO CICLO", "what": "plus", "n": 5, "secret": true},
+]
 
 # Melhorias permanentes compradas com Essência na Vigia (além das armas).
 const BLESSINGS := [
@@ -193,6 +234,20 @@ const BLESSINGS := [
 	{"id": "calice_2", "title": "Segundo Cálice", "cost": 110, "detail": "+1 FRASCO DE CURA (REQUER O PRIMEIRO)", "needs": "calice_1"},
 	{"id": "bolsa_inicial", "title": "Bolsa de Viagem", "cost": 45, "detail": "COMEÇA A PARTIDA COM 60 DE OURO"},
 ]
+
+
+static func advantage(id: String) -> Dictionary:
+	for a: Dictionary in ADVANTAGES:
+		if a["id"] == id:
+			return a
+	return {}
+
+
+static func feat(id: String) -> Dictionary:
+	for f: Dictionary in FEATS:
+		if f["id"] == id:
+			return f
+	return {}
 
 
 static func all_gear() -> Array[Resource]:

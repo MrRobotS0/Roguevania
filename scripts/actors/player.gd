@@ -134,6 +134,8 @@ func stat_mult(stat: String) -> float:
 func recompute_max_hp() -> void:
 	var before := max_hp
 	max_hp = BASE_HP + 10 * (levels["furia"] + levels["astucia"]) + 20 * levels["vigor"]
+	if Run.advantage == "cinza_dura":
+		max_hp = roundi(max_hp * 1.2)
 	hp = clampi(hp + max_hp - before, 1, max_hp)
 	health_changed.emit(hp, max_hp)
 
@@ -181,7 +183,7 @@ func nearest_interactable() -> Node2D:
 	for it: Node2D in get_tree().get_nodes_in_group("interactables"):
 		if not it.call("can_interact", self):
 			continue
-		var d := it.global_position.distance_to(global_position)
+		var d := it.global_position.distance_to(global_position) - float(it.get("reach"))
 		if d < best_d:
 			best = it
 			best_d = d
@@ -988,6 +990,11 @@ func hurt(d: Damage) -> bool:
 		hp = 1
 		Fx.toast("TEIMOSIA: AINDA NÃO")
 		Fx.burst(center(), Palette.GOLD, 18, 120.0, 0.5, -60.0)
+	elif hp <= 0 and Run.advantage == "cinza_que_volta" and not Run.revived:
+		Run.revived = true
+		hp = maxi(max_hp / 2, 1)
+		Fx.toast("A CINZA VOLTOU")
+		Fx.burst(center(), Palette.ESSENCE, 24, 130.0, 0.6, -60.0)
 	_rage = 3.0
 	apply_statuses(d)
 	_invuln = HURT_IFRAMES
@@ -1038,6 +1045,15 @@ var _front: Node2D
 var _tex: ImageTexture
 var _white: ImageTexture
 var _hand := Vector2(4, -12)
+
+
+# Trocou de aparência na Beira: vale na hora.
+func refresh_look() -> void:
+	skin = Meta.current_skin()
+	var pal := HeroLook.palette(skin.colors(Meta.chroma_of(skin)))
+	_tex = SpriteSheet.texture(SHEET, pal)
+	_white = SpriteSheet.texture(SHEET, pal, true)
+	body.texture = _tex
 
 
 func _setup_look() -> void:

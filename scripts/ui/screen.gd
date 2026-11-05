@@ -13,7 +13,6 @@ const TITLE_OPTIONS := [
 	["continue", "CONTINUAR"],
 	["start", "COMEÇAR"],
 	["daily", "DESAFIO DO DIA"],
-	["skins", "APARÊNCIA"],
 	["options", "OPÇÕES"],
 	["extras", "EXTRAS"],
 	["quit", "SAIR"],
@@ -58,10 +57,6 @@ func show_title() -> void:
 		if o[0] == "update":
 			return Updater.pending != ""
 		return o[0] != "continue" or not saved.is_empty())
-	# o Novo Jogo+ só existe para quem viu o final verdadeiro
-	if Meta.awake():
-		var at := _options.find(TITLE_OPTIONS.filter(func(o: Array) -> bool: return o[0] == "start")[0])
-		_options.insert(at + 1, ["plus", "NOVO JOGO+"])
 	lines = []
 	if not saved.is_empty():
 		var where: String = Catalog.STAGE_NAMES.get(saved["stage"], saved["stage"])
@@ -94,7 +89,7 @@ func show_victory(p: Player, true_end := false) -> void:
 		lines.append(["OS PESADELOS RECUAM. AINDA NÃO SOUBERAM QUE ACABOU.", Palette.UI_DIM])
 	elif true_end:
 		lines.append(["OS DOZE DESCANSAM. VOCÊ NÃO.", Palette.BURN])
-		lines.append(["NOVO JOGO+ LIBERADO NO TÍTULO.", Palette.GOLD])
+		lines.append(["NOVO JOGO+ LIBERADO NO BRASEIRO DA BEIRA.", Palette.GOLD])
 	else:
 		lines.append([("BRASAS DO DEUS LIBERADAS: %d" % mini(Run.heat + 1, Run.MAX_HEAT)) if Run.heat < Run.MAX_HEAT else "VOCÊ VENCEU COM TODAS AS BRASAS.", Palette.BURN])
 		lines.append(["O QUE ACONTECEU COM OS DEUSES CONTINUA SEM RESPOSTA.", Palette.UI_DIM])
@@ -177,7 +172,8 @@ func _draw() -> void:
 		PixelFont.body_centered(self, l[0], Vector2(mid, y), l[1])
 		y += PixelFont.BODY_LINE
 	if _t > 0.6 and int(_t * 2.0) % 2 == 0:
-		PixelFont.body_centered(self, ("%s  VOLTAR AO TÍTULO" if to_title else "%s  NOVA PARTIDA") % Controls.hint("confirm"), Vector2(mid, size.y - 36), Palette.UI_TEXT)
+		var next := "%s  RENASCER" if mode == "death" else ("%s  VOLTAR AO TÍTULO" if to_title else "%s  VOLTAR À BEIRA")
+		PixelFont.body_centered(self, next % Controls.hint("confirm"), Vector2(mid, size.y - 36), Palette.UI_TEXT)
 
 
 # Título: uma coluna à esquerda (logo, menu, rodapé) sobre um degradê escuro

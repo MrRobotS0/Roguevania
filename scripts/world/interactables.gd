@@ -5,6 +5,7 @@ extends Node2D
 # inscrições, saídas, a Vigia. O HUD mostra prompt() quando o herói chega perto.
 
 var level: Node
+var reach := 0.0     # desenhos largos: alcance a mais para usar
 var _t := 0.0
 
 

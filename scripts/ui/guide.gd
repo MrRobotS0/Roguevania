@@ -94,7 +94,7 @@ func _want(id: String) -> void:
 
 # Quando cada dica merece aparecer.
 func _watch(p: Player) -> void:
-	if level.kind == "gerada" and Run.stage_time > 0.6:
+	if level.kind == "beira" or (level.kind == "gerada" and Run.stage_time > 0.6):
 		_want("andar")
 	for e: Enemy in level.enemies():
 		if not e.alive():

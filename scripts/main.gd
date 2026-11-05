@@ -1,7 +1,7 @@
 extends Node2D
 
-# Fluxo do jogo: título → partida (fase gerada → sala do chefe) → morte ou
-# vitória → título. Também cuida da pausa (Esc).
+# Fluxo do jogo: título → Beira (onde se escolhe e se renasce) → arco → partida
+# (fase gerada → sala do chefe) → morte → Beira de novo. Também cuida da pausa (Esc).
 
 var level: Level
 var hud: Hud
@@ -137,21 +137,8 @@ func _on_screen_confirmed() -> void:
 		return
 	if _abandon_saved_first(_on_screen_confirmed):
 		return
-	var unlocked := int(Meta.data["heat"])
-	if screen.mode != "title" or unlocked <= 0:
-		screen.close()
-		_begin(-1, 0)
-		return
-	# Brasas do Deus: quem já venceu escolhe a dificuldade
-	var options: Array[Dictionary] = []
-	for h in unlocked + 1:
-		options.append({"label": HEAT_NAMES[h], "detail": HEAT_DETAILS[h],
-			"color": Palette.UI_TEXT if h == 0 else Palette.BURN.lerp(Palette.HURT, h / 4.0)})
-	menu.open_choice("BRASAS DO DEUS", "QUANTO MAIS BRASA, MAIS O DEUS MORTO RESISTE.", options,
-		func(i: int) -> void:
-			screen.close()
-			_begin(-1, i))
-	menu.select(unlocked)
+	screen.close()
+	_begin()
 
 
 const HEAT_NAMES := ["Sem brasa", "1 brasa", "2 brasas", "3 brasas", "4 brasas"]
@@ -168,12 +155,8 @@ func _on_title_option(id: String) -> void:
 	match id:
 		"continue":
 			continue_run()
-		"plus":
-			open_plus()
 		"update":
 			Updater.restart_into()
-		"skins":
-			open_skins()
 		"controls":
 			menu.open_text("COMANDOS", CONTROLS)
 		"options":
@@ -213,7 +196,7 @@ func open_skins() -> void:
 		options.append({"label": label, "detail": s.lore if owned else s.how_to_get(),
 			"disabled": not owned, "figure": s.colors(),
 			"color": Palette.GOLD if s == current else Palette.UI_TEXT})
-	menu.open_choice("APARÊNCIA", "SÓ MUDA O VISUAL. VALE PARA A PRÓXIMA PARTIDA.", options,
+	menu.open_choice("OS MANTOS", "SÓ MUDA O VISUAL.", options,
 		func(i: int) -> void:
 			open_chromas.call_deferred(list[i]))
 	menu.select(list.find(current))
@@ -238,37 +221,176 @@ func open_chromas(s: SkinData) -> void:
 	menu.open_choice(s.title.to_upper(), "CROMAS: A MESMA APARÊNCIA EM OUTRAS CORES.", options,
 		func(i: int) -> void:
 			Meta.wear(s.id, ids[i])
+			if level and is_instance_valid(level.player):
+				level.player.refresh_look()
 			open_skins.call_deferred())
 	menu.select(maxi(ids.find(now), 0) if worn else 0)
 
 
-# Novo Jogo+: cada ciclo vencido libera o próximo.
-func open_plus() -> void:
-	if _abandon_saved_first(open_plus):
-		return
-	var top := clampi(int(Meta.data.get("plus", 1)), 1, Run.MAX_PLUS)
-	var options: Array[Dictionary] = []
-	for n in range(1, top + 1):
-		options.append({"label": "CICLO %d" % n, "detail": "+%d%% DE VIDA E +%d%% DE DANO ALÉM DAS 4 BRASAS" % [25 * n, 15 * n],
-			"color": Palette.BURN.lerp(Palette.HURT, float(n) / Run.MAX_PLUS)})
-	menu.open_choice("NOVO JOGO+", "VOCÊ VOLTA MAIS FORTE. OS PESADELOS TAMBÉM.", options, func(i: int) -> void:
-		screen.close()
-		Music.play("passagem")
-		cutscene.play(PackedStringArray(Story.PLUS_INTRO), func() -> void:
-			start_run(-1, Run.MAX_HEAT, i + 1)))
-	menu.select(top - 1)
+# --- a Beira ------------------------------------------------------------------------
 
-
-# Na primeira partida, antes de tudo, a abertura.
-func _begin(seed_value: int, heat: int) -> void:
+# Na primeira vez, antes de tudo, a abertura.
+func _begin() -> void:
 	if Meta.data.get("intro_seen", false):
-		start_run(seed_value, heat)
+		enter_beira()
 		return
 	Music.play("passagem")
 	cutscene.play(PackedStringArray(Story.INTRO), func() -> void:
 		Meta.data["intro_seen"] = true
 		Meta.save()
-		start_run(seed_value, heat))
+		enter_beira())
+
+
+func enter_beira() -> void:
+	Run.discard_saved()
+	Run.enter_beira()
+	_load_stage()
+	_rebirth()
+
+
+# O herói se levanta da cinza. As conquistas novas aparecem aqui.
+func _rebirth() -> void:
+	var p := level.player
+	p.modulate = Color(0.25, 0.24, 0.28, 0.0)
+	p.create_tween().tween_property(p, "modulate", Color.WHITE, 0.9)
+	Fx.burst(p.center(), Color("8a8290"), 24, 70.0, 0.9, -30.0)
+	Sfx.play("portal", -10.0)
+	var fresh := Meta.check_feats()
+	if fresh.size() == 1:
+		Fx.toast("CONQUISTA: " + String(fresh[0]["title"]).to_upper())
+	elif fresh.size() > 1:
+		Fx.toast("%d CONQUISTAS NOVAS" % fresh.size())
+
+
+func _on_station(kind: String) -> void:
+	match kind:
+		"mantos":
+			open_skins()
+		"poco":
+			open_well()
+		"carroca":
+			open_wagon()
+		"marcas":
+			open_marks()
+		"braseiro":
+			open_brazier()
+
+
+func open_well() -> void:
+	var known := Meta.start_mutations()
+	var ids: Array[String] = [""]
+	var options: Array[Dictionary] = [{"label": "NADA", "detail": "COMEÇAR SEM MUTAÇÃO"}]
+	for m: Dictionary in Catalog.MUTATIONS:
+		var has := known.has(m["id"])
+		ids.append(m["id"])
+		options.append({"label": m["title"] if has else "???", "disabled": not has,
+			"detail": m["detail"] if has else "BEBA DELA NUM ALTAR PARA O POÇO LEMBRAR", "color": Color("b8f06a")})
+	_mark_current(options, ids, Run.start_mutation)
+	menu.open_choice("O POÇO", "UMA MUTAÇÃO PARA COMEÇAR. CONTA ENTRE AS TRÊS DA PARTIDA.", options, func(i: int) -> void:
+		Run.start_mutation = ids[i]
+		Meta.pick("pick_mutation", ids[i])
+		Sfx.play("mutation")
+		Fx.burst(level.player.center(), Color("b8f06a"), 14, 90.0, 0.5, -40.0))
+	menu.select(ids.find(Run.start_mutation))
+
+
+func open_wagon() -> void:
+	var ids: Array[String] = [""]
+	var options: Array[Dictionary] = [{"label": "NADA", "detail": "COMEÇAR DE MÃOS VAZIAS"}]
+	for a: Dictionary in Catalog.ADVANTAGES:
+		var has := Meta.has_advantage(a["id"])
+		ids.append(a["id"])
+		var how: String = "CONQUISTA: " + String(Catalog.feat(a.get("needs", "")).get("title", "")).to_upper()
+		options.append({"label": a["title"] if has else "???", "disabled": not has,
+			"detail": a["detail"] if has else how})
+	_mark_current(options, ids, Run.advantage)
+	menu.open_choice("A CARROÇA", "LEVE UMA COISA. O RESTO FICA PARA A PRÓXIMA VEZ.", options, func(i: int) -> void:
+		Run.advantage = ids[i]
+		Meta.pick("pick_advantage", ids[i])
+		Sfx.play("unlock", -6.0))
+	menu.select(ids.find(Run.advantage))
+
+
+# Marca o que está em uso, como nos mantos.
+func _mark_current(options: Array[Dictionary], ids: Array[String], current: String) -> void:
+	var at := ids.find(current)
+	if at >= 0:
+		options[at]["label"] = String(options[at]["label"]) + "  ·  EM USO"
+		options[at]["color"] = Palette.GOLD
+
+
+func open_marks() -> void:
+	var options: Array[Dictionary] = [
+		{"label": "CONQUISTAS", "price": "%d/%d" % [Meta.feats_done(), Catalog.FEATS.size()], "detail": "O QUE FICOU GRAVADO"},
+		{"label": "ESTATÍSTICAS", "detail": "PARTIDAS, MORTES E QUEM TE MATOU"},
+		{"label": "CÓDICE", "detail": "INSCRIÇÕES E CRIATURAS"},
+	]
+	menu.open_choice("AS MARCAS", "", options, _on_marks_pick)
+
+
+func _on_marks_pick(i: int) -> void:
+	match i:
+		0:
+			open_feats.call_deferred()
+		1:
+			menu.open_text.call_deferred("ESTATÍSTICAS", Meta.stats_text())
+		2:
+			open_codex.call_deferred()
+
+
+func open_feats() -> void:
+	var options: Array[Dictionary] = []
+	for f: Dictionary in Catalog.FEATS:
+		var done := Meta.feat_achieved(f)
+		var hidden: bool = f.get("secret", false) and not done
+		var reward := ""
+		for a: Dictionary in Catalog.ADVANTAGES:
+			if a.get("needs", "") == f["id"]:
+				reward = "   ·   LIBERA " + String(a["title"]).to_upper()
+		options.append({"label": "???" if hidden else f["title"], "price": "FEITA" if done else "",
+			"price_color": Palette.GOLD, "color": Palette.GOLD if done else Palette.UI_DIM,
+			"detail": "AINDA NÃO" if hidden else String(f["detail"]) + reward})
+	menu.open_choice("CONQUISTAS", "", options, func(_i: int) -> void:
+		open_feats.call_deferred())
+
+
+# Dificuldade: as brasas liberadas e, depois do final verdadeiro, os ciclos do Novo Jogo+.
+func brazier_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	for h in int(Meta.data["heat"]) + 1:
+		options.append({"label": HEAT_NAMES[h], "detail": HEAT_DETAILS[h], "heat": h, "plus": 0,
+			"color": Palette.UI_TEXT if h == 0 else Palette.BURN.lerp(Palette.HURT, h / 4.0)})
+	if Meta.awake():
+		for n in range(1, clampi(int(Meta.data.get("plus", 1)), 1, Run.MAX_PLUS) + 1):
+			options.append({"label": "NOVO JOGO+  ·  CICLO %d" % n, "detail": "+%d%% DE VIDA E +%d%% DE DANO ALÉM DAS 4 BRASAS" % [25 * n, 15 * n],
+				"heat": Run.MAX_HEAT, "plus": n, "color": Palette.BURN.lerp(Palette.HURT, float(n) / Run.MAX_PLUS)})
+	return options
+
+
+func open_brazier() -> void:
+	var options := brazier_options()
+	menu.open_choice("O BRASEIRO", "QUANTO MAIS BRASA, MAIS O DEUS MORTO RESISTE.", options, func(i: int) -> void:
+		Run.heat = options[i]["heat"]
+		Run.plus = options[i]["plus"]
+		Meta.data["pick_heat"] = Run.heat
+		Meta.pick("pick_plus", Run.plus)
+		Sfx.play("ui_ok", -6.0))
+	for i in options.size():
+		if options[i]["plus"] == Run.plus and (Run.plus > 0 or options[i]["heat"] == Run.heat):
+			menu.select(i)
+
+
+# Passou do arco: agora é partida.
+func _depart() -> void:
+	_playing = false
+	if Run.plus > 0:
+		Music.play("passagem")
+		cutscene.play(PackedStringArray(Story.PLUS_INTRO), func() -> void:
+			Run.depart()
+			_load_stage())
+		return
+	Run.depart()
+	_load_stage()
 
 
 func open_codex() -> void:
@@ -367,6 +489,12 @@ func _load_stage() -> void:
 			foreground.style = ""
 			weather.kind = "stars"
 			Music.play("passagem")
+		"beira":
+			level.build_beira(b, Run.stage_seed())
+			foreground.style = ""
+			weather.kind = b.weather
+			Music.play("passagem")
+			level.station_used.connect(_on_station)
 		_:
 			level.build_generated(b, Run.stage_seed())
 			weather.kind = b.weather
@@ -375,15 +503,17 @@ func _load_stage() -> void:
 	Run.stage_tier = level.tier
 	weather.player = level.player
 	Run.load_player(level.player)
-	Run.suspend()
+	# na Beira ainda não há partida: nada para continuar, nem relógio
+	if stage["kind"] != "beira":
+		Run.suspend()
 	hud.bind(level.player, level.boss)
 	guide.bind(level)
 	level.player.died.connect(_on_player_died)
 	# a saída é usada no meio do passo de física do herói: troca de andar no fim do quadro
 	level.exit_used.connect(_on_exit, CONNECT_DEFERRED)
 	_playing = true
-	# o relógio da partida parou no Imperador: a sala não conta tempo
-	Run.active = stage["kind"] != "sala"
+	# o relógio só corre entre o arco da Beira e o Imperador
+	Run.active = stage["kind"] != "sala" and stage["kind"] != "beira"
 	curtain.reveal()
 
 
@@ -403,6 +533,9 @@ func _clear_level() -> void:
 
 
 func _on_exit(dest: String) -> void:
+	if dest == "partida":
+		_depart()
+		return
 	Run.save_player(level.player)
 	match dest:
 		"fim":
@@ -475,13 +608,22 @@ func _on_player_died() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("debug"):
 		Fx.debug = not Fx.debug
-	elif event.is_action_pressed("reset") and _playing and Run.stage_id != Run.HALL:
-		start_run()
+	elif event.is_action_pressed("reset") and _playing and Run.stage_id != Run.HALL and Run.stage_id != Run.BEIRA:
+		enter_beira()
 	elif event.is_action_pressed("pause") and _playing and not menu.is_open() and not options_screen.is_open():
 		_pause()
 
 
 func _pause() -> void:
+	if Run.stage_id == Run.BEIRA:
+		var calm: Array[Dictionary] = [
+			{"label": "CONTINUAR", "detail": ""},
+			{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},
+			{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
+			{"label": "VOLTAR AO TÍTULO", "detail": ""},
+		]
+		menu.open_choice("PAUSA", "", calm, _on_pause_pick)
+		return
 	var options: Array[Dictionary] = [
 		{"label": "CONTINUAR", "detail": ""},
 		{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},

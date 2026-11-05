@@ -1672,3 +1672,22 @@ Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, 
 **Novo Jogo+.** Liberado no título (`Meta.awake`). Até 5 ciclos, cada vitória libera o próximo. Sempre com 4 brasas; cada ciclo soma +25% de vida e +15% de dano aos inimigos, e 12% a 24% dos comuns viram elite. O herói começa com +1 em cada atributo, armas +1, um frasco a mais, 100 de ouro e 50% mais essência. A primeira pedra de cada domínio conta como ele ficou (`Story.AFTER`); as falas da Vigia viram as do manto vazio. Aparência nova: O Que Ardeu. Códice: Rever o final e Os Treze.
 
 **Wiki.** Uma seção por vez, gerada de `tools/gerar_wiki.py` + `tools/wiki_modelo.html`. O site principal perdeu a seção de movimentos.
+
+## 31. A Beira: onde o herói renasce e toda partida começa (v0.6.0)
+
+**O fluxo mudou.** Título → COMEÇAR → Beira → arco → mapa sorteado. Morreu, a tela de morte leva de volta à Beira (RENASCER). O relógio e o caminho só começam no arco (`Run.enter_beira`, `Run.depart`); na Beira nada é salvo como partida.
+
+**O lugar.** `content/beira.txt` e `assets/sprites/beira.png`, gerados por `tools/importar_beira.py` com arte CC0 do Gothicvania. Prévia sem abrir o jogo: `python tools/previa_beira.py saida.png`. O caminho é plano de propósito: nenhum pulo obrigatório, porque se passa por ali a cada morte. Marcadores: 1 mantos, 2 poço, 3 carroça, 4 marcas, 5 braseiro, 6 arco, 7 poste, 8 estátua, 9 cinzas.
+
+**As estações (`Station`).**
+- Os Mantos: aparência e croma, valem na hora (`Player.refresh_look`).
+- O Poço: uma mutação inicial. Três abertas (`Catalog.STARTER_MUTATIONS`); as outras abrem ao beber num altar (`Meta.note_mutation`). Conta entre as três da partida.
+- A Carroça: uma vantagem (`Catalog.ADVANTAGES`, aplicada em `Run._apply_advantage`). Duas abertas; as outras saem de conquistas.
+- As Marcas: conquistas, estatísticas e Códice.
+- O Braseiro: Brasas do Deus e ciclos do Novo Jogo+ (saíram do título). A escolha fica salva em `pick_heat` e `pick_plus`.
+- O Arco (`Threshold`): atravessar basta, sem botão.
+- A Vigia: na Beira só conversa (`Story.BEIRA_LINES`), porque a essência vem da partida.
+
+**Conquistas (`Catalog.FEATS`).** Calculadas do que o save já guarda (`Meta.feat_value`), então valem para quem jogou antes delas existirem. Avisam ao renascer (`Meta.check_feats`). Três são secretas por serem spoiler do final.
+
+**Fora da Beira.** O desafio do dia vai direto, sem escolhas, para continuar igual para todos. `main.start_run` continua direto também: é o que o robô e os testes usam. A tecla de recomeçar volta à Beira.

@@ -25,7 +25,8 @@ func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
 		"blueprints": [], "runes": [], "heat": 0,
 		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false,
-		"hints": [], "awake": false, "plus": 0}
+		"hints": [], "awake": false, "plus": 0,
+		"feats": [], "mutations_seen": [], "pick_mutation": "", "pick_advantage": "", "pick_heat": 0, "pick_plus": 0}
 
 
 func _load() -> void:
@@ -170,6 +171,97 @@ func wake() -> void:
 func record_plus_win(level: int) -> void:
 	data["plus"] = mini(maxi(int(data.get("plus", 0)), level + 1), Run.MAX_PLUS)
 	save()
+
+
+# --- o que se escolhe na Beira -------------------------------------------------------
+
+# O poço lembra do que o herói já bebeu: três de graça, o resto depois de tomar num altar.
+func start_mutations() -> Array:
+	var out: Array = Catalog.STARTER_MUTATIONS.duplicate()
+	for id: String in data["mutations_seen"]:
+		if not out.has(id):
+			out.append(id)
+	return out
+
+
+func note_mutation(id: String) -> void:
+	if not data["mutations_seen"].has(id):
+		data["mutations_seen"].append(id)
+		save()
+
+
+func has_advantage(id: String) -> bool:
+	var a := Catalog.advantage(id)
+	if a.is_empty():
+		return false
+	return not a.has("needs") or feat_achieved(Catalog.feat(a["needs"]))
+
+
+func pick(key: String, value: Variant) -> void:
+	data[key] = value
+	save()
+
+
+# --- conquistas ----------------------------------------------------------------------
+# Vêm do que o jogo já guarda: quem jogou antes de elas existirem não perde nada.
+
+func feat_value(what: String) -> float:
+	var st: Dictionary = data["stats"]
+	match what:
+		"deaths", "wins", "runs":
+			return float(data[what])
+		"embers":
+			return float(data["heat"])
+		"kills":
+			var total := 0
+			for v in st.get("kills_by", {}).values():
+				total += int(v)
+			return float(total)
+		"guardians":
+			var seen: Dictionary = st.get("kills_by", {})
+			return float(Catalog.GUARDIANS.filter(func(t: String) -> bool: return seen.has(t)).size())
+		"deepest":
+			return float(st.get("deepest", 0))
+		"lore":
+			return float(data["lore"].size())
+		"creatures":
+			return float(known_creatures().size())
+		"blueprints":
+			return float(data["blueprints"].size())
+		"runes":
+			return float(data["runes"].size())
+		"mutations":
+			return float(data["mutations_seen"].size())
+		"skins":
+			return float(Catalog.skins().filter(func(s: SkinData) -> bool: return has_skin(s)).size())
+		"awake":
+			return 1.0 if awake() else 0.0
+		"plus":
+			return float(data.get("plus", 0))
+		"quick":
+			var best := float(data["best_time"])
+			return 1.0 if best > 0.0 and best < 1800.0 else 0.0
+	return 0.0
+
+
+func feat_achieved(f: Dictionary) -> bool:
+	return not f.is_empty() and feat_value(f["what"]) >= float(f["n"])
+
+
+func feats_done() -> int:
+	return Catalog.FEATS.filter(func(f: Dictionary) -> bool: return feat_achieved(f)).size()
+
+
+# As que ficaram prontas desde a última olhada. Cada uma é contada uma vez só.
+func check_feats() -> Array[Dictionary]:
+	var fresh: Array[Dictionary] = []
+	for f: Dictionary in Catalog.FEATS:
+		if feat_achieved(f) and not data["feats"].has(f["id"]):
+			data["feats"].append(f["id"])
+			fresh.append(f)
+	if not fresh.is_empty():
+		save()
+	return fresh
 
 
 # --- estatísticas, recorde e desafio do dia -------------------------------------------

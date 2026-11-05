@@ -38,9 +38,11 @@ const STAGES := {
 	"raposa": {"biome": "bosque", "kind": "chefe", "next": ["trono"]},
 	"trono": {"biome": "mar_de_cinzas", "kind": "chefe", "next": []},
 	"sala_dos_treze": {"biome": "observatorio", "kind": "sala", "next": []},
+	"beira": {"biome": "mar_de_cinzas", "kind": "beira", "next": ["mar_de_cinzas"]},
 }
 const FIRST := "mar_de_cinzas"
 const HALL := "sala_dos_treze"
+const BEIRA := "beira"
 const MAX_HEAT := 4
 const MAX_PLUS := 5
 
@@ -60,6 +62,9 @@ var weapon_kills := {}     # id da arma/habilidade -> abates nesta partida
 var killer := ""           # quem deu o último golpe no herói
 var hurt_by := {}          # quem tirou quanta vida do herói nesta partida
 var active := false
+var start_mutation := ""   # escolhida no poço da Beira
+var advantage := ""        # escolhida na carroça da Beira
+var revived := false       # a vantagem Cinza que Volta já foi usada
 
 
 func new_run(seed_override := -1, heat_level := 0, plus_level := 0) -> void:
@@ -78,6 +83,33 @@ func new_run(seed_override := -1, heat_level := 0, plus_level := 0) -> void:
 	weapon_kills = {}
 	killer = ""
 	hurt_by = {}
+	start_mutation = ""
+	advantage = ""
+	revived = false
+	active = true
+
+
+# A Beira: o herói já está de pé, com o que escolheu, mas a partida não começou:
+# sem relógio, sem caminho, sem nada salvo. Quem a atravessa chama depart().
+func enter_beira() -> void:
+	var cycle := clampi(int(Meta.data.get("pick_plus", 0)), 0, int(Meta.data.get("plus", 0)))
+	var embers := clampi(int(Meta.data.get("pick_heat", 0)), 0, int(Meta.data["heat"]))
+	new_run(-1, MAX_HEAT if cycle > 0 else embers, cycle)
+	stage_id = BEIRA
+	path = []
+	active = false
+	var mutation := String(Meta.data.get("pick_mutation", ""))
+	start_mutation = mutation if Meta.start_mutations().has(mutation) else ""
+	var pick := String(Meta.data.get("pick_advantage", ""))
+	advantage = pick if Meta.has_advantage(pick) else ""
+
+
+func depart() -> void:
+	stage_id = FIRST
+	path = [FIRST]
+	carry = {}
+	time = 0.0
+	stage_time = 0.0
 	active = true
 
 
@@ -134,7 +166,7 @@ func plus_hp_mult() -> float:
 
 # Novo Jogo+: os pesadelos rendem mais essência, e alguns vêm como elite.
 func essence_mult() -> float:
-	return 1.0 + 0.5 * mini(plus, 1)
+	return (1.0 + 0.5 * mini(plus, 1)) * (1.25 if advantage == "olho_coletor" else 1.0)
 
 
 func plus_elite_chance() -> float:
@@ -171,8 +203,29 @@ func starter_kit(p: Player) -> void:
 		for stat in Combat.STATS:
 			p.levels[stat] += 1
 		p.gold = maxi(p.gold, 100)
+	_apply_advantage(p)
+	if start_mutation != "":
+		p.add_mutation(start_mutation)
 	p.recompute_max_hp()
 	p.hp = p.max_hp
+
+
+func _apply_advantage(p: Player) -> void:
+	match advantage:
+		"saco_moedas":
+			p.gold += 80
+		"frasco_reserva":
+			p.max_flasks += 1
+			p.flasks = p.max_flasks
+		"lamina_afiada":
+			p.weapons = [Gear.of(p.weapons[0].data, p.weapons[0].tier + 1), Gear.of(p.weapons[1].data, p.weapons[1].tier + 1)]
+		"bolso_fundo":
+			var pool: Array[Resource] = Catalog.unlocked_pool().filter(func(r: Resource) -> bool:
+				return r is SkillData and r != p.skills[0].data)
+			if not pool.is_empty():
+				var rng := RandomNumberGenerator.new()
+				rng.seed = seed_value + 3
+				p.skills[1] = Gear.of(pool[rng.randi_range(0, pool.size() - 1)])
 
 
 func save_player(p: Player) -> void:
@@ -214,7 +267,8 @@ func snapshot() -> Dictionary:
 		c["skills"] = c["skills"].map(_gear_out)
 	return {"seed": seed_value, "stage": stage_id, "in_passage": in_passage, "path": path.duplicate(),
 		"time": time, "heat": heat, "daily": daily, "kills_by": kills_by.duplicate(),
-		"weapon_kills": weapon_kills.duplicate(), "carry": c, "plus": plus}
+		"weapon_kills": weapon_kills.duplicate(), "carry": c, "plus": plus,
+		"start_mutation": start_mutation, "advantage": advantage, "revived": revived}
 
 
 func restore(s: Dictionary) -> void:
@@ -224,6 +278,9 @@ func restore(s: Dictionary) -> void:
 	path.assign(s["path"])
 	time = float(s["time"])
 	daily = s["daily"]
+	start_mutation = String(s.get("start_mutation", ""))
+	advantage = String(s.get("advantage", ""))
+	revived = bool(s.get("revived", false))
 	kills_by = s["kills_by"].duplicate()
 	weapon_kills = s["weapon_kills"].duplicate()
 	var c: Dictionary = s["carry"].duplicate()

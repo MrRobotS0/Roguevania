@@ -174,6 +174,8 @@ def catalog_list(name):
 
 
 MUTATIONS, BLESSINGS = catalog_list("MUTATIONS"), catalog_list("BLESSINGS")
+ADVANTAGES, FEATS = catalog_list("ADVANTAGES"), catalog_list("FEATS")
+FEAT_TITLE = {f["id"]: f["title"] for f in FEATS}
 STAGE_NAMES = dict(re.findall(r'^\t"(\w+)": "([^"]+)",$', catalog.split("const STAGE_NAMES")[1].split("}")[0], re.M))
 HINTS = {"mar_de_cinzas": "O COMEÇO DE TODA PARTIDA · CINZA E VIDRO"}
 HINTS.update(dict(re.findall(r'^\t"(\w+)": "([^"]+)",$', catalog.split("const STAGE_HINTS")[1].split("}")[0], re.M)))
@@ -488,6 +490,26 @@ def blessing_rows():
         bi("%d de essência" % m["cost"], "%d essence" % m["cost"])) for m in BLESSINGS)
 
 
+def advantage_rows():
+    def how(a):
+        if "needs" not in a:
+            return bi("Desde o começo", "From the start")
+        t = FEAT_TITLE[a["needs"]]
+        return bi("Conquista: " + t, "Achievement: " + en(t, "title"))
+    return "".join('<li data-q="%s"><b>%s</b><span>%s</span><em>%s</em></li>' % (
+        norm(a["title"], en(a["title"], "title"), a["detail"], EN.get(a["detail"], "")),
+        bi(a["title"], en(a["title"], "title"), "title"), bi(a["detail"].capitalize(), sentence(EN.get(a["detail"], a["detail"]))),
+        how(a)) for a in ADVANTAGES)
+
+
+# As secretas ficam só na contagem: são spoiler do final.
+def feat_rows():
+    return "".join('<li data-q="%s"><b>%s</b><span>%s</span></li>' % (
+        norm(f["title"], en(f["title"], "title"), f["detail"], EN.get(f["detail"], "")),
+        bi(f["title"], en(f["title"], "title"), "title"), bi(f["detail"].capitalize(), sentence(EN.get(f["detail"], f["detail"]))))
+        for f in FEATS if not f.get("secret"))
+
+
 def pages(lst):
     return "".join("<p>%s</p>" % bi(t) for t in lst)
 
@@ -567,8 +589,11 @@ FAQ = [("O que perco quando morro?", "What do I lose when I die?",
         "Ouro e o que você carrega. Essência entregue à Vigia, plantas, bênçãos, aparências e runas ficam.",
         "Gold and what you carry. Essence spent at the Watcher, blueprints, blessings, skins and runes stay.", "progresso", "Progresso", "Progression"),
        ("Como funciona uma partida?", "How does a run work?",
-        "Dez andares. Cada domínio termina no guardião; na passagem você escolhe um entre três caminhos.",
-        "Ten floors. Each domain ends with its guardian; in the passage you pick one of three paths.", "dominios", "Ver a rota", "See the route"),
+        "Você renasce na Beira, escolhe o que levar e atravessa o arco. Daí são dez andares, e o relógio só corre depois do arco.",
+        "You are reborn on the Shore, choose what to take and cross the arch. Then come ten floors, and the clock only runs past the arch.", "beira", "A Beira", "The Shore"),
+       ("Onde troco de aparência e dificuldade?", "Where do I change skin and difficulty?",
+        "Na Beira: os mantos trocam a aparência, o braseiro escolhe as brasas e os ciclos do Novo Jogo+.",
+        "On the Shore: the cloaks change your skin, the brazier picks embers and New Game+ cycles.", "beira", "A Beira", "The Shore"),
        ("Como venço um guardião?", "How do I beat a guardian?",
         "Todo golpe é avisado. A cada três golpes ele para, exausto: é a sua janela. Com metade da vida, muda de fase.",
         "Every attack is telegraphed. Every third attack it stops, exhausted: that is your window. At half health, it changes phase.", "guardioes", "Guardiões", "Guardians"),
@@ -576,8 +601,8 @@ FAQ = [("O que perco quando morro?", "What do I lose when I die?",
         "Entregue a planta à Vigia: a arma passa a aparecer nas partidas.",
         "Deliver the blueprint to the Watcher: the weapon starts showing up in runs.", "armas", "Armas", "Weapons"),
        ("Onde pego mutações?", "Where do I get mutations?",
-        "No altar de cada passagem. Até três por partida; valem até você morrer.",
-        "At the altar in each passage. Up to three per run; they last until you die.", "mutacoes", "Mutações", "Mutations"),
+        "No altar de cada passagem, até três por partida. O poço da Beira deixa começar com uma que você já bebeu.",
+        "At the altar in each passage, up to three per run. The well on the Shore lets you start with one you already drank.", "mutacoes", "Mutações", "Mutations"),
        ("Como libero o final verdadeiro?", "How do I unlock the true ending?",
         "Vença o Imperador Cego com as 4 Brasas do Deus, a dificuldade máxima.",
         "Beat the Blind Emperor with all 4 God's Embers, the highest difficulty.", "progresso", "Brasas do Deus", "God's Embers"),
@@ -595,7 +620,7 @@ def main():
                                   ("guardioes", "Guardiões", "Guardians", c["boss"]), ("criaturas", "Criaturas", "Creatures", n_creatures)]),
               ("Equipamento", "Gear", [("armas", "Armas", "Weapons", c["weap"]), ("habilidades", "Habilidades", "Skills", c["skill"]),
                                        ("mutacoes", "Mutações", "Mutations", c["mut"]), ("aparencias", "Aparências", "Skins", c["skin"])]),
-              ("Consulta", "Reference", [("progresso", "Progresso", "Progression", None), ("comandos", "Comandos", "Controls", None)])]
+              ("Consulta", "Reference", [("beira", "A Beira", "The Shore", None), ("progresso", "Progresso", "Progression", None), ("comandos", "Comandos", "Controls", None)])]
     nav = ""
     for gp, ge, items in groups:
         head = "<span>%s</span>" % bi(gp, ge) if gp else ""
@@ -607,6 +632,7 @@ def main():
             ("armas", "Armas", "Weapons", c["weap"], "Dano, crítico e como conseguir", "Damage, crits and how to get them"),
             ("habilidades", "Habilidades", "Skills", c["skill"], "O que fazem e quanto demoram a recarregar", "What they do and how long they recharge"),
             ("mutacoes", "Mutações", "Mutations", c["mut"], "Bônus do altar que valem até você morrer", "Altar bonuses that last until you die"),
+            ("beira", "A Beira", "The Shore", None, "Onde você renasce e escolhe o que levar", "Where you are reborn and choose what to take"),
             ("progresso", "Progresso", "Progression", None, "O que fica para sempre e a dificuldade", "What you keep forever, and difficulty"),
             ("comandos", "Comandos", "Controls", None, "Teclado e controle", "Keyboard and gamepad")]
     hub = "".join('<a href="#%s"><b>%s%s</b><span>%s</span></a>' % (
@@ -621,6 +647,7 @@ def main():
     for k, v in dict(NAV=nav, HUB=hub, FAQ=faq, ROUTE=route_section(), DOMAINS=domains, GUARDIANS=guardians(), CREATURES=creatures,
                      WEAPONS=gear_rows("weapons"), SKILLS=gear_rows("skills"), SKINS=skin_rows(), STAT_CHIPS=stat_chips(),
                      MUTATIONS=mutation_rows(), BLESSINGS=blessing_rows(), HEAT=heat, CONTROLS=ctrl,
+                     ADVANTAGES=advantage_rows(), FEATS=feat_rows(), FEAT_COUNT=str(len(FEATS)), FEAT_SECRET=str(sum(1 for f in FEATS if f.get("secret"))),
                      INTRO=pages(INTRO), ENDING=pages(ENDING), TRUE_ENDING=pages(TRUE_ENDING),
                      FINAL=pages(REVEAL + FINAL), GODS_END=fate_rows(SEATS, True), AFTER=fate_rows(AFTER, False),
                      PLUS_STORY=pages(PLUS_INTRO + PLUS_ENDING),
