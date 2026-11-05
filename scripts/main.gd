@@ -132,6 +132,9 @@ func _abandon_saved_first(then: Callable) -> bool:
 
 
 func _on_screen_confirmed() -> void:
+	if screen.mode == "victory" and screen.to_title:
+		_show_title()
+		return
 	if _abandon_saved_first(_on_screen_confirmed):
 		return
 	var unlocked := int(Meta.data["heat"])
@@ -165,6 +168,8 @@ func _on_title_option(id: String) -> void:
 	match id:
 		"continue":
 			continue_run()
+		"plus":
+			open_plus()
 		"update":
 			Updater.restart_into()
 		"skins":
@@ -237,6 +242,23 @@ func open_chromas(s: SkinData) -> void:
 	menu.select(maxi(ids.find(now), 0) if worn else 0)
 
 
+# Novo Jogo+: cada ciclo vencido libera o próximo.
+func open_plus() -> void:
+	if _abandon_saved_first(open_plus):
+		return
+	var top := clampi(int(Meta.data.get("plus", 1)), 1, Run.MAX_PLUS)
+	var options: Array[Dictionary] = []
+	for n in range(1, top + 1):
+		options.append({"label": "CICLO %d" % n, "detail": "+%d%% DE VIDA E +%d%% DE DANO ALÉM DAS 4 BRASAS" % [25 * n, 15 * n],
+			"color": Palette.BURN.lerp(Palette.HURT, float(n) / Run.MAX_PLUS)})
+	menu.open_choice("NOVO JOGO+", "VOCÊ VOLTA MAIS FORTE. OS PESADELOS TAMBÉM.", options, func(i: int) -> void:
+		screen.close()
+		Music.play("passagem")
+		cutscene.play(PackedStringArray(Story.PLUS_INTRO), func() -> void:
+			start_run(-1, Run.MAX_HEAT, i + 1)))
+	menu.select(top - 1)
+
+
 # Na primeira partida, antes de tudo, a abertura.
 func _begin(seed_value: int, heat: int) -> void:
 	if Meta.data.get("intro_seen", false):
@@ -257,6 +279,9 @@ func open_codex() -> void:
 		{"label": "BESTIÁRIO  ·  %d DE %d" % [known.size(), Story.BESTIARY.size()], "detail": "O QUE VOCÊ JÁ DERROTOU"},
 		{"label": "REVER A ABERTURA", "detail": ""},
 	]
+	if Meta.awake():
+		options.append({"label": "REVER O FINAL", "detail": "O QUE ACONTECEU COM OS DEUSES"})
+		options.append({"label": "OS TREZE", "detail": "O DESFECHO DE CADA UM"})
 	menu.open_choice("CÓDICE", "", options, _on_codex_pick)
 
 
@@ -268,6 +293,19 @@ func _on_codex_pick(i: int) -> void:
 			_codex_bestiary.call_deferred()
 		2:
 			cutscene.play.call_deferred(PackedStringArray(Story.INTRO), Callable())
+		3:
+			var pages := PackedStringArray(Story.REVEAL)
+			pages.append_array(Story.FINAL)
+			cutscene.play.call_deferred(pages, Callable())
+		4:
+			_codex_gods.call_deferred()
+
+
+func _codex_gods() -> void:
+	var lines := PackedStringArray()
+	for id: String in Story.SEATS:
+		lines.append("%s: %s" % [Story.god_name(id), Story.SEATS[id]])
+	menu.open_text("OS TREZE", "\n\n".join(lines))
 
 
 func _codex_lore() -> void:
@@ -298,8 +336,8 @@ func continue_run() -> void:
 	_load_stage()
 
 
-func start_run(seed_value := -1, heat := 0) -> void:
-	Run.new_run(seed_value, heat)
+func start_run(seed_value := -1, heat := 0, plus := 0) -> void:
+	Run.new_run(seed_value, heat, plus)
 	_load_stage()
 
 
@@ -324,6 +362,11 @@ func _load_stage() -> void:
 		"passagem":
 			level.build_passage(b, Run.stage_seed())
 			Music.play("passagem")
+		"sala":
+			level.build_hall(b, Run.stage_seed())
+			foreground.style = ""
+			weather.kind = "stars"
+			Music.play("passagem")
 		_:
 			level.build_generated(b, Run.stage_seed())
 			weather.kind = b.weather
@@ -339,7 +382,8 @@ func _load_stage() -> void:
 	# a saída é usada no meio do passo de física do herói: troca de andar no fim do quadro
 	level.exit_used.connect(_on_exit, CONNECT_DEFERRED)
 	_playing = true
-	Run.active = true
+	# o relógio da partida parou no Imperador: a sala não conta tempo
+	Run.active = stage["kind"] != "sala"
 	curtain.reveal()
 
 
@@ -367,11 +411,41 @@ func _on_exit(dest: String) -> void:
 			Run.discard_saved()
 			Meta.record_run(true, level.player.kills)
 			Meta.record_heat_win(Run.heat)
+			if Run.plus > 0:
+				Meta.record_plus_win(Run.plus)
 			Run.set_meta("record", Meta.record_stats(true))
 			var hero := level.player
 			Music.play("passagem")
-			cutscene.play(Story.ending_pages(Run.heat), func() -> void:
-				screen.show_victory(hero)
+			if Run.plus > 0:
+				cutscene.play(PackedStringArray(Story.PLUS_ENDING), func() -> void:
+					screen.show_victory(hero)
+					Music.play("titulo"))
+			elif Run.heat >= Run.MAX_HEAT:
+				# a porta abre: o herói atravessa e anda até as cadeiras
+				cutscene.play(Story.ending_pages(Run.heat), func() -> void:
+					Run.stage_id = Run.HALL
+					_load_stage())
+			else:
+				cutscene.play(Story.ending_pages(Run.heat), func() -> void:
+					screen.show_victory(hero)
+					Music.play("titulo"))
+			return
+		"descanso":
+			# a virada: depois dela o herói ainda precisa apagar a última brasa com as próprias mãos
+			get_tree().paused = true
+			cutscene.play(PackedStringArray(Story.REVEAL), func() -> void:
+				get_tree().paused = false
+				level.hall_reveal())
+			return
+		"soltar":
+			_playing = false
+			Run.active = false
+			Run.discard_saved()
+			Meta.wake()
+			var hero := level.player
+			Music.play("passagem")
+			cutscene.play(PackedStringArray(Story.FINAL), func() -> void:
+				screen.show_victory(hero, true)
 				Music.play("titulo"))
 			return
 		"passagem":
@@ -401,7 +475,7 @@ func _on_player_died() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("debug"):
 		Fx.debug = not Fx.debug
-	elif event.is_action_pressed("reset") and _playing:
+	elif event.is_action_pressed("reset") and _playing and Run.stage_id != Run.HALL:
 		start_run()
 	elif event.is_action_pressed("pause") and _playing and not menu.is_open() and not options_screen.is_open():
 		_pause()
@@ -419,6 +493,8 @@ func _pause() -> void:
 	var info := "MUTAÇÕES: " + ", ".join(PackedStringArray(names)) if not names.is_empty() else ""
 	if Run.heat > 0:
 		info += ("   ·   " if info != "" else "") + "BRASAS: %d" % Run.heat
+	if Run.plus > 0:
+		info += "   ·   CICLO %d" % Run.plus
 	menu.open_choice("PAUSA", info, options, _on_pause_pick)
 
 
@@ -431,8 +507,10 @@ func _on_pause_pick(i: int) -> void:
 		_show_title()
 	elif i == 4:
 		Run.discard_saved()
-		Meta.record_run(false, level.player.kills)
-		Meta.record_stats(false)
+		# na sala a partida já foi contada como vitória
+		if Run.stage_id != Run.HALL:
+			Meta.record_run(false, level.player.kills)
+			Meta.record_stats(false)
 		_show_title()
 
 

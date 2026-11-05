@@ -11,6 +11,7 @@ signal boss_defeated
 
 const AMBIENT := Color(0.56, 0.52, 0.6)
 const PASSAGE_ROOM := "res://content/passagem.txt"
+const HALL_ROOM := "res://content/sala_treze.txt"
 const TIMED_LIMIT := 150.0
 const BLUEPRINT_CHANCE := 0.035
 
@@ -28,6 +29,7 @@ var _lore_index := 0
 var _after_boss: Array[Node2D] = []
 var _exit_index := 0
 var _explore_clock := 0.0
+var seats: Array[GodSeat] = []
 
 
 func build(room_text: String, with_camera := true) -> void:
@@ -61,6 +63,26 @@ func build_passage(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	room.load_file(PASSAGE_ROOM)
 	_populate(with_camera)
 	Fx.banner("A PASSAGEM", "A VIGIA ESPERA ONDE OS DOMÍNIOS SE TOCAM")
+
+
+# Do outro lado da porta: as treze cadeiras. Sem inimigos.
+func build_hall(b: BiomeData, seed_value: int, with_camera := true) -> void:
+	rng.seed = seed_value
+	tier = b.tier
+	kind = "sala"
+	_make_room(b)
+	room.load_file(HALL_ROOM)
+	_populate(with_camera)
+	Fx.banner("A SALA DOS TREZE", "CADA BRASA É UM DEUS QUE NÃO CONSEGUE MORRER")
+
+
+func seats_left() -> int:
+	return seats.filter(func(s: GodSeat) -> bool: return not s.rested).size()
+
+
+# Depois da virada: a Vigia senta na cadeira fria e sobra a última brasa.
+func hall_reveal() -> void:
+	seats[seats.size() - 1].light_up()
 
 
 func build_boss(b: BiomeData, seed_value: int, with_camera := true) -> void:
@@ -134,7 +156,7 @@ func _spawn_marker(m: Dictionary) -> void:
 			if biome:
 				var path := biome.pick_enemy(m["ch"], rng)
 				if path != "":
-					spawn_script(path, at)
+					spawn_script(path, at, Run.plus > 0 and rng.randf() < Run.plus_elite_chance())
 		"E":
 			if biome and not biome.elites.is_empty():
 				var e := spawn_script(biome.elites[rng.randi_range(0, biome.elites.size() - 1)], at, true)
@@ -157,6 +179,9 @@ func _spawn_marker(m: Dictionary) -> void:
 			if biome and not biome.lore.is_empty():
 				ins.text = biome.lore[_lore_index % biome.lore.size()]
 				_lore_index += 1
+				# Novo Jogo+: a primeira pedra conta como o domínio ficou
+				if Run.plus > 0 and _lore_index == 1 and Story.AFTER.has(biome.id):
+					ins.text = Story.AFTER[biome.id]
 			_place(ins, at)
 		"V":
 			var k := Keeper.new()
@@ -193,6 +218,19 @@ func _spawn_marker(m: Dictionary) -> void:
 			var altar := RuneAltar.new()
 			altar.rune = biome.rune if biome and biome.rune != "" else "asa"
 			_place(altar, at)
+		"Y":
+			var ids: Array = Story.SEATS.keys()
+			if seats.size() < ids.size():
+				var id: String = ids[seats.size()]
+				var seat := GodSeat.new()
+				seat.god = Story.god_name(id)
+				seat.line = Story.SEATS[id]
+				seat.color = Color(HudTheme.of(id)["accent"])
+				seat.cold = id == "cavernas"
+				seats.append(seat)
+				_place(seat, at)
+		"Z":
+			_place(LastSeat.new(), at)
 
 
 # Nome de cada portal pelo lugar: o do começo, o da saída e os do caminho.

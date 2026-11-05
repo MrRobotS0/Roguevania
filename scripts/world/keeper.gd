@@ -89,7 +89,8 @@ func _open_shop(p: Player) -> void:
 			option["icon"] = GearIcon.named("calice")
 		options.append(option)
 	options.append({"label": "SAIR", "detail": "A ESSÊNCIA QUE SOBRAR SE PERDE SE VOCÊ MORRER"})
-	var line: String = LINES[int(Run.time) % LINES.size()]
+	var pool: Array = Story.KEEPER_AWAKE if Meta.awake() else LINES
+	var line: String = pool[int(Run.time) % pool.size()]
 	menu().open_choice("A VIGIA  ·  ESSÊNCIA %d" % p.essence, line, options,
 		func(i: int) -> void:
 			if i >= offers.size():

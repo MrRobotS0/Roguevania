@@ -37,9 +37,12 @@ const STAGES := {
 	"serpe": {"biome": "cavernas", "kind": "chefe", "next": ["trono"]},
 	"raposa": {"biome": "bosque", "kind": "chefe", "next": ["trono"]},
 	"trono": {"biome": "mar_de_cinzas", "kind": "chefe", "next": []},
+	"sala_dos_treze": {"biome": "observatorio", "kind": "sala", "next": []},
 }
 const FIRST := "mar_de_cinzas"
+const HALL := "sala_dos_treze"
 const MAX_HEAT := 4
+const MAX_PLUS := 5
 
 var seed_value := 0
 var stage_id := FIRST
@@ -49,6 +52,7 @@ var carry := {}
 var time := 0.0
 var stage_time := 0.0
 var heat := 0              # Brasas do Deus: dificuldade escolhida no título
+var plus := 0              # Novo Jogo+: em que ciclo está (0 = partida normal)
 var stage_tier := 0        # profundidade do andar atual (inimigos ficam mais fortes)
 var daily := ""            # data do desafio do dia ("" = partida normal)
 var kills_by := {}         # título do inimigo -> abates nesta partida
@@ -58,7 +62,7 @@ var hurt_by := {}          # quem tirou quanta vida do herói nesta partida
 var active := false
 
 
-func new_run(seed_override := -1, heat_level := 0) -> void:
+func new_run(seed_override := -1, heat_level := 0, plus_level := 0) -> void:
 	seed_value = seed_override if seed_override >= 0 else randi()
 	stage_id = FIRST
 	in_passage = false
@@ -67,6 +71,7 @@ func new_run(seed_override := -1, heat_level := 0) -> void:
 	time = 0.0
 	stage_time = 0.0
 	heat = clampi(heat_level, 0, MAX_HEAT)
+	plus = clampi(plus_level, 0, MAX_PLUS)
 	stage_tier = 0
 	daily = ""
 	kills_by = {}
@@ -116,11 +121,24 @@ func _process(delta: float) -> void:
 # --- dificuldade ------------------------------------------------------------------
 
 func enemy_hp_mult() -> float:
-	return (1.0 + 0.4 * heat) * (1.0 + 0.2 * stage_tier)
+	return (1.0 + 0.4 * heat) * (1.0 + 0.2 * stage_tier) * plus_hp_mult()
 
 
 func enemy_damage_mult() -> float:
-	return (1.0 + 0.25 * heat) * (1.0 + 0.1 * stage_tier)
+	return (1.0 + 0.25 * heat) * (1.0 + 0.1 * stage_tier) * (1.0 + 0.15 * plus)
+
+
+func plus_hp_mult() -> float:
+	return 1.0 + 0.25 * plus
+
+
+# Novo Jogo+: os pesadelos rendem mais essência, e alguns vêm como elite.
+func essence_mult() -> float:
+	return 1.0 + 0.5 * mini(plus, 1)
+
+
+func plus_elite_chance() -> float:
+	return 0.09 + 0.03 * plus if plus > 0 else 0.0
 
 
 # --- o que passa de um andar para o outro ------------------------------------------
@@ -137,6 +155,8 @@ func starter_kit(p: Player) -> void:
 		flasks += 1
 	if heat >= 2:
 		flasks -= 1
+	if plus > 0:
+		flasks += 1
 	p.max_flasks = maxi(flasks, 1)
 	p.flasks = p.max_flasks
 	if Meta.is_unlocked("bencao_vigia"):
@@ -145,6 +165,12 @@ func starter_kit(p: Player) -> void:
 		p.levels[Combat.STATS[rng.randi_range(0, 2)]] += 1
 	if Meta.is_unlocked("bolsa_inicial"):
 		p.gold = 60
+	if plus > 0:
+		# quem começa o Novo Jogo+ já sabe quem é
+		p.weapons = [Gear.of(p.weapons[0].data, 1), Gear.of(p.weapons[1].data, 1)]
+		for stat in Combat.STATS:
+			p.levels[stat] += 1
+		p.gold = maxi(p.gold, 100)
 	p.recompute_max_hp()
 	p.hp = p.max_hp
 
@@ -188,11 +214,11 @@ func snapshot() -> Dictionary:
 		c["skills"] = c["skills"].map(_gear_out)
 	return {"seed": seed_value, "stage": stage_id, "in_passage": in_passage, "path": path.duplicate(),
 		"time": time, "heat": heat, "daily": daily, "kills_by": kills_by.duplicate(),
-		"weapon_kills": weapon_kills.duplicate(), "carry": c}
+		"weapon_kills": weapon_kills.duplicate(), "carry": c, "plus": plus}
 
 
 func restore(s: Dictionary) -> void:
-	new_run(int(s["seed"]), int(s["heat"]))
+	new_run(int(s["seed"]), int(s["heat"]), int(s.get("plus", 0)))
 	stage_id = s["stage"]
 	in_passage = s["in_passage"]
 	path.assign(s["path"])

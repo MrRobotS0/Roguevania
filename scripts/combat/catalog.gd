@@ -80,6 +80,7 @@ const AFFIXES := {
 const SKINS := [
 	"res://content/skins/andarilho.tres",
 	"res://content/skins/manto_cinza.tres",
+	"res://content/skins/desperto.tres",
 	"res://content/skins/herdeiro_vesper.tres",
 	"res://content/skins/casca_vidro.tres",
 	"res://content/skins/olhos_fechados.tres",
@@ -115,6 +116,7 @@ const BIOMES := {
 }
 
 const STAGE_NAMES := {
+	"sala_dos_treze": "A Sala dos Treze",
 	"mar_de_cinzas": "O Mar de Cinzas",
 	"saloes": "Os Salões do Último Inverno",
 	"forja_rubra": "A Forja Rubra",

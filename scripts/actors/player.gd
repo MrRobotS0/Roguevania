@@ -881,7 +881,7 @@ func heal(amount: int) -> void:
 
 
 func add_essence(n: int) -> void:
-	essence += n
+	essence += roundi(n * Run.essence_mult())
 	gear_changed.emit()
 
 

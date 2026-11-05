@@ -20,11 +20,81 @@ const ENDING := [
 	"A Vigia te encontra de novo na beira do Mar de Cinzas. \"Você de novo. Ou outro igual a você.\"",
 ]
 
-# Só com as quatro brasas acesas.
+# Só com as quatro brasas acesas: antes da sala das cadeiras.
 const TRUE_ENDING := [
-	"Com todas as brasas acesas, a porta não resiste. Do outro lado, treze cadeiras vazias.",
-	"E uma décima quarta, menor, de frente para as outras. Na madeira, alguém gravou o seu nome. Faz muito tempo.",
-	"Você entende, enfim, por que a Vigia sempre te reconhece. Você não chegou depois dos deuses. Você é o que eles deixaram para trás.",
+	"Com todas as brasas acesas, a porta não resiste. Do outro lado não há luz nem deus dormindo.",
+	"O Imperador nunca viu nada. Arrancou os olhos para preferir outra história.",
+	"Só há treze cadeiras. Em quase todas, uma brasa que não consegue apagar. Na última, alguém gravou o seu nome. Faz muito tempo.",
+]
+
+# O que cada brasa revela: o guardião que você matou era o próprio deus. A das Cavernas está fria.
+const SEATS := {
+	"saloes": "Dentro da brasa, um uivo. Você conhece esse uivo. O Lobo não guardava a porta do dono. Era o dono, esperando.",
+	"forja_rubra": "Dentro da brasa, uma marreta. O Colosso não era o que o deus esqueceu ligado. Era o deus, que não sabia parar.",
+	"necropole": "O Rei Esquecido lembrava de todos os mortos, menos de si mesmo. Ele era o deus que guardava os nomes. O seu foi o último que ele perdeu.",
+	"torre_babel": "O Arquiteto era mudo porque já tinha dito todas as palavras. Era o deus das línguas. Você nunca perguntou nada a ele.",
+	"jardim_primordial": "A pedra avisou: não sumiu, virou raiz. Você cortou a Mãe-Raiz mesmo assim. Ela lembra. Agora pode esquecer.",
+	"catedral": "Ninguém respondia às preces, então ele virou a resposta. Não veio outro. O Que Responde sempre foi ele.",
+	"carcosa": "Não havia nada embaixo da máscara do Rei sem Rosto porque o deus era a máscara.",
+	"observatorio": "O Último Astrônomo contou as estrelas até acabarem. Era o próprio deus contando. Você foi a última conta.",
+	"ventre": "O Insaciável ficou com fome dos irmãos e comeu o próprio domínio. Você o abriu por dentro. A fome se deita.",
+	"penhascos": "O Dragão foi sonhado para ninguém acordar quem sonhava. Mas só sobrou o sonho. Você matou tudo o que restava dele.",
+	"bosque": "A Raposa não ia na frente do deus. A Raposa era o deus, ainda andando. Chegou.",
+	"cavernas": "Esta nunca teve brasa. A Serpe guardava a porta de um buraco vazio. O deus que se escondia não desceu. Então onde ele está?",
+}
+
+# Ao sentar na cadeira do deus que ardeu: a virada.
+const REVEAL := [
+	"Você senta, e a cadeira te serve. Aqui ardeu um deus, e ninguém sabe qual. Foi você.",
+	"Os treze apodreciam sem conseguir morrer. Você foi o primeiro a entender, e ateou fogo em si mesmo para virar cinza. A cinza esquece. Quem lembra não consegue matar os próprios irmãos.",
+	"Você pediu a uma só pessoa que te refizesse, quantas vezes fosse preciso, e que nunca contasse. Ele sabia. E não contou a ninguém.",
+	"Atrás de você, uma voz que você conhece. \"Você de novo.\" A Serpe guardava um buraco vazio. O deus que se escondia se escondeu onde todo mundo olhava: debaixo do capuz da Vigia.",
+	"Ela encheu seus frascos. Vendeu suas armas. Guardou a essência de cada irmão que você matou, e te refez da cinza a cada morte. \"Ou outro igual a você.\" Eram todos você.",
+	"Ela se senta na cadeira fria, e a brasa dela acende. \"Foi o trato. Você apaga a última. Sozinha eu não consigo.\"",
+]
+
+# Ao apagar a brasa da Vigia: o desfecho dos deuses.
+const FINAL := [
+	"Moksha não é o seu nome. É a palavra que você pediu para ouvir a cada volta, até entender: soltar.",
+	"A última brasa se apaga na sua mão. Por baixo do capuz havia um rosto, afinal. Parecia descansado.",
+	"Os doze não voltam. Ninguém mais sonha este mundo, e ele continua aqui. Fazia tempo que não precisava de deuses.",
+	"Amanhece no Mar de Cinzas. O gelo pinga, as bigornas param, os mortos lembram os próprios nomes.",
+	"Resta uma brasa: a sua. Não há mais ninguém para apagá-la. O manto da Vigia ficou de pé na beira do mar, e serve em você.",
+]
+
+# Novo Jogo+: os pesadelos não souberam que acabou.
+const PLUS_INTRO := [
+	"Os doze descansam. Os pesadelos que eles sonhavam não souberam: continuam nos domínios, sonhando sozinhos.",
+	"Você veste o manto e volta. É o último deus, e ninguém mais vai fazer esse trabalho.",
+]
+
+const PLUS_ENDING := [
+	"O Imperador cai de novo. Não era ele: era o pesadelo de um trono que ninguém mais quer.",
+	"Em algum domínio, nesta noite, ninguém sonhou nada. Ainda há o que soltar.",
+]
+
+# Novo Jogo+: como cada domínio ficou depois que o deus dele descansou.
+const AFTER := {
+	"mar_de_cinzas": "A cinza já não fala. Os sacerdotes acham que é castigo. Os médicos dão alta.",
+	"saloes": "Alguém tirou a mesa. Os pratos estão lavados, e o gelo pinga.",
+	"forja_rubra": "As bigornas estão frias. O que ainda bate aqui é pesadelo, e não sabe fazer nada.",
+	"necropole": "As lápides têm nome de novo. O que anda por aqui não é morto de ninguém.",
+	"torre_babel": "Os escribas leram o original. Era uma lista de nomes. Pararam de copiar.",
+	"jardim_primordial": "A raiz secou sem dor. Nasceu uma coisa pequena em cima dela, sem nome.",
+	"catedral": "A água baixou até o joelho. No fundo, o que respondia ainda responde, para ninguém.",
+	"carcosa": "Alguém tirou a máscara e não sumiu. Os outros ainda não acreditam.",
+	"observatorio": "O caderno de bordo ganhou uma linha nova: JÁ PODE PARAR DE CONTAR.",
+	"ventre": "As paredes pararam de respirar. Os parasitas ainda não perceberam.",
+	"penhascos": "A nuvem se mexeu. O que corre aqui é o resto de um sonho que ninguém sonha.",
+	"cavernas": "A porta do fundo está aberta. Lá embaixo nunca houve ninguém.",
+	"bosque": "As placas agora apontam para um lado só. Os andarilhos estão pensando.",
+}
+
+# Depois do final verdadeiro: só o manto da Vigia ficou.
+const KEEPER_AWAKE := [
+	"O MANTO DELA AINDA VIGIA. NÃO TEM NINGUÉM DENTRO.",
+	"NINGUÉM AQUI. SÓ O MANTO, E O HÁBITO DE VENDER.",
+	"A ESSÊNCIA AGORA É SUA. O MANTO SÓ GUARDA.",
 ]
 
 const BESTIARY := {
@@ -98,7 +168,14 @@ const BESTIARY := {
 
 
 static func ending_pages(heat: int) -> PackedStringArray:
-	var pages := PackedStringArray(ENDING)
-	if heat >= 4:
-		pages.append_array(TRUE_ENDING)
+	if heat < 4:
+		return PackedStringArray(ENDING)
+	# com as quatro brasas a porta abre: "ainda não" e a volta à Vigia ficam de fora
+	var pages := PackedStringArray(ENDING.slice(0, 4))
+	pages.append_array(TRUE_ENDING)
 	return pages
+
+
+# Nome de um dos treze a partir do domínio: "O DEUS QUE ARDEU".
+static func god_name(biome_id: String) -> String:
+	return Catalog.biome(biome_id).subtitle.replace("Domínio do deus", "O deus").to_upper()

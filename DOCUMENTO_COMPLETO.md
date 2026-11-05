@@ -1657,3 +1657,18 @@ Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, 
 **Salas:** `tools/salas_especiais.py` desenha 5 salas por domínio novo (30 no total). Rodar depois de `salas_andares.py`, que limpa a pasta.
 
 **Testes:** 67 casos. Ninguém jogou os domínios novos com tela; o robô ainda morre no Mar de Cinzas, então estas mecânicas foram verificadas só pelos testes.
+
+## 30. O final verdadeiro e o Novo Jogo+ (v0.5.0)
+
+**A virada.** "Você é o que eles deixaram para trás" é isca: a história parece dizer que o herói é um deus esquecido, e a verdade é pior.
+1. A visão do Trono (doze deuses entrando numa porta de luz, dormindo) é mentira do Imperador, que arrancou os olhos para preferir outra história.
+2. Os guardiões não serviam aos deuses: **eram os deuses**, apodrecendo sem conseguir morrer. O herói vinha matando a própria família.
+3. O herói é o deus que ardeu ("aqui ardeu um deus, não se sabe qual"). Ele se queimou de propósito, porque a cinza esquece e quem lembra não consegue matar os irmãos.
+4. A Vigia é o deus que se escondia. A Serpe guardava um buraco vazio; ele se escondeu onde todo mundo olhava. Ela refez o herói da cinza a cada morte ("ou outro igual a você").
+5. Moksha não é nome: é a palavra para "soltar", que o herói pediu para ouvir até entender.
+
+**Como joga (só vencendo com as 4 brasas).** Vencido o Imperador, o portal leva à Sala dos Treze (`content/sala_treze.txt`, `Level.build_hall`), sem inimigos. Doze cadeiras: onze com brasa (`GodSeat`), cada uma revelando qual guardião era aquele deus, e a do que se escondia, fria. A décima terceira tem o nome do herói (`LastSeat`). Sentar mostra a virada (`Story.REVEAL`). A Vigia senta na cadeira fria e a brasa dela acende; apagá-la dá o desfecho (`Story.FINAL`): os doze descansam, o mundo continua sem deuses, e o herói fica com o manto.
+
+**Novo Jogo+.** Liberado no título (`Meta.awake`). Até 5 ciclos, cada vitória libera o próximo. Sempre com 4 brasas; cada ciclo soma +25% de vida e +15% de dano aos inimigos, e 12% a 24% dos comuns viram elite. O herói começa com +1 em cada atributo, armas +1, um frasco a mais, 100 de ouro e 50% mais essência. A primeira pedra de cada domínio conta como ele ficou (`Story.AFTER`); as falas da Vigia viram as do manto vazio. Aparência nova: O Que Ardeu. Códice: Rever o final e Os Treze.
+
+**Wiki.** Uma seção por vez, gerada de `tools/gerar_wiki.py` + `tools/wiki_modelo.html`. O site principal perdeu a seção de movimentos.

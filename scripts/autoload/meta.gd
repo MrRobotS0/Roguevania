@@ -25,7 +25,7 @@ func _defaults() -> Dictionary:
 	return {"unlocked": [], "runs": 0, "wins": 0, "best_kills": 0, "deaths": 0, "skin": "andarilho",
 		"blueprints": [], "runes": [], "heat": 0,
 		"stats": {}, "daily": {}, "best_time": 0.0, "lore": [], "intro_seen": false,
-		"hints": []}
+		"hints": [], "awake": false, "plus": 0}
 
 
 func _load() -> void:
@@ -76,6 +76,8 @@ func feat_done(feat: String) -> bool:
 			return int(data["wins"]) >= 1
 		"deaths10":
 			return int(data["deaths"]) >= 10
+		"despertar":
+			return awake()
 	return false
 
 
@@ -151,6 +153,23 @@ func record_heat_win(level: int) -> void:
 	if level + 1 > int(data["heat"]):
 		data["heat"] = mini(level + 1, 4)
 		save()
+
+
+# Final verdadeiro: o herói sabe quem é. Libera o Novo Jogo+.
+func awake() -> bool:
+	return bool(data.get("awake", false))
+
+
+func wake() -> void:
+	data["awake"] = true
+	data["plus"] = maxi(int(data.get("plus", 0)), 1)
+	save()
+
+
+# Vencer um ciclo libera o próximo.
+func record_plus_win(level: int) -> void:
+	data["plus"] = mini(maxi(int(data.get("plus", 0)), level + 1), Run.MAX_PLUS)
+	save()
 
 
 # --- estatísticas, recorde e desafio do dia -------------------------------------------

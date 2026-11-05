@@ -125,6 +125,7 @@ func _ready() -> void:
 	await _case("Asa de Cinza dá pulo duplo", _double_jump)
 	await _case("parede rachada só cede com o Punho", _cracked_wall)
 	await _case("brasas: inimigo mais forte e bate mais", _heat)
+	await _case("final verdadeiro: as cadeiras, o desfecho e o Novo Jogo+", _true_ending)
 	await _case("mercador vende e o item aparece", _merchant)
 	await _case("ferreiro, escória, lobo e sentinela acertam", _new_enemies)
 	await _case("jato de fogo e estalactite machucam", _hazards)
@@ -865,6 +866,121 @@ func _cracked_wall() -> void:
 	input.then(["attack1"], 2).wait(30)
 	await _run_until_idle()
 	_check(level.room.cell(11, 5) == ".", "a parede não cedeu com o Punho")
+	Meta.use_path("user://teste.save", true)
+
+
+func _true_ending() -> void:
+	Meta.use_path("user://teste.save", true)
+	_check(Story.SEATS.size() == 12 and Story.AFTER.size() == 13, "faltam deuses no desfecho")
+	Lang.use("en")
+	var texts: Array = []
+	texts.append_array(Story.TRUE_ENDING)
+	texts.append_array(Story.REVEAL)
+	texts.append_array(Story.FINAL)
+	texts.append_array(Story.PLUS_INTRO)
+	texts.append_array(Story.PLUS_ENDING)
+	texts.append_array(Story.KEEPER_AWAKE)
+	for id: String in Story.SEATS:
+		_check(Catalog.BIOMES.has(id), "domínio desconhecido: " + id)
+		texts.append(Story.SEATS[id])
+		texts.append(Story.god_name(id))
+	for id: String in Story.AFTER:
+		texts.append(Story.AFTER[id])
+	texts.append(Story.god_name("mar_de_cinzas"))
+	for t: String in texts:
+		_check(Lang.t(t.to_upper()) != t.to_upper(), "sem inglês: " + t)
+	_check(Lang.t("+50% DE VIDA E +30% DE DANO ALÉM DAS 4 BRASAS") == "+50% HEALTH AND +30% DAMAGE BEYOND THE 4 EMBERS", "ciclo: " + Lang.t("+50% DE VIDA E +30% DE DANO ALÉM DAS 4 BRASAS"))
+	Lang.use("pt")
+
+	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _frames(5)
+	main.screen.close()
+	# sem todas as brasas, o final continua igual e não há sala
+	Run.new_run(7, 3)
+	Run.stage_id = "trono"
+	main._load_stage()
+	await _frames(3)
+	main._on_exit("fim")
+	for i in Story.ENDING.size() * 2:
+		main.cutscene.advance()
+	_check(main.screen.mode == "victory" and not main.screen.to_title and not Meta.awake(), "o final comum mudou")
+	main.screen.close()
+	# com as quatro: a porta abre e o herói anda até as cadeiras
+	Run.new_run(7, 4)
+	Run.stage_id = "trono"
+	main._load_stage()
+	await _frames(3)
+	main._on_exit("fim")
+	for i in Story.ending_pages(4).size() * 2:
+		main.cutscene.advance()
+	await _frames(3)
+	var hall: Level = main.level
+	_check(Run.stage_id == Run.HALL and hall.kind == "sala" and hall.seats.size() == 12, "a sala não abriu (%s)" % Run.stage_id)
+	_check(hall.get_children().filter(func(n: Node) -> bool: return n is Enemy).is_empty(), "tem inimigo na sala")
+	_check(not Run.active, "o relógio andou na sala")
+	_check(not Run.saved().is_empty() and Run.saved()["stage"] == Run.HALL, "sair na sala perde o lugar")
+	var last: LastSeat = null
+	for n in hall.get_children():
+		if n is LastSeat:
+			last = n
+	_check(last != null, "falta a cadeira do herói")
+	var hero: Player = hall.player
+	_check(hero.is_on_floor() or hall.room.size_px().x > 1000.0, "sala pequena demais")
+	last.interact(hero)
+	await _frames(3)
+	_check(main.level == hall and not main.cutscene.is_open(), "sentou antes de ver as outras cadeiras")
+	var cold: GodSeat = hall.seats[hall.seats.size() - 1]
+	_check(cold.cold and cold.prompt() == "OLHAR A CADEIRA FRIA", "a cadeira do que se escondia não está fria")
+	for seat: GodSeat in hall.seats:
+		seat.interact(hero)
+		main.menu.close()
+		_check(not seat.can_interact(hero), "a brasa não apagou")
+	_check(hall.seats_left() == 0 and last.prompt() == "SENTAR", "a última cadeira não liberou")
+	# sentar revela; o desfecho só vem depois de apagar a brasa da Vigia
+	last.interact(hero)
+	await _frames(3)
+	_check(main.cutscene.is_open() and not Meta.awake() and get_tree().paused, "sentar não mostrou a virada")
+	for i in Story.REVEAL.size() * 2:
+		main.cutscene.advance()
+	await _frames(3)
+	_check(not get_tree().paused and main.level == hall and not last.can_interact(hero), "a virada não devolveu o jogo")
+	_check(cold.last_ember and cold.can_interact(hero) and cold.prompt() == "APAGAR A BRASA", "a brasa da Vigia não acendeu")
+	_check(not Run.saved().is_empty(), "o save sumiu antes do fim")
+	cold.interact(hero)
+	await _frames(3)
+	_check(main.cutscene.is_open() and Meta.awake() and Run.saved().is_empty(), "apagar a última brasa não deu o desfecho")
+	for i in Story.FINAL.size() * 2:
+		main.cutscene.advance()
+	_check(main.screen.mode == "victory" and main.screen.to_title, "o desfecho não fechou na vitória")
+	_check(Meta.has_skin(Catalog.skin("desperto")), "a aparência não liberou")
+	main.screen.show_title()
+	_check(main.screen._options.any(func(o: Array) -> bool: return o[0] == "plus"), "o título não oferece o Novo Jogo+")
+
+	# Novo Jogo+: herói e inimigos mais fortes, e o ciclo fica salvo
+	Run.new_run(9, 0, 0)
+	var hp0 := Run.enemy_hp_mult()
+	Run.new_run(9, 0, 2)
+	_check(is_equal_approx(Run.enemy_hp_mult(), hp0 * 1.5), "vida do ciclo errada")
+	Run.new_run(9, 4, 2)
+	Run.suspend()
+	var snap := Run.saved()
+	Run.new_run(1, 0)
+	Run.restore(snap)
+	_check(Run.plus == 2 and Run.heat == 4, "o ciclo não voltou do save")
+	main._load_stage()
+	await _frames(3)
+	var p: Player = main.level.player
+	_check(p.levels["furia"] == 1 and p.levels["vigor"] == 1 and p.weapons[0].tier == 1, "o herói não começou mais forte")
+	var before := p.essence
+	p.add_essence(10)
+	_check(p.essence - before == 15, "a essência do ciclo não rendeu")
+	Run.discard_saved()
+	Meta.record_plus_win(2)
+	_check(int(Meta.data["plus"]) == 3, "vencer o ciclo não liberou o próximo")
+	main.queue_free()
+	await _frames(2)
+	Run.new_run(1, 0)
 	Meta.use_path("user://teste.save", true)
 
 

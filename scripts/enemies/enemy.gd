@@ -46,7 +46,7 @@ var _draw_scale := 1.0        # arte pequena desenhada maior (chefes): vem do .j
 
 func _ready() -> void:
 	setup_body(4)
-	max_hp = roundi(max_hp * (Run.enemy_hp_mult() if tier_scaling else 1.0 + 0.4 * Run.heat))
+	max_hp = roundi(max_hp * (Run.enemy_hp_mult() if tier_scaling else (1.0 + 0.4 * Run.heat) * Run.plus_hp_mult()))
 	hp = max_hp
 	_shown_hp = hp
 	z_index = 4

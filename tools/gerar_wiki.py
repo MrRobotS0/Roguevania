@@ -150,6 +150,15 @@ def story_list(name):
 
 
 INTRO, ENDING, TRUE_ENDING = story_list("INTRO"), story_list("ENDING"), story_list("TRUE_ENDING")
+REVEAL, FINAL, PLUS_INTRO, PLUS_ENDING = story_list("REVEAL"), story_list("FINAL"), story_list("PLUS_INTRO"), story_list("PLUS_ENDING")
+
+
+def story_dict(name):
+    m = re.search(r"const %s := \{(.*?)\n\}" % name, story, re.S)
+    return [(k, json.loads('"%s"' % v)) for k, v in re.findall(r'^\t"(\w+)": "((?:[^"\\]|\\.)*)",$', m.group(1), re.M)]
+
+
+SEATS, AFTER = story_dict("SEATS"), story_dict("AFTER")
 
 run = read("scripts", "autoload", "run.gd")
 STAGES = {}
@@ -483,6 +492,19 @@ def pages(lst):
     return "".join("<p>%s</p>" % bi(t) for t in lst)
 
 
+def fate_rows(items, as_god):
+    """O destino de cada deus (ou de cada domínio): nome à esquerda, frase ao lado."""
+    out = []
+    for bid, text in items:
+        b = BIOMES[bid]
+        if as_god:
+            who = bi(b["subtitle"].replace("Domínio do deus", "O deus"), en(b["subtitle"]).replace("Domain of the god", "The god"))
+        else:
+            who = dom_name(bid)
+        out.append('<li style="--c:%s"><b>%s</b><span>%s</span></li>' % (ACCENT.get(bid, "#e8a33d"), who, bi(text)))
+    return "".join(out)
+
+
 def boss_card(script, place_html, place_q, color):
     title, sheet, name, name_en, desc = creature_text(script)
     return ('<article class="boss" data-q="%s" style="--c:%s"><div class="stage">%s</div><h3>%s</h3>'
@@ -557,8 +579,11 @@ FAQ = [("O que perco quando morro?", "What do I lose when I die?",
         "No altar de cada passagem. Até três por partida; valem até você morrer.",
         "At the altar in each passage. Up to three per run; they last until you die.", "mutacoes", "Mutações", "Mutations"),
        ("Como libero o final verdadeiro?", "How do I unlock the true ending?",
-        "Suba as Brasas do Deus, a dificuldade, até 4.",
-        "Raise the God's Embers, the difficulty, to 4.", "progresso", "Brasas do Deus", "God's Embers")]
+        "Vença o Imperador Cego com as 4 Brasas do Deus, a dificuldade máxima.",
+        "Beat the Blind Emperor with all 4 God's Embers, the highest difficulty.", "progresso", "Brasas do Deus", "God's Embers"),
+       ("O que vem depois do final verdadeiro?", "What comes after the true ending?",
+        "O Novo Jogo+: ciclos mais difíceis, com o herói mais forte e os domínios mudados.",
+        "New Game+: harder cycles, with a stronger hero and changed domains.", "progresso", "Novo Jogo+", "New Game+")]
 
 
 def main():
@@ -597,6 +622,8 @@ def main():
                      WEAPONS=gear_rows("weapons"), SKILLS=gear_rows("skills"), SKINS=skin_rows(), STAT_CHIPS=stat_chips(),
                      MUTATIONS=mutation_rows(), BLESSINGS=blessing_rows(), HEAT=heat, CONTROLS=ctrl,
                      INTRO=pages(INTRO), ENDING=pages(ENDING), TRUE_ENDING=pages(TRUE_ENDING),
+                     FINAL=pages(REVEAL + FINAL), GODS_END=fate_rows(SEATS, True), AFTER=fate_rows(AFTER, False),
+                     PLUS_STORY=pages(PLUS_INTRO + PLUS_ENDING),
                      VERSION=version).items():
         page = page.replace("{{%s}}" % k, v)
     open(os.path.join(SITE, "wiki.html"), "w", encoding="utf-8", newline="\n").write(page)
