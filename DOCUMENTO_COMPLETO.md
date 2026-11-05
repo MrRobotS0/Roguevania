@@ -1691,3 +1691,15 @@ Pedido dele: "o maior update de conteúdo da história: mapas, skins, inimigos, 
 **Conquistas (`Catalog.FEATS`).** Calculadas do que o save já guarda (`Meta.feat_value`), então valem para quem jogou antes delas existirem. Avisam ao renascer (`Meta.check_feats`). Três são secretas por serem spoiler do final.
 
 **Fora da Beira.** O desafio do dia vai direto, sem escolhas, para continuar igual para todos. `main.start_run` continua direto também: é o que o robô e os testes usam. A tecla de recomeçar volta à Beira.
+
+## 32. Versão de navegador (v0.6.1)
+
+**Onde.** `moksha.com.br`, na VPS do Prumo, ao lado dele: um `server` próprio no nginx (`tools/nginx_moksha.conf`) e os arquivos em `/var/www/moksha`. O servidor só entrega arquivos; o jogo roda no navegador de quem joga.
+
+**Publicar.** `python tools/publicar_web.py` exporta o preset `Web` e troca os arquivos por renomeação. O destino fica em `.publicar_web`, fora do git, porque o repositório é público. O `lancar_versao.py` chama esse script no fim de cada versão.
+
+**Por que os cabeçalhos COOP e COEP.** O build usa threads, que deixam o som e os quadros mais estáveis. Sem esses dois cabeçalhos, e sem HTTPS, o jogo não abre.
+
+**O que muda na web.** Não há atualizador nem a opção SAIR (`OS.has_feature("web")`). O save fica no IndexedDB daquele navegador e não conversa com o do `.exe`. Sem controles de toque, não serve para celular.
+
+**Medir sem janela.** Playwright com `channel="chrome"`, `--headless=new` e `--use-angle=d3d11`. O script injetado pelo Kaspersky aparece como erro de COEP no console: não é do jogo.

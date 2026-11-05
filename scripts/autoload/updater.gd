@@ -23,7 +23,8 @@ var _http: HTTPRequest
 
 func _ready() -> void:
 	version = String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
-	if not OS.has_feature("template") or DisplayServer.get_name() == "headless":
+	# na web quem atualiza é o servidor: trocou os arquivos, a próxima visita já vem nova
+	if not OS.has_feature("template") or OS.has_feature("web") or DisplayServer.get_name() == "headless":
 		return
 	var saved := _saved()
 	if not saved.is_empty() and newer(String(saved["version"]), version) and FileAccess.file_exists(String(saved["path"])):

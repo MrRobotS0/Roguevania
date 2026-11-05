@@ -8,6 +8,7 @@
 4. commit + tag vX.Y.Z + push;
 5. cria o Release no GitHub com o zip (quem baixa pela primeira vez) e o
    Moksha.pck (o que o jogo baixa sozinho para se atualizar).
+6. exporta a versão de navegador e troca os arquivos no servidor (publicar_web.py).
 
 Quem já tem o jogo recebe a versão nova na próxima vez que abrir: o jogo vê
 o Release, baixa o .pck e se reabre com ele.
@@ -63,6 +64,7 @@ def main():
     run(["git", "push", "origin", "master", "--tags"])
     run(["gh", "release", "create", "v" + version, zip_path, os.path.join(BUILD, "Moksha.pck"),
          "--title", "MOKSHA " + version, "--notes", notes])
+    run([sys.executable, os.path.join("tools", "publicar_web.py")])
     print("pronto: v" + version)
 
 

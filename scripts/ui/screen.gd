@@ -56,6 +56,8 @@ func show_title() -> void:
 	_options = TITLE_OPTIONS.filter(func(o: Array) -> bool:
 		if o[0] == "update":
 			return Updater.pending != ""
+		if o[0] == "quit":
+			return not OS.has_feature("web")    # numa aba, quem fecha é o navegador
 		return o[0] != "continue" or not saved.is_empty())
 	lines = []
 	if not saved.is_empty():

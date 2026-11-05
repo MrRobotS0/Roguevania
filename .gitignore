@@ -8,3 +8,4 @@ __pycache__/
 build/
 arte_externa/
 .claude/settings.local.json
+.publicar_web
