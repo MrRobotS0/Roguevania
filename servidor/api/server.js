@@ -251,6 +251,8 @@ const routes = {
     if (!u) return fail(res, 401, "sem_sessao");
     if (!u.name) return fail(res, 403, "sem_personagem");
     const { rows } = await pool.query(`SELECT data, rev FROM saves WHERE user_id = $1`, [u.id]);
+    // cada abertura do jogo fica anotada (só a hora): mede quem volta e os primeiros minutos
+    pool.query(`INSERT INTO openings (user_id) VALUES ($1)`, [u.id]).catch(() => {});
     send(res, 200, { nome: u.name, data: rows[0] ? rows[0].data : null, rev: rows[0] ? Number(rows[0].rev) : 0 });
   },
 
@@ -302,6 +304,161 @@ const routes = {
     const { rows: c } = await pool.query(`SELECT name FROM characters WHERE user_id = $1`, [uid]);
     await startSession(res, uid, 200, { ok: true, nome: c[0] ? c[0].name : null });
   },
+};
+
+// --- conta: trocar senha e excluir ---------------------------------------------------
+
+routes["POST /api/trocar-senha"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u) return fail(res, 401, "sem_sessao");
+  const b = await readJson(req);
+  if (limited("troca:" + u.id, 10, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const p = passwordProblem(b.nova);
+  if (p) return fail(res, 400, p);
+  const { rows } = await pool.query(`SELECT pass_hash FROM users WHERE id = $1`, [u.id]);
+  if (!(await checkPassword(String(b.atual || ""), rows[0].pass_hash))) return fail(res, 401, "senha_atual_errada");
+  await pool.query(`UPDATE users SET pass_hash = $1 WHERE id = $2`, [await hashPassword(b.nova), u.id]);
+  // as outras sessões caem; esta continua
+  const token = cookies(req)[COOKIE];
+  await pool.query(`DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2`, [u.id, sha256(token)]);
+  send(res, 200, { ok: true });
+};
+
+// LGPD: apaga conta, personagem, saves, partidas e sessões (ON DELETE CASCADE)
+routes["POST /api/excluir-conta"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u) return fail(res, 401, "sem_sessao");
+  const b = await readJson(req);
+  if (limited("exc:" + u.id, 5, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const { rows } = await pool.query(`SELECT pass_hash FROM users WHERE id = $1`, [u.id]);
+  if (!(await checkPassword(String(b.senha || ""), rows[0].pass_hash))) return fail(res, 401, "senha_atual_errada");
+  await pool.query(`DELETE FROM users WHERE id = $1`, [u.id]);
+  console.log(`[conta excluída] id ${u.id}`);
+  send(res, 200, { ok: true }, { "Set-Cookie": sessionCookie("", 0) });
+};
+
+// --- telemetria: um resumo por partida ------------------------------------------------
+
+routes["POST /api/partida"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u || !u.name) return fail(res, 401, "sem_sessao");
+  if (limited("part:" + u.id, 120, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const b = await readJson(req);
+  if (!b || typeof b !== "object" || Array.isArray(b) || JSON.stringify(b).length > 8000) return fail(res, 400, "pedido_invalido");
+  await pool.query(`INSERT INTO runs (user_id, data) VALUES ($1, $2)`, [u.id, b]);
+  send(res, 201, { ok: true });
+};
+
+// --- ranking (vem dos saves: o jogo já guarda o melhor de cada desafio) -----------------
+
+const RANK_LIMIT = 50;
+routes["GET /api/ranking"] = async (req, res) => {
+  const q = new URL(req.url, "http://x").searchParams;
+  const tipo = q.get("tipo");
+  let rows;
+  if (tipo === "ondas") {
+    ({ rows } = await pool.query(
+      `SELECT c.name AS nome, (s.data->>'best_wave')::int AS wave
+         FROM saves s JOIN characters c USING (user_id)
+        WHERE (s.data->>'best_wave')::int > 0
+        ORDER BY wave DESC, s.updated_at ASC LIMIT ${RANK_LIMIT}`));
+  } else if (tipo === "dia" || tipo === "semana") {
+    const chave = String(q.get("chave") || "");
+    if (!(tipo === "dia" ? /^\d{4}-\d{2}-\d{2}$/ : /^S\d{3,6}$/).test(chave)) return fail(res, 400, "chave_invalida");
+    const campo = tipo === "dia" ? "daily" : "weekly";
+    // quem venceu vem primeiro (menor tempo); depois quem foi mais fundo
+    ({ rows } = await pool.query(
+      `SELECT c.name AS nome,
+              NULLIF((s.data->'${campo}'->$1->>'best_time')::float, 0) AS tempo,
+              (s.data->'${campo}'->$1->>'best_depth')::int AS andares,
+              (s.data->'${campo}'->$1->>'tries')::int AS tentativas
+         FROM saves s JOIN characters c USING (user_id)
+        WHERE s.data->'${campo}' ? $1
+        ORDER BY tempo ASC NULLS LAST, andares DESC, tentativas ASC LIMIT ${RANK_LIMIT}`, [chave]));
+  } else {
+    return fail(res, 400, "tipo_invalido");
+  }
+  send(res, 200, { tipo, linhas: rows });
+};
+
+// --- perfil público do personagem ----------------------------------------------------
+
+routes["GET /api/perfil"] = async (req, res) => {
+  const nome = String(new URL(req.url, "http://x").searchParams.get("nome") || "").normalize("NFC").trim();
+  if (!nome || nome.length > 16) return fail(res, 404, "nao_encontrado");
+  const { rows } = await pool.query(
+    `SELECT c.name, c.created_at, s.data FROM characters c LEFT JOIN saves s USING (user_id) WHERE lower(c.name) = lower($1)`, [nome]);
+  if (!rows[0]) return fail(res, 404, "nao_encontrado");
+  const d = rows[0].data || {};
+  const st = d.stats || {};
+  const sum = o => Object.values(o || {}).reduce((a, v) => a + Number(v || 0), 0);
+  send(res, 200, {
+    nome: rows[0].name,
+    desde: rows[0].created_at,
+    partidas: Number(d.runs || 0), vitorias: Number(d.wins || 0), mortes: Number(d.deaths || 0),
+    abates: sum(st.kills_by), andar_mais_fundo: Number(st.deepest || 0), tempo_jogado: Number(st.time || 0),
+    melhor_tempo: Number(d.best_time || 0), melhor_wave: Number(d.best_wave || 0),
+    brasas: Number(d.heat || 0), ciclo: Number(d.plus || 0), desperto: Boolean(d.awake),
+    conquistas: Array.isArray(d.feats) ? d.feats : [],
+    aparencia: d.skin || "andarilho",
+    guardioes: Object.keys(st.kills_by || {}),
+  });
+};
+
+// --- feedback e bugs (do jogo e do site) ---------------------------------------------
+
+routes["POST /api/feedback"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u) return fail(res, 401, "sem_sessao");
+  if (limited("fb:" + u.id, 10, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const b = await readJson(req);
+  const tipo = ["bug", "ideia", "outro"].includes(b.tipo) ? b.tipo : "outro";
+  const texto = String(b.texto || "").trim().slice(0, 4000);
+  if (texto.length < 5) return fail(res, 400, "texto_curto");
+  const info = String(b.info || "").slice(0, 500);
+  await pool.query(`INSERT INTO feedback (user_id, kind, text, info) VALUES ($1, $2, $3, $4)`, [u.id, tipo, texto, info]);
+  send(res, 201, { ok: true });
+  if (process.env.DISCORD_WEBHOOK) {
+    const content = `**${tipo.toUpperCase()}** de **${u.name || u.email}**\n${texto}`.slice(0, 1900);
+    fetch(process.env.DISCORD_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, allowed_mentions: { parse: [] } }) }).catch(e => console.error("discord:", e.message));
+  }
+};
+
+// --- painel do dono (e-mails em ADMIN_EMAILS) -----------------------------------------
+
+const ADMINS = String(process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+routes["GET /api/admin/resumo"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u || !ADMINS.includes(u.email)) return fail(res, 403, "proibido");
+  const one = async (sql, args = []) => (await pool.query(sql, args)).rows;
+  const [contas] = await one(`SELECT
+      (SELECT count(*) FROM users)::int AS contas,
+      (SELECT count(*) FROM characters)::int AS personagens,
+      (SELECT count(*) FROM users WHERE created_at > now() - interval '1 day')::int AS contas_24h,
+      (SELECT count(*) FROM users WHERE created_at > now() - interval '7 days')::int AS contas_7d,
+      (SELECT count(DISTINCT user_id) FROM openings WHERE at > now() - interval '1 day')::int AS jogaram_24h,
+      (SELECT count(DISTINCT user_id) FROM openings WHERE at > now() - interval '7 days')::int AS jogaram_7d,
+      (SELECT count(*) FROM runs)::int AS partidas,
+      (SELECT count(*) FROM runs WHERE created_at > now() - interval '1 day')::int AS partidas_24h`);
+  const onde = await one(`SELECT data->>'onde' AS onde, count(*)::int AS mortes FROM runs
+      WHERE NOT (data->>'venceu')::boolean AND created_at > now() - interval '30 days' GROUP BY 1 ORDER BY 2 DESC LIMIT 15`);
+  const quem = await one(`SELECT data->>'morto_por' AS quem, count(*)::int AS mortes FROM runs
+      WHERE coalesce(data->>'morto_por', '') <> '' AND created_at > now() - interval '30 days' GROUP BY 1 ORDER BY 2 DESC LIMIT 15`);
+  const andares = await one(`SELECT (data->>'andares')::int AS andares, count(*)::int AS partidas FROM runs
+      WHERE data->>'modo' = 'normal' AND created_at > now() - interval '30 days' GROUP BY 1 ORDER BY 1`);
+  // primeiros minutos: quanto tempo da primeira abertura até a primeira partida terminada, e quem nunca terminou uma
+  const [inicio] = await one(`WITH f AS (
+        SELECT u.id, (SELECT min(at) FROM openings o WHERE o.user_id = u.id) AS abriu,
+               (SELECT min(created_at) FROM runs r WHERE r.user_id = u.id) AS jogou
+          FROM users u JOIN characters c ON c.user_id = u.id)
+      SELECT count(*) FILTER (WHERE abriu IS NOT NULL)::int AS abriram_o_jogo,
+             count(*) FILTER (WHERE abriu IS NOT NULL AND jogou IS NULL)::int AS nunca_terminaram_partida,
+             round(extract(epoch FROM percentile_cont(0.5) WITHIN GROUP (ORDER BY jogou - abriu)) / 60)::int AS minutos_ate_1a_partida
+        FROM f`);
+  const fb = await one(`SELECT f.id, f.kind AS tipo, f.text AS texto, f.info, f.created_at AS em, c.name AS nome
+      FROM feedback f LEFT JOIN characters c USING (user_id) ORDER BY f.id DESC LIMIT 50`);
+  send(res, 200, { contas, mortes_por_andar: onde, quem_mais_mata: quem, andares_alcancados: andares, primeiros_minutos: inicio, feedback: fb });
 };
 
 const server = http.createServer(async (req, res) => {

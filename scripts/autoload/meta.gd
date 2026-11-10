@@ -404,7 +404,25 @@ func record_stats(won: bool) -> bool:
 	if Run.mode == Run.WAVES:
 		data["best_wave"] = maxi(int(data["best_wave"]), Run.wave)
 	save()
+	_report_run(won)
 	return record
+
+
+# No navegador: um resumo da partida vai para o servidor, para saber onde as
+# pessoas morrem e desistem (não muda nada no jogo).
+func _report_run(won: bool) -> void:
+	if not cloud or _offline:
+		return
+	var kills := 0
+	for v in Run.kills_by.values():
+		kills += int(v)
+	var mode := "ondas" if Run.mode == Run.WAVES else ("semana" if Run.week != "" else ("dia" if Run.daily != "" else "normal"))
+	var run := {"modo": mode, "venceu": won, "andares": Run.path.size(), "onde": Run.stage_id,
+		"tempo": snappedf(Run.time, 0.1), "morto_por": Run.killer, "abates": kills, "brasas": Run.heat,
+		"wave": Run.wave, "caminho": Run.path, "armas": Run.weapon_kills.keys(), "versao": Updater.version}
+	var js := """fetch('/api/partida', {method: 'POST', credentials: 'same-origin', keepalive: true,
+		headers: {'Content-Type': 'application/json'}, body: %s}).catch(function () {});""" % JSON.stringify(JSON.stringify(run))
+	JavaScriptBridge.eval(js, true)
 
 
 func stats_text() -> String:

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Perfil</title>
+<meta property="og:title" content="MOKSHA · Perfil">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="apple-touch-icon" href="img/icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="comum.js"></script>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<header>
+  <a class="brand" href="/">MOKSHA</a>
+  <div class="lang" role="group" aria-label="Idioma">
+    <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+  <div class="card wide" id="card">
+    <p class="lead" id="msg" data-pt="Carregando…" data-en="Loading…">Carregando…</p>
+    <div id="body" hidden>
+      <div class="hero"><img id="skin" src="img/skins/andarilho.png" alt="" width="64" height="64">
+        <p class="who"><span id="nome"></span><small id="sub"></small></p></div>
+      <div class="stats" id="stats"></div>
+      <h2 id="feats-t"></h2>
+      <ul class="feats" id="feats"></ul>
+      <h2 id="guard-t"></h2>
+      <ul class="feats" id="guards"></ul>
+      <div class="links" style="margin-top:22px">
+        <a href="ranking.html" data-pt="Ver o ranking" data-en="See the leaderboard">Ver o ranking</a>
+        <button type="button" id="share" data-pt="Copiar link do perfil" data-en="Copy profile link">Copiar link do perfil</button>
+      </div>
+    </div>
+  </div>
+</main>
+<footer><a href="/" data-pt="Página inicial" data-en="Home">Página inicial</a><a href="ranking.html" data-pt="Ranking" data-en="Leaderboard">Ranking</a><a href="conta.html" data-pt="Conta" data-en="Account">Conta</a></footer>
+<script>
+  const nome = new URLSearchParams(location.search).get("nome") || "";
+  let p = null, jogo = null;
+
+  function render() {
+    if (!p) return;
+    const L = M.lang;
+    document.title = "MOKSHA · " + p.nome;
+    document.getElementById("nome").textContent = p.nome;
+    const since = new Date(p.desde).toLocaleDateString(L === "en" ? "en-US" : "pt-BR", { month: "long", year: "numeric" });
+    const skin = (jogo.aparencias.find(s => s.id === p.aparencia) || {})[L] || "";
+    document.getElementById("sub").textContent = M.t("Renasceu em ", "Reborn in ") + since + (skin ? " · " + skin : "");
+    const img = document.getElementById("skin");
+    img.src = "img/skins/" + encodeURIComponent(p.aparencia) + ".png";
+    img.onerror = () => { img.onerror = null; img.src = "img/skins/andarilho.png"; };
+
+    const stats = [
+      [p.partidas, "Partidas", "Runs"], [p.vitorias, "Vitórias", "Wins"], [p.mortes, "Mortes", "Deaths"],
+      [p.abates, "Abates", "Kills"], [p.andar_mais_fundo, "Andar mais fundo", "Deepest floor"],
+      [p.melhor_tempo ? M.clock(p.melhor_tempo) : "—", "Vitória mais rápida", "Fastest win"],
+      [p.melhor_wave || "—", "Melhor wave", "Best wave"], [M.clock(p.tempo_jogado), "Tempo jogado", "Time played"],
+    ];
+    if (p.brasas) stats.push([p.brasas, "Brasas do Deus", "God's Embers"]);
+    if (p.ciclo) stats.push([p.ciclo, "Novo Jogo+", "New Game+"]);
+    document.getElementById("stats").replaceChildren(...stats.map(([v, pt, en]) =>
+      M.el("div", { class: "stat" }, M.el("b", { text: String(v) }), M.el("span", { text: M.t(pt, en) }))));
+
+    const done = new Set(p.conquistas);
+    const visible = jogo.conquistas.filter(f => !f.secreta || done.has(f.id));
+    document.getElementById("feats-t").textContent = M.t("Conquistas", "Achievements") + ` · ${done.size}/${jogo.conquistas.length}`;
+    document.getElementById("feats").replaceChildren(...visible.map(f =>
+      M.el("li", done.has(f.id) ? { class: "done" } : {}, M.el("b", { text: f[L] }), M.el("span", { text: L === "en" ? f.detalhe_en : f.detalhe_pt }))));
+
+    const beaten = new Set(p.guardioes.map(g => g.toUpperCase()));
+    const g = jogo.guardioes;
+    document.getElementById("guard-t").textContent = M.t("Guardiões derrotados", "Guardians defeated") + ` · ${g.filter(x => beaten.has(x.pt.toUpperCase())).length}/${g.length}`;
+    document.getElementById("guards").replaceChildren(...g.map(x =>
+      M.el("li", beaten.has(x.pt.toUpperCase()) ? { class: "done" } : {}, M.el("b", { text: beaten.has(x.pt.toUpperCase()) ? x[L] : "???" }))));
+  }
+
+  document.getElementById("share").addEventListener("click", async e => {
+    try { await navigator.clipboard.writeText(location.href); e.target.textContent = M.t("Link copiado", "Link copied"); } catch (err) {}
+  });
+  M.onLang(render);
+
+  (async () => {
+    const msg = document.getElementById("msg");
+    if (!nome) { msg.dataset.pt = "Nenhum personagem informado."; msg.dataset.en = "No character given."; M.setLang(M.lang); return; }
+    const [r, j] = await Promise.all([M.api("GET", "/api/perfil?nome=" + encodeURIComponent(nome)), fetch("dados/jogo.json").then(x => x.json()).catch(() => null)]);
+    if (!r.ok || !j) {
+      msg.dataset.pt = "Esse personagem não existe."; msg.dataset.en = "That character doesn't exist.";
+      M.setLang(M.lang); return;
+    }
+    p = r; jogo = j;
+    msg.hidden = true;
+    document.getElementById("body").hidden = false;
+    render();
+  })();
+</script>
+</body>
+</html>

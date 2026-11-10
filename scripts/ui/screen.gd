@@ -23,6 +23,13 @@ const EXTRAS := [
 	["controls", "COMANDOS"],
 	["credits", "CRÉDITOS"],
 ]
+# só no navegador (moksha.com.br): abrem uma página do site em outra aba
+const WEB_EXTRAS := [
+	["ranking", "RANKING"],
+	["profile", "MEU PERFIL"],
+	["feedback", "BUG OU SUGESTÃO"],
+]
+const WEB_PAGES := {"ranking": "/ranking.html", "feedback": "/conta.html#feedback"}
 
 # ouro do título, em degraus: contorno, relevo e as duas faces da letra
 const INK := Color("1a0b04")

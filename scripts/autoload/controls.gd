@@ -61,6 +61,8 @@ func _ready() -> void:
 			InputMap.erase_action(action)
 		InputMap.add_action(action, 0.4)
 
+	_touch_bridge()
+
 	for action: String in KEYS:
 		for code: int in KEYS[action]:
 			var key := InputEventKey.new()
@@ -162,3 +164,28 @@ func _refresh_hints(custom: Dictionary) -> void:
 	_custom_hints.clear()
 	for action in custom:
 		_custom_hints[action] = key_name(action)
+
+
+# --- toque (navegador) -----------------------------------------------------------------
+# Os botões na tela do celular são HTML (web/shell.html). Eles chamam
+# window.mokshaAction(ação, apertado), que vira um InputEventAction de verdade:
+# o jogo e os menus recebem igual a uma tecla.
+
+var _touch_cb: JavaScriptObject   # precisa ficar guardado, senão o navegador perde a função
+
+func _touch_bridge() -> void:
+	if not OS.has_feature("web"):
+		return
+	_touch_cb = JavaScriptBridge.create_callback(_on_touch)
+	JavaScriptBridge.get_interface("window").mokshaAction = _touch_cb
+
+
+func _on_touch(args: Array) -> void:
+	var action := String(args[0]) if args.size() > 0 else ""
+	if not ACTIONS.has(action):
+		return
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = bool(args[1]) if args.size() > 1 else true
+	ev.strength = 1.0 if ev.pressed else 0.0
+	Input.parse_input_event(ev)

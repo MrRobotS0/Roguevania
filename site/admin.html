@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Painel</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="comum.js"></script>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<header><a class="brand" href="/">MOKSHA</a></header>
+<main>
+  <div class="card wide">
+    <h1>Painel</h1>
+    <p class="lead" id="msg">Carregando…</p>
+    <div id="body" hidden>
+      <div class="stats" id="contas"></div>
+      <h2>Primeiros minutos</h2>
+      <div class="stats" id="inicio"></div>
+      <h2>Onde morrem (30 dias)</h2>
+      <div class="scroll"><table><thead><tr><th>Andar</th><th class="num">Mortes</th></tr></thead><tbody id="onde"></tbody></table></div>
+      <h2>Quem mais mata (30 dias)</h2>
+      <div class="scroll"><table><thead><tr><th>Inimigo</th><th class="num">Mortes</th></tr></thead><tbody id="quem"></tbody></table></div>
+      <h2>Até onde chegam (partida normal, 30 dias)</h2>
+      <div class="scroll"><table><thead><tr><th class="num">Andares</th><th class="num">Partidas</th></tr></thead><tbody id="andares"></tbody></table></div>
+      <h2>Bugs e sugestões</h2>
+      <ul class="feats" id="fb" style="grid-template-columns:1fr"></ul>
+    </div>
+  </div>
+</main>
+<script>
+  const LABEL = { contas: "Contas", personagens: "Personagens", contas_24h: "Contas novas 24h", contas_7d: "Contas novas 7d",
+    jogaram_24h: "Jogaram 24h", jogaram_7d: "Jogaram 7d", partidas: "Partidas", partidas_24h: "Partidas 24h",
+    abriram_o_jogo: "Abriram o jogo", nunca_terminaram_partida: "Nunca terminaram uma partida", minutos_ate_1a_partida: "Minutos até a 1ª partida (mediana)" };
+  const tiles = (id, obj) => document.getElementById(id).replaceChildren(...Object.entries(obj || {}).map(([k, v]) =>
+    M.el("div", { class: "stat" }, M.el("b", { text: v === null ? "—" : String(v) }), M.el("span", { text: LABEL[k] || k }))));
+  const rows = (id, list, a, b) => document.getElementById(id).replaceChildren(...(list.length ? list : [{ [a]: "nada ainda", [b]: "" }]).map(r =>
+    M.el("tr", {}, M.el("td", { class: a === "andares" ? "num" : "", text: String(r[a]) }), M.el("td", { class: "num", text: String(r[b]) }))));
+  (async () => {
+    const r = await M.api("GET", "/api/admin/resumo");
+    const msg = document.getElementById("msg");
+    if (r.status === 401 || r.status === 403) { msg.innerHTML = 'Só para o dono. <a href="conta.html?volta=/admin.html">Entrar</a>'; return; }
+    if (!r.ok) { msg.textContent = "Não deu para carregar."; return; }
+    msg.hidden = true;
+    document.getElementById("body").hidden = false;
+    tiles("contas", r.contas);
+    tiles("inicio", r.primeiros_minutos);
+    rows("onde", r.mortes_por_andar, "onde", "mortes");
+    rows("quem", r.quem_mais_mata, "quem", "mortes");
+    rows("andares", r.andares_alcancados, "andares", "partidas");
+    document.getElementById("fb").replaceChildren(...(r.feedback.length ? r.feedback : [{ tipo: "", texto: "Nenhuma mensagem ainda.", nome: "", em: "", info: "" }]).map(f =>
+      M.el("li", { class: f.tipo === "bug" ? "done" : "" },
+        M.el("b", { text: [f.tipo.toUpperCase(), f.nome, f.em && new Date(f.em).toLocaleString("pt-BR")].filter(Boolean).join(" · ") }),
+        M.el("span", { text: f.texto, style: "white-space:pre-wrap;display:block;color:var(--text)" }),
+        M.el("span", { text: f.info }))));
+  })();
+</script>
+</body>
+</html>

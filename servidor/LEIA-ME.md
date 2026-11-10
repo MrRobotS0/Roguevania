@@ -26,6 +26,12 @@ com personagem.
 | `GET /api/save` / `PUT /api/save` `{rev, data}` | o legado (`Meta.data`) do jogo |
 | `POST /api/esqueci` `{email}` / `POST /api/redefinir` `{token, senha}` | recuperação de senha por e-mail |
 | `GET /api/gate` | 204 ou 401, usado pelo nginx antes de `/jogar/` |
+| `POST /api/trocar-senha` `{atual, nova}` / `POST /api/excluir-conta` `{senha}` | conta (excluir apaga tudo: LGPD) |
+| `POST /api/partida` | telemetria: um resumo por partida (o jogo manda sozinho no navegador) |
+| `GET /api/ranking?tipo=dia\|semana\|ondas&chave=` | ranking, calculado dos saves |
+| `GET /api/perfil?nome=` | perfil público do personagem |
+| `POST /api/feedback` `{tipo, texto}` | bug ou sugestão (vai também para o Discord se houver `DISCORD_WEBHOOK`) |
+| `GET /api/admin/resumo` | painel em `/admin.html`, só para os e-mails de `ADMIN_EMAILS` |
 
 Sem `SMTP_HOST` no `.env`, o link de "esqueci a senha" só aparece em
 `journalctl -u moksha-api`.
@@ -40,7 +46,28 @@ servidor ignorar o que chegar fora de ordem). A tela de carregamento é
 tinha antes das contas vai para a primeira conta que entrar nele. No Windows e
 nos testes nada muda.
 
+## Páginas
+
+`conta.html`, `ranking.html`, `perfil.html?nome=`, `privacidade.html`, `admin.html`
+(estilo em `site/estilo.css`, idioma e API em `site/comum.js`). Os nomes das
+conquistas e aparências vêm de `site/dados/jogo.json`, gerado por
+`tools/dados_site.py` a partir dos dados do jogo.
+
+## Servidor
+
+`servidor/preparar_servidor.sh` (roda como root; pode rodar de novo): chave de
+publicação, fail2ban no SSH e backup diário do banco (`moksha-backup.timer`,
+03:30, 30 dias em `/var/backups/moksha`). Para mandar uma cópia para fora,
+instale o rclone, configure um remoto e crie `/etc/moksha-backup.env` com
+`RCLONE_REMOTE=nome:pasta`. Restaurar: `pg_restore --clean -d "$DATABASE_URL" arquivo.dump`.
+
 ## Atualizar
+
+Tudo de uma vez: `python tools/publicar.py` (testes, export, dados do site,
+site, jogo e API; `--so-site` para só as páginas). Usa `.publicar_web`
+(`root@2.25.121.5`) e a chave `~/.ssh/moksha_ed25519`.
+
+Partes:
 
 - Jogo: `python tools/publicar_web.py` (troca `/var/www/moksha/jogar`).
 - Site: copiar `site/` para `/var/www/moksha/` sem apagar `jogar/` nem os `.import`.

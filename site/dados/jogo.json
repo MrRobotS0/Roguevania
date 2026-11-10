@@ -1,0 +1,323 @@
+{
+ "conquistas": [
+  {
+   "id": "cinza_na_boca",
+   "pt": "Cinza na Boca",
+   "en": "Ash in the mouth",
+   "detalhe_pt": "Morra pela primeira vez",
+   "detalhe_en": "Die for the first time",
+   "secreta": false
+  },
+  {
+   "id": "outro_igual",
+   "pt": "Outro Igual a Você",
+   "en": "Another just like you",
+   "detalhe_pt": "Morra 10 vezes",
+   "detalhe_en": "Die 10 times",
+   "secreta": false
+  },
+  {
+   "id": "cinquenta_cinzas",
+   "pt": "Cinquenta Cinzas",
+   "en": "Fifty ashes",
+   "detalhe_pt": "Morra 50 vezes",
+   "detalhe_en": "Die 50 times",
+   "secreta": false
+  },
+  {
+   "id": "mao_pesada",
+   "pt": "Mão Pesada",
+   "en": "Heavy hand",
+   "detalhe_pt": "Derrote 100 inimigos",
+   "detalhe_en": "Defeat 100 enemies",
+   "secreta": false
+  },
+  {
+   "id": "carrasco",
+   "pt": "Carrasco",
+   "en": "Executioner",
+   "detalhe_pt": "Derrote 1000 inimigos",
+   "detalhe_en": "Defeat 1000 enemies",
+   "secreta": false
+  },
+  {
+   "id": "caiu_o_primeiro",
+   "pt": "Caiu o Primeiro",
+   "en": "The first one fell",
+   "detalhe_pt": "Derrote um guardião",
+   "detalhe_en": "Defeat a guardian",
+   "secreta": false
+  },
+  {
+   "id": "cinco_portas",
+   "pt": "Cinco Portas",
+   "en": "Five doors",
+   "detalhe_pt": "Derrote 5 guardiões diferentes",
+   "detalhe_en": "Defeat 5 different guardians",
+   "secreta": false
+  },
+  {
+   "id": "todas_as_portas",
+   "pt": "Todas as Portas",
+   "en": "All the doors",
+   "detalhe_pt": "Derrote os 13 guardiões",
+   "detalhe_en": "Defeat the 13 guardians",
+   "secreta": false
+  },
+  {
+   "id": "longe_de_casa",
+   "pt": "Longe de Casa",
+   "en": "Far from home",
+   "detalhe_pt": "Chegue ao quinto andar",
+   "detalhe_en": "Reach the fifth floor",
+   "secreta": false
+  },
+  {
+   "id": "trono_vazio",
+   "pt": "O Trono Vazio",
+   "en": "The empty throne",
+   "detalhe_pt": "Vença o imperador cego",
+   "detalhe_en": "Beat the blind emperor",
+   "secreta": false
+  },
+  {
+   "id": "antes_do_sino",
+   "pt": "Antes do Sino",
+   "en": "Before the bell",
+   "detalhe_pt": "Vença em menos de 30 minutos",
+   "detalhe_en": "Win in under 30 minutes",
+   "secreta": false
+  },
+  {
+   "id": "brasa_viva",
+   "pt": "Brasa Viva",
+   "en": "Living ember",
+   "detalhe_pt": "Vença com 2 brasas",
+   "detalhe_en": "Win with 2 embers",
+   "secreta": false
+  },
+  {
+   "id": "quem_le_pedra",
+   "pt": "Quem Lê Pedra",
+   "en": "Stone reader",
+   "detalhe_pt": "Leia 10 inscrições",
+   "detalhe_en": "Read 10 inscriptions",
+   "secreta": false
+  },
+  {
+   "id": "bestiario",
+   "pt": "Bestiário",
+   "en": "Bestiary",
+   "detalhe_pt": "Derrote 30 criaturas diferentes",
+   "detalhe_en": "Defeat 30 different creatures",
+   "secreta": false
+  },
+  {
+   "id": "mao_de_ferreiro",
+   "pt": "Mão de Ferreiro",
+   "en": "Smith's hand",
+   "detalhe_pt": "Entregue 10 plantas à vigia",
+   "detalhe_en": "Deliver 10 blueprints to the watcher",
+   "secreta": false
+  },
+  {
+   "id": "o_que_fica",
+   "pt": "O Que Fica",
+   "en": "What stays",
+   "detalhe_pt": "Consiga uma runa",
+   "detalhe_en": "Get a rune",
+   "secreta": false
+  },
+  {
+   "id": "calice_cheio",
+   "pt": "Cálice Cheio",
+   "en": "Full chalice",
+   "detalhe_pt": "Beba 10 mutações diferentes",
+   "detalhe_en": "Drink 10 different mutations",
+   "secreta": false
+  },
+  {
+   "id": "guarda_roupa",
+   "pt": "Guarda-Roupa",
+   "en": "Wardrobe",
+   "detalhe_pt": "Tenha 5 aparências",
+   "detalhe_en": "Own 5 appearances",
+   "secreta": false
+  },
+  {
+   "id": "soltar",
+   "pt": "Soltar",
+   "en": "Let go",
+   "detalhe_pt": "Complete o final verdadeiro",
+   "detalhe_en": "Complete the true ending",
+   "secreta": true
+  },
+  {
+   "id": "outra_volta",
+   "pt": "Outra Volta",
+   "en": "Another turn",
+   "detalhe_pt": "Vença um ciclo do novo jogo+",
+   "detalhe_en": "Beat a new game+ cycle",
+   "secreta": true
+  },
+  {
+   "id": "cinco_voltas",
+   "pt": "Cinco Voltas",
+   "en": "Five turns",
+   "detalhe_pt": "Chegue ao último ciclo",
+   "detalhe_en": "Reach the last cycle",
+   "secreta": true
+  }
+ ],
+ "aparencias": [
+  {
+   "id": "andarilho",
+   "pt": "O Andarilho",
+   "en": "The wanderer"
+  },
+  {
+   "id": "asa_dragao",
+   "pt": "Asa do Dragão Sonhado",
+   "en": "Wing of the dreamed dragon"
+  },
+  {
+   "id": "capa_estrada",
+   "pt": "Capa da Estrada",
+   "en": "Road cloak"
+  },
+  {
+   "id": "casca_vidro",
+   "pt": "Casca de Vidro",
+   "en": "Glass shell"
+  },
+  {
+   "id": "cinza_pura",
+   "pt": "Cinza Pura",
+   "en": "Pure ash"
+  },
+  {
+   "id": "couro_fenda",
+   "pt": "Couro da Fenda",
+   "en": "Rift leather"
+  },
+  {
+   "id": "desperto",
+   "pt": "O Que Ardeu",
+   "en": "The one who burned"
+  },
+  {
+   "id": "escama_serpe",
+   "pt": "Escama da Serpe",
+   "en": "Wyrm scale"
+  },
+  {
+   "id": "herdeiro_vesper",
+   "pt": "Herdeiro Vesper",
+   "en": "Vesper heir"
+  },
+  {
+   "id": "manto_cinza",
+   "pt": "Manto de Cinza",
+   "en": "Ash cloak"
+  },
+  {
+   "id": "manto_sonho",
+   "pt": "Manto do Sonho",
+   "en": "Dream mantle"
+  },
+  {
+   "id": "mortalha",
+   "pt": "Mortalha",
+   "en": "Shroud"
+  },
+  {
+   "id": "nove_caudas",
+   "pt": "Nove Caudas",
+   "en": "Nine tails"
+  },
+  {
+   "id": "olhos_fechados",
+   "pt": "Olhos Fechados",
+   "en": "Closed eyes"
+  },
+  {
+   "id": "pele_ventre",
+   "pt": "Pele do Ventre",
+   "en": "Belly hide"
+  },
+  {
+   "id": "rei_esquecido",
+   "pt": "Coroa sem Nome",
+   "en": "Nameless crown"
+  },
+  {
+   "id": "saco_penitente",
+   "pt": "Saco de Penitente",
+   "en": "Penitent's sack"
+  },
+  {
+   "id": "tentaculo",
+   "pt": "O Que Responde",
+   "en": "The one who answers"
+  },
+  {
+   "id": "vestes_afogadas",
+   "pt": "Vestes Afogadas",
+   "en": "Drowned vestments"
+  }
+ ],
+ "guardioes": [
+  {
+   "pt": "O LOBO DA LONGA NOITE",
+   "en": "THE LONG NIGHT WOLF"
+  },
+  {
+   "pt": "O COLOSSO DA BIGORNA",
+   "en": "THE ANVIL COLOSSUS"
+  },
+  {
+   "pt": "O REI ESQUECIDO",
+   "en": "THE FORGOTTEN KING"
+  },
+  {
+   "pt": "O ARQUITETO MUDO",
+   "en": "THE MUTE ARCHITECT"
+  },
+  {
+   "pt": "A MÃE-RAIZ",
+   "en": "THE ROOT MOTHER"
+  },
+  {
+   "pt": "O QUE RESPONDE",
+   "en": "THE ONE WHO ANSWERS"
+  },
+  {
+   "pt": "O REI SEM ROSTO",
+   "en": "THE FACELESS KING"
+  },
+  {
+   "pt": "O ÚLTIMO ASTRÔNOMO",
+   "en": "THE LAST ASTRONOMER"
+  },
+  {
+   "pt": "O INSACIÁVEL",
+   "en": "THE INSATIABLE"
+  },
+  {
+   "pt": "O DRAGÃO SONHADO",
+   "en": "THE DREAMED DRAGON"
+  },
+  {
+   "pt": "A SERPE DO FUNDO",
+   "en": "THE WYRM BELOW"
+  },
+  {
+   "pt": "A RAPOSA DE NOVE CAUDAS",
+   "en": "THE NINE-TAILED FOX"
+  },
+  {
+   "pt": "O IMPERADOR CEGO",
+   "en": "THE BLIND EMPEROR"
+  }
+ ]
+}

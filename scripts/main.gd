@@ -165,11 +165,18 @@ func _on_title_option(id: String) -> void:
 			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
 		"extras":
 			# o que saiu do menu principal: uma lista curta à parte
+			var list: Array = Screen.EXTRAS.duplicate()
+			if OS.has_feature("web"):
+				list.append_array(Screen.WEB_EXTRAS)
 			var options: Array[Dictionary] = []
-			for o in Screen.EXTRAS:
-				options.append({"label": o[1], "detail": ""})
+			for o in list:
+				options.append({"label": o[1], "detail": "ABRE EM OUTRA ABA" if Screen.WEB_EXTRAS.has(o) else ""})
 			menu.open_choice("EXTRAS", "", options, func(i: int) -> void:
-				_on_title_option.call_deferred(String(Screen.EXTRAS[i][0])))
+				_on_title_option.call_deferred(String(list[i][0])))
+		"ranking", "feedback":
+			open_site_page(Screen.WEB_PAGES[id])
+		"profile":
+			open_site_page("/perfil.html?nome=" + Meta.player_name.uri_encode())
 		"codex":
 			open_codex()
 		"credits":
@@ -201,6 +208,12 @@ func _on_title_option(id: String) -> void:
 			_load_stage()
 		"quit":
 			get_tree().quit()
+
+
+# No navegador: abre uma página de moksha.com.br em outra aba, sem fechar o jogo.
+func open_site_page(path: String) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.open(%s, '_blank', 'noopener')" % JSON.stringify(path), true)
 
 
 # O que não é a partida normal. Nada aqui passa pela Beira: as regras são as mesmas para todos.
@@ -682,6 +695,7 @@ func _pause() -> void:
 			{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
 			{"label": "VOLTAR AO TÍTULO", "detail": ""},
 		]
+		_pause_with_feedback(calm)
 		menu.open_choice("PAUSA", "", calm, _on_pause_pick)
 		return
 	var options: Array[Dictionary] = [
@@ -699,10 +713,25 @@ func _pause() -> void:
 		info += "   ·   CICLO %d" % Run.plus
 	for id: String in Run.rules:
 		info += ("   ·   " if info != "" else "") + String(Run.rule(id)["title"]).to_upper()
+	_pause_with_feedback(options)
 	menu.open_choice("PAUSA", info, options, _on_pause_pick)
 
 
+const PAUSE_FEEDBACK := "BUG OU SUGESTÃO"
+var _pause_count := 0
+
+
+# no navegador a pausa ganha um atalho para mandar bug ou sugestão (sempre o último item)
+func _pause_with_feedback(options: Array[Dictionary]) -> void:
+	if OS.has_feature("web"):
+		options.append({"label": PAUSE_FEEDBACK, "detail": "ABRE EM OUTRA ABA"})
+	_pause_count = options.size()
+
+
 func _on_pause_pick(i: int) -> void:
+	if OS.has_feature("web") and i == _pause_count - 1:
+		open_site_page(Screen.WEB_PAGES["feedback"])
+		return
 	if i == 1:
 		options_screen.open.call_deferred()
 	elif i == 2:

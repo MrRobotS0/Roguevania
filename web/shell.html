@@ -86,6 +86,22 @@
     box-shadow: inset -3px -3px 0 var(--gold-md), inset 3px 3px 0 var(--gold-lt), 0 4px 0 var(--gold-dk); }
   [hidden] { display: none !important; }
 
+  /* --- controles de toque (só em tela de toque, depois que o jogo abre) --- */
+  #touch { position: fixed; inset: 0; z-index: 5; pointer-events: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #touch button, #touch .stick { pointer-events: auto; touch-action: none; }
+  #touch button { position: absolute; display: grid; place-items: center; align-content: center; padding: 0; border: 2px solid rgba(242,193,78,.55);
+    background: rgba(13,10,18,.42); color: rgba(255,236,190,.9); font: 700 13px var(--pixel); border-radius: 50%;
+    -webkit-tap-highlight-color: transparent; }
+  #touch button.on { background: rgba(242,193,78,.55); color: #1a0f04; }
+  #touch button small { display: block; font: 400 9px var(--pixel); opacity: .8; margin-top: 1px; }
+  #touch .sq { border-radius: 6px; }
+  .stick { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: 18px; width: 150px; height: 150px; border-radius: 50%;
+    border: 2px solid rgba(242,193,78,.4); background: rgba(13,10,18,.3); }
+  .stick i { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+    background: rgba(242,193,78,.45); border: 2px solid rgba(255,224,138,.7); }
+  #rotate { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; text-align: center;
+    background: rgba(7,6,11,.94); color: var(--gold); font: 700 18px/1.5 var(--pixel); }
+
   @media (max-height: 560px) { .sigil, .keys { display: none; } .lore { margin-top: 14px; min-height: 0; } .hello { margin-bottom: 12px; } }
   @media (prefers-reduced-motion: reduce) { .runner, .bar.busy .fill::after { animation: none; } }
 </style>
@@ -112,6 +128,22 @@ $GODOT_HEAD_INCLUDE
   </div>
 </div>
 
+<div id="touch" hidden aria-hidden="true">
+  <div class="stick" id="stick"><i id="knob"></i></div>
+  <button data-keys="jump confirm" style="right:22px;bottom:22px;width:84px;height:84px;font-size:15px"><span data-pt="PULO" data-en="JUMP"></span></button>
+  <button data-keys="attack1 confirm" style="right:118px;bottom:30px;width:66px;height:66px">J<small data-pt="ARMA" data-en="WPN"></small></button>
+  <button data-keys="attack2" style="right:48px;bottom:118px;width:66px;height:66px">K<small data-pt="ARMA" data-en="WPN"></small></button>
+  <button data-keys="roll" style="right:200px;bottom:22px;width:58px;height:58px"><span data-pt="ROLAR" data-en="ROLL"></span></button>
+  <button data-keys="skill1" style="right:134px;bottom:112px;width:52px;height:52px">U</button>
+  <button data-keys="skill2" style="right:118px;bottom:180px;width:52px;height:52px">I</button>
+  <button data-keys="heal" style="right:40px;bottom:200px;width:52px;height:52px"><span data-pt="CURA" data-en="HEAL"></span></button>
+  <button data-keys="interact confirm" style="left:186px;bottom:28px;width:58px;height:58px"><span data-pt="USAR" data-en="USE"></span></button>
+  <button class="sq" data-keys="pause cancel" style="right:16px;top:12px;width:48px;height:40px">II</button>
+  <button class="sq" data-keys="map" style="right:72px;top:12px;width:56px;height:40px"><span data-pt="MAPA" data-en="MAP"></span></button>
+  <button class="sq" id="fullscreen" style="right:136px;top:12px;width:48px;height:40px" aria-label="Tela cheia">[ ]</button>
+</div>
+<div id="rotate" hidden></div>
+
 <script src="$GODOT_URL"></script>
 <script>
 const GODOT_CONFIG = $GODOT_CONFIG;
@@ -126,12 +158,12 @@ const engine = new Engine(GODOT_CONFIG);
 
   const TXT = PT ? {
     down: "BAIXANDO", wake: "DESPERTANDO", wait: "PREPARANDO", hello: "A cinza lembra de você, ", helloEnd: ".",
-    mobile: "O MOKSHA precisa de teclado ou controle. No celular ele abre, mas não dá para jogar.",
+    mobile: "No celular: deite a tela e use os botões. Teclado ou controle bluetooth também funcionam.", rotate: "Gire o celular para jogar deitado.",
     fail: "O jogo não conseguiu abrir.", missing: "Faltam recursos no navegador para rodar o jogo:\n", retry: "TENTAR DE NOVO",
     keys: [["A D", "andar"], ["ESPAÇO", "pular"], ["J K", "armas"], ["SHIFT", "rolar"], ["Q", "curar"], ["E", "usar"]],
   } : {
     down: "DOWNLOADING", wake: "AWAKENING", wait: "PREPARING", hello: "The ash remembers you, ", helloEnd: ".",
-    mobile: "MOKSHA needs a keyboard or gamepad. It opens on phones, but you can't play there.",
+    mobile: "On phones: turn it sideways and use the on-screen buttons. A bluetooth keyboard or gamepad works too.", rotate: "Turn your phone sideways to play.",
     fail: "The game couldn't start.", missing: "Your browser is missing features the game needs:\n", retry: "TRY AGAIN",
     keys: [["A D", "move"], ["SPACE", "jump"], ["J K", "weapons"], ["SHIFT", "roll"], ["Q", "heal"], ["E", "use"]],
   };
@@ -174,7 +206,7 @@ const engine = new Engine(GODOT_CONFIG);
     $("keys").appendChild(li);
   });
 
-  if (matchMedia("(pointer: coarse)").matches && !matchMedia("(any-pointer: fine)").matches) {
+  if (matchMedia("(pointer: coarse)").matches) {
     $("warn").textContent = TXT.mobile;
     $("warn").hidden = false;
   }
@@ -229,7 +261,66 @@ const engine = new Engine(GODOT_CONFIG);
   }
   $("retry").addEventListener("click", () => location.reload());
 
+  // --- toque -------------------------------------------------------------------------
+  const TOUCH = matchMedia("(pointer: coarse)").matches;
+  if (TOUCH) $("keys").hidden = true;
+  function send(action, down) { if (window.mokshaAction) window.mokshaAction(action, down); }
+
+  function setupTouch() {
+    const pad = $("touch");
+    pad.querySelectorAll("[data-pt]").forEach(el => { el.textContent = PT ? el.dataset.pt : el.dataset.en; });
+    pad.hidden = false;
+    // cada botão é uma tecla: aperta todas as ações dela ao tocar e solta ao tirar o dedo
+    pad.querySelectorAll("button[data-keys]").forEach(b => {
+      const acts = b.dataset.keys.split(" ");
+      const up = () => { if (!b.classList.contains("on")) return; b.classList.remove("on"); acts.forEach(a => send(a, false)); };
+      b.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        b.setPointerCapture(e.pointerId);
+        b.classList.add("on");
+        acts.forEach(a => send(a, true));
+        if (navigator.vibrate) navigator.vibrate(8);
+      });
+      ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => b.addEventListener(t, up));
+    });
+    // direcional: o polegar arrasta; passou do limite, vira a seta daquele lado
+    const stick = $("stick"), knob = $("knob");
+    const held = { left: false, right: false, up: false, down: false };
+    function set(dir, on) { if (held[dir] !== on) { held[dir] = on; send(dir, on); } }
+    function move(e) {
+      const r = stick.getBoundingClientRect();
+      let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      const len = Math.hypot(dx, dy), max = r.width / 2 - 20;
+      if (len > max) { dx *= max / len; dy *= max / len; }
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+      const t = 20;
+      set("left", dx < -t); set("right", dx > t);
+      // cima e baixo pedem mais: o polegar sobe sem querer ao correr
+      set("up", dy < -t * 1.8); set("down", dy > t * 1.8);
+    }
+    function release() { knob.style.transform = ""; Object.keys(held).forEach(d => set(d, false)); }
+    stick.addEventListener("pointerdown", e => { e.preventDefault(); stick.setPointerCapture(e.pointerId); move(e); });
+    stick.addEventListener("pointermove", e => { if (stick.hasPointerCapture(e.pointerId)) move(e); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => stick.addEventListener(t, release));
+    $("fullscreen").addEventListener("click", () => {
+      if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
+      const go = document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen({ navigationUI: "hide" }) : null;
+      if (go) go.then(() => {
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+      }).catch(() => {});
+    });
+    // de pé, os botões cobrem o jogo: pede para deitar o celular
+    const rot = $("rotate");
+    rot.textContent = TXT.rotate;
+    const portrait = matchMedia("(orientation: portrait)");
+    const check = () => { rot.hidden = !portrait.matches; };
+    portrait.addEventListener("change", check);
+    check();
+    pad.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
   function done() {
+    if (TOUCH) setupTouch();
     clearInterval(loreTimer);
     overlay.classList.add("gone");
     setTimeout(() => overlay.remove(), 600);

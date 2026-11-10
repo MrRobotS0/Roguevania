@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Ranking</title>
+<meta name="description" content="Ranking do MOKSHA: desafio do dia, desafio da semana e Modo Waves.">
+<meta property="og:title" content="MOKSHA · Ranking">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="apple-touch-icon" href="img/icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="comum.js"></script>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<header>
+  <a class="brand" href="/">MOKSHA</a>
+  <div class="lang" role="group" aria-label="Idioma">
+    <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+  <div class="card wide">
+    <h1 data-pt="Ranking" data-en="Leaderboard">Ranking</h1>
+    <p class="lead" id="lead"></p>
+    <div class="tabs" role="group" aria-label="Ranking">
+      <button type="button" data-tipo="dia" aria-pressed="true" data-pt="Desafio do dia" data-en="Daily challenge">Desafio do dia</button>
+      <button type="button" data-tipo="semana" aria-pressed="false" data-pt="Desafio da semana" data-en="Weekly challenge">Desafio da semana</button>
+      <button type="button" data-tipo="ondas" aria-pressed="false" data-pt="Modo Waves" data-en="Waves mode">Modo Waves</button>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <p class="empty" id="empty" hidden></p>
+    <a class="btn" href="/jogar/" style="margin-top:22px" data-pt="Jogar" data-en="Play">Jogar</a>
+  </div>
+</main>
+<footer><a href="/" data-pt="Página inicial" data-en="Home">Página inicial</a><a href="conta.html" data-pt="Conta" data-en="Account">Conta</a><a href="privacidade.html" data-pt="Privacidade" data-en="Privacy">Privacidade</a></footer>
+<script>
+  let tipo = new URLSearchParams(location.search).get("tipo") || "dia";
+  let me = null, data = null;
+  const LEAD = {
+    dia: ["Mesmo mapa para todo mundo hoje. Quem vence mais rápido fica na frente; depois, quem foi mais fundo. Vira à meia-noite (Brasília).",
+          "Same map for everyone today. Fastest win ranks first; then whoever got deepest. Resets at midnight (Brasília)."],
+    semana: ["Mesmo mapa e duas regras sorteadas para todos até segunda-feira.", "Same map and two random rules for everyone until Monday."],
+    ondas: ["Arena sem fim: a wave mais alta que cada um já alcançou.", "Endless arena: the highest wave each player ever reached."],
+  };
+
+  function render() {
+    document.querySelectorAll("[data-tipo]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tipo === tipo)));
+    document.getElementById("lead").textContent = M.t(...LEAD[tipo]);
+    const head = document.getElementById("head"), rows = document.getElementById("rows"), empty = document.getElementById("empty");
+    head.replaceChildren(); rows.replaceChildren();
+    const cols = tipo === "ondas"
+      ? [["#", "#", "num"], ["Personagem", "Character"], ["Wave", "Wave", "num"]]
+      : [["#", "#", "num"], ["Personagem", "Character"], ["Resultado", "Result"], ["Andares", "Floors", "num"], ["Tentativas", "Tries", "num"]];
+    cols.forEach(([pt, en, c]) => head.append(M.el("th", { class: c || "", text: M.t(pt, en) })));
+    if (!data) return;
+    empty.hidden = data.length > 0;
+    empty.textContent = M.t("Ninguém ainda. Seja o primeiro.", "No one yet. Be the first.");
+    data.forEach((r, i) => {
+      const tr = M.el("tr", me && me === r.nome ? { class: "me" } : {});
+      const link = M.el("a", { href: "perfil.html?nome=" + encodeURIComponent(r.nome), text: r.nome });
+      tr.append(M.el("td", { class: "num", text: String(i + 1) }), M.el("td", {}, link));
+      if (tipo === "ondas") tr.append(M.el("td", { class: "num", text: String(r.wave) }));
+      else tr.append(
+        M.el("td", { text: r.tempo ? M.t("Venceu em ", "Won in ") + M.clock(r.tempo) : M.t("Não venceu", "Didn't win") }),
+        M.el("td", { class: "num", text: String(r.andares || 0) }),
+        M.el("td", { class: "num", text: String(r.tentativas || 0) }));
+      rows.append(tr);
+    });
+  }
+
+  async function load() {
+    data = null; render();
+    const chave = tipo === "dia" ? M.todayKey() : tipo === "semana" ? M.weekKey() : "";
+    const r = await M.api("GET", `/api/ranking?tipo=${tipo}&chave=${encodeURIComponent(chave)}`);
+    data = r.ok ? r.linhas : [];
+    render();
+  }
+
+  document.querySelectorAll("[data-tipo]").forEach(b => b.addEventListener("click", () => {
+    tipo = b.dataset.tipo;
+    history.replaceState(null, "", "?tipo=" + tipo);
+    load();
+  }));
+  M.onLang(render);
+  M.api("GET", "/api/me").then(r => { if (r.nome) { me = r.nome; render(); } });
+  load();
+</script>
+</body>
+</html>

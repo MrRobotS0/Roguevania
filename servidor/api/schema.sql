@@ -36,3 +36,30 @@ CREATE TABLE IF NOT EXISTS password_resets (
   expires_at  timestamptz NOT NULL,
   used_at     timestamptz
 );
+
+-- telemetria: um resumo por partida terminada (venceu, morreu ou desistiu)
+CREATE TABLE IF NOT EXISTS runs (
+  id          bigserial PRIMARY KEY,
+  user_id     bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  data        jsonb NOT NULL
+);
+CREATE INDEX IF NOT EXISTS runs_user ON runs (user_id);
+CREATE INDEX IF NOT EXISTS runs_created ON runs (created_at);
+
+-- cada vez que o jogo abre (GET /api/save)
+CREATE TABLE IF NOT EXISTS openings (
+  id          bigserial PRIMARY KEY,
+  user_id     bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS openings_user ON openings (user_id, at);
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id          bigserial PRIMARY KEY,
+  user_id     bigint REFERENCES users(id) ON DELETE CASCADE,
+  kind        text NOT NULL,
+  text        text NOT NULL,
+  info        text NOT NULL DEFAULT '',
+  created_at  timestamptz NOT NULL DEFAULT now()
+);

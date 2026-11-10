@@ -7,7 +7,13 @@
 <meta name="description" content="MOKSHA. A pixel-art action roguelite. Thirteen gods vanished. You are what they left behind.">
 <meta property="og:title" content="MOKSHA">
 <meta property="og:description" content="Thirteen gods vanished. You are what they left behind.">
-<meta property="og:image" content="img/mar.png">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://moksha.com.br/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://moksha.com.br/img/og.png">
 <link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
 <link rel="icon" type="image/png" sizes="128x128" href="img/icone.png">
 <link rel="apple-touch-icon" href="img/icone-192.png">
@@ -185,6 +191,9 @@
   .spr { overflow: hidden; }
   .spr .film { image-rendering: pixelated; background-repeat: no-repeat; will-change: transform; }
 
+  /* em moksha.com.br a barra tem Wiki, Ranking e Entrar: no celular a Wiki sai (fica no rodapé) para o idioma caber */
+  .bar .lang { display: flex; flex: none; }
+  @media (max-width: 520px) { .bar nav a[href="wiki.html"] { display: none; } .bar nav { gap: 6px; } .bar .lang button { min-width: 40px; padding: 0 8px; } .bar .btn.mini { padding-inline: 10px; } }
   @media (max-width: 720px) {
     .bar .btn:not(.ghost) { display: none; }
     .track { gap: 8vw; padding-left: 11vw; padding-right: 11vw; }
@@ -398,6 +407,18 @@
     document.querySelector('#download [data-i18n="smart"]').remove();
     const acct = document.getElementById("acct");
     acct.hidden = false;
+    const rank = document.createElement("a");
+    rank.className = "btn mini ghost";
+    rank.href = "/ranking.html";
+    rank.dataset.i18n = "rank";
+    rank.textContent = "Leaderboard";
+    acct.before(rank);
+    const foot = document.querySelector(".foot-links");
+    [["/ranking.html", "rank", "Leaderboard"], ["/privacidade.html", "privacy", "Privacy"]].forEach(([href, key, text]) => {
+      const a = document.createElement("a");
+      a.href = href; a.dataset.i18n = key; a.textContent = text;
+      foot.appendChild(a);
+    });
     fetch("/api/me", { credentials: "same-origin" }).then(r => r.json()).then(me => {
       if (!me.logado) return;
       // logado: o botão da conta mostra o nome do personagem (ou pede para criar)
@@ -410,7 +431,7 @@
 
   const PT = {
     get: "Jogar grátis", download: "Baixar grátis",
-    signIn: "Entrar", playNow: "Jogar agora", verWeb: "NO NAVEGADOR · V0.7.0 · EN / PT",
+    signIn: "Entrar", playNow: "Jogar agora", rank: "Ranking", privacy: "Privacidade", verWeb: "NO NAVEGADOR · V0.7.0 · EN / PT",
     dlPWeb: "Grátis, no navegador. Crie uma conta e seu progresso vai junto. Teclado ou controle.",
     tagline: "Treze deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
     gEye: "13 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
