@@ -12,6 +12,8 @@ const DEFAULTS := {
 	"timer": false,          # cronômetro de speedrun na tela
 	"hints": true,           # dicas da primeira partida
 	"numbers": true,         # números de dano subindo dos inimigos
+	"colorblind": false,     # avisos dos inimigos em azul e branco
+	"easy_dodge": false,     # rolagem invencível por mais tempo
 	"lang": "pt",            # pt | en (o nome do jogo fica igual)
 	"keys": {},              # ação -> [physical keycode]
 }
@@ -53,6 +55,7 @@ func apply() -> void:
 		if DisplayServer.window_get_mode() != want:
 			DisplayServer.window_set_mode(want)
 	Controls.apply_bindings(data["keys"])
+	Palette.use_colorblind(bool(data.get("colorblind", false)))
 
 
 func shake_scale() -> float:

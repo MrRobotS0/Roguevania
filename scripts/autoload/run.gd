@@ -168,12 +168,22 @@ func boss_of(id: String) -> String:
 	return STAGES[id].get("boss", "")
 
 
+# a arena de um guardião (vem logo depois do andar, antes da Passagem)
+func is_boss_stage(id: String) -> bool:
+	for s: String in STAGES:
+		if String(STAGES[s].get("boss", "")) == id:
+			return true
+	return false
+
+
 func stage_seed() -> int:
 	return seed_value + (path.size() + wave_block) * 7349
 
 
 const PASSAGE_HEAL := 0.4        # parte da vida que volta ao chegar na Passagem
 const PASSAGE_HEAL_HEAT := 0.25  # com Brasas do Deus
+const BOSS_HEAL := 0.3           # ao entrar na arena do guardião
+const BOSS_HEAL_HEAT := 0.15
 
 
 func enter_passage() -> void:
@@ -380,6 +390,12 @@ func load_player(p: Player) -> void:
 		if gain > 0:
 			p.hp += gain
 			Fx.toast.call_deferred("A PASSAGEM ACALMA: +%d VIDA" % gain)
+	# antes do guardião, um fôlego: o robô chegava sem vida e morria em segundos
+	elif is_boss_stage(stage_id) and mode != WAVES:
+		var gain := mini(roundi(p.max_hp * (BOSS_HEAL if heat == 0 else BOSS_HEAL_HEAT)), p.max_hp - p.hp)
+		if gain > 0:
+			p.hp += gain
+			Fx.toast.call_deferred("ANTES DO GUARDIÃO: +%d VIDA" % gain)
 
 
 # --- partida salva ---------------------------------------------------------------------

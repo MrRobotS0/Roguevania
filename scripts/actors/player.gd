@@ -26,6 +26,7 @@ const CLIMB_TIME := 0.16
 const ROLL_SPEED := 270.0
 const ROLL_TIME := 0.32
 const ROLL_DODGE := 0.27           # invencível durante quase toda a rolagem
+const EASY_DODGE := 0.38           # opção Esquiva Facilitada: cobre a rolagem toda e um pouco depois
 const ROLL_COOLDOWN := 0.12
 const AIR_DASH_SPEED := 320.0
 const AIR_DASH_TIME := 0.18
@@ -756,7 +757,7 @@ func _start_roll() -> void:
 	var dir := pad.axis()
 	if dir != 0.0:
 		facing = int(signf(dir))
-	_dodge = ROLL_DODGE
+	_dodge = EASY_DODGE if Options.get_value("easy_dodge") else ROLL_DODGE
 	_rolled_through.clear()
 	_rolling_in_air = not is_on_floor()
 	if _rolling_in_air:

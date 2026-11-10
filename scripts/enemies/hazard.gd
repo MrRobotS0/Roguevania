@@ -59,6 +59,18 @@ func danger_name() -> String:
 		"light": return "COLUNA DE LUZ"
 		"fire": return "JATO DE FOGO"
 		"molten": return "ESCÓRIA DERRETIDA"
+		"bile": return "JATO DE BILE"
+		"bone": return "OSSOS QUE SOBEM"
+		"brick": return "TIJOLO QUE CAI"
+		"dream": return "CLARÃO DO SONHO"
+		"glyph": return "GLIFO ARDENTE"
+		"shard": return "ESTILHAÇO"
+		"spore": return "ESPOROS"
+		"tendril": return "RAIZ QUE SOBE"
+		"thorn": return "ESPINHEIRO"
+		"vine": return "TREPADEIRA"
+		"water": return "JATO D'ÁGUA"
+		"wave": return "ONDA"
 	return "PERIGO DO CENÁRIO"
 
 

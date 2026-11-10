@@ -54,6 +54,10 @@ func _ready() -> void:
 	Updater.ready_to_apply.connect(func(_v: String) -> void:
 		if mode == "title":
 			show_title())
+	# a conta trouxe outro legado (ou saiu): o título mostra o nome e a partida certa
+	Meta.account_changed.connect(func() -> void:
+		if mode == "title":
+			show_title())
 
 
 func show_title() -> void:
@@ -129,7 +133,7 @@ func _menu_open() -> bool:
 	if m != null and m.is_open():
 		return true
 	for n in get_parent().get_children():
-		if n is OptionsScreen and n.is_open():
+		if (n is OptionsScreen or n is AccountScreen) and n.is_open():
 			return true
 	return false
 

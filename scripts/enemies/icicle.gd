@@ -48,6 +48,7 @@ func _physics_process(delta: float) -> void:
 			var tip := global_position + Vector2(0, _y + 12.0)
 			if is_instance_valid(player) and player.alive() and Rect2(tip - Vector2(4, 12), Vector2(8, 12)).intersects(player.hurt_rect()):
 				var d := Damage.make(DAMAGE, 1 if player.global_position.x >= global_position.x else -1, 120.0)
+				d.label = danger_name()
 				d.unblockable = true
 				player.hurt(d)
 				_shatter()
@@ -79,3 +80,11 @@ func _draw() -> void:
 		var wid := 7.0 - i
 		draw_rect(Rect2(-wid * 0.5 + shake, top + i * 2.5, wid, 3), ice.darkened(i * 0.05))
 	draw_rect(Rect2(-3 + shake, top, 1, 10), Palette.FLASH)
+
+
+# nome em "morto por": cada bioma que reaproveita esta queda tem o seu
+func danger_name() -> String:
+	match (get_script() as Script).resource_path.get_file():
+		"cave_drip.gd": return "GOTEIRA ÁCIDA"
+		"falling_stone.gd": return "PEDRA QUE CAI"
+	return "ESTALACTITE DE GELO"

@@ -21,8 +21,12 @@ var _rev := 0               # cada envio leva um número maior; o servidor ignor
 var _offline := false       # não leu a conta: não manda nada, para não sobrescrever o legado de verdade
 
 
+signal account_changed     # entrou, saiu ou o legado veio da conta (o título se redesenha)
+
+
 func _ready() -> void:
 	_load()
+	_desk_start()
 
 
 func use_path(p: String, wipe := false) -> void:
@@ -56,6 +60,7 @@ func save() -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data, "  "))
+	_desk_push()
 
 
 func _read_file(p: String) -> Variant:
@@ -543,3 +548,161 @@ func note_lore(text: String) -> bool:
 
 func known_creatures() -> Array:
 	return data["stats"].get("kills_by", {}).keys()
+
+
+# --- conta no Windows (moksha.com.br) --------------------------------------------------
+# Opcional: em EXTRAS > CONTA o jogador entra com usuário (ou e-mail) e senha.
+# Daí o legado é o mesmo da conta do site: ao abrir, o mais novo vence (conta
+# ou este PC) e cada save() manda uma cópia. Sem conta, nada muda: tudo local.
+
+const SITE := "https://moksha.com.br"
+const ACCOUNT_FILE := "user://conta.json"
+
+var desk_token := ""        # sessão da conta (o mesmo cookie do site)
+var desk_user := ""         # usuário ou e-mail usado para entrar
+var _desk_rev := 0          # número do último envio deste PC
+var _desk_ready := false    # já comparou com a conta nesta abertura
+var _desk_fresh := false    # acabou de entrar: na 1ª comparação vence quem jogou mais
+
+
+func desktop_account_enabled() -> bool:
+	return not OS.has_feature("web") and path == DEFAULT_PATH
+
+
+func desk_logged_in() -> bool:
+	return desk_token != ""
+
+
+func _desk_start() -> void:
+	if not desktop_account_enabled():
+		return
+	var saved = _read_file(ACCOUNT_FILE)
+	if not saved is Dictionary or String(saved.get("token", "")) == "":
+		return
+	desk_token = String(saved["token"])
+	desk_user = String(saved.get("usuario", ""))
+	player_name = String(saved.get("nome", ""))
+	_desk_rev = int(saved.get("rev", 0))
+	_desk_pull.call_deferred()
+
+
+func _desk_write() -> void:
+	if desk_token == "":
+		if FileAccess.file_exists(ACCOUNT_FILE):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(ACCOUNT_FILE))
+		return
+	var f := FileAccess.open(ACCOUNT_FILE, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"token": desk_token, "usuario": desk_user, "nome": player_name, "rev": _desk_rev}))
+
+
+func _desk_request(method: int, api: String, body: Variant = null) -> Dictionary:
+	var http := HTTPRequest.new()
+	http.timeout = 12.0
+	add_child(http)
+	var headers := PackedStringArray(["Content-Type: application/json", "User-Agent: MOKSHA-GAME"])
+	if desk_token != "":
+		headers.append("Cookie: moksha_sess=" + desk_token)
+	var err := http.request(SITE + api, headers, method, "" if body == null else JSON.stringify(body))
+	if err != OK:
+		http.queue_free()
+		return {"status": 0}
+	var r: Array = await http.request_completed
+	http.queue_free()
+	var out := {"status": int(r[1]) if int(r[0]) == HTTPRequest.RESULT_SUCCESS else 0, "headers": r[2]}
+	var parsed = JSON.parse_string((r[3] as PackedByteArray).get_string_from_utf8())
+	out["body"] = parsed if parsed is Dictionary else {}
+	return out
+
+
+# Entra na conta. Devolve "" se deu certo ou o código do erro (para a tela de conta).
+func desktop_login(login: String, senha: String) -> String:
+	var r := await _desk_request(HTTPClient.METHOD_POST, "/api/entrar", {"login": login, "senha": senha})
+	if int(r["status"]) == 0:
+		return "rede"
+	if int(r["status"]) != 200:
+		return String(r["body"].get("erro", "login_invalido"))
+	var token := ""
+	for h: String in r["headers"]:
+		if h.to_lower().begins_with("set-cookie:") and h.contains("moksha_sess="):
+			token = h.get_slice("moksha_sess=", 1).get_slice(";", 0).strip_edges()
+	if token == "":
+		return "outro"
+	if r["body"].get("nome") == null:
+		desk_token = token
+		await _desk_request(HTTPClient.METHOD_POST, "/api/sair", {})
+		desk_token = ""
+		return "sem_personagem"
+	desk_token = token
+	desk_user = login
+	player_name = String(r["body"]["nome"])
+	_desk_rev = 0
+	_desk_ready = false
+	_desk_fresh = true
+	_desk_write()
+	await _desk_pull()
+	return ""
+
+
+func desktop_logout() -> void:
+	if desk_token != "":
+		_desk_request(HTTPClient.METHOD_POST, "/api/sair", {})
+	desk_token = ""
+	desk_user = ""
+	player_name = ""
+	_desk_rev = 0
+	_desk_ready = false
+	_desk_write()
+	account_changed.emit()
+
+
+# Compara este PC com a conta: o lado com o número maior vence. Conta vazia
+# recebe o legado deste PC.
+func _desk_pull() -> void:
+	var r := await _desk_request(HTTPClient.METHOD_GET, "/api/save")
+	var st := int(r["status"])
+	if st == 401 or st == 403:
+		desk_token = ""
+		player_name = ""
+		_desk_write()
+		Fx.toast("A SESSÃO DA CONTA ACABOU: ENTRE DE NOVO EM EXTRAS")
+		account_changed.emit()
+		return
+	if st != 200:
+		return   # sem internet: segue local e tenta de novo na próxima abertura
+	var body: Dictionary = r["body"]
+	player_name = String(body.get("nome", player_name))
+	var cloud_rev := int(body.get("rev", 0))
+	# primeiro login neste PC: se aqui há mais partidas que na conta, fica o daqui
+	var keep_local := _desk_fresh and body.get("data") is Dictionary 		and int(data.get("runs", 0)) > int((body["data"] as Dictionary).get("runs", 0))
+	_desk_fresh = false
+	if keep_local:
+		_desk_rev = cloud_rev + 1
+		Fx.toast("ESTE PC TINHA MAIS PROGRESSO: ELE FOI PARA A CONTA")
+	if body.get("data") is Dictionary and cloud_rev >= _desk_rev:
+		data = _defaults()
+		_merge(body["data"])
+		_desk_rev = cloud_rev
+		var f := FileAccess.open(path, FileAccess.WRITE)
+		if f:
+			f.store_string(JSON.stringify(data, "  "))
+		Options.reload()
+		Fx.toast("PROGRESSO DA CONTA CARREGADO")
+	_desk_ready = true
+	if cloud_rev < _desk_rev or not body.get("data") is Dictionary:
+		_desk_rev = cloud_rev
+		_desk_push()
+	_desk_write()
+	account_changed.emit()
+
+
+func _desk_push() -> void:
+	if desk_token == "" or not _desk_ready or not desktop_account_enabled():
+		return
+	_desk_rev += 1
+	_desk_write()
+	var r := await _desk_request(HTTPClient.METHOD_PUT, "/api/save", {"rev": _desk_rev, "data": data})
+	if int(r["status"]) == 401 or int(r["status"]) == 403:
+		desk_token = ""
+		_desk_write()
+		account_changed.emit()

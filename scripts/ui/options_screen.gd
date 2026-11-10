@@ -71,6 +71,8 @@ func _rows() -> Array:
 		{"id": "timer", "label": "CRONÔMETRO NA TELA", "value": _yes("timer")},
 		{"id": "hints", "label": "DICAS", "value": _yes("hints")},
 		{"id": "numbers", "label": "NÚMEROS DE DANO", "value": _yes("numbers")},
+		{"id": "colorblind", "label": "AVISOS PARA DALTONISMO", "value": _yes("colorblind")},
+		{"id": "easy_dodge", "label": "ESQUIVA FACILITADA", "value": _yes("easy_dodge")},
 		{"id": "keys", "label": "TECLAS", "value": ">"},
 		{"id": "back", "label": "VOLTAR", "value": ""},
 	]
@@ -143,7 +145,7 @@ func _change(id: String, step: int) -> void:
 			var i := clampi(roundi(v * 10.0) + step, 0, 10)
 			Options.set_value(id, STEPS[i])
 			Sfx.play("ui_move", -10.0)
-		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers":
+		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "colorblind", "easy_dodge":
 			Options.set_value(id, not Options.get_value(id))
 			Sfx.play("ui_move", -10.0)
 
@@ -153,7 +155,7 @@ func _confirm(id: String) -> void:
 		"back":
 			if _page == "keys":
 				_page = "main"
-				_index = 11   # volta para TECLAS
+				_index = 13   # volta para TECLAS
 			else:
 				close()
 		"keys":
@@ -161,7 +163,7 @@ func _confirm(id: String) -> void:
 			_index = 0
 		"reset_keys":
 			Options.set_value("keys", {})
-		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "lang":
+		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "colorblind", "easy_dodge", "lang":
 			_change(id, 1)
 		_:
 			if _page == "keys" and REBINDABLE.has(id):

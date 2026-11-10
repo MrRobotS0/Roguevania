@@ -14,6 +14,7 @@ var foreground: Foreground
 var curtain: Curtain
 var map_view: MapView
 var options_screen: OptionsScreen
+var account_screen: AccountScreen
 var cutscene: Cutscene
 var guide: Guide
 var _playing := false
@@ -83,6 +84,8 @@ func _ready() -> void:
 	front.add_child(menu)
 	options_screen = OptionsScreen.new()
 	front.add_child(options_screen)
+	account_screen = AccountScreen.new()
+	front.add_child(account_screen)
 	cutscene = Cutscene.new()
 	front.add_child(cutscene)
 	screen.confirmed.connect(_on_screen_confirmed)
@@ -168,11 +171,17 @@ func _on_title_option(id: String) -> void:
 			var list: Array = Screen.EXTRAS.duplicate()
 			if OS.has_feature("web"):
 				list.append_array(Screen.WEB_EXTRAS)
+			elif Meta.desktop_account_enabled():
+				list.append(["account", "CONTA"])
 			var options: Array[Dictionary] = []
 			for o in list:
-				options.append({"label": o[1], "detail": "ABRE EM OUTRA ABA" if Screen.WEB_EXTRAS.has(o) else ""})
+				options.append({"label": o[1], "detail": "ABRE EM OUTRA ABA" if Screen.WEB_EXTRAS.has(o) else
+					(("CONECTADO: " + Meta.player_name.to_upper()) if o[0] == "account" and Meta.desk_logged_in() else
+					("PROGRESSO JUNTO COM MOKSHA.COM.BR" if o[0] == "account" else ""))})
 			menu.open_choice("EXTRAS", "", options, func(i: int) -> void:
 				_on_title_option.call_deferred(String(list[i][0])))
+		"account":
+			account_screen.open()
 		"ranking", "feedback":
 			open_site_page(Screen.WEB_PAGES[id])
 		"profile":
@@ -224,12 +233,100 @@ func open_modes() -> void:
 		{"label": "DESAFIO DA SEMANA", "detail": "DUAS REGRAS QUE VIRAM O JOGO. MUDAM TODA SEGUNDA"},
 		{"label": "MODO WAVES", "price": ("WAVE %d" % best) if best > 0 else "", "price_color": Palette.GOLD,
 			"detail": "ARENA FECHADA. FRASCO A CADA 5 WAVES, GUARDIÃO A CADA 10"},
+		{"label": "RANKING", "detail": "QUEM FOI MAIS LONGE HOJE, NA SEMANA E NAS WAVES"},
 	]
 	menu.open_choice("MODOS", "", options, _on_modes_pick)
 
 
 func _on_modes_pick(i: int) -> void:
+	if i == 3:
+		open_ranking.call_deferred()
+		return
 	_on_title_option.call_deferred(["daily", "weekly", "waves"][i])
+
+
+# --- ranking (moksha.com.br) ---------------------------------------------------------
+# O mesmo ranking do site, dentro do jogo. Funciona no navegador e no Windows
+# (precisa de internet); sem conexão, avisa e mostra o endereço.
+
+const SITE := "https://moksha.com.br"
+var _ranking_busy := false
+
+
+func open_ranking() -> void:
+	if _ranking_busy:
+		return
+	_ranking_busy = true
+	Fx.toast("CARREGANDO O RANKING")
+	var day: Variant = await _fetch_json("%s/api/ranking?tipo=dia&chave=%s" % [SITE, Run.today()])
+	var week: Variant = await _fetch_json("%s/api/ranking?tipo=semana&chave=%s" % [SITE, Run.this_week()])
+	var waves: Variant = await _fetch_json("%s/api/ranking?tipo=ondas" % SITE)
+	_ranking_busy = false
+	if day == null and week == null and waves == null:
+		menu.open_text("RANKING", "SEM CONEXÃO COM O SITE AGORA.\n\nO RANKING TAMBÉM FICA EM MOKSHA.COM.BR/RANKING.HTML")
+		return
+	var me := Meta.player_name.to_upper()
+	var out: PackedStringArray = []
+	out.append("DESAFIO DO DIA")
+	out.append_array(_ranking_lines(day, 10, me, false))
+	out.append("")
+	out.append("DESAFIO DA SEMANA")
+	out.append_array(_ranking_lines(week, 5, me, false))
+	out.append("")
+	out.append("MODO WAVES")
+	out.append_array(_ranking_lines(waves, 5, me, true))
+	menu.open_text("RANKING", "\n".join(out))
+
+
+func _ranking_lines(data: Variant, top: int, me: String, waves: bool) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if not (data is Dictionary) or not (data.get("linhas") is Array):
+		out.append("  (SEM CONEXÃO)")
+		return out
+	var rows: Array = data["linhas"]
+	if rows.is_empty():
+		out.append("  NINGUÉM AINDA. SEJA O PRIMEIRO.")
+		return out
+	var mine := -1
+	for i in rows.size():
+		if String(rows[i].get("nome", "")).to_upper() == me and me != "":
+			mine = i
+	for i in mini(top, rows.size()):
+		out.append(_ranking_row(i, rows[i], waves, i == mine))
+	if mine >= top:
+		out.append("  ...")
+		out.append(_ranking_row(mine, rows[mine], waves, true))
+	return out
+
+
+func _ranking_row(i: int, r: Dictionary, waves: bool, mine: bool) -> String:
+	var name := String(r.get("nome", "?")).to_upper()
+	var what := ""
+	if waves:
+		what = "WAVE %d" % int(r.get("wave", 0))
+	elif r.get("tempo") != null and float(r.get("tempo")) > 0.0:
+		what = "VENCEU EM %s" % _clock(float(r["tempo"]))
+	else:
+		what = "%d ANDARES" % int(r.get("andares", 0))
+	return "%s%d. %s  ·  %s" % ["> " if mine else "  ", i + 1, name, what]
+
+
+func _clock(t: float) -> String:
+	return "%d:%02d" % [int(t) / 60, int(t) % 60]
+
+
+func _fetch_json(url: String) -> Variant:
+	var http := HTTPRequest.new()
+	http.timeout = 8.0
+	add_child(http)
+	if http.request(url) != OK:
+		http.queue_free()
+		return null
+	var r: Array = await http.request_completed
+	http.queue_free()
+	if int(r[0]) != HTTPRequest.RESULT_SUCCESS or int(r[1]) != 200:
+		return null
+	return JSON.parse_string((r[3] as PackedByteArray).get_string_from_utf8())
 
 
 func open_weekly() -> void:

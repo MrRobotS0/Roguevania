@@ -40,11 +40,18 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	if Run.stage_id == Run.FIRST and Run.heat == 0 and Run.mode == "":
-		aim_time = GENTLE_AIM
-		lock_time = GENTLE_LOCK
-		cooldown_time = GENTLE_COOLDOWN
-		damage = GENTLE_DAMAGE
+	if Run.heat == 0 and Run.mode == "":
+		if Run.stage_id == Run.FIRST:
+			aim_time = GENTLE_AIM
+			lock_time = GENTLE_LOCK
+			cooldown_time = GENTLE_COOLDOWN
+			damage = GENTLE_DAMAGE
+		elif Run.path.size() <= 2:
+			# 2º andar (Forja ou Salões): meio-termo. O robô morria 80% na Forja, quase sempre para ele.
+			aim_time = lerpf(AIM, GENTLE_AIM, 0.5)
+			lock_time = lerpf(LOCK, GENTLE_LOCK, 0.5)
+			cooldown_time = lerpf(COOLDOWN, GENTLE_COOLDOWN, 0.5)
+			damage = 10
 
 
 func body_color() -> Color:

@@ -33,8 +33,15 @@ const GRUNT_DARK := Color("3b4d27")
 const ARCHER := Color("7a4f8f")
 const ARCHER_DARK := Color("4c2f5a")
 const ENEMY_EYE := Color("ff5a4a")
-const TELEGRAPH := Color("ff8a3d")
-const DANGER := Color("ffd84a")
+# Avisos dos inimigos (preparando / vai acertar). Mudam com a opção de
+# daltonismo: laranja e amarelo viram azul e branco, que não se confundem.
+static var TELEGRAPH := Color("ff8a3d")
+static var DANGER := Color("ffd84a")
+
+
+static func use_colorblind(on: bool) -> void:
+	TELEGRAPH = Color("4fb8ff") if on else Color("ff8a3d")
+	DANGER = Color("ffffff") if on else Color("ffd84a")
 const ARROW := Color("c9b38a")
 
 const HIT := Color("ff6a55")
