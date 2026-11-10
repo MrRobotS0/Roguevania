@@ -3,11 +3,22 @@ extends Node
 # Progresso permanente (sobrevive à morte): o que foi desbloqueado e as
 # estatísticas. Fica em user://legado.save (pasta de dados do Godot).
 # Testes trocam o caminho com use_path() — nunca escrevem no save real.
+#
+# No navegador (moksha.com.br) o legado mora na conta do jogador: carrega de
+# /api/save ao abrir e cada save() manda uma cópia para lá. O arquivo local vira
+# só um cache. O progresso que já estava neste navegador antes das contas é
+# levado para a primeira conta que entrar nele, uma vez só.
 
 const DEFAULT_PATH := "user://legado.save"
+const CLOUD_CACHE := "user://legado-conta.save"
+const ACCOUNT_PAGE := "/conta.html?volta=/jogar/"
 
 var path := DEFAULT_PATH
 var data := {}
+var cloud := false          # salvando na conta (só no navegador, com o save real)
+var player_name := ""       # nome do personagem criado no site
+var _rev := 0               # cada envio leva um número maior; o servidor ignora o que chegar atrasado
+var _offline := false       # não leu a conta: não manda nada, para não sobrescrever o legado de verdade
 
 
 func _ready() -> void:
@@ -31,18 +42,105 @@ func _defaults() -> Dictionary:
 
 func _load() -> void:
 	data = _defaults()
-	if not FileAccess.file_exists(path):
+	cloud = OS.has_feature("web") and path == DEFAULT_PATH
+	if cloud:
+		_load_cloud()
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	_merge(_read_file(path))
+
+
+func save() -> void:
+	if cloud:
+		_save_cloud()
+		return
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(data, "  "))
+
+
+func _read_file(p: String) -> Variant:
+	if not FileAccess.file_exists(p):
+		return null
+	return JSON.parse_string(FileAccess.get_file_as_string(p))
+
+
+func _merge(parsed: Variant) -> void:
 	if parsed is Dictionary:
 		for k in parsed:
 			data[k] = parsed[k]
 
 
-func save() -> void:
-	var f := FileAccess.open(path, FileAccess.WRITE)
+# --- conta (navegador) ---------------------------------------------------------------
+
+# Pedido síncrono de propósito: o resto do jogo lê Meta.data logo no _ready, e
+# o pedido é pequeno e vai para o mesmo servidor que acabou de entregar o jogo.
+const _JS_GET := """(function () {
+	for (var i = 0; i < 3; i++) {
+		try {
+			var x = new XMLHttpRequest();
+			x.open('GET', '/api/save', false);
+			x.send();
+			if (x.status) return JSON.stringify({s: x.status, b: x.responseText});
+		} catch (e) {}
+	}
+	return JSON.stringify({s: 0, b: ''});
+})()"""
+
+
+func _load_cloud() -> void:
+	var reply = JSON.parse_string(str(JavaScriptBridge.eval(_JS_GET, true)))
+	var status := int(reply["s"]) if reply is Dictionary else 0
+	if status == 401 or status == 403:
+		_to_account_page()
+		return
+	var body = JSON.parse_string(String(reply["b"])) if status == 200 else null
+	if not body is Dictionary:
+		# servidor fora do ar: joga com o cache local, sem mandar nada para a conta
+		_offline = true
+		push_warning("Meta: não deu para ler o legado da conta (status %d)" % status)
+		var cached = _read_file(CLOUD_CACHE)
+		if cached is Dictionary:
+			player_name = String(cached.get("nome", ""))
+			_merge(cached.get("data"))
+		return
+	player_name = String(body.get("nome", ""))
+	_rev = int(body.get("rev", 0))
+	if body.get("data") is Dictionary:
+		_merge(body["data"])
+		_write_cache()
+		return
+	# conta nova: leva o progresso que este navegador tinha antes das contas
+	var old = _read_file(DEFAULT_PATH)
+	if old is Dictionary:
+		_merge(old)
+		DirAccess.rename_absolute(ProjectSettings.globalize_path(DEFAULT_PATH),
+			ProjectSettings.globalize_path("user://legado-importado.save"))
+		_save_cloud()
+
+
+func _save_cloud() -> void:
+	if _offline:
+		return
+	_rev += 1
+	_write_cache()
+	var body := JSON.stringify({"rev": _rev, "data": data})
+	# keepalive deixa o envio terminar mesmo se a aba fechar, mas só aceita até 64 KB
+	var js := """fetch('/api/save', {method: 'PUT', credentials: 'same-origin', keepalive: %s,
+		headers: {'Content-Type': 'application/json'}, body: %s})
+		.then(function (r) { if (r.status === 401 || r.status === 403) location.replace(%s); })
+		.catch(function () {});""" % ["true" if body.length() < 60000 else "false",
+			JSON.stringify(body), JSON.stringify(ACCOUNT_PAGE)]
+	JavaScriptBridge.eval(js, true)
+
+
+func _write_cache() -> void:
+	var f := FileAccess.open(CLOUD_CACHE, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify(data, "  "))
+		f.store_string(JSON.stringify({"nome": player_name, "rev": _rev, "data": data}))
+
+
+func _to_account_page() -> void:
+	JavaScriptBridge.eval("location.replace(%s)" % JSON.stringify(ACCOUNT_PAGE), true)
 
 
 func is_unlocked(id: String) -> bool:

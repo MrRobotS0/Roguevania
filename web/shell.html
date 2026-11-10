@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<title>MOKSHA</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/img/icone-32.png">
+<link rel="icon" type="image/png" sizes="128x128" href="/img/icone.png">
+<link rel="apple-touch-icon" href="/img/icone-192.png">
+<!-- Tela de carregamento do MOKSHA no navegador (html/custom_html_shell do preset Web).
+     O jogo roda com COEP: tudo que vem de fora precisa de crossorigin. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+  :root {
+    --bg: #07060b;
+    --line: #2b2438;
+    --text: #f2ecff;
+    --dim: #a99dc2;
+    --gold: #f2c14e;
+    --gold-lt: #ffe08a;
+    --gold-md: #c08a24;
+    --gold-dk: #7a4a10;
+    --blood: #ff6b72;
+    --pixel: "Silkscreen", monospace;
+    --body: "Pixelify Sans", system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #canvas { margin: 0; padding: 0; border: 0; }
+  body { color: var(--text); background: var(--bg); overflow: hidden; touch-action: none; }
+  #canvas { display: block; }
+  #canvas:focus { outline: none; }
+
+  #status { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px;
+    background: linear-gradient(rgba(7,6,11,.62), rgba(7,6,11,.9)), #120c0e url("/img/mar.png") center / cover;
+    image-rendering: pixelated; transition: opacity .5s steps(5); font: 400 17px/1.5 var(--body); }
+  #status.gone { opacity: 0; pointer-events: none; }
+  #status::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgba(5,4,8,.75) 100%); }
+
+  .box { position: relative; z-index: 1; width: min(560px, 100%); text-align: center; display: grid; justify-items: center; }
+
+  h1 { margin: 0; font: 700 clamp(44px, 11vw, 84px)/1 var(--pixel); letter-spacing: .06em; color: var(--gold);
+    text-shadow: 0 3px 0 var(--gold-md), 0 6px 0 var(--gold-dk), 0 10px 0 #1a0b04, 0 0 30px rgba(242,193,78,.25); }
+  .sigil { width: min(300px, 70%); height: auto; margin: 18px 0 8px; color: var(--gold); }
+  .hello { min-height: 1.5em; margin: 0 0 22px; color: var(--dim); font-size: 17px; }
+  .hello b { color: var(--text); font-weight: 600; }
+
+  /* o andarilho correndo em cima da barra: tira de 8 quadros */
+  .runner { width: 64px; height: 64px; margin-bottom: -6px; background: url("/img/heroi_corrida.png") 0 0 / 512px 64px;
+    image-rendering: pixelated; animation: run .55s steps(8) infinite; }
+  @keyframes run { to { background-position: -512px 0; } }
+
+  .bar { width: 100%; height: 22px; padding: 3px; background: var(--bg); border: 2px solid var(--line);
+    box-shadow: 0 0 0 3px var(--bg), inset 0 0 0 1px #000; }
+  .fill { height: 100%; width: 0%; transition: width .2s steps(4);
+    background: repeating-linear-gradient(90deg, var(--gold) 0 10px, var(--gold-md) 10px 12px);
+    box-shadow: inset 0 3px 0 var(--gold-lt), inset 0 -3px 0 var(--gold-dk); }
+  /* sem tamanho conhecido (ou já baixado, só despertando): o brilho anda sozinho */
+  .bar.busy .fill { width: 100% !important; transition: none;
+    background: repeating-linear-gradient(90deg, var(--gold-dk) 0 10px, #4a2c0a 10px 12px), var(--gold-dk);
+    position: relative; overflow: hidden; }
+  .bar.busy .fill::after { content: ""; position: absolute; inset: 0; width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255,224,138,.85), transparent); animation: sweep 1.1s steps(12) infinite; }
+  @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+  .meta { display: flex; justify-content: space-between; gap: 12px; width: 100%; margin-top: 10px;
+    font: 400 13px var(--pixel); color: var(--dim); letter-spacing: .04em; }
+  .meta b { color: var(--gold); font-weight: 400; }
+
+  .lore { min-height: 4.6em; margin: 26px 0 0; max-width: 44ch; color: var(--text); font-size: 17px; opacity: .92; transition: opacity .4s steps(4); }
+  .lore.out { opacity: 0; }
+  .lore small { display: block; margin-top: 6px; font: 400 12px var(--pixel); color: var(--gold); letter-spacing: .08em; opacity: .8; }
+
+  .keys { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px;
+    font: 400 12px var(--pixel); color: var(--dim); }
+  .keys kbd { font: inherit; color: var(--text); background: rgba(7,6,11,.8); border: 2px solid var(--line); padding: 1px 6px; margin-right: 4px; }
+
+  .warn, .error { margin: 22px 0 0; padding: 12px 14px; border: 2px solid; font-size: 16px; text-align: left; width: 100%; }
+  .warn { color: var(--gold); border-color: rgba(242,193,78,.45); background: rgba(242,193,78,.06); }
+  .error { color: var(--blood); border-color: rgba(255,107,114,.5); background: rgba(217,67,75,.1); white-space: pre-line; }
+  .error button { display: block; margin-top: 12px; font: 700 14px var(--pixel); color: #1a0f04; background: var(--gold); border: 0; padding: 10px 16px; cursor: pointer;
+    box-shadow: inset -3px -3px 0 var(--gold-md), inset 3px 3px 0 var(--gold-lt), 0 4px 0 var(--gold-dk); }
+  [hidden] { display: none !important; }
+
+  @media (max-height: 560px) { .sigil, .keys { display: none; } .lore { margin-top: 14px; min-height: 0; } .hello { margin-bottom: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .runner, .bar.busy .fill::after { animation: none; } }
+</style>
+$GODOT_HEAD_INCLUDE
+</head>
+<body>
+<canvas id="canvas">Seu navegador não desenha canvas.</canvas>
+<noscript>O MOKSHA precisa de JavaScript para rodar.</noscript>
+
+<div id="status" role="status" aria-live="polite">
+  <div class="box">
+    <h1>MOKSHA</h1>
+    <svg class="sigil" viewBox="0 0 84 9" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M0 4h30v1H0zM54 4h30v1H54zM31 3h2v3h-2zM51 3h2v3h-2zM36 2h12v1H36zM34 3h2v3h-2zM48 3h2v3h-2zM36 6h12v1H36zM40 3h4v3h-4z" opacity=".95"/><path d="M41 4h2v1h-2z" fill="#1a0b04"/><path d="M38 0h1v2h-1zM45 0h1v2h-1zM41 0h2v1h-2zM38 7h1v2h-1zM45 7h1v2h-1zM41 8h2v1h-2z" opacity=".6"/></svg>
+    <p class="hello" id="hello"></p>
+
+    <div class="runner" aria-hidden="true"></div>
+    <div class="bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="fill"></div></div>
+    <div class="meta"><span id="phase"></span><b id="pct"></b></div>
+
+    <p class="lore" id="lore"></p>
+    <ul class="keys" id="keys"></ul>
+    <p class="warn" id="warn" hidden></p>
+    <div class="error" id="error" hidden><span id="error-text"></span><button type="button" id="retry"></button></div>
+  </div>
+</div>
+
+<script src="$GODOT_URL"></script>
+<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+  let lang = "pt";
+  try { lang = localStorage.getItem("moksha-lang") || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"); } catch (e) {}
+  const PT = lang !== "en";
+  document.documentElement.lang = PT ? "pt-BR" : "en";
+
+  const TXT = PT ? {
+    down: "BAIXANDO", wake: "DESPERTANDO", wait: "PREPARANDO", hello: "A cinza lembra de você, ", helloEnd: ".",
+    mobile: "O MOKSHA precisa de teclado ou controle. No celular ele abre, mas não dá para jogar.",
+    fail: "O jogo não conseguiu abrir.", missing: "Faltam recursos no navegador para rodar o jogo:\n", retry: "TENTAR DE NOVO",
+    keys: [["A D", "andar"], ["ESPAÇO", "pular"], ["J K", "armas"], ["SHIFT", "rolar"], ["Q", "curar"], ["E", "usar"]],
+  } : {
+    down: "DOWNLOADING", wake: "AWAKENING", wait: "PREPARING", hello: "The ash remembers you, ", helloEnd: ".",
+    mobile: "MOKSHA needs a keyboard or gamepad. It opens on phones, but you can't play there.",
+    fail: "The game couldn't start.", missing: "Your browser is missing features the game needs:\n", retry: "TRY AGAIN",
+    keys: [["A D", "move"], ["SPACE", "jump"], ["J K", "weapons"], ["SHIFT", "roll"], ["Q", "heal"], ["E", "use"]],
+  };
+
+  // a mesma lore da landing: uma linha de cada domínio enquanto espera
+  const LORE = [
+    ["O MAR DE CINZAS", "Aqui ardeu um deus. Não se sabe qual. As Casas dizem que foi o delas.", "THE SEA OF ASH", "A god burned here. No one knows which. Each House claims it was theirs."],
+    ["OS SALÕES DO ÚLTIMO INVERNO", "O deus do Inverno prometeu voltar na primavera. Ninguém aqui viu outra estação desde então.", "THE HALLS OF THE LAST WINTER", "The god of winter promised to return in spring. No one here has seen another season since."],
+    ["A FORJA RUBRA", "Quando ele sumiu, as bigornas continuaram batendo sozinhas por um ano.", "THE CRIMSON FORGE", "When he vanished, the anvils kept striking on their own for a year."],
+    ["A TORRE DE BABEL", "Feita para chegar ao deus. Chegou. Ele já tinha ido embora.", "THE TOWER OF BABEL", "Built to reach the god. It did. He had already left."],
+    ["O JARDIM PRIMORDIAL", "Ele não sumiu. Virou raiz. Ainda sente cada passo.", "THE PRIMORDIAL GARDEN", "He did not vanish. He became a root. He still feels every step."],
+    ["CARCOSA", "Os sóis são negros e ninguém estranha.", "CARCOSA", "The suns are black and no one finds it strange."],
+    ["O OBSERVATÓRIO CELESTE", "No caderno de bordo, a última linha: ele olhou de volta.", "THE CELESTIAL OBSERVATORY", "In the logbook, the last line: he looked back."],
+    ["A NECRÓPOLE", "Escrito por dentro de uma cova aberta: se você lembrar de mim, eu volto.", "THE NECROPOLIS", "Written inside an open grave: if you remember me, I come back."],
+    ["A CATEDRAL SUBMERSA", "Alguma coisa no fundo começou a responder. Ninguém pediu isso a ela.", "THE SUNKEN CATHEDRAL", "Something at the bottom began to answer. No one asked it to."],
+    ["O VENTRE", "Você está andando por dentro dele. As paredes respiram.", "THE BELLY", "You are walking inside him. The walls breathe."],
+    ["OS PENHASCOS DO SONHO", "Isto não existe. É o sonho de um deus que dormiu e não acordou mais.", "THE DREAM CLIFFS", "This does not exist. It is the dream of a god who fell asleep and never woke."],
+    ["AS CAVERNAS FUNDAS", "Riscado na rocha, bem fundo: ele sabia. E não contou a ninguém.", "THE DEEP CAVERNS", "Scratched in the rock, very deep: he knew. And told no one."],
+    ["O BOSQUE ERRANTE", "Numa placa de estrada, apontando para todos os lados: ele foi por aqui.", "THE WANDERING FOREST", "On a road sign pointing every way: he went this way."],
+  ];
+
+  const $ = id => document.getElementById(id);
+  const overlay = $("status"), bar = $("bar"), fill = $("fill"), phase = $("phase"), pct = $("pct"), lore = $("lore");
+
+  // quem está entrando (a página só abre com login, então isto quase sempre responde)
+  fetch("/api/me", { credentials: "same-origin" }).then(r => r.json()).then(me => {
+    if (!me.nome) return;
+    const h = $("hello");
+    h.append(TXT.hello);
+    const b = document.createElement("b");
+    b.textContent = me.nome;
+    h.append(b, TXT.helloEnd);
+  }).catch(() => {});
+
+  TXT.keys.forEach(([k, what]) => {
+    const li = document.createElement("li");
+    const kb = document.createElement("kbd");
+    kb.textContent = k;
+    li.append(kb, what);
+    $("keys").appendChild(li);
+  });
+
+  if (matchMedia("(pointer: coarse)").matches && !matchMedia("(any-pointer: fine)").matches) {
+    $("warn").textContent = TXT.mobile;
+    $("warn").hidden = false;
+  }
+
+  let li = Math.floor(Math.random() * LORE.length);
+  function showLore() {
+    const d = LORE[li % LORE.length];
+    lore.textContent = PT ? d[1] : d[3];
+    const s = document.createElement("small");
+    s.textContent = PT ? d[0] : d[2];
+    lore.appendChild(s);
+  }
+  showLore();
+  const loreTimer = setInterval(() => {
+    lore.classList.add("out");
+    setTimeout(() => { li++; showLore(); lore.classList.remove("out"); }, 420);
+  }, 7000);
+
+  const MB = n => (n / 1048576).toFixed(n < 10485760 ? 1 : 0);
+  // o nginx comprime o .wasm, então o navegador às vezes não sabe o tamanho: o total
+  // conhecido do export (fileSizes) serve de régua
+  const KNOWN = Object.values(GODOT_CONFIG.fileSizes || {}).reduce((a, b) => a + b, 0);
+
+  function busy(label) {
+    bar.classList.add("busy");
+    bar.removeAttribute("aria-valuenow");
+    phase.textContent = label;
+    pct.textContent = "";
+  }
+
+  function progress(current, total) {
+    const t = total > 0 ? total : KNOWN;
+    if (!(current > 0 && t > 0)) return busy(TXT.wait);
+    if (current >= t) return busy(TXT.wake);
+    const p = Math.min(99, Math.floor(current / t * 100));
+    bar.classList.remove("busy");
+    fill.style.width = p + "%";
+    bar.setAttribute("aria-valuenow", String(p));
+    phase.textContent = `${TXT.down} ${MB(current)} / ${MB(t)} MB`;
+    pct.textContent = p + "%";
+  }
+
+  function failure(err) {
+    console.error(err);
+    clearInterval(loreTimer);
+    busy("");
+    bar.hidden = true;
+    document.querySelector(".runner").hidden = true;
+    $("error-text").textContent = typeof err === "string" ? err : TXT.fail + (err && err.message ? "\n" + err.message : "");
+    $("retry").textContent = TXT.retry;
+    $("error").hidden = false;
+  }
+  $("retry").addEventListener("click", () => location.reload());
+
+  function done() {
+    clearInterval(loreTimer);
+    overlay.classList.add("gone");
+    setTimeout(() => overlay.remove(), 600);
+  }
+
+  const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+  if (missing.length !== 0) {
+    failure(TXT.missing + missing.join("\n"));
+    return;
+  }
+  busy(TXT.wait);
+  engine.startGame({ onProgress: progress }).then(done, failure);
+}());
+</script>
+</body>
+</html>

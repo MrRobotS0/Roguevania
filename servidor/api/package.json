@@ -1,0 +1,17 @@
+{
+  "name": "moksha-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contas, personagem e progresso do moksha.com.br",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "nodemailer": "6.9.16",
+    "pg": "8.13.1"
+  }
+}

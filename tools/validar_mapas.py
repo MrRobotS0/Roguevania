@@ -15,7 +15,11 @@ import tempfile
 
 from validar_salas import ROOT, Room, deque
 
-GODOT = os.path.expanduser(os.path.join("~", "Desktop", "Godot_v4.7.2-stable_win64_console.exe"))
+GODOT_EXE = "Godot_v4.7.2-stable_win64_console.exe"
+# MOKSHA_GODOT aponta para o executável; sem ela, procura na Área de Trabalho e em ~/Godot
+GODOT = os.environ.get("MOKSHA_GODOT") or next(
+    (p for p in (os.path.join(os.path.expanduser("~"), d, GODOT_EXE) for d in ("Desktop", os.path.join("OneDrive", "Desktop"), "Godot"))
+     if os.path.exists(p)), os.path.join(os.path.expanduser("~"), "Desktop", GODOT_EXE))
 
 
 def dump(seeds):

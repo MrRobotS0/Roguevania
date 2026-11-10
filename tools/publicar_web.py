@@ -13,14 +13,20 @@ import sys
 import tarfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-GODOT = os.path.join(os.path.expanduser("~"), "Desktop", "Godot_v4.7.2-stable_win64_console.exe")
+GODOT_EXE = "Godot_v4.7.2-stable_win64_console.exe"
+# MOKSHA_GODOT aponta para o executável; sem ela, procura na Área de Trabalho e em ~/Godot
+GODOT = os.environ.get("MOKSHA_GODOT") or next(
+    (p for p in (os.path.join(os.path.expanduser("~"), d, GODOT_EXE) for d in ("Desktop", os.path.join("OneDrive", "Desktop"), "Godot"))
+     if os.path.exists(p)), os.path.join(os.path.expanduser("~"), "Desktop", GODOT_EXE))
 WEB = os.path.join(ROOT, "build", "web")
 HOST_FILE = os.path.join(ROOT, ".publicar_web")
 KEY = os.path.join(os.path.expanduser("~"), ".ssh", "id_ed25519")
-SWAP = ("set -e; rm -rf /var/www/moksha.new; mkdir -p /var/www/moksha.new; "
-        "tar -xzf - --no-same-owner -C /var/www/moksha.new; chmod -R u=rwX,go=rX /var/www/moksha.new; "
-        "rm -rf /var/www/moksha.old; if [ -d /var/www/moksha ]; then mv /var/www/moksha /var/www/moksha.old; fi; "
-        "mv /var/www/moksha.new /var/www/moksha; rm -rf /var/www/moksha.old")
+# o jogo fica em /jogar/ (o nginx só entrega com login); a raiz é a landing (servidor/LEIA-ME.md)
+DEST = "/var/www/moksha/jogar"
+SWAP = ("set -e; rm -rf {d}.new; mkdir -p {d}.new; "
+        "tar -xzf - --no-same-owner -C {d}.new; chmod -R u=rwX,go=rX {d}.new; "
+        "rm -rf {d}.old; if [ -d {d} ]; then mv {d} {d}.old; fi; "
+        "mv {d}.new {d}; rm -rf {d}.old").format(d=DEST)
 
 
 def main():

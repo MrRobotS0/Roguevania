@@ -200,6 +200,10 @@ func _draw_title(size: Vector2) -> void:
 		PixelFont.draw(self, String(lines[0][0]), Vector2(MENU_X, foot - 11), Color(lines[0][1]).darkened(0.15))
 	var tag := "V" + Updater.version
 	PixelFont.draw(self, tag, Vector2(size.x - 8 - PixelFont.width(tag), foot), Palette.UI_DIM)
+	# no navegador: o personagem criado no site, em cima da versão
+	if Meta.player_name != "":
+		var who := Meta.player_name.to_upper()
+		PixelFont.draw(self, who, Vector2(size.x - 8 - PixelFont.width(who), foot - 11), Palette.UI_DIM)
 
 
 # MOKSHA em ouro: contorno escuro, relevo em bronze, face funda embaixo e face
