@@ -19,6 +19,8 @@ const JUMP_VELOCITY := -335.0      # ~3,9 blocos: passa com folga do degrau de 3
 const JUMP_CUT := 0.45             # soltar o pulo cedo = pulo curto
 const COYOTE_TIME := 0.1           # ainda pula logo depois de sair da beirada
 const JUMP_BUFFER := 0.12          # pulo apertado um pouco antes de tocar o chão vale
+const TOUCH_EXTRA_COYOTE := 0.04   # no toque o dedo demora mais: um pouco mais de folga
+const TOUCH_EXTRA_BUFFER := 0.06
 const CLIMB_TIME := 0.16
 
 const ROLL_SPEED := 270.0
@@ -249,7 +251,7 @@ func _enter(next: State) -> void:
 func _after_move(falling: float) -> void:
 	var grounded := is_on_floor()
 	if grounded:
-		_coyote = COYOTE_TIME
+		_coyote = COYOTE_TIME + (TOUCH_EXTRA_COYOTE if Controls.touch_mode else 0.0)
 		_air_jumps = 2 if Meta.has_rune("asa") else 1
 		_air_dash = true
 		if not _was_grounded and falling > 200.0:
@@ -295,7 +297,7 @@ func _move_state(delta: float) -> void:
 	_gravity(delta)
 
 	if pad.just("jump"):
-		_jump_buffer = JUMP_BUFFER
+		_jump_buffer = JUMP_BUFFER + (TOUCH_EXTRA_BUFFER if Controls.touch_mode else 0.0)
 	if pad.released("jump") and velocity.y < 0.0:
 		velocity.y *= JUMP_CUT
 	if _jump_buffer > 0.0:
@@ -798,7 +800,7 @@ func _roll_state(delta: float) -> void:
 				e.add_status("burn", 3.0)
 				Fx.burst(e.center(), Palette.BURN, 8, 90.0, 0.3, -60.0)
 	if pad.just("jump"):
-		_jump_buffer = JUMP_BUFFER
+		_jump_buffer = JUMP_BUFFER + (TOUCH_EXTRA_BUFFER if Controls.touch_mode else 0.0)
 	if _state_time >= ROLL_TIME:
 		_roll_cd = 0.0 if has_mutation("pes_leves") else ROLL_COOLDOWN
 		_enter(State.MOVE)
@@ -935,6 +937,16 @@ func boost(d: Damage) -> void:
 
 func on_kill(e: Node) -> void:
 	kills += 1
+	# Incêndio: quem morre queimando passa o fogo para quem está perto
+	if e is Enemy and (e as Enemy).has_status("burn") and has_synergy("incendio"):
+		var spread := false
+		for other: Enemy in get_tree().get_nodes_in_group("enemies"):
+			if other != e and other.alive() and other.center().distance_to((e as Enemy).center()) < 56.0:
+				other.add_status("burn", 2.5)
+				spread = true
+		if spread:
+			Fx.burst((e as Enemy).center(), Palette.BURN, 14, 120.0, 0.4, -60.0)
+			_synergy_fired("incendio")
 	if e is Enemy:
 		Run.note_kill(e.title, last_used)
 	if has_mutation("sangue_quente") and alive():
@@ -980,17 +992,18 @@ func hurt(d: Damage) -> bool:
 	var before_hit := hp
 	var taken := d.value() * Run.enemy_damage_mult() * (0.85 if has_mutation("pele_de_pedra") else 1.0)
 	hp = maxi(hp - roundi(taken), 0)
-	var who := "?"
+	var who := d.label
 	if is_instance_valid(d.source):
-		if d.source.get("title") != null:
-			who = String(d.source.get("title"))
-		elif d.source.get_script():
-			who = String((d.source.get_script() as Script).get_global_name())
+		var t: Variant = d.source.get("title")
+		if t is String and t != "":
+			who = t
+	if who == "":
+		who = "?"
 	Run.note_hurt(who, before_hit - hp)
 	if has_mutation("couraca"):
 		_slag_burst()
-	if is_instance_valid(d.source) and d.source is Enemy:
-		Run.killer = d.source.title
+	if who != "?":
+		Run.killer = who
 	if curse > 0:
 		hp = 0
 		Fx.toast("A MALDIÇÃO COBROU")
@@ -1376,6 +1389,43 @@ func _draw_ghosts() -> void:
 	draw_set_transform(Vector2.ZERO)
 
 
+# --- sinergias: afixo da arma + mutação ----------------------------------------------
+# Combinações que mudam o jeito de jogar. A primeira vez que cada uma acontece
+# na partida, o jogo avisa o nome (e o Códice/estatísticas guardam que você viu).
+
+const SYNERGIES := {
+	"incendio": {"title": "INCÊNDIO", "detail": "INIMIGO EM CHAMAS QUE MORRE ESPALHA O FOGO", "affix": "brasa", "mutation": "rastro_brasa"},
+	"gelo_fino": {"title": "GELO FINO", "detail": "ATORDOADO PELA GEADA LEVA +30% DE DANO", "affix": "geada", "mutation": "frieza"},
+	"banquete": {"title": "BANQUETE", "detail": "A ARMA VAMPIRA CURA O DOBRO", "affix": "vampira", "mutation": "sangue_quente"},
+	"eco_faminto": {"title": "ECO FAMINTO", "detail": "O ECO ACONTECE QUASE O DOBRO DAS VEZES", "affix": "eco", "mutation": "fome_sem_fim"},
+	"carrasco_paciente": {"title": "CARRASCO PACIENTE", "detail": "A CARRASCA PEGA QUEM TEM ATÉ 45% DE VIDA", "affix": "carrasca", "mutation": "ultima_prece"},
+	"estopim": {"title": "ESTOPIM", "detail": "EXPLOSÕES MAIORES ADIANTAM AS HABILIDADES", "affix": "explosiva", "mutation": "polvora"},
+}
+
+var _synergies_seen := {}
+
+
+func has_synergy(id: String, g: Gear = null) -> bool:
+	var syn: Dictionary = SYNERGIES[id]
+	if not has_mutation(syn["mutation"]):
+		return false
+	if g != null:
+		return g.has(syn["affix"])
+	for w in weapons:
+		if w is Gear and (w as Gear).has(syn["affix"]):
+			return true
+	return false
+
+
+func _synergy_fired(id: String) -> void:
+	if _synergies_seen.has(id):
+		return
+	_synergies_seen[id] = true
+	Fx.banner("SINERGIA: " + String(SYNERGIES[id]["title"]), String(SYNERGIES[id]["detail"]))
+	Sfx.play("mutation", -8.0)
+	Meta.note_synergy(id)
+
+
 # --- afixos da arma ----------------------------------------------------------------
 
 func _affix_before(g: Gear, d: Damage, target: Actor) -> void:
@@ -1383,8 +1433,14 @@ func _affix_before(g: Gear, d: Damage, target: Actor) -> void:
 		return
 	if g.has("afiada"):
 		d.amount *= 1.15
-	if g.has("carrasca") and target and target.hp < target.max_hp * 0.3:
+	var execute := 0.45 if has_synergy("carrasco_paciente", g) else 0.3
+	if g.has("carrasca") and target and target.hp < target.max_hp * execute:
 		d.amount *= 1.5
+		if target.hp >= target.max_hp * 0.3:
+			_synergy_fired("carrasco_paciente")
+	if has_synergy("gelo_fino", g) and target and target.has_status("stun"):
+		d.amount *= 1.3
+		_synergy_fired("gelo_fino")
 	if g.has("brasa"):
 		d.status["burn"] = 2.5
 	if g.has("geada") and randf() < 0.25:
@@ -1395,16 +1451,28 @@ func _affix_after(g: Gear, d: Damage, target: Enemy) -> void:
 	if g.affixes.is_empty():
 		return
 	if g.has("vampira"):
-		heal(1)
+		if has_synergy("banquete", g):
+			heal(2)
+			_synergy_fired("banquete")
+		else:
+			heal(1)
 	if g.has("explosiva") and d.crit:
+		var fuse := has_synergy("estopim", g)
+		if fuse:
+			_synergy_fired("estopim")
+			for i in skill_cd.size():
+				skill_cd[i] = maxf(skill_cd[i] - 0.5, 0.0)
 		for e: Enemy in get_tree().get_nodes_in_group("enemies"):
-			if e != target and e.alive() and e.center().distance_to(target.center()) < 40.0:
+			if e != target and e.alive() and e.center().distance_to(target.center()) < (64.0 if fuse else 40.0):
 				var blast := Damage.make(d.amount * 0.5, 1 if e.global_position.x >= target.global_position.x else -1, 120.0)
 				blast.source = self
 				e.hurt(blast)
 		Fx.burst(target.center(), Palette.BURN, 16, 150.0, 0.35, 200.0, 2.0)
 		Sfx.play("boom", -10.0)
-	if g.has("eco") and randf() < 0.2 and is_instance_valid(target) and target.alive():
+	var echo := 0.35 if has_synergy("eco_faminto", g) else 0.2
+	if g.has("eco") and randf() < echo and is_instance_valid(target) and target.alive():
+		if echo > 0.2:
+			_synergy_fired("eco_faminto")
 		var again := Damage.make(d.amount * 0.5, d.dir, 30.0)
 		again.source = self
 		target.hurt.call_deferred(again)

@@ -55,10 +55,35 @@ func build_generated(b: BiomeData, seed_value: int, with_camera := true) -> void
 	if b.rune != "" and not Meta.has_rune(b.rune):
 		branches.insert(0, "runa")
 	var lines := gen.generate(LevelGen.load_dir(b.rooms_dir), seed_value, b.combat_rooms, branches)
+	_note_pieces(gen)
 	_make_room(b)
 	room.load_grid(lines)
 	_populate(with_camera)
 	Fx.banner(b.title.to_upper(), b.subtitle.to_upper())
+
+
+# De que sala do acervo veio cada pedaço do andar (para o robô e o debug
+# dizerem onde algo aconteceu): [nome, retângulo em tiles do mapa montado]
+var pieces: Array = []
+
+
+func _note_pieces(gen: LevelGen) -> void:
+	pieces.clear()
+	if gen.placed.is_empty():
+		return
+	var box := Rect2i(gen.placed[0].rect())
+	for p in gen.placed:
+		box = box.merge(p.rect())
+	box = box.grow(LevelGen.MARGIN)
+	for p in gen.placed:
+		pieces.append([String(p.t.name), Rect2i(p.pos - box.position, Vector2i(p.t.width, p.t.height))])
+
+
+func piece_at(tile: Vector2i) -> String:
+	for p in pieces:
+		if (p[1] as Rect2i).has_point(tile):
+			return p[0]
+	return ""
 
 
 # Entre um andar e outro: a Vigia, o altar de mutação e as saídas possíveis.
@@ -95,6 +120,10 @@ func build_beira(b: BiomeData, seed_value: int, with_camera := true) -> void:
 	if not _beira_named:
 		_beira_named = true
 		Fx.banner("A BEIRA", "ONDE A CINZA VIRA VOCÊ DE NOVO")
+	# o que está perto de sair: motivo para a próxima partida
+	var next := Meta.closest_feat_text()
+	if next != "" and int(Meta.data["runs"]) > 0:
+		Fx.toast.call_deferred(next)
 
 
 # Modo Waves: a arena cabe na tela, e quem manda nela é o diretor.
@@ -175,6 +204,7 @@ func _populate(with_camera: bool) -> void:
 
 	for m in room.markers:
 		_spawn_marker(m)
+	_maybe_thief()
 	_name_portals()
 	for spot in room.brazier_spots:
 		var fire := Brazier.new()
@@ -197,6 +227,25 @@ func _populate(with_camera: bool) -> void:
 		camera = CameraRig.new()
 		add_child(camera)
 		camera.follow(player, room.size_px())
+
+
+# Evento: às vezes um Ladrão de Cinzas espera num canto do andar com um saco
+# de ouro e Essência (só em andar gerado da partida normal ou dos desafios).
+const THIEF_CHANCE := 0.45
+
+
+func _maybe_thief() -> void:
+	if kind != "gerada" or Run.mode == Run.WAVES or rng.randf() >= THIEF_CHANCE:
+		return
+	var spots: Array = room.markers.filter(func(m: Dictionary) -> bool:
+		return m["ch"] == "e" and (m["pos"] as Vector2).distance_to(room.player_spawn) > 320.0)
+	if spots.is_empty():
+		return
+	var at: Vector2 = spots[rng.randi_range(0, spots.size() - 1)]["pos"]
+	var thief := spawn_script("res://scripts/enemies/ash_thief.gd", at + Vector2(10, 0))
+	thief.killed.connect(func(e: Enemy) -> void:
+		drop_gold(e.center(), 20 * (1 + tier))
+		Fx.toast("SAQUE RECUPERADO"))
 
 
 func _spawn_marker(m: Dictionary) -> void:

@@ -282,6 +282,15 @@ func start_mutations() -> Array:
 	return out
 
 
+# sinergias que o jogador já viu acontecer (aparecem nas estatísticas)
+func note_synergy(id: String) -> void:
+	if not data.has("synergies"):
+		data["synergies"] = []
+	if not data["synergies"].has(id):
+		data["synergies"].append(id)
+		save()
+
+
 func note_mutation(id: String) -> void:
 	if not data["mutations_seen"].has(id):
 		data["mutations_seen"].append(id)
@@ -346,6 +355,31 @@ func feat_achieved(f: Dictionary) -> bool:
 	return not f.is_empty() and feat_value(f["what"]) >= float(f["n"])
 
 
+# A conquista que está mais perto de sair (a maior fração já feita), para o
+# título e a Beira mostrarem "quase lá". Secretas ficam de fora.
+func closest_feat() -> Dictionary:
+	var best := {}
+	var best_ratio := -1.0
+	for f: Dictionary in Catalog.FEATS:
+		if f.get("secret", false) or feat_achieved(f) or data["feats"].has(f["id"]):
+			continue
+		var ratio := feat_value(f["what"]) / maxf(float(f["n"]), 1.0)
+		if ratio > best_ratio:
+			best_ratio = ratio
+			best = f
+	return best
+
+
+func closest_feat_text() -> String:
+	var f := closest_feat()
+	if f.is_empty():
+		return ""
+	var have := mini(int(feat_value(f["what"])), int(f["n"]))
+	if int(f["n"]) <= 1:
+		return "PRÓXIMA CONQUISTA: %s · %s" % [String(f["title"]).to_upper(), f["detail"]]
+	return "PRÓXIMA CONQUISTA: %s · %d DE %d" % [String(f["title"]).to_upper(), have, int(f["n"])]
+
+
 func feats_done() -> int:
 	return Catalog.FEATS.filter(func(f: Dictionary) -> bool: return feat_achieved(f)).size()
 
@@ -389,6 +423,8 @@ func record_stats(won: bool) -> bool:
 		record = true
 	if Run.daily != "":
 		var day: Dictionary = data["daily"].get(Run.daily, {"tries": 0, "best_depth": 0, "best_time": 0.0})
+		if int(day["tries"]) == 0:
+			_reward_daily(Run.daily)
 		day["tries"] = int(day["tries"]) + 1
 		day["best_depth"] = maxi(int(day["best_depth"]), Run.path.size())
 		if won and (float(day["best_time"]) <= 0.0 or Run.time < float(day["best_time"])):
@@ -425,6 +461,36 @@ func _report_run(won: bool) -> void:
 	JavaScriptBridge.eval(js, true)
 
 
+# --- recompensa do Desafio do Dia ------------------------------------------------------
+# A primeira tentativa de cada dia guarda Essência para a próxima partida normal.
+# Dias seguidos aumentam a recompensa (até 7 dias).
+
+const DAILY_BASE := 10
+const DAILY_PER_DAY := 5
+const DAILY_MAX_STREAK := 7
+
+
+func _reward_daily(date: String) -> void:
+	var last := String(data.get("daily_last", ""))
+	var streak := int(data.get("daily_streak", 0))
+	var gap := (Time.get_unix_time_from_datetime_string(date + "T00:00:00") -
+		Time.get_unix_time_from_datetime_string(last + "T00:00:00")) if last != "" else 0
+	streak = streak + 1 if last != "" and gap == 86400 else 1
+	data["daily_streak"] = streak
+	data["daily_last"] = date
+	var gain := DAILY_BASE + DAILY_PER_DAY * (mini(streak, DAILY_MAX_STREAK) - 1)
+	data["daily_bonus"] = int(data.get("daily_bonus", 0)) + gain
+	Fx.toast.call_deferred("DESAFIO DO DIA: +%d ESSÊNCIA NA PRÓXIMA PARTIDA · SEQUÊNCIA: %d" % [gain, streak])
+
+
+func take_daily_bonus() -> int:
+	var b := int(data.get("daily_bonus", 0))
+	if b > 0:
+		data["daily_bonus"] = 0
+		save()
+	return b
+
+
 func stats_text() -> String:
 	var st: Dictionary = data["stats"]
 	var lines := PackedStringArray()
@@ -433,6 +499,9 @@ func stats_text() -> String:
 	lines.append("ANDAR MAIS FUNDO: %d DE 8 · TEMPO JOGADO: %s" % [int(st.get("deepest", 0)), clock.call(float(st.get("time", 0.0)))])
 	if float(data["best_time"]) > 0.0:
 		lines.append("MELHOR VITÓRIA: %s" % clock.call(float(data["best_time"])))
+	var syn: Array = data.get("synergies", [])
+	if not syn.is_empty():
+		lines.append("SINERGIAS DESCOBERTAS: %d DE %d" % [syn.size(), Player.SYNERGIES.size()])
 	lines.append("")
 	for pair in [["deaths_by", "QUEM MAIS TE MATOU"], ["kills_by", "QUEM VOCÊ MAIS MATOU"], ["weapon_kills", "SUAS ARMAS FAVORITAS"]]:
 		var table: Dictionary = st.get(pair[0], {})

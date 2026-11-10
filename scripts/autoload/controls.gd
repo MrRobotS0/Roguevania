@@ -101,7 +101,19 @@ const PAD_HINTS := {
 	"walk": "ANALÓGICO", "down": "BAIXO",
 }
 
+# Toque (celular): os nomes dos botões da tela em web/shell.html
+const TOUCH_HINTS := {
+	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "CURA",
+	"interact": "USAR", "confirm": "PULO", "cancel": "II", "move": "DIRECIONAL", "roll": "ROLAR", "jump": "PULO", "map": "MAPA",
+	"walk": "DIRECIONAL", "down": "BAIXO",
+}
+const TOUCH_HINTS_EN := {
+	"heal": "HEAL", "interact": "USE", "confirm": "JUMP", "move": "STICK", "roll": "ROLL", "jump": "JUMP", "map": "MAP",
+	"walk": "STICK", "down": "DOWN",
+}
+
 var pad_mode := false
+var touch_mode := false     # o último comando veio dos botões da tela
 
 # Trava de interface: a tecla que abre ou fecha uma tela não pode valer também
 # para a tela que aparece no mesmo quadro (Enter em OPÇÕES ligava a 1ª opção;
@@ -120,13 +132,22 @@ func ui_ready() -> bool:
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton:
 		pad_mode = true
+		touch_mode = false
 	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
 		pad_mode = true
-	elif event is InputEventKey or event is InputEventMouseButton:
+		touch_mode = false
+	elif event is InputEventKey:
+		pad_mode = false
+		touch_mode = false
+	elif event is InputEventMouseButton and not touch_mode:
 		pad_mode = false
 
 
 func hint(action: String) -> String:
+	if touch_mode:
+		if Lang.lang == "en" and TOUCH_HINTS_EN.has(action):
+			return TOUCH_HINTS_EN[action]
+		return TOUCH_HINTS.get(action, "?")
 	if not pad_mode and _custom_hints.has(action):
 		return _custom_hints[action]
 	var table := PAD_HINTS if pad_mode else KEY_HINTS
@@ -178,12 +199,16 @@ func _touch_bridge() -> void:
 		return
 	_touch_cb = JavaScriptBridge.create_callback(_on_touch)
 	JavaScriptBridge.get_interface("window").mokshaAction = _touch_cb
+	# tela só de toque: as dicas já começam com os nomes dos botões
+	touch_mode = bool(JavaScriptBridge.eval("matchMedia('(pointer: coarse)').matches", true))
 
 
 func _on_touch(args: Array) -> void:
 	var action := String(args[0]) if args.size() > 0 else ""
 	if not ACTIONS.has(action):
 		return
+	touch_mode = true
+	pad_mode = false
 	var ev := InputEventAction.new()
 	ev.action = action
 	ev.pressed = bool(args[1]) if args.size() > 1 else true

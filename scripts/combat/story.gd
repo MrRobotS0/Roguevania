@@ -110,6 +110,7 @@ const BESTIARY := {
 	"PENITENTE": "Peregrinos que juraram carregar a culpa do mundo. A clava é a culpa.",
 	"GUARDA DA CASA": "Soldados das Casas do Mar de Cinzas. O escudo protege a frente; as costas, ninguém.",
 	"PEREGRINO CINZENTO": "Vem para arder. Acredita que quem queima vira parte do deus.",
+	"LADRÃO DE CINZAS": "Junta o que os mortos deixam cair. Nunca briga: corre. O saco pesa mais que ele.",
 	"ASSASSINO DA DUNA": "Nada sob a cinza. O volume que se mexe no chão é ele.",
 	"ATIRADOR DE VIDRO": "Atira lascas de fulgurante. A mira trava um instante antes do disparo.",
 	"INQUISIDOR PROFETA": "Julga em nome de um deus que não responde mais. Salta e cai onde você está.",

@@ -72,6 +72,10 @@ func show_title() -> void:
 		if saved["in_passage"]:
 			where = "A Passagem"
 		lines = [["PARTIDA SALVA: %s   ·   %s" % [where.to_upper(), _clock(float(saved["time"]))], Palette.GOLD]]
+	elif int(Meta.data["runs"]) > 0:
+		var next := Meta.closest_feat_text()
+		if next != "":
+			lines = [[next, Palette.UI_DIM]]
 	_open()
 
 

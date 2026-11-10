@@ -126,7 +126,7 @@ func _close_stage(how: String) -> void:
 		_stage["gear"] = p.weapons.map(func(g: Variant) -> String: return g.title() if g else "-") \
 			+ p.skills.map(func(g: Variant) -> String: return g.title() if g else "-")
 		_stage["levels"] = p.levels.duplicate()
-	_stage["stuck"] = bot.stuck_events.map(func(s: Array) -> String: return "%s" % [s[1]])
+	_stage["stuck"] = bot.stuck_events.map(func(s: Array) -> String: return "%s %s" % [s[1], s[5]] if s.size() > 5 and s[5] != "" else "%s" % [s[1]])
 	for s in bot.stuck_events:
 		print("  preso em %s pos %s indo %s alvo %s" % [s[1], s[3], s[2], s[4]])
 	_run["stages"].append(_stage)
@@ -302,6 +302,25 @@ func _report() -> String:
 	if not any:
 		L.append("Nenhum.")
 	L.append("")
+	# a mesma sala em sementes diferentes aponta para a sala, não para o robô
+	var by_piece := {}
+	for r: Dictionary in results:
+		for s: Dictionary in r["stages"]:
+			var seen := {}
+			for e: String in s["stuck"]:
+				var parts := e.split(" ")
+				var piece := parts[parts.size() - 1] if parts.size() > 2 else ""
+				if piece != "" and not seen.has(piece):
+					seen[piece] = true
+					by_piece[piece] = int(by_piece.get(piece, 0)) + 1
+	if not by_piece.is_empty():
+		L.append("### Salas onde ele prende (em quantas partidas)")
+		L.append("")
+		var names := by_piece.keys()
+		names.sort_custom(func(a: String, b: String) -> bool: return by_piece[a] > by_piece[b])
+		for n: String in names:
+			L.append("- %s: %d" % [n, by_piece[n]])
+		L.append("")
 	return "\n".join(L)
 
 

@@ -220,7 +220,7 @@ func open_site_page(path: String) -> void:
 func open_modes() -> void:
 	var best := int(Meta.data.get("best_wave", 0))
 	var options: Array[Dictionary] = [
-		{"label": "DESAFIO DO DIA", "detail": "O MESMO MAPA PARA TODOS, SÓ HOJE"},
+		{"label": "DESAFIO DO DIA", "detail": "O MESMO MAPA PARA TODOS, SÓ HOJE. A 1ª TENTATIVA DÁ ESSÊNCIA"},
 		{"label": "DESAFIO DA SEMANA", "detail": "DUAS REGRAS QUE VIRAM O JOGO. MUDAM TODA SEGUNDA"},
 		{"label": "MODO WAVES", "price": ("WAVE %d" % best) if best > 0 else "", "price_color": Palette.GOLD,
 			"detail": "ARENA FECHADA. FRASCO A CADA 5 WAVES, GUARDIÃO A CADA 10"},

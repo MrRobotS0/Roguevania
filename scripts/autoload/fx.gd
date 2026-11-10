@@ -54,7 +54,7 @@ func impact(pos: Vector2, color: Color, big := false) -> void:
 
 
 func number(pos: Vector2, value: int, crit := false) -> void:
-	if is_instance_valid(sparks):
+	if is_instance_valid(sparks) and Options.get_value("numbers"):
 		sparks.number(pos, value, crit)
 
 

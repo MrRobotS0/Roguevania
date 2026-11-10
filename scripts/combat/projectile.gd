@@ -29,6 +29,9 @@ var _spin := 0.0
 
 func _ready() -> void:
 	z_index = 6
+	# guarda o nome de quem atirou: se ele morrer antes do tiro chegar, a morte ainda tem dono
+	if damage and damage.label == "" and is_instance_valid(source) and source.get("title") != null:
+		damage.label = String(source.get("title"))
 	match style:
 		"bomb":
 			Glow.attach(self, Palette.BURN, 40.0, 0.8)

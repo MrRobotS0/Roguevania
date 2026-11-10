@@ -345,7 +345,7 @@ func _watch_progress(delta: float, here: Vector2i) -> void:
 	_progress_clock += delta
 	if _progress_clock > STUCK_SKIP and not _path.is_empty():
 		# preso: anota onde foi e empurra o herói para o próximo passo
-		stuck_events.append([level.kind, here, _path.slice(0, 3), player.global_position.round(), "%s estado %d %s" % [_goal.name if _goal else "", player.state, _why]])
+		stuck_events.append([level.kind, here, _path.slice(0, 3), player.global_position.round(), "%s estado %d %s" % [_goal.name if _goal else "", player.state, _why], level.piece_at(here)])
 		player.global_position = JumpMap.center_of(_path[0][0])
 		player.velocity = Vector2.ZERO
 		_progress_clock = 0.0

@@ -79,6 +79,7 @@ func tick_statuses(delta: float) -> void:
 			_burn_clock = BURN_TICK
 			var d := Damage.make(BURN_DAMAGE)
 			d.over_time = true
+			d.label = "QUEIMADURA"
 			hurt(d)
 			Fx.burst(center() + Vector2(randf_range(-4, 4), -4), Palette.BURN, 3, 40.0, 0.4, -120.0)
 

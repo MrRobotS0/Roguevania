@@ -13,6 +13,7 @@ var stop := 0.0              # congelamento no impacto (hitstop)
 var shake := 0.0
 var status := {}             # {"burn": 3.0} = queima por 3 s
 var source: Node
+var label := ""              # nome de quem causou, para a tela de morte quando a fonte já sumiu
 var over_time := false       # dano de status: não atordoa nem empurra
 var unblockable := false
 var parried := false         # preenchido por quem defendeu com aparo

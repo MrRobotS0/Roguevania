@@ -21,6 +21,7 @@ var aim_time := AIM
 var lock_time := LOCK
 var cooldown_time := COOLDOWN
 var damage := DAMAGE
+var _lock_sound := false
 
 var _target := Vector2.ZERO
 
@@ -64,6 +65,7 @@ func think(delta: float) -> void:
 		"idle", "chase":
 			velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
 			if sees_player(240.0, 140.0):
+				_lock_sound = false
 				set_state("aim")
 		"aim":
 			velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
@@ -73,7 +75,13 @@ func think(delta: float) -> void:
 				if not sees_player(280.0, 170.0):
 					set_state("idle")
 					return
+			# o som de "travou": quem não está olhando para ele também sabe que vem tiro
+			if not _lock_sound and state_time >= aim_time - lock_time:
+				_lock_sound = true
+				if sees_player(320.0, 200.0):
+					Sfx.play("laser_charge", -15.0)
 			if state_time >= aim_time:
+				_lock_sound = false
 				_shoot()
 				set_state("cooldown")
 		"cooldown":

@@ -52,11 +52,22 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+# o nome que aparece em "morto por" e no relatório
+func danger_name() -> String:
+	match style:
+		"glass": return "ESPINHO DE VIDRO"
+		"light": return "COLUNA DE LUZ"
+		"fire": return "JATO DE FOGO"
+		"molten": return "ESCÓRIA DERRETIDA"
+	return "PERIGO DO CENÁRIO"
+
+
 func _fire() -> void:
 	var zone := Rect2(global_position.x - width * 0.5, global_position.y - height, width, height)
 	if is_instance_valid(player) and player.alive() and zone.intersects(player.hurt_rect()):
 		var d := Damage.make(damage, 1 if player.global_position.x >= global_position.x else -1, 150.0)
 		d.source = source if is_instance_valid(source) else self
+		d.label = danger_name()
 		d.unblockable = true
 		if style in ["fire", "molten"]:
 			d.status = {"burn": 3.0}

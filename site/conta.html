@@ -32,7 +32,7 @@
       <h1 data-t="loginT">Entrar</h1>
       <p class="lead" data-t="loginP">Volte para a Beira.</p>
       <form id="f-entrar" novalidate>
-        <label><span data-t="email">E-mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label><span data-t="login">E-mail ou usuário</span><input name="login" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
         <label><span data-t="pass">Senha</span><input name="senha" type="password" autocomplete="current-password" required></label>
         <p class="msg err" role="alert" hidden></p>
         <button class="btn" type="submit" data-t="loginB">Entrar</button>
@@ -49,6 +49,8 @@
       <p class="lead" data-t="signupP">Grátis. Seu progresso fica salvo na conta e você continua de qualquer navegador.</p>
       <form id="f-criar" novalidate>
         <label><span data-t="email">E-mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label><span data-t="user">Nome de usuário</span><input name="usuario" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="20" required>
+          <span class="hint" data-t="userHint">3 a 20 letras sem acento, números, ponto, hífen ou sublinhado. Serve para entrar.</span></label>
         <label><span data-t="pass">Senha</span><input name="senha" type="password" autocomplete="new-password" minlength="8" required>
           <span class="hint" data-t="passHint">Pelo menos 8 caracteres.</span></label>
         <label><span data-t="pass2">Repita a senha</span><input name="senha2" type="password" autocomplete="new-password" required></label>
@@ -65,7 +67,7 @@
       <h1 data-t="forgotT">Esqueci a senha</h1>
       <p class="lead" data-t="forgotP">Mandamos um link para o seu e-mail. Ele vale por 1 hora.</p>
       <form id="f-esqueci" novalidate>
-        <label><span data-t="email">E-mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label><span data-t="login">E-mail ou usuário</span><input name="login" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
         <p class="msg err" role="alert" hidden></p>
         <p class="msg ok" role="status" hidden data-t="forgotOk">Se esse e-mail tiver conta, o link está a caminho. Olhe também o spam.</p>
         <button class="btn" type="submit" data-t="forgotB">Mandar link</button>
@@ -179,10 +181,11 @@
 <script>
   const T = {
     pt: {
-      loading: "Carregando…", email: "E-mail", pass: "Senha", pass2: "Repita a senha", passHint: "Pelo menos 8 caracteres.",
+      loading: "Carregando…", email: "E-mail", login: "E-mail ou usuário", user: "Nome de usuário",
+      userHint: "3 a 20 letras sem acento, números, ponto, hífen ou sublinhado. Serve para entrar.", pass: "Senha", pass2: "Repita a senha", passHint: "Pelo menos 8 caracteres.",
       loginT: "Entrar", loginP: "Volte para a Beira.", loginB: "Entrar", toSignup: "Criar conta", toForgot: "Esqueci a senha",
       signupT: "Criar conta", signupP: "Grátis. Seu progresso fica salvo na conta e você continua de qualquer navegador.", signupB: "Criar conta", toLogin: "Já tenho conta",
-      forgotT: "Esqueci a senha", forgotP: "Mandamos um link para o seu e-mail. Ele vale por 1 hora.", forgotB: "Mandar link",
+      forgotT: "Esqueci a senha", forgotP: "Digite seu e-mail ou usuário: mandamos um link para o e-mail da conta. Ele vale por 1 hora.", forgotB: "Mandar link",
       forgotOk: "Se esse e-mail tiver conta, o link está a caminho. Olhe também o spam.",
       resetT: "Senha nova", resetP: "Escolha a senha nova. As sessões abertas em outros lugares serão encerradas.", resetB: "Salvar senha",
       charT: "Quem renasce?", charP: "Dê um nome a quem vai atravessar o arco. É assim que o jogo vai te chamar, e não dá para trocar depois.",
@@ -199,7 +202,9 @@
         email_invalido: "Esse e-mail não parece certo.", senha_curta: "A senha precisa de pelo menos 8 caracteres.",
         senha_longa: "Senha longa demais.", senhas_diferentes: "As duas senhas não são iguais.",
         email_em_uso: "Já existe uma conta com esse e-mail. Entre ou use \"Esqueci a senha\".",
-        login_invalido: "E-mail ou senha errados.", muitas_tentativas: "Muitas tentativas. Espere alguns minutos e tente de novo.",
+        login_invalido: "E-mail/usuário ou senha errados.",
+        usuario_invalido: "Usuário: 3 a 20 letras sem acento, números, ponto, hífen ou sublinhado (começa e termina com letra ou número).",
+        usuario_em_uso: "Esse nome de usuário já tem dono. Tente outro.", muitas_tentativas: "Muitas tentativas. Espere alguns minutos e tente de novo.",
         nome_invalido: "Use de 3 a 16 letras ou números (espaço e hífen podem, mas não no começo nem no fim).",
         nome_em_uso: "Esse nome já tem dono. Tente outro.", link_expirado: "Esse link venceu ou já foi usado. Peça outro em \"Esqueci a senha\".",
         sem_sessao: "Sua sessão acabou. Entre de novo.", rede: "Não deu para falar com o servidor. Confira sua internet.",
@@ -207,10 +212,11 @@
       },
     },
     en: {
-      loading: "Loading…", email: "Email", pass: "Password", pass2: "Repeat password", passHint: "At least 8 characters.",
+      loading: "Loading…", email: "Email", login: "Email or username", user: "Username",
+      userHint: "3 to 20 letters (no accents), numbers, dot, hyphen or underscore. Used to sign in.", pass: "Password", pass2: "Repeat password", passHint: "At least 8 characters.",
       loginT: "Sign in", loginP: "Return to the Brink.", loginB: "Sign in", toSignup: "Create account", toForgot: "Forgot password",
       signupT: "Create account", signupP: "Free. Your progress is saved to your account, so you can continue from any browser.", signupB: "Create account", toLogin: "I already have an account",
-      forgotT: "Forgot password", forgotP: "We'll email you a link. It works for 1 hour.", forgotB: "Send link",
+      forgotT: "Forgot password", forgotP: "Type your email or username: we'll send a link to the account's email. It works for 1 hour.", forgotB: "Send link",
       forgotOk: "If that email has an account, the link is on its way. Check your spam folder too.",
       resetT: "New password", resetP: "Choose a new password. Sessions open elsewhere will be signed out.", resetB: "Save password",
       charT: "Who is reborn?", charP: "Name the one who will cross the arch. The game will call you by it, and it can't be changed later.",
@@ -227,7 +233,9 @@
         email_invalido: "That email doesn't look right.", senha_curta: "The password needs at least 8 characters.",
         senha_longa: "Password too long.", senhas_diferentes: "The two passwords don't match.",
         email_em_uso: "An account with that email already exists. Sign in or use \"Forgot password\".",
-        login_invalido: "Wrong email or password.", muitas_tentativas: "Too many attempts. Wait a few minutes and try again.",
+        login_invalido: "Wrong email/username or password.",
+        usuario_invalido: "Username: 3 to 20 letters (no accents), numbers, dot, hyphen or underscore (start and end with a letter or number).",
+        usuario_em_uso: "That username is taken. Try another.", muitas_tentativas: "Too many attempts. Wait a few minutes and try again.",
         nome_invalido: "Use 3 to 16 letters or numbers (spaces and hyphens are fine, but not at the start or end).",
         nome_em_uso: "That name is taken. Try another.", link_expirado: "That link expired or was already used. Ask for a new one under \"Forgot password\".",
         sem_sessao: "Your session ended. Sign in again.", rede: "Couldn't reach the server. Check your connection.",
@@ -296,7 +304,7 @@
     if (!me.nome) return show("personagem");
     if (volta) return location.replace(volta);
     document.getElementById("nome").textContent = me.nome;
-    document.getElementById("email").textContent = me.email || "";
+    document.getElementById("email").textContent = (me.usuario ? "@" + me.usuario + " · " : "") + (me.email || "");
     document.getElementById("meu-perfil").href = "perfil.html?nome=" + encodeURIComponent(me.nome);
     show(wanted && ["feedback", "trocar", "excluir"].includes(wanted) ? wanted : "pronto");
     wanted = "";
@@ -314,7 +322,7 @@
   }
 
   wire("f-entrar", async (form, v) => {
-    const r = await api("POST", "/api/entrar", { email: v.email, senha: v.senha });
+    const r = await api("POST", "/api/entrar", { login: v.login, senha: v.senha });
     if (!r.ok) return fail(form, r.erro);
     refresh();
   });
@@ -322,13 +330,13 @@
   wire("f-criar", async (form, v) => {
     if (v.senha.length < 8) return fail(form, "senha_curta");
     if (v.senha !== v.senha2) return fail(form, "senhas_diferentes");
-    const r = await api("POST", "/api/cadastro", { email: v.email, senha: v.senha });
+    const r = await api("POST", "/api/cadastro", { email: v.email, usuario: v.usuario, senha: v.senha });
     if (!r.ok) return fail(form, r.erro);
     show("personagem");
   });
 
   wire("f-esqueci", async (form, v) => {
-    const r = await api("POST", "/api/esqueci", { email: v.email });
+    const r = await api("POST", "/api/esqueci", { login: v.login });
     if (!r.ok) return fail(form, r.erro);
     form.querySelector(".msg.ok").hidden = false;
   });

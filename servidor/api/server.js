@@ -68,6 +68,25 @@ function cleanEmail(v) {
   return e.length <= 254 && EMAIL_RE.test(e) ? e : null;
 }
 
+// usuário para entrar: 3 a 20 letras sem acento, números, ponto, hífen ou sublinhado
+const USER_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{1,18}[A-Za-z0-9]$/;
+function cleanUsername(v) {
+  const u = String(v || "").trim();
+  return USER_RE.test(u) ? u : null;
+}
+
+// quem entra digita o e-mail ou o usuário: com @ é e-mail
+async function findAccount(login) {
+  const l = String(login || "").trim();
+  if (!l || l.length > 254) return null;
+  const email = l.includes("@") ? cleanEmail(l) : null;
+  if (l.includes("@") && !email) return null;
+  const { rows } = await pool.query(
+    `SELECT u.id, u.email, u.pass_hash, c.name FROM users u LEFT JOIN characters c ON c.user_id = u.id
+      WHERE ${email ? "u.email = $1" : "lower(u.username) = lower($1)"}`, [email || l]);
+  return rows[0] || null;
+}
+
 function passwordProblem(pw) {
   if (typeof pw !== "string" || pw.length < 8) return "senha_curta";
   if (pw.length > 200) return "senha_longa";
@@ -138,7 +157,7 @@ async function currentUser(req) {
   const token = cookies(req)[COOKIE];
   if (!token || token.length > 100) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.email, c.name
+    `SELECT u.id, u.email, u.username, c.name
        FROM sessions s JOIN users u ON u.id = s.user_id
        LEFT JOIN characters c ON c.user_id = u.id
       WHERE s.token_hash = $1 AND s.expires_at > now()`, [sha256(token)]);
@@ -194,7 +213,7 @@ const routes = {
   "GET /api/me": async (req, res) => {
     const u = await currentUser(req);
     if (!u) return send(res, 200, { logado: false });
-    send(res, 200, { logado: true, email: u.email, nome: u.name || null });
+    send(res, 200, { logado: true, email: u.email, usuario: u.username || null, nome: u.name || null });
   },
 
   "POST /api/cadastro": async (req, res) => {
@@ -202,23 +221,28 @@ const routes = {
     if (limited("cad:" + ip(req), 10, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
     const email = cleanEmail(b.email);
     if (!email) return fail(res, 400, "email_invalido");
+    const username = cleanUsername(b.usuario);
+    if (!username) return fail(res, 400, "usuario_invalido");
     const p = passwordProblem(b.senha);
     if (p) return fail(res, 400, p);
     const hash = await hashPassword(b.senha);
-    const { rows } = await pool.query(
-      `INSERT INTO users (email, pass_hash) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING RETURNING id`, [email, hash]);
-    if (!rows[0]) return fail(res, 409, "email_em_uso");
+    let rows;
+    try {
+      ({ rows } = await pool.query(
+        `INSERT INTO users (email, username, pass_hash) VALUES ($1, $2, $3) RETURNING id`, [email, username, hash]));
+    } catch (e) {
+      if (e.code === "23505") return fail(res, 409, String(e.constraint).includes("username") ? "usuario_em_uso" : "email_em_uso");
+      throw e;
+    }
     await startSession(res, rows[0].id, 201, { ok: true, nome: null });
   },
 
   "POST /api/entrar": async (req, res) => {
     const b = await readJson(req);
-    const email = cleanEmail(b.email);
-    if (limited("ent:" + ip(req), 30, 15 * 60_000) || (email && limited("ent:" + email, 10, 15 * 60_000)))
+    const login = String(b.login || b.email || "").trim().toLowerCase();
+    if (limited("ent:" + ip(req), 30, 15 * 60_000) || (login && limited("ent:" + login, 10, 15 * 60_000)))
       return fail(res, 429, "muitas_tentativas");
-    const { rows } = email ? await pool.query(
-      `SELECT u.id, u.pass_hash, c.name FROM users u LEFT JOIN characters c ON c.user_id = u.id WHERE u.email = $1`, [email]) : { rows: [] };
-    const u = rows[0];
+    const u = await findAccount(login);
     const ok = await checkPassword(String(b.senha || ""), u ? u.pass_hash : DUMMY_HASH);
     if (!u || !ok) return fail(res, 401, "login_invalido");
     await startSession(res, u.id, 200, { ok: true, nome: u.name || null });
@@ -274,18 +298,18 @@ const routes = {
 
   "POST /api/esqueci": async (req, res) => {
     const b = await readJson(req);
-    const email = cleanEmail(b.email);
+    const login = String(b.login || b.email || "").trim().toLowerCase();
     if (limited("esq:" + ip(req), 5, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
     // a resposta é a mesma com ou sem conta: não dá para descobrir quem é cadastrado
     send(res, 200, { ok: true });
-    if (!email || limited("esq:" + email, 3, 60 * 60_000)) return;
-    const { rows } = await pool.query(`SELECT id FROM users WHERE email = $1`, [email]);
-    if (!rows[0]) return;
+    if (!login || limited("esq:" + login, 3, 60 * 60_000)) return;
+    const acc = await findAccount(login);
+    if (!acc) return;
     const token = newToken();
     await pool.query(
       `INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES ($1, $2, now() + make_interval(mins => $3))`,
-      [sha256(token), rows[0].id, RESET_MINUTES]);
-    await sendReset(email, `${SITE}/conta.html#redefinir=${token}`).catch(e => console.error("e-mail falhou:", e.message));
+      [sha256(token), acc.id, RESET_MINUTES]);
+    await sendReset(acc.email, `${SITE}/conta.html#redefinir=${token}`).catch(e => console.error("e-mail falhou:", e.message));
   },
 
   "POST /api/redefinir": async (req, res) => {

@@ -172,6 +172,10 @@ func stage_seed() -> int:
 	return seed_value + (path.size() + wave_block) * 7349
 
 
+const PASSAGE_HEAL := 0.4        # parte da vida que volta ao chegar na Passagem
+const PASSAGE_HEAL_HEAT := 0.25  # com Brasas do Deus
+
+
 func enter_passage() -> void:
 	in_passage = true
 
@@ -291,6 +295,12 @@ func starter_kit(p: Player) -> void:
 		p.levels[Combat.STATS[rng.randi_range(0, 2)]] += 1
 	if Meta.is_unlocked("bolsa_inicial"):
 		p.gold = 60
+	# recompensa do Desafio do Dia: Essência guardada para a próxima partida normal
+	if mode == "" and daily == "" and week == "":
+		var bonus := Meta.take_daily_bonus()
+		if bonus > 0:
+			p.essence += bonus
+			Fx.toast.call_deferred("RECOMPENSA DO DESAFIO: +%d ESSÊNCIA" % bonus)
 	if plus > 0:
 		# quem começa o Novo Jogo+ já sabe quem é
 		p.weapons = [Gear.of(p.weapons[0].data, 1), Gear.of(p.weapons[1].data, 1)]
@@ -362,6 +372,14 @@ func load_player(p: Player) -> void:
 	p.blueprints.assign(carry.get("blueprints", []))
 	p.recompute_max_hp()
 	p.hp = clampi(carry["hp"], 1, p.max_hp)
+	# A Passagem é o respiro entre andares: cura parte da vida ao chegar (o
+	# robô chegava ao 2º andar quase morto e caía em meio minuto). Vem do carry
+	# do começo do andar, então salvar e voltar não cura de novo.
+	if in_passage and mode != WAVES:
+		var gain := mini(roundi(p.max_hp * (PASSAGE_HEAL if heat == 0 else PASSAGE_HEAL_HEAT)), p.max_hp - p.hp)
+		if gain > 0:
+			p.hp += gain
+			Fx.toast.call_deferred("A PASSAGEM ACALMA: +%d VIDA" % gain)
 
 
 # --- partida salva ---------------------------------------------------------------------

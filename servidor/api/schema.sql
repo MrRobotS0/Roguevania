@@ -63,3 +63,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   info        text NOT NULL DEFAULT '',
   created_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- nome de usuário para entrar (além do e-mail); único sem diferenciar maiúsculas
+ALTER TABLE users ADD COLUMN IF NOT EXISTS username text;
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
