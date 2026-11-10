@@ -7,8 +7,16 @@
 <meta name="description" content="MOKSHA. A pixel-art action roguelite. Thirteen gods vanished. You are what they left behind.">
 <meta property="og:title" content="MOKSHA">
 <meta property="og:description" content="Thirteen gods vanished. You are what they left behind.">
-<meta property="og:image" content="img/mar.png">
-<link rel="icon" href="img/heroi.png">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://moksha.com.br/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://moksha.com.br/img/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="icon" type="image/png" sizes="128x128" href="img/icone.png">
+<link rel="apple-touch-icon" href="img/icone-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -183,6 +191,9 @@
   .spr { overflow: hidden; }
   .spr .film { image-rendering: pixelated; background-repeat: no-repeat; will-change: transform; }
 
+  /* em moksha.com.br a barra tem Wiki, Ranking e Entrar: no celular a Wiki sai (fica no rodapé) para o idioma caber */
+  .bar .lang { display: flex; flex: none; }
+  @media (max-width: 520px) { .bar nav a[href="wiki.html"] { display: none; } .bar nav { gap: 6px; } .bar .lang button { min-width: 40px; padding: 0 8px; } .bar .btn.mini { padding-inline: 10px; } }
   @media (max-width: 720px) {
     .bar .btn:not(.ghost) { display: none; }
     .track { gap: 8vw; padding-left: 11vw; padding-right: 11vw; }
@@ -245,6 +256,7 @@
   <a class="brand" href="#top">MOKSHA</a>
   <nav>
     <a class="btn mini ghost" href="wiki.html">Wiki</a>
+    <a class="btn mini ghost" id="acct" href="/conta.html" data-i18n="signIn" hidden>Sign in</a>
     <a class="btn mini" href="#download" data-i18n="get">Play free</a>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
@@ -264,7 +276,7 @@
         <span data-i18n="download">Download free</span>
       </a>
       <p class="dl-note" role="status" aria-live="polite" hidden></p>
-      <p class="ver">WINDOWS · V0.7.0 · EN / PT</p>
+      <p class="ver">WINDOWS · V0.8.0 · EN / PT</p>
     </div>
     <div class="runner" aria-hidden="true"></div>
     <div class="cue" aria-hidden="true">SCROLL<i></i></div>
@@ -316,7 +328,7 @@
   <div class="wrap">
     <div class="foot-top">
       <div>
-        <p class="foot-name">MOKSHA · v0.7.0</p>
+        <p class="foot-name">MOKSHA · v0.8.0</p>
         <p class="foot-by"><span data-i18n="madeBy">Developed by</span> <strong>Guilherme Belinelo</strong></p>
       </div>
       <nav class="foot-links" aria-label="Links">
@@ -374,8 +386,53 @@
     ["boss_wyrm", "#8ac8e8", ["The Wyrm Below", "A Serpe do Fundo"], ["Left at the door so no one would go deeper.", "Deixada na porta para ninguém descer mais."], ["THE CAVERNS", "AS CAVERNAS"]],
     ["boss_fox", "#e8d070", ["The Nine-Tailed Fox", "A Raposa de Nove Caudas"], ["Always went ahead of the god who walked. It still does.", "Ia sempre na frente do deus que caminhava. Ainda vai."], ["THE FOREST", "O BOSQUE"]],
   ];
+  // Em moksha.com.br o jogo roda no navegador e pede conta: os botões de baixar
+  // viram "Jogar" e a barra ganha "Entrar". No GitHub Pages fica tudo como era.
+  const WEB = /(^|\.)moksha\.com\.br$/.test(location.hostname);
+  if (WEB) {
+    const PLAY_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor" shape-rendering="crispEdges"><path d="M4 2h2v1h2v1h2v1h2v1h1v4h-1v1h-2v1H8v1H6v1H4z"/></svg>';
+    document.querySelectorAll("a.dl").forEach(a => {
+      a.href = "/jogar/";
+      a.classList.remove("dl");
+      a.classList.add("play");
+      a.innerHTML = PLAY_ICON + '<span data-i18n="playNow">Play now</span>';
+    });
+    document.querySelectorAll(".dl-note").forEach(n => n.remove());
+    document.querySelector('.bar a[href="#download"]').href = "/jogar/";
+    document.querySelector(".hero .ver").textContent = "IN YOUR BROWSER · V0.8.0 · EN / PT";
+    document.querySelector(".hero .ver").dataset.i18n = "verWeb";
+    const lead = document.querySelector("#download .lead");
+    lead.dataset.i18n = "dlPWeb";
+    lead.textContent = "Free, in your browser. Create an account and your progress follows you. Keyboard or gamepad.";
+    document.querySelector('#download [data-i18n="smart"]').remove();
+    const acct = document.getElementById("acct");
+    acct.hidden = false;
+    const rank = document.createElement("a");
+    rank.className = "btn mini ghost";
+    rank.href = "/ranking.html";
+    rank.dataset.i18n = "rank";
+    rank.textContent = "Leaderboard";
+    acct.before(rank);
+    const foot = document.querySelector(".foot-links");
+    [["/ranking.html", "rank", "Leaderboard"], ["/privacidade.html", "privacy", "Privacy"]].forEach(([href, key, text]) => {
+      const a = document.createElement("a");
+      a.href = href; a.dataset.i18n = key; a.textContent = text;
+      foot.appendChild(a);
+    });
+    fetch("/api/me", { credentials: "same-origin" }).then(r => r.json()).then(me => {
+      if (!me.logado) return;
+      // logado: o botão da conta mostra o nome do personagem (ou pede para criar)
+      delete acct.dataset.i18n;
+      acct.textContent = me.nome || (lang === "pt" ? "Criar personagem" : "Create character");
+    }).catch(() => {});
+  } else {
+    document.getElementById("acct").remove();
+  }
+
   const PT = {
     get: "Jogar grátis", download: "Baixar grátis",
+    signIn: "Entrar", playNow: "Jogar agora", rank: "Ranking", privacy: "Privacidade", verWeb: "NO NAVEGADOR · V0.8.0 · EN / PT",
+    dlPWeb: "Grátis, no navegador. Crie uma conta e seu progresso vai junto. Teclado ou controle.",
     tagline: "Treze deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
     gEye: "13 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",
     dlT: "A cinza <span>lembra de você</span>.",
