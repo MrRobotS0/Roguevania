@@ -50,7 +50,7 @@ def main():
     g = re.search(r"const GUARDIANS := \[(.*?)\]", catalog, re.S).group(1)
     guardians = [{"pt": t, "en": tr(t)} for t in re.findall(r'"([^"]+)"', g)]
     os.makedirs(os.path.join(ROOT, "site", "dados"), exist_ok=True)
-    with open(os.path.join(ROOT, "site", "dados", "jogo.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "site", "dados", "jogo.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump({"conquistas": feats, "aparencias": skins, "guardioes": guardians}, f, ensure_ascii=False, indent=1)
     print("%d conquistas, %d aparências, %d guardiões" % (len(feats), len(skins), len(guardians)))
 
