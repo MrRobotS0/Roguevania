@@ -551,8 +551,8 @@ func open_codex() -> void:
 	var lore: Array = Meta.data["lore"]
 	var known := Meta.known_creatures()
 	var options: Array[Dictionary] = [
-		{"label": "INSCRIÇÕES  ·  %d LIDAS" % lore.size(), "detail": "O QUE AS PEDRAS CONTAM"},
-		{"label": "BESTIÁRIO  ·  %d DE %d" % [known.size(), Story.BESTIARY.size()], "detail": "O QUE VOCÊ JÁ DERROTOU"},
+		{"label": "INSCRIÇÕES  ·  %d LIDAS" % lore.size(), "detail": Meta.next_codex_text("lore")},
+		{"label": "BESTIÁRIO  ·  %d DE %d" % [known.size(), Story.BESTIARY.size()], "detail": Meta.next_codex_text("creatures")},
 		{"label": "REVER A ABERTURA", "detail": ""},
 	]
 	if Meta.awake():

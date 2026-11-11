@@ -4,6 +4,9 @@ extends Interactable
 # Mercador de passagem: troca ouro por armas, cura e frascos. O estoque é
 # sorteado quando a fase nasce; o que se compra aparece no chão, ao lado.
 
+const WANDER_DISCOUNT := 0.8
+
+var wandering := false       # Mercador Errante (evento): 20% mais barato
 var _stock: Array[Dictionary] = []
 var _body: Sprite2D
 
@@ -15,11 +18,11 @@ func _ready() -> void:
 
 
 func prompt() -> String:
-	return "NEGOCIAR COM O MERCADOR"
+	return "NEGOCIAR COM O MERCADOR ERRANTE" if wandering else "NEGOCIAR COM O MERCADOR"
 
 
 func detail() -> String:
-	return "TROCA OURO POR ARMAS E CURA"
+	return "PREÇOS DE ESTRADA: 20% MAIS BARATO" if wandering else "TROCA OURO POR ARMAS E CURA"
 
 
 func stock() -> Array[Dictionary]:
@@ -63,7 +66,9 @@ func interact(p: Player) -> void:
 		options.append({"label": label, "price": "VENDIDO" if sold else "%d OURO" % cost,
 			"detail": detail_text, "disabled": sold or p.gold < cost, "icon": icon})
 	options.append({"label": "SAIR", "detail": "VOCÊ TEM %d DE OURO" % p.gold})
-	menu().open_choice("O MERCADOR", "\"TUDO TEM PREÇO. ATÉ O QUE CAIU DO CÉU.\"", options,
+	var title := "O MERCADOR ERRANTE" if wandering else "O MERCADOR"
+	var line := "\"NÃO FICO MUITO TEMPO NO MESMO LUGAR. APROVEITE.\"" if wandering else "\"TUDO TEM PREÇO. ATÉ O QUE CAIU DO CÉU.\""
+	menu().open_choice(title, line, options,
 		func(i: int) -> void:
 			if i >= items.size():
 				return
@@ -72,8 +77,10 @@ func interact(p: Player) -> void:
 
 
 func price(o: Dictionary, p: Player) -> int:
-	var cost: int = o["cost"]
-	return roundi(cost * 0.7) if p.has_mutation("barganha") else cost
+	var cost := float(o["cost"])
+	if wandering:
+		cost *= WANDER_DISCOUNT
+	return roundi(cost * 0.7) if p.has_mutation("barganha") else roundi(cost)
 
 
 func _buy(p: Player, o: Dictionary) -> void:

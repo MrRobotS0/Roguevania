@@ -13,7 +13,7 @@ const GROUND_ACCEL := 1600.0
 const GROUND_DECEL := 2200.0
 const AIR_ACCEL := 1100.0
 const GRAVITY_UP := 950.0
-const GRAVITY_DOWN := 1500.0
+const GRAVITY_DOWN := 1750.0     # cai mais rápido do que sobe: o pulo alto não fica flutuando
 const MAX_FALL := 430.0
 const JUMP_VELOCITY := -370.0      # ~4,7 blocos: um pulo só já sobe nas plataformas (3-4 blocos)
 const JUMP_CUT := 0.6              # soltar o pulo cedo = pulo mais curto (sem matar o pulo num toque rápido)
@@ -22,6 +22,7 @@ const JUMP_BUFFER := 0.12          # pulo apertado um pouco antes de tocar o ch�
 const TOUCH_EXTRA_COYOTE := 0.04   # no toque o dedo demora mais: um pouco mais de folga
 const TOUCH_EXTRA_BUFFER := 0.06
 const CLIMB_TIME := 0.16
+const LEDGE_AUTO_REACH := 6.0     # sem segurar direção: agarra a borda até 6 px à frente
 
 const ROLL_SPEED := 270.0
 const ROLL_TIME := 0.32
@@ -330,8 +331,13 @@ func _move_state(delta: float) -> void:
 		if it:
 			it.call("interact", self)
 			return
-	if not is_on_floor() and velocity.y > -150.0 and dir != 0.0 and is_on_wall():
-		_try_ledge(int(signf(dir)))
+	# beirada: segurando a direção contra a parede, ou sozinho quando a borda
+	# está logo à frente (segurar ↓ deixa cair sem agarrar)
+	if not is_on_floor() and velocity.y > -150.0 and not pad.held("down"):
+		if dir != 0.0 and is_on_wall():
+			_try_ledge(int(signf(dir)))
+		elif dir == 0.0:
+			_try_ledge(facing, LEDGE_AUTO_REACH)
 
 
 # Golpe ou tiro interrompido por um pulo (no chão ou um dos pulos do ar).
@@ -366,11 +372,11 @@ func _on_platform() -> bool:
 	return room != null and room.is_platform_at(global_position + Vector2(0, 2))
 
 
-func _try_ledge(dir: int) -> bool:
+func _try_ledge(dir: int, reach := 3.0) -> bool:
 	if room == null:
 		return false
 	var t := Room.TILE
-	var front := floori((global_position.x + dir * (w * 0.5 + 3.0)) / t)
+	var front := floori((global_position.x + dir * (w * 0.5 + reach)) / t)
 	var own := floori(global_position.x / t)
 	var head := global_position.y - h
 	var first := floori((head - 4.0) / t)
@@ -502,6 +508,9 @@ func _check_swing(g: Gear, m: Dictionary) -> void:
 		box = Rect2(global_position.x - r.x, global_position.y - h * 0.5 - r.y * 0.5 - 1.0, r.x * 2.0, r.y)
 	var landed := false
 	var crit_any := false
+	var killed := false       # golpe final: o impacto pesa mais
+	var heavy := false        # acertou chefe ou elite
+	var boss_down := false
 	for e: Actor in get_tree().get_nodes_in_group("enemies"):
 		if not e.alive() or _swing_hits.has(e):
 			continue
@@ -526,11 +535,27 @@ func _check_swing(g: Gear, m: Dictionary) -> void:
 		if e.hurt(d):
 			landed = true
 			_affix_after(g, d, e)
+			if e is Boss or (e is Enemy and (e as Enemy).elite):
+				heavy = true
+			if not e.alive():
+				killed = true
+				boss_down = boss_down or (e is Boss and (e as Boss).aggro_range <= 0.0)
 	if room and room.has_cracked() and room.strike_cracked(box):
 		landed = true
 	if landed:
-		Fx.hitstop(float(m["stop"]) * (1.4 if crit_any else 1.0))
-		Fx.add_shake(float(m["shake"]))
+		var stop := float(m["stop"]) * (1.4 if crit_any else 1.0)
+		var shake := float(m["shake"])
+		if boss_down:
+			stop = maxf(stop, 0.22)
+			shake += 5.0
+		elif killed:
+			stop = maxf(stop * 1.3, 0.07)
+			shake += 1.5
+		elif heavy:
+			stop *= 1.25
+			shake += 0.8
+		Fx.hitstop(stop)
+		Fx.add_shake(shake)
 		Sfx.play("crit" if crit_any else "hit", -4.0)
 
 

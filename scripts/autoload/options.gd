@@ -12,6 +12,7 @@ const DEFAULTS := {
 	"timer": false,          # cronômetro de speedrun na tela
 	"hints": true,           # dicas da primeira partida
 	"numbers": true,         # números de dano subindo dos inimigos
+	"minimap": true,         # minimapa no canto (andares gerados)
 	"colorblind": false,     # avisos dos inimigos em azul e branco
 	"easy_dodge": false,     # rolagem invencível por mais tempo
 	"lang": "pt",            # pt | en (o nome do jogo fica igual)

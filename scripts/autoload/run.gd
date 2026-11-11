@@ -311,6 +311,10 @@ func starter_kit(p: Player) -> void:
 		if bonus > 0:
 			p.essence += bonus
 			Fx.toast.call_deferred("RECOMPENSA DO DESAFIO: +%d ESSÊNCIA" % bonus)
+		var codex := Meta.take_codex_bonus()
+		if codex > 0:
+			p.essence += codex
+			Fx.toast.call_deferred("RECOMPENSA DO CÓDICE: +%d ESSÊNCIA" % codex)
 	if plus > 0:
 		# quem começa o Novo Jogo+ já sabe quem é
 		p.weapons = [Gear.of(p.weapons[0].data, 1), Gear.of(p.weapons[1].data, 1)]

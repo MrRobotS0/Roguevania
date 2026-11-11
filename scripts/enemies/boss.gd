@@ -39,6 +39,14 @@ var _last := -1
 var aggro_range := 0.0       # > 0: modo elite (só age quando vê o herói, sem apresentação)
 var sounds := {}             # tipo de golpe -> som (o padrão está em _sound)
 
+# Quem já foi vencido algumas vezes aprende: veterano (2 vitórias sobre ele)
+# ganha um golpe novo em cada fase; mestre (4) enfurece com 60% da vida,
+# descansa menos e anda mais rápido. Paga mais Essência.
+const VETERAN_AT := 2
+const MASTER_AT := 4
+var veteran := 0             # 0 normal · 1 veterano · 2 mestre
+var phase2_at := 0.5         # fração da vida em que entra na fase 2
+
 
 func _ready() -> void:
 	tier_scaling = aggro_range > 0.0
@@ -48,6 +56,7 @@ func _ready() -> void:
 	set_state("idle" if aggro_range > 0.0 else "intro")
 	if aggro_range <= 0.0:
 		Sfx.play("boss_intro", -2.0)
+		_learn_from_defeats()
 	if arena.size == Vector2.ZERO:
 		arena = Rect2(global_position.x - 240.0, global_position.y - 200.0, 480.0, 200.0)
 
@@ -63,7 +72,7 @@ func hurt(d: Damage) -> bool:
 		d.amount *= 1.5
 		d.crit = true
 	var hit := super.hurt(d)
-	if hit and phase == 1 and hp <= max_hp / 2 and alive():
+	if hit and phase == 1 and hp <= roundi(max_hp * phase2_at) and alive():
 		phase = 2
 		phase_changed.emit(2)
 		Fx.add_shake(6.0)
@@ -72,6 +81,34 @@ func hurt(d: Damage) -> bool:
 		custom_abort()
 		set_state("idle")
 	return hit
+
+
+static func defeats_of(boss_title: String) -> int:
+	return int(Meta.data["stats"].get("kills_by", {}).get(boss_title, 0))
+
+
+func _learn_from_defeats() -> void:
+	var wins := defeats_of(title)
+	veteran = 2 if wins >= MASTER_AT else (1 if wins >= VETERAN_AT else 0)
+	if veteran == 0:
+		return
+	# fase 1: um anel de orbes que gira (pula-se por cima ou entre eles)
+	moves.append({"type": "volley", "windup": 0.7, "style": "orb", "color": Palette.ESSENCE, "count": 10,
+		"radial": true, "bursts": 2, "rate": 0.4, "speed": 140.0, "damage": 12.0, "recover": 0.6})
+	# fase 2: ondas no chão, ou chuva prevista se ele já tinha ondas
+	var has_wave := (moves + moves2).any(func(m: Dictionary) -> bool: return m["type"] == "wave")
+	if has_wave:
+		moves2.append({"type": "rain", "windup": 0.6, "style": "glass", "count": 4, "height": 50.0,
+			"predict": true, "damage": 16.0})
+	else:
+		moves2.append({"type": "wave", "windup": 0.55, "speed": 210.0, "damage": 16.0, "recover": 0.6})
+	essence_drop = Vector2i(roundi(essence_drop.x * 1.25), roundi(essence_drop.y * 1.25))
+	if veteran == 2:
+		phase2_at = 0.6
+		rest_every += 1
+		walk_speed *= 1.15
+		essence_drop = Vector2i(roundi(essence_drop.x * 1.2), roundi(essence_drop.y * 1.2))
+	Fx.toast.call_deferred("%s TE RECONHECE · %s" % [title, "MESTRE: MAIS RÁPIDO E MAIS CEDO FURIOSO" if veteran == 2 else "VETERANO: GOLPES NOVOS"])
 
 
 func telegraphing() -> bool:

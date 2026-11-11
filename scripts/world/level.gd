@@ -202,8 +202,12 @@ func _populate(with_camera: bool) -> void:
 	explored.resize(room.cols * room.rows)
 	explored.fill(0)
 
+	var reserved: Variant = _pick_event()
 	for m in room.markers:
-		_spawn_marker(m)
+		if is_same(m, reserved):
+			_spawn_event(m["pos"])
+		else:
+			_spawn_marker(m)
 	_maybe_thief()
 	_name_portals()
 	for spot in room.brazier_spots:
@@ -232,6 +236,37 @@ func _populate(with_camera: bool) -> void:
 # Evento: às vezes um Ladrão de Cinzas espera num canto do andar com um saco
 # de ouro e Essência (só em andar gerado da partida normal ou dos desafios).
 const THIEF_CHANCE := 0.45
+
+# Evento do andar (no máximo um), no lugar de um inimigo longe do começo:
+#   desafio: Pedra do Desafio (levas de inimigos por um item melhor)
+#   pacto:   Altar do Pacto (vida por um item muito melhor)
+#   errante: Mercador Errante (mais barato, aparece onde quer)
+const EVENT_CHANCE := 0.6
+const EVENTS := ["desafio", "pacto", "errante"]
+var event := ""
+
+
+func _pick_event() -> Variant:
+	if kind != "gerada" or Run.mode == Run.WAVES or rng.randf() >= EVENT_CHANCE:
+		return null
+	var spots: Array = room.markers.filter(func(m: Dictionary) -> bool:
+		return m["ch"] == "e" and (m["pos"] as Vector2).distance_to(room.player_spawn) > 320.0)
+	if spots.is_empty():
+		return null
+	event = EVENTS[rng.randi_range(0, EVENTS.size() - 1)]
+	return spots[rng.randi_range(0, spots.size() - 1)]
+
+
+func _spawn_event(at: Vector2) -> void:
+	match event:
+		"desafio":
+			_place(ChallengeStone.new(), at)
+		"pacto":
+			_place(PactAltar.new(), at)
+		"errante":
+			var m := Merchant.new()
+			m.wandering = true
+			_place(m, at)
 
 
 func _maybe_thief() -> void:

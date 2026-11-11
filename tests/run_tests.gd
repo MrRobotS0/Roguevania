@@ -155,6 +155,14 @@ func _ready() -> void:
 	await _case("dicas: aparecem na hora, somem ao aprender, uma vez só", _guide)
 	await _case("HUD: cada domínio tem a sua pele e ela cabe na tela", _hud_skins)
 	await _case("créditos: a arte CC-BY aparece no título, nos dois idiomas", _credits)
+	await _case("agarra a beirada sozinho, sem segurar a direção", _auto_ledge)
+	await _case("golpe final pesa mais", _heavy_hits)
+	await _case("altar do pacto cobra vida, nunca mata e dá item", _pact_altar)
+	await _case("pedra do desafio: duas levas e a recompensa", _challenge_stone)
+	await _case("eventos do andar: desafio, pacto e mercador errante aparecem", _floor_events)
+	await _case("minimapa aparece nos andares gerados e some na opção", _minimap)
+	await _case("guardião veterano e mestre aprendem golpes", _boss_veteran)
+	await _case("códice: marcos dão Essência uma vez só", _codex_rewards)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -2173,3 +2181,172 @@ func _credits() -> void:
 	# todo inimigo com arte nova tem a folha colorida e os nomes que o script pede
 	for sheet in ["penitent", "emperor", "colossus", "mother_root", "architect", "faceless_king", "astronomer", "wolf_king"]:
 		_check(SpriteSheet.meta(sheet).get("color", false), "%s ainda é a folha antiga" % sheet)
+
+
+# --- sensação, eventos, minimapa, chefes veteranos e códice ---------------------------
+
+func _auto_ledge() -> void:
+	await _load(LEDGE)
+	var p := level.player
+	input.then(["right"], 50).then(["jump"], 30).wait(40)
+	await _run_until_idle()
+	var wall_top := 6 * Room.TILE
+	_check(absf(p.global_position.y - wall_top) < 2.0 and p.global_position.x > 10 * Room.TILE,
+		"terminou em %s, devia ter subido no muro sozinho" % p.global_position)
+
+
+func _heavy_hits() -> void:
+	await _load(WIDE)
+	var p := level.player
+	var e := _calm(level.spawn("grunt", p.global_position + Vector2(20, 0)))
+	e.hp = 1
+	input.then(["attack1"], 2).wait(20)
+	var shook := 0.0
+	for i in 22:
+		await get_tree().physics_frame
+		shook = maxf(shook, Fx.shake)
+	_check(not is_instance_valid(e) or not e.alive(), "o golpe não matou")
+	_check(shook >= 2.5, "golpe final tremeu pouco (%.1f)" % shook)
+	Engine.time_scale = 1.0
+
+
+func _pact_altar() -> void:
+	await _load(FLAT)
+	var p := level.player
+	var a := PactAltar.new()
+	a.level = level
+	a.position = p.global_position + Vector2(30, 0)
+	level.add_child(a)
+	var before := p.hp
+	a.pay(p)
+	_check(p.hp == before - a.cost(p), "vida %d, esperado %d" % [p.hp, before - a.cost(p)])
+	await _frames(2)
+	_check(level.get_children().any(func(n: Node) -> bool: return n is Pickup), "o item não apareceu")
+	_check(not a.can_interact(p), "o altar continua aceitando")
+	var b := PactAltar.new()
+	b.level = level
+	level.add_child(b)
+	p.hp = 5
+	b.pay(p)
+	_check(p.hp == 1 and p.alive(), "o pacto matou (vida %d)" % p.hp)
+
+
+func _challenge_stone() -> void:
+	await _load(WIDE)
+	var p := level.player
+	var s := ChallengeStone.new()
+	s.level = level
+	s.position = p.global_position + Vector2(200, 0)
+	level.add_child(s)
+	await _frames(2)
+	s._begin()
+	for wave in ChallengeStone.WAVES:
+		await _frames(3)
+		var foes := level.enemies().filter(func(e: Enemy) -> bool: return e.alive())
+		_check(foes.size() >= 2, "leva %d com %d inimigos" % [wave + 1, foes.size()])
+		for e: Enemy in foes:
+			_check(not level.room.is_solid_at(e.global_position + Vector2(0, -8)), "inimigo nasceu na parede")
+			e.hp = 1
+			e.hurt(Damage.make(999.0, 1, 0.0))
+		await _frames(70)
+	_check(s.done, "o desafio não terminou (leva %d)" % s._wave)
+	await _frames(2)
+	_check(level.get_children().any(func(n: Node) -> bool: return n is Pickup), "sem recompensa")
+
+
+func _floor_events() -> void:
+	Run.new_run(5)
+	var seen := {}
+	var b := Catalog.biome(Catalog.BIOMES.keys()[0])
+	for seed_value in 40:
+		if level:
+			remove_child(level)
+			level.queue_free()
+		level = Level.new()
+		add_child(level)
+		level.build_generated(b, seed_value * 7 + 3, false)
+		if level.event == "":
+			continue
+		var ev := level.event
+		var found := level.get_children().any(func(n: Node) -> bool:
+			match ev:
+				"desafio":
+					return n is ChallengeStone
+				"pacto":
+					return n is PactAltar
+				"errante":
+					return n is Merchant and n.wandering
+			return false)
+		_check(found, "evento %s sorteado mas não colocado (semente %d)" % [ev, seed_value])
+		seen[ev] = true
+	_check(seen.size() == Level.EVENTS.size(), "eventos vistos em 40 andares: %s" % [seen.keys()])
+	var errant := Merchant.new()
+	errant.wandering = true
+	_check(errant.price({"cost": 100}, level.player) == 80, "mercador errante sem desconto")
+	errant.free()
+	Run.active = false
+
+
+func _minimap() -> void:
+	Run.new_run(6)
+	if level:
+		remove_child(level)
+		level.queue_free()
+	level = Level.new()
+	add_child(level)
+	level.build_generated(Catalog.biome(Catalog.BIOMES.keys()[0]), 11, false)
+	var hud := Hud.new()
+	add_child(hud)
+	hud.bind(level.player)
+	await _frames(10)
+	var me := level.player.center() / Room.TILE
+	_check(level.seen(int(me.x), int(me.y)), "o herói não marcou onde está")
+	Options.set_value("minimap", false)
+	await _frames(3)
+	Options.set_value("minimap", true)
+	await _frames(3)
+	hud.queue_free()
+	Run.active = false
+
+
+func _boss_veteran() -> void:
+	Meta.use_path("user://teste.save", true)
+	await _load(WIDE)
+	var p := level.player
+	var path := "res://scripts/enemies/boss_wolf_king.gd"
+	var plain: Boss = level.spawn_script(path, p.global_position + Vector2(200, 0))
+	_check(plain.veteran == 0 and plain.moves.size() == 3, "lobo novo já veio veterano")
+	var title := plain.title
+	plain.queue_free()
+	Meta.data["stats"]["kills_by"] = {title: 2}
+	var vet: Boss = level.spawn_script(path, p.global_position + Vector2(200, 0))
+	_check(vet.veteran == 1 and vet.moves.size() == 4, "veterano com %d golpes" % vet.moves.size())
+	_check(vet.moves2.any(func(m: Dictionary) -> bool: return m["type"] == "wave"), "veterano sem as ondas na fase 2")
+	vet.queue_free()
+	Meta.data["stats"]["kills_by"] = {title: 4}
+	var master: Boss = level.spawn_script(path, p.global_position + Vector2(200, 0))
+	_check(master.veteran == 2 and is_equal_approx(master.phase2_at, 0.6), "mestre não ficou mestre")
+	master.hp = roundi(master.max_hp * 0.59)
+	master.set_state("idle")
+	master.hurt(Damage.make(1.0, 1, 0.0))
+	_check(master.phase == 2, "mestre não enfureceu com 60% da vida")
+	master.queue_free()
+	Meta.use_path("user://teste.save", true)
+
+
+func _codex_rewards() -> void:
+	Meta.use_path("user://teste.save", true)
+	for i in 5:
+		Meta.data["lore"].append("pedra %d" % i)
+	_check(Meta.claim_codex() == 20, "5 inscrições não deram 20")
+	_check(Meta.claim_codex() == 0, "pagou duas vezes")
+	var kb := {}
+	for t: String in Story.BESTIARY.keys().slice(0, 10):
+		kb[t] = 1
+	kb["NÃO É CRIATURA"] = 5
+	Meta.data["stats"]["kills_by"] = kb
+	_check(Meta.claim_codex() == 25, "10 criaturas não deram 25")
+	_check(Meta.take_codex_bonus() == 45, "bônus guardado errado")
+	_check(Meta.take_codex_bonus() == 0, "bônus entregue duas vezes")
+	_check(Meta.next_codex_text("creatures").contains("10 DE 20"), Meta.next_codex_text("creatures"))
+	Meta.use_path("user://teste.save", true)

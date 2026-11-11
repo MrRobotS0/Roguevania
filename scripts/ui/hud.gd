@@ -104,6 +104,7 @@ func _draw() -> void:
 		var left := _draw_health()
 		_draw_flasks(Vector2(left, _below_health))
 		_draw_right(size)
+		_draw_minimap(size)
 		_draw_slots(size)
 		_draw_prompt(size)
 		if is_instance_valid(boss) and boss.alive() and boss.state != "intro":
@@ -443,3 +444,69 @@ func _draw_status(size: Vector2) -> void:
 			c = Palette.UI_DIM
 		PixelFont.draw_centered(self, text, Vector2(size.x * 0.5, 10), c)
 		break
+
+
+# --- minimapa ----------------------------------------------------------------------
+# Canto de cima, embaixo do ouro: o pedaço do andar em volta do herói, só o que
+# ele já viu (o mesmo do mapa grande, M / Tab). Só nos andares gerados.
+
+const MINI_W := 100.0
+const MINI_H := 46.0
+const MINI_SCALE := 2
+
+
+func _draw_minimap(size: Vector2) -> void:
+	if not Options.get_value("minimap") or Input.is_action_pressed("map"):
+		return
+	var level := player.get_parent() as Level
+	if level == null or level.room == null or level.kind != "gerada":
+		return
+	var room := level.room
+	var top := (44.0 if not player.blueprints.is_empty() else 31.0) + 9.0
+	var box := Rect2(size.x - 104.0, top, MINI_W, MINI_H)
+	var plate := Palette.UI_SHADOW
+	plate.a = 0.62
+	draw_rect(box, plate)
+	draw_rect(Rect2(box.position.x, box.end.y, box.size.x, 1), Color(Menu.FRAME, 0.5))
+	var s := MINI_SCALE
+	var span := Vector2i(int(MINI_W) / s, int(MINI_H) / s)
+	var me := player.center() / Room.TILE
+	var x0 := clampi(int(me.x) - span.x / 2, 0, maxi(room.cols - span.x, 0))
+	var y0 := clampi(int(me.y) - span.y / 2, 0, maxi(room.rows - span.y, 0))
+	var origin := box.position + Vector2(maxf((MINI_W - room.cols * s) * 0.5, 0.0), maxf((MINI_H - room.rows * s) * 0.5, 0.0)).floor()
+	var air := Color("1b1726", 0.85)
+	var edge := Color("8a7fa0")
+	var rock := Color("4a3f60")
+	for y in range(y0, mini(y0 + span.y, room.rows)):
+		for x in range(x0, mini(x0 + span.x, room.cols)):
+			if not level.seen(x, y):
+				continue
+			var at := origin + Vector2((x - x0) * s, (y - y0) * s)
+			if room._solidish(x, y):
+				if not room._solidish(x + 1, y) or not room._solidish(x - 1, y) 						or not room._solidish(x, y + 1) or not room._solidish(x, y - 1):
+					draw_rect(Rect2(at, Vector2(s, s)), edge)
+			else:
+				draw_rect(Rect2(at, Vector2(s, s)), air if room.cell(x, y) != Room.PLATFORM else rock)
+	for n in level.get_children():
+		var c := Color(0, 0, 0, 0)
+		if n is ExitGate and n.visible:
+			c = Palette.ESSENCE
+		elif n is Chest and not n.opened:
+			c = Palette.GOLD
+		elif n is Merchant:
+			c = Palette.GOLD.lightened(0.3)
+		elif n is Altar or n is MutationAltar or n is RuneAltar or n is ChallengeStone or n is PactAltar:
+			c = Color("b8f06a")
+		elif n is Portal and n.found:
+			c = Portal.CORE
+		if c.a <= 0.0:
+			continue
+		var cell := (n as Node2D).global_position / Room.TILE
+		if not level.seen(int(cell.x), int(cell.y) - 1):
+			continue
+		var p := origin + (cell - Vector2(x0, y0)) * s
+		if box.grow(-1.0).has_point(p):
+			draw_rect(Rect2(p - Vector2(1, 2), Vector2(3, 3)), c)
+	if int(_t * 4.0) % 2 == 0:
+		var p := origin + (me - Vector2(x0, y0)) * s
+		draw_rect(Rect2((p - Vector2(1, 1)).floor(), Vector2(3, 3)), Palette.HURT)

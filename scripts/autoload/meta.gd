@@ -444,6 +444,7 @@ func record_stats(won: bool) -> bool:
 		data["weekly"][Run.week] = w
 	if Run.mode == Run.WAVES:
 		data["best_wave"] = maxi(int(data["best_wave"]), Run.wave)
+	claim_codex()
 	save()
 	_report_run(won)
 	return record
@@ -542,8 +543,69 @@ func note_lore(text: String) -> bool:
 	if text == "" or data["lore"].has(text):
 		return false
 	data["lore"].append(text)
+	claim_codex()
 	save()
 	return true
+
+
+# Recompensas do Códice: marcos de criaturas derrotadas e de inscrições lidas.
+# Cada uma vale uma vez e guarda Essência para a próxima partida normal.
+# n = -1: o bestiário inteiro.
+const CODEX_REWARDS := [
+	{"id": "bestiario_10", "what": "creatures", "n": 10, "essence": 25},
+	{"id": "bestiario_20", "what": "creatures", "n": 20, "essence": 40},
+	{"id": "bestiario_30", "what": "creatures", "n": 30, "essence": 60},
+	{"id": "bestiario_todo", "what": "creatures", "n": -1, "essence": 150},
+	{"id": "pedras_5", "what": "lore", "n": 5, "essence": 20},
+	{"id": "pedras_15", "what": "lore", "n": 15, "essence": 35},
+	{"id": "pedras_30", "what": "lore", "n": 30, "essence": 60},
+	{"id": "pedras_50", "what": "lore", "n": 50, "essence": 100},
+]
+
+
+# Criaturas: só as que estão no bestiário (o Ladrão e afins não contam).
+func codex_value(what: String) -> int:
+	if what == "creatures":
+		var known := known_creatures()
+		return Story.BESTIARY.keys().filter(func(t: String) -> bool: return known.has(t)).size()
+	return int(feat_value(what))
+
+
+func codex_target(r: Dictionary) -> int:
+	return Story.BESTIARY.size() if int(r["n"]) < 0 else int(r["n"])
+
+
+func claim_codex() -> int:
+	var claimed: Array = data.get("codex_claimed", [])
+	var gain := 0
+	for r: Dictionary in CODEX_REWARDS:
+		if claimed.has(r["id"]) or codex_value(r["what"]) < codex_target(r):
+			continue
+		claimed.append(r["id"])
+		gain += int(r["essence"])
+		var what := "CRIATURAS" if r["what"] == "creatures" else "INSCRIÇÕES"
+		Fx.toast.call_deferred("CÓDICE: %d %s · +%d ESSÊNCIA NA PRÓXIMA PARTIDA" % [codex_target(r), what, int(r["essence"])])
+	data["codex_claimed"] = claimed
+	if gain > 0:
+		data["codex_bonus"] = int(data.get("codex_bonus", 0)) + gain
+	return gain
+
+
+func take_codex_bonus() -> int:
+	var b := int(data.get("codex_bonus", 0))
+	if b > 0:
+		data["codex_bonus"] = 0
+		save()
+	return b
+
+
+# A próxima recompensa de um tipo ("creatures" ou "lore"), para o Códice mostrar.
+func next_codex_text(what: String) -> String:
+	var claimed: Array = data.get("codex_claimed", [])
+	for r: Dictionary in CODEX_REWARDS:
+		if r["what"] == what and not claimed.has(r["id"]):
+			return "PRÓXIMA RECOMPENSA: %d DE %d · +%d ESSÊNCIA" % [mini(codex_value(what), codex_target(r)), codex_target(r), int(r["essence"])]
+	return "TODAS AS RECOMPENSAS RECEBIDAS"
 
 
 func known_creatures() -> Array:

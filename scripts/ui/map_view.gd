@@ -59,7 +59,7 @@ func _draw() -> void:
 			c = Palette.GOLD
 		elif n is Merchant:
 			c = Palette.GOLD.lightened(0.3)
-		elif n is Altar or n is MutationAltar or n is RuneAltar:
+		elif n is Altar or n is MutationAltar or n is RuneAltar or n is ChallengeStone or n is PactAltar:
 			c = Color("b8f06a")
 		elif n is Portal and n.found:
 			c = Portal.CORE
