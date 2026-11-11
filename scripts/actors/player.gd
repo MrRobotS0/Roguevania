@@ -15,8 +15,8 @@ const AIR_ACCEL := 1100.0
 const GRAVITY_UP := 950.0
 const GRAVITY_DOWN := 1500.0
 const MAX_FALL := 430.0
-const JUMP_VELOCITY := -335.0      # ~3,9 blocos: passa com folga do degrau de 3
-const JUMP_CUT := 0.45             # soltar o pulo cedo = pulo curto
+const JUMP_VELOCITY := -370.0      # ~4,7 blocos: um pulo só já sobe nas plataformas (3-4 blocos)
+const JUMP_CUT := 0.6              # soltar o pulo cedo = pulo mais curto (sem matar o pulo num toque rápido)
 const COYOTE_TIME := 0.1           # ainda pula logo depois de sair da beirada
 const JUMP_BUFFER := 0.12          # pulo apertado um pouco antes de tocar o chão vale
 const TOUCH_EXTRA_COYOTE := 0.04   # no toque o dedo demora mais: um pouco mais de folga

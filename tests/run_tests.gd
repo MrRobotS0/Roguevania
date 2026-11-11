@@ -84,7 +84,7 @@ func _ready() -> void:
 	Sfx.muted = true
 
 	await _case("todo script compila e a tela principal abre", _all_scripts)
-	await _case("pulo sobe ~3,9 blocos", _jump_height)
+	await _case("pulo sobe ~4,7 blocos (plataforma de 3-4 com um pulo só)", _jump_height)
 	await _case("soltar o pulo cedo dá pulo curto", _short_hop)
 	await _case("ainda pula logo depois de sair da beirada", _coyote)
 	await _case("no ar, depois da tolerância, só sobra o pulo duplo", _no_air_jump)
@@ -229,7 +229,7 @@ func _jump_height() -> void:
 		await get_tree().physics_frame
 		top = minf(top, p.global_position.y)
 	var rise := ground - top
-	_check(rise > 58.0 and rise < 64.0, "subiu %.1f px (esperado 58-64)" % rise)
+	_check(rise > 70.0 and rise < 80.0, "subiu %.1f px (esperado 70-80)" % rise)
 
 
 func _short_hop() -> void:
@@ -242,7 +242,7 @@ func _short_hop() -> void:
 		await get_tree().physics_frame
 		top = minf(top, p.global_position.y)
 	var rise := ground - top
-	_check(rise > 4.0 and rise < 30.0, "pulo curto subiu %.1f px (esperado 4-30)" % rise)
+	_check(rise > 4.0 and rise < 45.0, "pulo curto subiu %.1f px (esperado 4-45)" % rise)
 
 
 func _walk_off_cliff(extra_frames: int) -> void:
