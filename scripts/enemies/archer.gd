@@ -120,8 +120,23 @@ func _draw() -> void:
 		var locked := state_time >= aim_time - lock_time
 		var c := Palette.DANGER if locked else Palette.TELEGRAPH
 		c.a = 0.9 if locked else 0.25 + 0.3 * (state_time / aim_time)
+		var from := bow() - global_position
+		var to := _target - global_position
 		if not locked or int(state_time * 20.0) % 2 == 0:
-			draw_line(bow() - global_position, _target - global_position, c, 1.0)
+			draw_line(from, to, c, 2.0 if locked else 1.0)
+		# o tiro carregando no arco: cresce até soltar
+		var k := clampf(state_time / aim_time, 0.0, 1.0)
+		var r := roundf(1.0 + k * 3.0)
+		draw_rect(Rect2(from - Vector2(r + 1, r + 1), Vector2(r * 2 + 2, r * 2 + 2)), Palette.UI_SHADOW)
+		draw_rect(Rect2(from - Vector2(r, r), Vector2(r * 2, r * 2)), Palette.HURT if locked else Palette.TELEGRAPH)
+		draw_rect(Rect2(from - Vector2(1, 1), Vector2(2, 2)), Palette.FLASH)
+		if locked:
+			# alvo travado em cima do herói: quatro cantos fechando
+			var s := roundf(lerpf(9.0, 5.0, clampf((state_time - (aim_time - lock_time)) / lock_time, 0.0, 1.0)))
+			for q: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+				var p := (to + q * s).round()
+				draw_rect(Rect2(p.x if q.x < 0.0 else p.x - 2.0, p.y, 3, 1), c)
+				draw_rect(Rect2(p.x, p.y if q.y < 0.0 else p.y - 2.0, 1, 3), c)
 	super._draw()
 
 

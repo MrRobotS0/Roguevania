@@ -12,6 +12,8 @@ var target: Player
 
 func follow(who: Player, bounds: Vector2) -> void:
 	target = who
+	_has_ref = false
+	_look = 0.0
 	limit_left = 0
 	limit_top = 0
 	limit_right = int(bounds.x)
@@ -24,6 +26,8 @@ func follow(who: Player, bounds: Vector2) -> void:
 
 
 func snap() -> void:
+	_has_ref = false
+	_look = 0.0
 	if is_instance_valid(target):
 		global_position = target.global_position + Vector2(0, HEIGHT)
 		reset_smoothing()
@@ -31,14 +35,36 @@ func snap() -> void:
 		target.reset_physics_interpolation()
 
 
+# O olhar para a frente desliza em vez de pular de lado a cada virada (no
+# combate o herói vira o tempo todo). Na vertical, a câmera segue o chão onde
+# ele pisou: um pulo comum não sacode a tela; só cair abaixo dele ou subir
+# bem acima move a câmera no ar.
+const LOOK_SPEED := 110.0      # px/s do olhar trocando de lado
+const AIR_SLACK := 52.0        # quanto o herói sobe no ar antes da câmera ir junto
+
+var _look := 0.0
+var _ref_y := 0.0
+var _has_ref := false
+
+
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
 		return
-	var look := target.facing * LOOK_AHEAD
+	var moving := absf(target.velocity.x) > 40.0
+	var want := target.facing * LOOK_AHEAD * (1.0 if moving else 0.6)
+	_look = move_toward(_look, want, LOOK_SPEED * delta)
+	var y := target.global_position.y
+	if not _has_ref or target.is_on_floor():
+		_ref_y = y
+		_has_ref = true
+	elif y > _ref_y:
+		_ref_y = y
+	elif y < _ref_y - AIR_SLACK:
+		_ref_y = y + AIR_SLACK
 	var drop := LOOK_DOWN * clampf((target.velocity.y - 220.0) / 180.0, 0.0, 1.0)
-	var goal := target.global_position + Vector2(look, HEIGHT + drop)
+	var goal := Vector2(target.global_position.x + _look, _ref_y + HEIGHT + drop)
 	global_position.x = lerpf(global_position.x, goal.x, 1.0 - exp(-9.0 * delta))
-	global_position.y = lerpf(global_position.y, goal.y, 1.0 - exp(-12.0 * delta))
+	global_position.y = lerpf(global_position.y, goal.y, 1.0 - exp(-8.0 * delta))
 
 	_shake(delta)
 

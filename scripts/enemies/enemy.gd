@@ -271,7 +271,10 @@ func body_color() -> Color:
 func strike(rect: Rect2, amount: float, push := 160.0, extra := {}) -> bool:
 	if not player.alive() or not rect.intersects(player.hurt_rect()):
 		return false
-	var d := Damage.make(amount, facing, push)
+	# empurra para longe do inimigo: quem passou rolando para trás dele não é
+	# puxado de volta para dentro do golpe
+	var dx := player.global_position.x - global_position.x
+	var d := Damage.make(amount, facing if absf(dx) < 2.0 else int(signf(dx)), push)
 	d.source = self
 	d.status = extra.get("status", {})
 	d.unblockable = extra.get("unblockable", false)

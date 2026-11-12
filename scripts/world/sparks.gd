@@ -20,6 +20,7 @@ class Number:
 	var text: String
 	var crit: bool
 	var life: float
+	var tint := Color(0, 0, 0, 0)    # cor própria (dano no herói: vermelho)
 
 
 class Streak:
@@ -121,8 +122,9 @@ func streak(pos: Vector2, dir: float, color: Color) -> void:
 	_streaks.append(s)
 
 
-func number(pos: Vector2, value: int, crit: bool) -> void:
+func number(pos: Vector2, value: int, crit: bool, tint := Color(0, 0, 0, 0)) -> void:
 	var n := Number.new()
+	n.tint = tint
 	n.pos = pos + Vector2(randf_range(-4, 4), 0)
 	n.text = str(value)
 	n.crit = crit
@@ -184,6 +186,8 @@ func _draw() -> void:
 		draw_rect(Rect2(b.pos.floor(), Vector2(b.size, b.size)), c)
 	for n: Number in _numbers:
 		var c := Palette.UI_CRIT if n.crit else Palette.UI_TEXT
+		if n.tint.a > 0.0:
+			c = n.tint
 		c.a = clampf(n.life / NUMBER_LIFE * 2.5, 0.0, 1.0)
 		var shadow := Palette.UI_SHADOW
 		shadow.a = c.a

@@ -1718,3 +1718,24 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 **Desafio da Semana.** `Run.new_weekly`. Semente e duas regras saem do número da semana, que vira na segunda-feira (`Run.this_week`, `Run.week_rules`). `Run.RULE_CLASHES` lista os pares que não vêm juntos. O bônus de dano é calculado em `Enemy.hurt` sem alterar o pacote `Damage`, porque o mesmo golpe pode passar por vários inimigos.
 
 **Recordes.** `Meta.data["best_wave"]` e `Meta.data["weekly"]`, locais. O ranking online ainda não existe.
+
+## 34. Fluidez da campanha e tiros que se veem (v0.8.1)
+
+**Movimento (`player.gd`).**
+- Quinas: a cabeça raspando a borda de um bloco desliza até 5 px para o lado; no ar, o pé preso numa quina sobe até 4 px (`_corner_correct`).
+- No alto do pulo, segurando o botão, a gravidade cai pela metade (`APEX_BAND`); segurando ↓ no ar, queda mais rápida (`FAST_FALL`).
+- Golpe no ar segura a queda (3 por pulo, `AIR_HANGS`); soltar o pulo durante o golpe também corta o pulo.
+- Frasco: comando guardado, bebe no ar e andando devagar; rolar nos primeiros 0,3 s desiste e devolve o frasco.
+- Depois de 0,12 s do golpe recebido já dá para rolar para fora.
+- Arco: anda devagar enquanto puxa. Defesa: rolagem guardada.
+- Golpe sem direção vira para o inimigo colado atrás, se não há ninguém à frente.
+
+**Câmera (`camera_rig.gd`).** O olhar à frente desliza (110 px/s) em vez de pular a cada virada. Na vertical, segue o chão onde o herói pisou: pulo comum não sacode a tela.
+
+**Impacto (`fx.gd`).** Congelamento que começa logo depois de outro dura metade (golpes rápidos não viram câmera lenta), menos o do chefe.
+
+**Inimigos.** O golpe empurra para longe do inimigo, não para onde ele olha.
+
+**Tiros inimigos (`projectile.gd`).** Desenhados em dobro (o acerto não muda), com contorno escuro, brilho vermelho, rastro e clarão no disparo. O Atirador de Vidro mostra o tiro carregando no arco, linha grossa ao travar e um alvo fechando no herói.
+
+**Dano no herói.** Número vermelho e borda vermelha na tela (`Vignette`, `Fx.pain`), que respeita a opção de clarões.

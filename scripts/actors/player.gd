@@ -46,7 +46,22 @@ const INTERACT_RANGE := 22.0
 # Comandos guardados: apertou um pouco antes de poder (no fim de um golpe, da
 # rolagem ou durante o congelamento do impacto), o comando sai assim que der.
 const ACTION_BUFFER := 0.16
-const BUFFERED := ["attack1", "attack2", "skill1", "skill2", "roll"]
+const BUFFERED := ["attack1", "attack2", "skill1", "skill2", "roll", "heal"]
+# Ar: no alto do pulo (segurando o botão) a gravidade alivia um instante;
+# segurando ↓ o herói cai mais rápido.
+const APEX_BAND := 55.0
+const APEX_GRAVITY := 0.5
+const FAST_FALL := 560.0
+# Quinas: a cabeça raspando a borda de um bloco desliza para o lado em vez de
+# parar o pulo; o pé raspando uma quina no ar sobe os pixels que faltam.
+const CORNER_NUDGE := 5
+const LEDGE_NUDGE := 4
+const AIR_HANGS := 3            # golpes no ar que seguram a queda, por pulo
+const HEAL_WALK := 0.4          # bebendo, anda devagar
+const HEAL_CANCEL := 0.3        # rolar antes disto cancela o gole e devolve o frasco
+const HURT_ESCAPE := 0.12       # depois do susto, já dá para rolar para fora
+const AUTO_FACE_BACK := 44.0    # golpe sem direção vira para quem está colado atrás
+const AUTO_FACE_FRONT := 56.0
 
 var pad: PlayerInput = PlayerInput.new()
 var state := State.MOVE
@@ -109,6 +124,8 @@ var skin: SkinData
 var _scarf: Array[Vector2] = []
 var _ghosts: Array = []          # rastros da rolagem/mergulho: [posição, tempo, quadro]
 var _ghost_clock := 0.0
+var _air_hangs := AIR_HANGS
+var _hang_move := false
 
 
 func _init() -> void:
@@ -223,6 +240,8 @@ func _physics_process(delta: float) -> void:
 		State.DEAD: _dead_state(delta)
 	if state != State.CLIMB:
 		var falling := velocity.y
+		if state in [State.MOVE, State.ROLL, State.ATTACK, State.SHOOT]:
+			_corner_correct(delta)
 		move_and_slide()
 		_after_move(falling)
 	_update_scarf(delta)
@@ -267,6 +286,7 @@ func _after_move(falling: float) -> void:
 		_coyote = COYOTE_TIME + (TOUCH_EXTRA_COYOTE if Controls.touch_mode else 0.0)
 		_air_jumps = 2 if Meta.has_rune("asa") else 1
 		_air_dash = true
+		_air_hangs = AIR_HANGS
 		if not _was_grounded and falling > 200.0:
 			Fx.dust(global_position, 4 if falling < 380.0 else 8)
 			Sfx.play("land", -8.0)
@@ -292,7 +312,44 @@ func _separate_from_enemies() -> void:
 
 func _gravity(delta: float, scale := 1.0) -> void:
 	var g := GRAVITY_UP if velocity.y < 0.0 else GRAVITY_DOWN
-	velocity.y = minf(velocity.y + g * scale * Run.gravity_mult() * delta, MAX_FALL)
+	var cap := MAX_FALL
+	if state == State.MOVE and not is_on_floor():
+		if absf(velocity.y) < APEX_BAND and pad.held("jump"):
+			g *= APEX_GRAVITY
+		elif velocity.y > 0.0 and pad.held("down"):
+			g *= 1.3
+			cap = FAST_FALL
+	var before := velocity.y
+	velocity.y += g * scale * Run.gravity_mult() * delta
+	if velocity.y > cap:
+		# soltou o ↓ caindo rápido: volta ao limite normal sem tranco
+		velocity.y = maxf(cap, before - 1800.0 * delta) if before > cap else cap
+
+
+# Quinas (antes de mover): cabeça na borda de um bloco desliza para o lado;
+# no ar, o pé preso numa quina sobe os poucos pixels que faltam.
+func _corner_correct(delta: float) -> void:
+	if is_on_floor():
+		return
+	var t := global_transform
+	if velocity.y < 0.0:
+		var up := Vector2(0.0, velocity.y * delta)
+		if test_move(t, up):
+			var first := facing if pad.axis() == 0.0 else int(signf(pad.axis()))
+			for i in range(1, CORNER_NUDGE + 1):
+				for s: int in [first, -first]:
+					var side := Vector2(s * i, 0.0)
+					if not test_move(t, side) and not test_move(t.translated(side), up):
+						global_position.x += s * i
+						return
+	if absf(velocity.x) > 1.0 and velocity.y > -40.0:
+		var fwd := Vector2(velocity.x * delta, 0.0)
+		if test_move(t, fwd):
+			for i in range(1, LEDGE_NUDGE + 1):
+				var lift := Vector2(0.0, -i)
+				if not test_move(t, lift) and not test_move(t.translated(lift), fwd):
+					global_position.y -= i
+					return
 
 
 # --- estados ------------------------------------------------------------------
@@ -346,7 +403,8 @@ func _move_state(delta: float) -> void:
 		_take("roll")
 		_start_roll()
 		return
-	if pad.just("heal") and flasks > 0 and is_on_floor() and hp < max_hp:
+	if _wants("heal") and flasks > 0 and hp < max_hp:
+		_take("heal")
 		_start_heal()
 		return
 	if pad.just("interact"):
@@ -464,6 +522,8 @@ func _use_weapon(slot: int) -> bool:
 	var dir := pad.axis()
 	if dir != 0.0:
 		facing = int(signf(dir))
+	else:
+		_auto_face()
 	_slot = slot
 	if data.category == "bow":
 		_shot_fired = false
@@ -477,7 +537,30 @@ func _use_weapon(slot: int) -> bool:
 	return true
 
 
+# Golpe sem direção: se ninguém está à frente e tem alguém colado atrás, vira
+# para ele. Com a direção segurada, vale sempre a direção.
+func _auto_face() -> void:
+	var front := false
+	var back := false
+	for e: Actor in get_tree().get_nodes_in_group("enemies"):
+		if not e.alive() or e.get("ghost"):
+			continue
+		var dx := e.global_position.x - global_position.x
+		if absf(e.global_position.y - global_position.y) > 28.0:
+			continue
+		if signf(dx) == facing and absf(dx) < AUTO_FACE_FRONT:
+			front = true
+		elif signf(dx) == -facing and absf(dx) < AUTO_FACE_BACK:
+			back = true
+	if back and not front:
+		facing = -facing
+
+
 func _start_move(slot: int, index: int) -> void:
+	# golpe no ar segura a queda um instante (até AIR_HANGS por pulo)
+	_hang_move = not is_on_floor() and _air_hangs > 0
+	if _hang_move:
+		_air_hangs -= 1
 	_slot = slot
 	_combo_slot = slot
 	_move_index = index
@@ -511,7 +594,13 @@ func _attack_state(delta: float) -> void:
 	var active_end: float = startup + float(m["active"])
 	var total: float = active_end + float(m["recover"])
 
-	_gravity(delta)
+	if _hang_move and not is_on_floor() and _state_time < active_end:
+		velocity.y = minf(velocity.y, 40.0)
+		_gravity(delta, 0.3)
+	else:
+		_gravity(delta)
+	if pad.released("jump") and velocity.y < 0.0:
+		velocity.y *= JUMP_CUT
 	if _wants("attack%d" % (_slot + 1)):
 		_take("attack%d" % (_slot + 1))
 		_combo_queued = true
@@ -623,7 +712,7 @@ func _shoot_state(delta: float) -> void:
 		return
 	var data: WeaponData = g.data
 	var s := data.shot
-	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
+	velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.3, GROUND_DECEL * delta)
 	_gravity(delta, 0.5 if velocity.y > 0.0 else 1.0)
 	if _wants("roll") and _can_roll():
 		_take("roll")
@@ -805,7 +894,8 @@ func _block_state(delta: float) -> void:
 		facing = int(signf(dir))
 	if not pad.held("skill%d" % (_block_slot + 1)) and _state_time > 0.12:
 		_enter(State.MOVE)
-	elif pad.just("roll") and _can_roll():
+	elif _wants("roll") and _can_roll():
+		_take("roll")
 		_start_roll()
 
 
@@ -956,8 +1046,18 @@ func _start_heal() -> void:
 
 
 func _heal_state(delta: float) -> void:
-	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
+	var dir := pad.axis()
+	if dir != 0.0:
+		facing = int(signf(dir))
+	velocity.x = move_toward(velocity.x, dir * RUN_SPEED * HEAL_WALK, GROUND_DECEL * delta)
 	_gravity(delta)
+	# rolar logo no começo desiste do gole: o frasco volta
+	if _state_time < HEAL_CANCEL and _wants("roll") and _can_roll():
+		_take("roll")
+		flasks += 1
+		gear_changed.emit()
+		_start_roll()
+		return
 	if _state_time >= FLASK_TIME:
 		heal(roundi(max_hp * FLASK_HEAL_RATIO * (1.3 if has_mutation("prece_atendida") else 1.0) * Run.flask_heal_mult()))
 		_enter(State.MOVE)
@@ -1101,6 +1201,10 @@ func hurt(d: Damage) -> bool:
 		hp = maxi(max_hp / 2, 1)
 		Fx.toast("A CINZA VOLTOU")
 		Fx.burst(center(), Palette.ESSENCE, 24, 130.0, 0.6, -60.0)
+	var lost := before_hit - hp
+	if lost > 0:
+		Fx.number(center() + Vector2(0, -h * 0.5 - 6), lost, false, Palette.HURT)
+	Fx.hurt_flash(0.35 + float(lost) / float(maxi(max_hp, 1)) * 3.0)
 	_rage = 3.0
 	if Run.has_rule("brasa"):
 		d.status["burn"] = 2.0
@@ -1128,6 +1232,10 @@ func hurt(d: Damage) -> bool:
 func _hurt_state(delta: float) -> void:
 	_gravity(delta)
 	velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
+	if _state_time >= HURT_ESCAPE and _wants("roll") and _can_roll():
+		_take("roll")
+		_start_roll()
+		return
 	if _state_time >= 0.22:
 		_enter(State.MOVE)
 

@@ -12,9 +12,19 @@ var visibility := 1.0      # a tempestade encurta a visão dos inimigos
 var sparks: Node2D
 
 var _stop_token := 0
+var pain := 0.0            # 0..1: borda vermelha da tela quando o herói apanha (Vignette)
 
+
+# Golpes seguidos (arma rápida, vários inimigos) não viram câmera lenta: um
+# congelamento que começa logo depois de outro dura metade.
+const STOP_CHAIN := 0.12
+var _stop_chain_until := 0.0
 
 func hitstop(seconds: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _stop_chain_until and seconds < 0.15:    # o golpe final do chefe pesa sempre
+		seconds *= 0.5
+	_stop_chain_until = now + seconds + STOP_CHAIN
 	_stop_token += 1
 	var token := _stop_token
 	Engine.time_scale = 0.02
@@ -58,9 +68,15 @@ func impact(pos: Vector2, color: Color, big := false) -> void:
 		sparks.impact(pos, color, big)
 
 
-func number(pos: Vector2, value: int, crit := false) -> void:
+func number(pos: Vector2, value: int, crit := false, tint := Color(0, 0, 0, 0)) -> void:
 	if is_instance_valid(sparks) and Options.get_value("numbers"):
-		sparks.number(pos, value, crit)
+		sparks.number(pos, value, crit, tint)
+
+
+# Herói ferido: borda vermelha proporcional ao golpe (some sozinha).
+func hurt_flash(strength: float) -> void:
+	if Options.flashes():
+		pain = maxf(pain, clampf(strength, 0.25, 1.0))
 
 
 func toast(text: String) -> void:

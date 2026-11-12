@@ -26,12 +26,35 @@ var _traveled := 0.0
 var _hit: Array = []
 var _spin := 0.0
 
+# Tiro inimigo tem que ser visto de longe: desenhado maior, com contorno
+# escuro, brilho quente e um rastro. O acerto continua do mesmo tamanho.
+const TRAIL := 6
+const BIG := ["arrow", "shard", "thorn", "glyph", "star", "orb"]
+var _trail: Array[Vector2] = []
+var _ink := Color(0, 0, 0, 0)     # > 0: desenha a forma toda nesta cor (contorno)
+var _size := 1.0
+
+
+func _hostile() -> bool:
+	return team == "enemy"
+
+
+func _c(original: Color) -> Color:
+	return _ink if _ink.a > 0.0 else original
+
 
 func _ready() -> void:
 	z_index = 6
 	# guarda o nome de quem atirou: se ele morrer antes do tiro chegar, a morte ainda tem dono
 	if damage and damage.label == "" and is_instance_valid(source) and source.get("title") != null:
 		damage.label = String(source.get("title"))
+	if _hostile():
+		_size = 2.0 if style in BIG else 1.0
+		if not style in ["bomb", "orb", "wave", "roots", "chain"]:
+			Glow.attach(self, Palette.HURT, 30.0, 0.7)
+		# clarão na boca do disparo: dá para ver de onde veio
+		Fx.burst(global_position, Palette.HURT, 6, 70.0, 0.22, 0.0, 2.0)
+		Fx.burst(global_position, Palette.FLASH, 3, 40.0, 0.12, 0.0, 2.0)
 	match style:
 		"bomb":
 			Glow.attach(self, Palette.BURN, 40.0, 0.8)
@@ -54,6 +77,10 @@ func _physics_process(delta: float) -> void:
 			var turn := clampf(angle_difference(velocity.angle(), want), -homing * delta, homing * delta)
 			velocity = velocity.rotated(turn)
 	var step := velocity * delta
+	if _hostile():
+		_trail.push_front(global_position)
+		if _trail.size() > TRAIL:
+			_trail.pop_back()
 	position += step
 	_traveled += step.length()
 	_spin += delta * 14.0
@@ -153,64 +180,86 @@ func explode() -> void:
 
 
 func _draw() -> void:
+	if not _hostile():
+		_draw_shape(Vector2.ZERO)
+		return
+	# rastro: quadradinhos que esfriam e somem atrás do tiro
+	var n := _trail.size()
+	for k in n:
+		var p := (_trail[k] - global_position).round()
+		var c := Palette.HURT.lerp(Palette.TELEGRAPH, float(k) / maxf(n, 1))
+		c.a = 0.75 * (1.0 - float(k) / n)
+		var sz := maxf(3.0 - k * 0.4, 1.0) * (_size if _size > 1.0 else 1.0)
+		draw_rect(Rect2(p - Vector2(sz, sz) * 0.5, Vector2(sz, sz)), c)
+	# contorno escuro: a forma em preto um pixel para cada lado
+	_ink = Palette.UI_SHADOW
+	for o: Vector2 in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
+		_draw_shape(o)
+	_ink = Color(0, 0, 0, 0)
+	_draw_shape(Vector2.ZERO)
+	draw_set_transform(Vector2.ZERO)
+
+
+func _draw_shape(off: Vector2) -> void:
+	draw_set_transform(off, 0.0, Vector2(_size, _size))
 	var dir := velocity.normalized() if velocity.length() > 1.0 else Vector2.RIGHT
 	match style:
 		"arrow":
-			draw_line(-dir * 9.0, Vector2.ZERO, color, 1.0)
-			draw_line(-dir * 9.0, -dir * 7.0 + dir.orthogonal() * 2.0, Palette.UI_DIM, 1.0)
-			draw_rect(Rect2(dir - Vector2(1, 1), Vector2(2, 2)), Palette.BLADE)
+			draw_line(-dir * 9.0, Vector2.ZERO, _c(color), 1.0)
+			draw_line(-dir * 9.0, -dir * 7.0 + dir.orthogonal() * 2.0, _c(Palette.UI_DIM), 1.0)
+			draw_rect(Rect2(dir - Vector2(1, 1), Vector2(2, 2)), _c(Palette.BLADE))
 		"shard":
 			var side := dir.orthogonal() * 2.0
-			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), Palette.GLASS)
+			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), _c(Palette.GLASS))
 		"glyph":
-			var c := color
+			var c := _c(color)
 			var turn := _spin * 0.5
 			for i in 4:
 				var a := turn + i * TAU / 4.0
 				draw_rect(Rect2(Vector2(cos(a), sin(a)) * 4.0 - Vector2(1, 1), Vector2(2, 2)), c)
-			draw_rect(Rect2(-1, -1, 3, 3), Palette.FLASH)
+			draw_rect(Rect2(-1, -1, 3, 3), _c(Palette.FLASH))
 		"thorn":
 			var side := dir.orthogonal() * 1.5
-			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 3.0, -side]), Color("c8e07a"))
-			draw_line(-dir * 3.0, -dir * 6.0, Color("4a7a3a"), 1.0)
+			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 3.0, -side]), _c(Color("c8e07a")))
+			draw_line(-dir * 3.0, -dir * 6.0, _c(Color("4a7a3a")), 1.0)
 		"star":
-			var c := color
+			var c := _c(color)
 			draw_rect(Rect2(-1, -3, 3, 7), c)
 			draw_rect(Rect2(-3, -1, 7, 3), c)
-			draw_rect(Rect2(0, 0, 1, 1), Palette.FLASH)
+			draw_rect(Rect2(0, 0, 1, 1), _c(Palette.FLASH))
 		"wave":
 			var k := absf(sin(_spin * 0.6))
 			for i in 4:
-				draw_rect(Rect2(-6 + i * 3, -4 - k * 4.0 + i % 2 * 2, 3, 4 + k * 4.0), Palette.DUST.lightened(0.2))
-			draw_rect(Rect2(-7, 2, 14, 2), Palette.BURN)
+				draw_rect(Rect2(-6 + i * 3, -4 - k * 4.0 + i % 2 * 2, 3, 4 + k * 4.0), _c(Palette.DUST.lightened(0.2)))
+			draw_rect(Rect2(-7, 2, 14, 2), _c(Palette.BURN))
 		"brick":
 			var turn := _spin * 0.25
-			draw_set_transform(Vector2.ZERO, turn)
-			draw_rect(Rect2(-3, -2, 6, 4), color)
-			draw_rect(Rect2(-3, -2, 6, 1), color.lightened(0.3))
-			draw_rect(Rect2(-3, 1, 6, 1), color.darkened(0.4))
-			draw_set_transform(Vector2.ZERO)
+			draw_set_transform(off, turn, Vector2(_size, _size))
+			draw_rect(Rect2(-3, -2, 6, 4), _c(color))
+			draw_rect(Rect2(-3, -2, 6, 1), _c(color.lightened(0.3)))
+			draw_rect(Rect2(-3, 1, 6, 1), _c(color.darkened(0.4)))
+			draw_set_transform(off, 0.0, Vector2(_size, _size))
 		"roots":
 			var grow := clampf(_traveled / 30.0, 0.3, 1.0)
 			for i in 4:
 				var tall := (5.0 + float((i * 7) % 5)) * grow
-				draw_rect(Rect2(-7 + i * 4, 3 - tall, 2, tall), color if i % 2 else color.darkened(0.35))
-			draw_rect(Rect2(-8, 2, 16, 2), Color("4a3a24"))
+				draw_rect(Rect2(-7 + i * 4, 3 - tall, 2, tall), _c(color if i % 2 else color.darkened(0.35)))
+			draw_rect(Rect2(-8, 2, 16, 2), _c(Color("4a3a24")))
 		"chain":
 			if is_instance_valid(source):
 				var back := source.center() - global_position
 				var links := int(back.length() / 4.0)
 				for i in links:
 					var p := back * (float(i) / maxi(links, 1))
-					draw_rect(Rect2(p.round() - Vector2(1, 1), Vector2(2, 2)), Color("8a8a96") if i % 2 else Color("5a5a62"))
-			draw_rect(Rect2(-3, -2, 5, 4), Color("c9c2b0"))
+					draw_rect(Rect2(p.round() - Vector2(1, 1), Vector2(2, 2)), _c(Color("8a8a96") if i % 2 else Color("5a5a62")))
+			draw_rect(Rect2(-3, -2, 5, 4), _c(Color("c9c2b0")))
 		"javelin":
-			draw_line(-dir * 16.0, Vector2.ZERO, Palette.GLASS, 2.0)
-			draw_rect(Rect2(dir * 2.0 - Vector2(2, 2), Vector2(3, 3)), Palette.FLASH)
+			draw_line(-dir * 16.0, Vector2.ZERO, _c(Palette.GLASS), 2.0)
+			draw_rect(Rect2(dir * 2.0 - Vector2(2, 2), Vector2(3, 3)), _c(Palette.FLASH))
 		"bomb":
-			draw_rect(Rect2(-3, -3, 6, 6), Palette.STONE_TOP)
-			draw_rect(Rect2(-2, -2, 4, 4), Palette.BURN if int(_spin) % 2 == 0 else Palette.HIT)
-			draw_rect(Rect2(-1, -5, 2, 2), Palette.DANGER)
+			draw_rect(Rect2(-3, -3, 6, 6), _c(Palette.STONE_TOP))
+			draw_rect(Rect2(-2, -2, 4, 4), _c(Palette.BURN if int(_spin) % 2 == 0 else Palette.HIT))
+			draw_rect(Rect2(-1, -5, 2, 2), _c(Palette.DANGER))
 		"orb":
-			draw_rect(Rect2(-3, -3, 6, 6), color)
-			draw_rect(Rect2(-1, -1, 2, 2), Palette.FLASH)
+			draw_rect(Rect2(-3, -3, 6, 6), _c(color))
+			draw_rect(Rect2(-1, -1, 2, 2), _c(Palette.FLASH))
