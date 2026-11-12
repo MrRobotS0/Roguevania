@@ -38,9 +38,14 @@ func dust(pos: Vector2, count := 5) -> void:
 	burst(pos, Palette.DUST, count, 55.0, 0.3, 120.0, 2.0, 25.0)
 
 
-func ash(parts: Array) -> void:
+func ash(parts: Array, push := Vector2.ZERO) -> void:
 	if is_instance_valid(sparks):
-		sparks.ash(parts)
+		sparks.ash(parts, push)
+
+
+func spray(pos: Vector2, dir: float, color: Color, count := 8, speed := 200.0) -> void:
+	if is_instance_valid(sparks):
+		sparks.spray(pos, dir, color, count, speed)
 
 
 func streak(pos: Vector2, dir: float, color: Color) -> void:

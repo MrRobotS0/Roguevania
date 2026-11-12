@@ -66,8 +66,24 @@ func burst(pos: Vector2, color: Color, count: int, speed: float, life: float, gr
 		_bits.append(b)
 
 
+# Faíscas num leque para o lado do golpe (o impacto "sai" do outro lado do alvo).
+func spray(pos: Vector2, dir: float, color: Color, count: int, speed: float) -> void:
+	var side := dir if dir != 0.0 else 1.0
+	for i in count:
+		var b := Bit.new()
+		b.pos = pos
+		var ang := randf_range(-0.7, 0.5)
+		b.vel = Vector2(cos(ang) * side, sin(ang)) * randf_range(speed * 0.45, speed)
+		b.max_life = randf_range(0.14, 0.28)
+		b.life = b.max_life
+		b.color = color
+		b.size = 2.0 if i % 3 == 0 else 1.0
+		b.gravity = 380.0
+		_bits.append(b)
+
+
 # Cada parte do corpo vira um punhado de cinza que sobe e escurece.
-func ash(parts: Array) -> void:
+func ash(parts: Array, push := Vector2.ZERO) -> void:
 	for p in parts:
 		var r: Rect2 = p[0]
 		var c: Color = p[1]
@@ -77,7 +93,7 @@ func ash(parts: Array) -> void:
 		for i in n:
 			var b := Bit.new()
 			b.pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
-			b.vel = Vector2(randf_range(-28.0, 28.0), randf_range(-70.0, -15.0))
+			b.vel = Vector2(randf_range(-28.0, 28.0), randf_range(-70.0, -15.0)) + push * randf_range(0.4, 1.0)
 			b.max_life = randf_range(0.6, 1.3)
 			b.life = b.max_life
 			b.color = c

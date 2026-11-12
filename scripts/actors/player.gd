@@ -83,6 +83,7 @@ var _state_time := 0.0
 var _coyote := 0.0
 var _jump_buffer := 0.0
 var _buffer := {}
+var _step_dust := 0.0
 var _roll_cd := 0.0
 var _dodge := 0.0
 var _invuln := 0.0
@@ -304,7 +305,14 @@ func _move_state(delta: float) -> void:
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
 		if dir != 0.0 and signf(velocity.x) == -dir and absf(velocity.x) <= RUN_SPEED * 1.05:
+			if absf(velocity.x) > RUN_SPEED * 0.6:
+				Fx.burst(global_position + Vector2(-dir * 4.0, 0), Palette.DUST, 5, 70.0, 0.25, 120.0, 2.0, 20.0)
 			velocity.x = 0.0    # virar é instantâneo
+		# poeira dos passos: correndo, um tufo a cada passada
+		_step_dust -= delta
+		if absf(velocity.x) > RUN_SPEED * 0.8 and _step_dust <= 0.0:
+			_step_dust = 0.17
+			Fx.burst(global_position + Vector2(-signf(velocity.x) * 5.0, 0), Palette.DUST, 2, 30.0, 0.25, 60.0, 1.0, 14.0)
 	elif absf(velocity.x) > RUN_SPEED and signf(velocity.x) == dir:
 		accel = 160.0    # embalo da rolagem segue no ar enquanto segurar a direção
 	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind + inhale, accel * delta)

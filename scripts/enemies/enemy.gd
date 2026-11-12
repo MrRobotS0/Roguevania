@@ -35,6 +35,10 @@ var _anim := 0.0
 var sheet := ""
 var look := ""               # paleta (vazio = a da própria folha)
 var body: Sprite2D
+const KICK_TIME := 0.14      # o corpo recua alguns pixels com o golpe e volta
+var _kick := 0.0
+var _kick_dir := 0.0
+var _last_push := Vector2.ZERO
 var sink_px := 0.0           # afundado no chão (o assassino emerge da cinza)
 var _tex: ImageTexture
 var _white: ImageTexture
@@ -115,6 +119,7 @@ func _update_sprite() -> void:
 	body.offset = Vector2(-fw * 0.5, -fh + 2 + cut)
 	body.flip_h = facing < 0
 	body.scale = _pose() * _draw_scale
+	body.position = Vector2(_kick_offset(), 0)
 	if flash > 0.0 and Options.flashes():
 		body.texture = _white
 	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
@@ -161,7 +166,11 @@ func hurt(d: Damage) -> bool:
 	# conta à parte: o mesmo golpe pode passar por vários inimigos
 	var dealt := maxi(1, roundi(d.value() * Run.hero_damage_mult()))
 	hp -= dealt
-	flash = 0.1
+	flash = 0.12 if d.crit else 0.1
+	if not d.over_time:
+		_kick = KICK_TIME
+		_kick_dir = signf(d.dir) if d.dir != 0.0 else 0.0
+		_last_push = Vector2(d.dir * (90.0 + d.knock * 0.5), -30.0)
 	_hp_visible = 2.5
 	apply_statuses(d)
 	Fx.number(center() + Vector2(0, -h * 0.5 - 4), dealt, d.crit)
@@ -173,6 +182,7 @@ func hurt(d: Damage) -> bool:
 			velocity.y = -minf(d.knock * 0.4, 110.0) / weight
 		Fx.burst(center(), Palette.HIT, 12 if d.crit else 6, 180.0 if d.crit else 120.0)
 		Fx.streak(center(), d.dir, Palette.UI_CRIT if d.crit else Palette.SLASH)
+		Fx.spray(center() + Vector2(d.dir * w * 0.3, 0), d.dir, Palette.UI_CRIT if d.crit else Palette.HIT, 12 if d.crit else 7, 260.0 if d.crit else 190.0)
 		Fx.impact(center() + Vector2(-d.dir * 3.0, 0), Palette.UI_CRIT if d.crit else Palette.FLASH, d.crit)
 	if hp <= 0:
 		_die()
@@ -206,9 +216,12 @@ func _die() -> void:
 		parts.append([Rect2(r.position + global_position, r.size), p[1]])
 	if parts.is_empty():
 		Fx.burst(center(), body_color(), 18, 170.0, 0.6, 500.0, 3.0, 40.0)
-	Fx.ash(parts)
-	Fx.burst(center(), Palette.HIT, 10, 220.0, 0.45)
-	Fx.add_shake(3.0)
+	# golpe final: a cinza voa para o lado do golpe e o impacto é maior
+	Fx.ash(parts, _last_push)
+	Fx.burst(center(), Palette.HIT, 14, 240.0, 0.45)
+	Fx.spray(center(), signf(_last_push.x), Palette.FLASH, 16, 320.0)
+	Fx.impact(center(), Palette.FLASH, true)
+	Fx.add_shake(3.5)
 	Sfx.play("enemy_die", -4.0)
 	if player:
 		player.on_kill(self)
@@ -222,6 +235,7 @@ func _physics_process(delta: float) -> void:
 		return
 	state_time += delta
 	flash -= delta
+	_kick -= delta
 	_hp_visible -= delta
 	_anim += delta
 	_shown_hp = move_toward(_shown_hp, hp, 60.0 * delta)
@@ -314,6 +328,12 @@ func front_rect(width: float, height: float, lift := 2.0) -> Rect2:
 
 # Animação comum a todos: respira parado, balança andando, se encolhe ao
 # apanhar e cresce no aviso. Passos inteiros de pixel, sem tremido.
+func _kick_offset() -> float:
+	if _kick <= 0.0:
+		return 0.0
+	return _kick_dir * ceilf(3.0 * _kick / KICK_TIME)
+
+
 func _pose() -> Vector2:
 	var grow := 0.0
 	var squeeze := 0.0
@@ -331,7 +351,7 @@ func _pose() -> Vector2:
 
 func _draw() -> void:
 	if body == null:
-		draw_set_transform(Vector2.ZERO, 0.0, _pose())
+		draw_set_transform(Vector2(_kick_offset(), 0), 0.0, _pose())
 	begin_tint()
 	draw_body()
 	end_tint()
