@@ -11,7 +11,7 @@ const KEYS := {
 	"right": [KEY_D, KEY_RIGHT],
 	"up": [KEY_W, KEY_UP],
 	"down": [KEY_S, KEY_DOWN],
-	"jump": [KEY_SPACE],
+	"jump": [KEY_SPACE, KEY_W],   # W também pula (e continua sendo "cima" nos menus)
 	"attack1": [KEY_J],
 	"attack2": [KEY_K],
 	"skill1": [KEY_U],
@@ -92,7 +92,7 @@ func _ready() -> void:
 
 const KEY_HINTS := {
 	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "Q",
-	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO", "map": "M",
+	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO/W", "map": "M",
 	"walk": "A/D", "down": "S",
 }
 const PAD_HINTS := {
@@ -201,6 +201,10 @@ func _touch_bridge() -> void:
 	JavaScriptBridge.get_interface("window").mokshaAction = _touch_cb
 	# tela só de toque: as dicas já começam com os nomes dos botões
 	touch_mode = bool(JavaScriptBridge.eval("matchMedia('(pointer: coarse)').matches", true))
+	# No celular a escala inteira deixa faixas pretas enormes (a tela raramente é
+	# múltipla de 480x270): lá o jogo estica até preencher a altura.
+	if touch_mode:
+		get_tree().root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 
 
 func _on_touch(args: Array) -> void:

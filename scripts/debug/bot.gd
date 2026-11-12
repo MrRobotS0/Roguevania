@@ -445,3 +445,7 @@ func _portal_toward(dest: Vector2) -> Portal:
 		return null
 	_portal_to = near_goal
 	return near_me
+
+
+func is_live() -> bool:
+	return false

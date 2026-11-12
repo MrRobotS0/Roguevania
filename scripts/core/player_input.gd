@@ -20,6 +20,11 @@ func _read(action: String) -> bool:
 	return Input.is_action_pressed(action)
 
 
+# Controle de verdade (teclado, controle, toque)? Roteiros e o robô dizem que não.
+func is_live() -> bool:
+	return true
+
+
 func held(action: String) -> bool:
 	return _held.get(action, false)
 

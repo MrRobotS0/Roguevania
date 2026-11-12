@@ -86,18 +86,42 @@
     box-shadow: inset -3px -3px 0 var(--gold-md), inset 3px 3px 0 var(--gold-lt), 0 4px 0 var(--gold-dk); }
   [hidden] { display: none !important; }
 
-  /* --- controles de toque (só em tela de toque, depois que o jogo abre) --- */
-  #touch { position: fixed; inset: 0; z-index: 5; pointer-events: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-  #touch button, #touch .stick { pointer-events: auto; touch-action: none; }
+  /* --- controles de toque (só em tela de toque, depois que o jogo abre) ---
+     Tudo mede em --u, que acompanha a altura da tela: no celular pequeno os
+     botões encolhem juntos e no tablet não viram pratos. Os cantos respeitam o
+     entalhe da câmera (safe-area). */
+  #touch { --u: clamp(44px, 16.5vh, 76px); --g: calc(var(--u) * .16);
+    --sl: max(14px, env(safe-area-inset-left)); --sr: max(14px, env(safe-area-inset-right));
+    --sb: max(12px, env(safe-area-inset-bottom)); --st: max(8px, env(safe-area-inset-top));
+    position: fixed; inset: 0; z-index: 5; pointer-events: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #touch button, #touch .zone { pointer-events: auto; touch-action: none; }
   #touch button { position: absolute; display: grid; place-items: center; align-content: center; padding: 0; border: 2px solid rgba(242,193,78,.55);
-    background: rgba(13,10,18,.42); color: rgba(255,236,190,.9); font: 700 13px var(--pixel); border-radius: 50%;
-    -webkit-tap-highlight-color: transparent; }
-  #touch button.on { background: rgba(242,193,78,.55); color: #1a0f04; }
-  #touch button small { display: block; font: 400 9px var(--pixel); opacity: .8; margin-top: 1px; }
-  #touch .sq { border-radius: 6px; }
-  .stick { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: 18px; width: 150px; height: 150px; border-radius: 50%;
-    border: 2px solid rgba(242,193,78,.4); background: rgba(13,10,18,.3); }
-  .stick i { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+    width: var(--s); height: var(--s); background: rgba(13,10,18,.38); color: rgba(255,236,190,.92);
+    font: 700 calc(var(--u) * .2) var(--pixel); border-radius: 50%; -webkit-tap-highlight-color: transparent;
+    transition: transform .05s, background .05s; }
+  #touch button.on { background: rgba(242,193,78,.6); color: #1a0f04; transform: scale(.92); }
+  #touch button small { display: block; font: 400 calc(var(--u) * .14) var(--pixel); opacity: .8; margin-top: 1px; }
+  #touch .sq { border-radius: 6px; --s: calc(var(--u) * .62); top: var(--st); font-size: calc(var(--u) * .18); }
+  /* lado direito: pulo no canto, as duas armas em volta dele, rolar ao lado */
+  #touch .b-jump { --s: calc(var(--u) * 1.3); right: var(--sr); bottom: var(--sb); font-size: calc(var(--u) * .24); }
+  .b-atk1 { --s: calc(var(--u) * 1.05); right: calc(var(--sr) + var(--u) * 1.3 + var(--g)); bottom: calc(var(--sb) + var(--u) * .12); }
+  .b-atk2 { --s: calc(var(--u) * 1.05); right: calc(var(--sr) + var(--u) * .12); bottom: calc(var(--sb) + var(--u) * 1.3 + var(--g)); }
+  .b-roll { --s: calc(var(--u) * .95); right: calc(var(--sr) + var(--u) * 2.35 + var(--g) * 2); bottom: var(--sb); }
+  .b-sk1 { --s: calc(var(--u) * .8); right: calc(var(--sr) + var(--u) * 1.5 + var(--g)); bottom: calc(var(--sb) + var(--u) * 1.3 + var(--g) * 1.5); }
+  .b-sk2 { --s: calc(var(--u) * .8); right: calc(var(--sr) + var(--u) * 2.45 + var(--g) * 2); bottom: calc(var(--sb) + var(--u) * 1.05 + var(--g)); }
+  .b-heal { --s: calc(var(--u) * .8); right: calc(var(--sr) + var(--u) * .25); bottom: calc(var(--sb) + var(--u) * 2.35 + var(--g) * 2); }
+  /* lado esquerdo: o direcional aparece onde o polegar encosta; USAR fica acima dele */
+  .b-use { --s: calc(var(--u) * .85); left: var(--sl); bottom: calc(var(--sb) + var(--u) * 2.7); }
+  .b-pause { right: var(--sr); }
+  #touch .b-map { right: calc(var(--sr) + var(--u) * .62 + var(--g)); width: calc(var(--u) * .9); }
+  .b-full { right: calc(var(--sr) + var(--u) * 1.52 + var(--g) * 2); }
+  #touch .zone { position: absolute; left: 0; bottom: 0; width: 46%; height: 72%; }
+  .stick { position: absolute; width: calc(var(--u) * 2.2); height: calc(var(--u) * 2.2); margin: calc(var(--u) * -1.1) 0 0 calc(var(--u) * -1.1);
+    left: calc(var(--sl) + var(--u) * 1.1); top: calc(100% - var(--sb) - var(--u) * 1.1);
+    border-radius: 50%; border: 2px solid rgba(242,193,78,.35); background: rgba(13,10,18,.25); pointer-events: none; opacity: .55; transition: opacity .15s; }
+  .stick.on { opacity: 1; transition: none; }
+  .stick i { position: absolute; left: 50%; top: 50%; width: calc(var(--u) * .85); height: calc(var(--u) * .85);
+    margin: calc(var(--u) * -.425) 0 0 calc(var(--u) * -.425); border-radius: 50%;
     background: rgba(242,193,78,.45); border: 2px solid rgba(255,224,138,.7); }
   #rotate { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; text-align: center;
     background: rgba(7,6,11,.94); color: var(--gold); font: 700 18px/1.5 var(--pixel); }
@@ -129,18 +153,18 @@ $GODOT_HEAD_INCLUDE
 </div>
 
 <div id="touch" hidden aria-hidden="true">
-  <div class="stick" id="stick"><i id="knob"></i></div>
-  <button data-keys="jump confirm" style="right:22px;bottom:22px;width:84px;height:84px;font-size:15px"><span data-pt="PULO" data-en="JUMP"></span></button>
-  <button data-keys="attack1 confirm" style="right:118px;bottom:30px;width:66px;height:66px">J<small data-pt="ARMA" data-en="WPN"></small></button>
-  <button data-keys="attack2" style="right:48px;bottom:118px;width:66px;height:66px">K<small data-pt="ARMA" data-en="WPN"></small></button>
-  <button data-keys="roll" style="right:200px;bottom:22px;width:58px;height:58px"><span data-pt="ROLAR" data-en="ROLL"></span></button>
-  <button data-keys="skill1" style="right:134px;bottom:112px;width:52px;height:52px">U</button>
-  <button data-keys="skill2" style="right:118px;bottom:180px;width:52px;height:52px">I</button>
-  <button data-keys="heal" style="right:40px;bottom:200px;width:52px;height:52px"><span data-pt="CURA" data-en="HEAL"></span></button>
-  <button data-keys="interact confirm" style="left:186px;bottom:28px;width:58px;height:58px"><span data-pt="USAR" data-en="USE"></span></button>
-  <button class="sq" data-keys="pause cancel" style="right:16px;top:12px;width:48px;height:40px">II</button>
-  <button class="sq" data-keys="map" style="right:72px;top:12px;width:56px;height:40px"><span data-pt="MAPA" data-en="MAP"></span></button>
-  <button class="sq" id="fullscreen" style="right:136px;top:12px;width:48px;height:40px" aria-label="Tela cheia">[ ]</button>
+  <div class="zone" id="zone"><div class="stick" id="stick"><i id="knob"></i></div></div>
+  <button class="b-jump" data-keys="jump confirm"><span data-pt="PULO" data-en="JUMP"></span></button>
+  <button class="b-atk1" data-keys="attack1 confirm">J<small data-pt="ARMA" data-en="WPN"></small></button>
+  <button class="b-atk2" data-keys="attack2">K<small data-pt="ARMA" data-en="WPN"></small></button>
+  <button class="b-roll" data-keys="roll"><span data-pt="ROLAR" data-en="ROLL"></span></button>
+  <button class="b-sk1" data-keys="skill1">U</button>
+  <button class="b-sk2" data-keys="skill2">I</button>
+  <button class="b-heal" data-keys="heal"><span data-pt="CURA" data-en="HEAL"></span></button>
+  <button class="b-use" data-keys="interact confirm"><span data-pt="USAR" data-en="USE"></span></button>
+  <button class="sq b-pause" data-keys="pause cancel">II</button>
+  <button class="sq b-map" data-keys="map"><span data-pt="MAPA" data-en="MAP"></span></button>
+  <button class="sq b-full" id="fullscreen" aria-label="Tela cheia">[ ]</button>
 </div>
 <div id="rotate" hidden></div>
 
@@ -160,12 +184,12 @@ const engine = new Engine(GODOT_CONFIG);
     down: "BAIXANDO", wake: "DESPERTANDO", wait: "PREPARANDO", hello: "A cinza lembra de você, ", helloEnd: ".",
     mobile: "No celular: deite a tela e use os botões. Teclado ou controle bluetooth também funcionam.", rotate: "Gire o celular para jogar deitado.",
     fail: "O jogo não conseguiu abrir.", missing: "Faltam recursos no navegador para rodar o jogo:\n", retry: "TENTAR DE NOVO",
-    keys: [["A D", "andar"], ["ESPAÇO", "pular"], ["J K", "armas"], ["SHIFT", "rolar"], ["Q", "curar"], ["E", "usar"]],
+    keys: [["A D", "andar"], ["ESPAÇO W", "pular"], ["J K", "armas"], ["SHIFT", "rolar"], ["Q", "curar"], ["E", "usar"]],
   } : {
     down: "DOWNLOADING", wake: "AWAKENING", wait: "PREPARING", hello: "The ash remembers you, ", helloEnd: ".",
     mobile: "On phones: turn it sideways and use the on-screen buttons. A bluetooth keyboard or gamepad works too.", rotate: "Turn your phone sideways to play.",
     fail: "The game couldn't start.", missing: "Your browser is missing features the game needs:\n", retry: "TRY AGAIN",
-    keys: [["A D", "move"], ["SPACE", "jump"], ["J K", "weapons"], ["SHIFT", "roll"], ["Q", "heal"], ["E", "use"]],
+    keys: [["A D", "move"], ["SPACE W", "jump"], ["J K", "weapons"], ["SHIFT", "roll"], ["Q", "heal"], ["E", "use"]],
   };
 
   // a mesma lore da landing: uma linha de cada domínio enquanto espera
@@ -283,25 +307,62 @@ const engine = new Engine(GODOT_CONFIG);
       });
       ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => b.addEventListener(t, up));
     });
-    // direcional: o polegar arrasta; passou do limite, vira a seta daquele lado
-    const stick = $("stick"), knob = $("knob");
+    // direcional flutuante: nasce onde o polegar encosta (na metade esquerda) e
+    // vem atrás do polegar se ele passar muito do limite, então nunca "escapa" do dedo
+    const zone = $("zone"), stick = $("stick"), knob = $("knob");
     const held = { left: false, right: false, up: false, down: false };
+    let cx = 0, cy = 0, sid = null;
     function set(dir, on) { if (held[dir] !== on) { held[dir] = on; send(dir, on); } }
+    function place(x, y) {
+      const z = zone.getBoundingClientRect(), r = stick.offsetWidth / 2;
+      cx = Math.min(Math.max(x, z.left + r * 0.6), z.right - r * 0.6);
+      cy = Math.min(Math.max(y, z.top + r * 0.6), z.bottom - r * 0.6);
+      stick.style.left = (cx - z.left) + "px";
+      stick.style.top = (cy - z.top) + "px";
+    }
     function move(e) {
-      const r = stick.getBoundingClientRect();
-      let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-      const len = Math.hypot(dx, dy), max = r.width / 2 - 20;
-      if (len > max) { dx *= max / len; dy *= max / len; }
-      knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      const t = 20;
+      const max = stick.offsetWidth / 2 - knob.offsetWidth * 0.25;
+      let dx = e.clientX - cx, dy = e.clientY - cy;
+      const len = Math.hypot(dx, dy);
+      if (len > max * 1.35) {
+        const k = (len - max) / len;
+        place(cx + dx * k, cy + dy * k);
+        dx = e.clientX - cx; dy = e.clientY - cy;
+      }
+      const l2 = Math.hypot(dx, dy);
+      if (l2 > max) { dx *= max / l2; dy *= max / l2; }
+      knob.style.transform = "translate(" + dx + "px, " + dy + "px)";
+      const t = max * 0.28;
       set("left", dx < -t); set("right", dx > t);
       // cima e baixo pedem mais: o polegar sobe sem querer ao correr
-      set("up", dy < -t * 1.8); set("down", dy > t * 1.8);
+      set("up", dy < -max * 0.6); set("down", dy > max * 0.6);
     }
-    function release() { knob.style.transform = ""; Object.keys(held).forEach(d => set(d, false)); }
-    stick.addEventListener("pointerdown", e => { e.preventDefault(); stick.setPointerCapture(e.pointerId); move(e); });
-    stick.addEventListener("pointermove", e => { if (stick.hasPointerCapture(e.pointerId)) move(e); });
-    ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => stick.addEventListener(t, release));
+    function release(e) {
+      if (sid === null) return;
+      if (e && e.pointerId !== undefined && e.pointerId !== sid) return;
+      sid = null;
+      knob.style.transform = "";
+      stick.classList.remove("on");
+      stick.style.left = ""; stick.style.top = "";
+      Object.keys(held).forEach(d => set(d, false));
+    }
+    zone.addEventListener("pointerdown", e => {
+      if (sid !== null) return;
+      e.preventDefault();
+      sid = e.pointerId;
+      zone.setPointerCapture(e.pointerId);
+      stick.classList.add("on");
+      place(e.clientX, e.clientY);
+      move(e);
+    });
+    zone.addEventListener("pointermove", e => { if (e.pointerId === sid) move(e); });
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(t => zone.addEventListener(t, release));
+    // girou a tela ou trocou de app: ninguém fica com direção ou botão preso
+    addEventListener("resize", () => release());
+    addEventListener("blur", () => {
+      release();
+      pad.querySelectorAll("button.on").forEach(b => b.dispatchEvent(new PointerEvent("pointercancel")));
+    });
     $("fullscreen").addEventListener("click", () => {
       if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return; }
       const go = document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen({ navigationUI: "hide" }) : null;

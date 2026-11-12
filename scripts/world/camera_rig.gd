@@ -19,12 +19,16 @@ func follow(who: Player, bounds: Vector2) -> void:
 	global_position = who.global_position + Vector2(0, HEIGHT)
 	make_current()
 	reset_smoothing()
+	reset_physics_interpolation()
+	who.reset_physics_interpolation()
 
 
 func snap() -> void:
 	if is_instance_valid(target):
 		global_position = target.global_position + Vector2(0, HEIGHT)
 		reset_smoothing()
+		reset_physics_interpolation()
+		target.reset_physics_interpolation()
 
 
 func _physics_process(delta: float) -> void:
@@ -33,8 +37,8 @@ func _physics_process(delta: float) -> void:
 	var look := target.facing * LOOK_AHEAD
 	var drop := LOOK_DOWN * clampf((target.velocity.y - 220.0) / 180.0, 0.0, 1.0)
 	var goal := target.global_position + Vector2(look, HEIGHT + drop)
-	global_position.x = lerpf(global_position.x, goal.x, 1.0 - exp(-6.0 * delta))
-	global_position.y = lerpf(global_position.y, goal.y, 1.0 - exp(-9.0 * delta))
+	global_position.x = lerpf(global_position.x, goal.x, 1.0 - exp(-9.0 * delta))
+	global_position.y = lerpf(global_position.y, goal.y, 1.0 - exp(-12.0 * delta))
 
 	_shake(delta)
 

@@ -108,3 +108,17 @@
     color: var(--text); background: var(--bg); border: 2px solid var(--line); text-decoration: none; cursor: pointer; text-align: left; width: 100%; }
   .menu a:hover, .menu button:hover { border-color: var(--gold); }
   .menu a::after, .menu button::after { content: "›"; color: var(--gold); font: 700 18px var(--pixel); }
+
+  /* celular: menos moldura, mais conteúdo */
+  @media (max-width: 480px) {
+    header { padding: 10px 12px; }
+    main { padding: 14px 10px 36px; }
+    .card { padding: 22px 16px 18px; box-shadow: 0 0 0 3px var(--bg), 0 12px 40px rgba(0,0,0,.6); }
+    h1 { font-size: 20px; }
+    .who { font-size: 18px; }
+    th, td { padding: 6px 8px; font-size: 15px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat b { font-size: 18px; }
+    .feats { grid-template-columns: minmax(0, 1fr); }
+    footer a { margin: 4px 8px; }
+  }

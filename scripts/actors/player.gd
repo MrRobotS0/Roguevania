@@ -8,27 +8,27 @@ signal gear_changed
 enum State { MOVE, ATTACK, SHOOT, BLOCK, ROLL, DIVE, CLIMB, HEAL, HURT, DEAD }
 
 # Movimento. Em pixels/segundo; 1 bloco = 16 px.
-const RUN_SPEED := 165.0
-const GROUND_ACCEL := 1600.0
-const GROUND_DECEL := 2200.0
-const AIR_ACCEL := 1100.0
+const RUN_SPEED := 180.0
+const GROUND_ACCEL := 3400.0      # arranca quase na hora: o herói responde ao dedo, não escorrega
+const GROUND_DECEL := 4200.0
+const AIR_ACCEL := 2200.0         # muda de direção no ar sem demora (estilo Dead Cells)
 const GRAVITY_UP := 950.0
 const GRAVITY_DOWN := 1750.0     # cai mais rápido do que sobe: o pulo alto não fica flutuando
 const MAX_FALL := 430.0
 const JUMP_VELOCITY := -370.0      # ~4,7 blocos: um pulo só já sobe nas plataformas (3-4 blocos)
 const JUMP_CUT := 0.6              # soltar o pulo cedo = pulo mais curto (sem matar o pulo num toque rápido)
-const COYOTE_TIME := 0.1           # ainda pula logo depois de sair da beirada
-const JUMP_BUFFER := 0.12          # pulo apertado um pouco antes de tocar o chão vale
+const COYOTE_TIME := 0.12          # ainda pula logo depois de sair da beirada
+const JUMP_BUFFER := 0.15          # pulo apertado um pouco antes de tocar o chão vale
 const TOUCH_EXTRA_COYOTE := 0.04   # no toque o dedo demora mais: um pouco mais de folga
 const TOUCH_EXTRA_BUFFER := 0.06
 const CLIMB_TIME := 0.16
 const LEDGE_AUTO_REACH := 6.0     # sem segurar direção: agarra a borda até 6 px à frente
 
-const ROLL_SPEED := 270.0
-const ROLL_TIME := 0.32
+const ROLL_SPEED := 300.0
+const ROLL_TIME := 0.28
 const ROLL_DODGE := 0.27           # invencível durante quase toda a rolagem
 const EASY_DODGE := 0.38           # opção Esquiva Facilitada: cobre a rolagem toda e um pouco depois
-const ROLL_COOLDOWN := 0.12
+const ROLL_COOLDOWN := 0.06
 const AIR_DASH_SPEED := 320.0
 const AIR_DASH_TIME := 0.18
 const POGO := -290.0                 # quique ao acertar alguém no mergulho
@@ -43,6 +43,10 @@ const BASE_HP := 100
 const COMBO_GRACE := 0.3
 const PARRY_WINDOW := 0.18
 const INTERACT_RANGE := 22.0
+# Comandos guardados: apertou um pouco antes de poder (no fim de um golpe, da
+# rolagem ou durante o congelamento do impacto), o comando sai assim que der.
+const ACTION_BUFFER := 0.16
+const BUFFERED := ["attack1", "attack2", "skill1", "skill2", "roll"]
 
 var pad: PlayerInput = PlayerInput.new()
 var state := State.MOVE
@@ -78,6 +82,7 @@ var _rolled_through: Array = []
 var _state_time := 0.0
 var _coyote := 0.0
 var _jump_buffer := 0.0
+var _buffer := {}
 var _roll_cd := 0.0
 var _dodge := 0.0
 var _invuln := 0.0
@@ -199,6 +204,9 @@ func nearest_interactable() -> Node2D:
 
 func _physics_process(delta: float) -> void:
 	pad.poll()
+	for a: String in BUFFERED:
+		if pad.just(a):
+			_buffer[a] = ACTION_BUFFER
 	_tick(delta)
 	tick_statuses(delta)
 	match state:
@@ -227,6 +235,8 @@ func _tick(delta: float) -> void:
 	_anim += delta
 	_coyote -= delta
 	_jump_buffer -= delta
+	for a in _buffer:
+		_buffer[a] -= delta
 	_roll_cd -= delta
 	_dodge -= delta
 	_invuln -= delta
@@ -293,6 +303,8 @@ func _move_state(delta: float) -> void:
 	var accel := AIR_ACCEL
 	if is_on_floor():
 		accel = GROUND_ACCEL if dir != 0.0 else GROUND_DECEL
+		if dir != 0.0 and signf(velocity.x) == -dir and absf(velocity.x) <= RUN_SPEED * 1.05:
+			velocity.x = 0.0    # virar é instantâneo
 	elif absf(velocity.x) > RUN_SPEED and signf(velocity.x) == dir:
 		accel = 160.0    # embalo da rolagem segue no ar enquanto segurar a direção
 	velocity.x = move_toward(velocity.x, dir * RUN_SPEED + wind + inhale, accel * delta)
@@ -316,11 +328,14 @@ func _move_state(delta: float) -> void:
 			_ghosts.append([global_position, 0.18, body.frame if body else 0, facing])
 
 	for slot in 2:
-		if pad.just("attack%d" % (slot + 1)) and _use_weapon(slot):
+		if _wants("attack%d" % (slot + 1)) and _use_weapon(slot):
+			_take("attack%d" % (slot + 1))
 			return
-		if pad.just("skill%d" % (slot + 1)) and _use_skill(slot):
+		if _wants("skill%d" % (slot + 1)) and _use_skill(slot):
+			_take("skill%d" % (slot + 1))
 			return
-	if pad.just("roll") and _can_roll():
+	if _wants("roll") and _can_roll():
+		_take("roll")
 		_start_roll()
 		return
 	if pad.just("heal") and flasks > 0 and is_on_floor() and hp < max_hp:
@@ -358,6 +373,26 @@ func _cancel_into_jump() -> bool:
 func current_move_count() -> int:
 	var g := weapon(_slot)
 	return (g.data as WeaponData).moves.size() if g and g.is_weapon() else 1
+
+
+func _wants(action: String) -> bool:
+	return _buffer.get(action, 0.0) > 0.0
+
+
+func _take(action: String) -> void:
+	_buffer[action] = 0.0
+
+
+# Toque rápido durante o congelamento do impacto (o jogo quase parado) não
+# chega a aparecer no poll: o evento guarda o comando direto.
+func _unhandled_input(event: InputEvent) -> void:
+	if not pad.is_live():
+		return
+	for a: String in BUFFERED:
+		if event.is_action_pressed(a):
+			_buffer[a] = ACTION_BUFFER
+	if event.is_action_pressed("jump") and state == State.MOVE:
+		_jump_buffer = JUMP_BUFFER + (TOUCH_EXTRA_BUFFER if Controls.touch_mode else 0.0)
 
 
 func _jump() -> void:
@@ -469,15 +504,17 @@ func _attack_state(delta: float) -> void:
 	var total: float = active_end + float(m["recover"])
 
 	_gravity(delta)
-	if pad.just("attack%d" % (_slot + 1)):
+	if _wants("attack%d" % (_slot + 1)):
+		_take("attack%d" % (_slot + 1))
 		_combo_queued = true
-	if pad.just("roll") and _can_roll():
+	if _wants("roll") and _can_roll():
+		_take("roll")
 		_start_roll()
 		return
 	if is_on_floor():
-		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.3, 900.0 * delta)
+		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.45, 1400.0 * delta)
 	else:
-		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.6, AIR_ACCEL * delta)
+		velocity.x = move_toward(velocity.x, pad.axis() * RUN_SPEED * 0.7, AIR_ACCEL * delta)
 	if pad.just("jump") and _state_time >= startup + float(m["active"]) * 0.5:
 		if _cancel_into_jump():
 			return
@@ -494,6 +531,18 @@ func _attack_state(delta: float) -> void:
 	if _combo_queued and _state_time >= active_end + 0.03:
 		_start_move(_slot, next)
 		return
+	# depois do golpe sair, a outra arma ou uma habilidade emendam direto
+	if _state_time >= active_end:
+		var other := 1 - _slot
+		if _wants("attack%d" % (other + 1)) and weapon(other):
+			_take("attack%d" % (other + 1))
+			_combo_grace = 0.0
+			_use_weapon(other)
+			return
+		for s in 2:
+			if _wants("skill%d" % (s + 1)) and _use_skill(s):
+				_take("skill%d" % (s + 1))
+				return
 	if _state_time >= total:
 		_combo_next = next
 		_combo_grace = COMBO_GRACE
@@ -568,7 +617,8 @@ func _shoot_state(delta: float) -> void:
 	var s := data.shot
 	velocity.x = move_toward(velocity.x, 0.0, GROUND_DECEL * delta)
 	_gravity(delta, 0.5 if velocity.y > 0.0 else 1.0)
-	if pad.just("roll") and _can_roll():
+	if _wants("roll") and _can_roll():
+		_take("roll")
 		_start_roll()
 		return
 	if _shot_fired and pad.just("jump") and _cancel_into_jump():
@@ -813,7 +863,7 @@ func _roll_state(delta: float) -> void:
 	velocity.x = facing * speed
 	_gravity(delta)
 	# pular no fim da rolagem emenda o embalo no pulo
-	if pad.just("jump") and k >= 0.35 and (is_on_floor() or _coyote > 0.0):
+	if pad.just("jump") and k >= 0.2 and (is_on_floor() or _coyote > 0.0):
 		_jump()
 		velocity.x = facing * ROLL_SPEED * 0.8
 		_roll_cd = ROLL_COOLDOWN

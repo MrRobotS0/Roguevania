@@ -36,3 +36,7 @@ func poll() -> void:
 
 func _read(action: String) -> bool:
 	return not _queue.is_empty() and action in _queue[0][0]
+
+
+func is_live() -> bool:
+	return false
