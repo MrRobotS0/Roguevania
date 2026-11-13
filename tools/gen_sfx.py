@@ -99,6 +99,8 @@ SOUNDS = {
     "throw": lambda: noise(0.12, 0.3, smooth=0.5, decay=1.2),
     "boom": lambda: mix(noise(0.6, 0.9, smooth=0.9, decay=1.8), tone(0.4, 90, 30, "tri", 0.6)),
     "block": lambda: mix(tone(0.08, 1200, 1100, "square", 0.3), noise(0.05, 0.3, smooth=0.1)),
+    # aviso padrão de golpe inimigo: dois toques agudos e curtos ("tin-tin")
+    "warn": lambda: seq(tone(0.045, 1760, 1760, "pulse", 0.35), tone(0.02, 0, 0, "sine", 0.0), tone(0.06, 2350, 2350, "pulse", 0.3)),
     "parry": lambda: mix(tone(0.25, 1600, 1500, "tri", 0.4, vibrato=0.01), tone(0.25, 2400, 2300, "sine", 0.25), noise(0.06, 0.4)),
     "shield_up": lambda: tone(0.06, 500, 700, "square", 0.2),
     "drink": lambda: seq(tone(0.08, 400, 600, "sine", 0.3), tone(0.08, 500, 750, "sine", 0.3), tone(0.12, 600, 900, "sine", 0.3)),

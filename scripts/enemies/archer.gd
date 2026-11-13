@@ -16,11 +16,14 @@ const GENTLE_AIM := 1.15
 const GENTLE_LOCK := 0.4
 const GENTLE_COOLDOWN := 1.7
 const GENTLE_DAMAGE := 9
+const GENTLE_SPEED := 195.0   # tiro mais lento: dá tempo de ver e pular
 
 var aim_time := AIM
 var lock_time := LOCK
 var cooldown_time := COOLDOWN
 var damage := DAMAGE
+var arrow_speed := ARROW_SPEED
+var _first_delay := 0.0
 var _lock_sound := false
 
 var _target := Vector2.ZERO
@@ -46,6 +49,13 @@ func _ready() -> void:
 			lock_time = GENTLE_LOCK
 			cooldown_time = GENTLE_COOLDOWN
 			damage = GENTLE_DAMAGE
+			arrow_speed = GENTLE_SPEED
+			# dois atiradores perto um do outro não atiram juntos: o segundo
+			# começa meio ciclo atrasado
+			for o in get_tree().get_nodes_in_group("enemies"):
+				if o != self and o is Archer and o.global_position.distance_to(global_position) < 300.0:
+					_first_delay = cooldown_time * 0.6
+					break
 		elif Run.path.size() <= 2:
 			# 2º andar (Forja ou Salões): meio-termo. O robô morria 80% na Forja, quase sempre para ele.
 			aim_time = lerpf(AIM, GENTLE_AIM, 0.5)
@@ -71,7 +81,8 @@ func think(delta: float) -> void:
 	match state:
 		"idle", "chase":
 			velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
-			if sees_player(240.0, 140.0):
+			if sees_player(240.0, 140.0) and state_time >= _first_delay:
+				_first_delay = 0.0
 				_lock_sound = false
 				set_state("aim")
 		"aim":
@@ -108,7 +119,7 @@ func _shoot() -> void:
 	p.style = "shard" if shard else "arrow"
 	p.source = self
 	p.position = bow()
-	p.velocity = (_target - bow()).normalized() * ARROW_SPEED
+	p.velocity = (_target - bow()).normalized() * arrow_speed
 	p.damage = Damage.make(damage, facing, 120.0)
 	p.damage.source = self
 	get_parent().add_child(p)

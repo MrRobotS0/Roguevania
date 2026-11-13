@@ -22,7 +22,31 @@ func detail() -> String:
 	var stat: String = Combat.STAT_NAMES.get(gear.stat(), "")
 	var kind := "ARMA" if gear.is_weapon() else "HABILIDADE"
 	var extra: String = gear.affix_text() if not gear.affixes.is_empty() else gear.data.describe()
-	return "%s DE %s%s" % [kind, stat, (" · " + extra) if extra != "" else ""]
+	var text := "%s DE %s%s" % [kind, stat, (" · " + extra) if extra != "" else ""]
+	var cmp := compare()
+	var p := get_tree().get_first_node_in_group("player") as Player
+	var syn := p.synergy_with(gear) if p else ""
+	if syn != "":
+		cmp += ("  · " if cmp != "" else "") + "SINERGIA: " + syn
+	return text + ("
+" + cmp if cmp != "" else "")
+
+
+# Comparação com o que vai sair da mão ao pegar: "FORÇA 34 → 41".
+func compare() -> String:
+	var p := get_tree().get_first_node_in_group("player") as Player
+	if p == null:
+		return ""
+	var list: Array = p.weapons if gear.is_weapon() else p.skills
+	var slot := list.find(null)
+	if slot >= 0:
+		return "SLOT VAZIO"
+	var old: Gear = list[p._slot if gear.is_weapon() else 0]
+	if old == null:
+		return ""
+	if gear.is_weapon():
+		return "FORÇA %d → %d  (TROCA %s)" % [old.strength(), gear.strength(), old.title()]
+	return "TROCA %s" % old.title()
 
 
 func interact(p: Player) -> void:

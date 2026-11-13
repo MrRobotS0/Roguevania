@@ -56,6 +56,7 @@ const FAST_FALL := 560.0
 # parar o pulo; o pé raspando uma quina no ar sobe os pixels que faltam.
 const CORNER_NUDGE := 5
 const LEDGE_NUDGE := 4
+const LEDGE_CLIMB := 12     # segurando para a parede: quase alcançou a beirada, sobe
 const AIR_HANGS := 3            # golpes no ar que seguram a queda, por pulo
 const HEAL_WALK := 0.4          # bebendo, anda devagar
 const HEAL_CANCEL := 0.3        # rolar antes disto cancela o gole e devolve o frasco
@@ -342,13 +343,18 @@ func _corner_correct(delta: float) -> void:
 					if not test_move(t, side) and not test_move(t.translated(side), up):
 						global_position.x += s * i
 						return
-	if absf(velocity.x) > 1.0 and velocity.y > -40.0:
+	var toward := pad.axis() != 0.0 and signf(pad.axis()) == signf(velocity.x)
+	if absf(velocity.x) > 1.0 and velocity.y > (-160.0 if toward else -40.0):
 		var fwd := Vector2(velocity.x * delta, 0.0)
 		if test_move(t, fwd):
-			for i in range(1, LEDGE_NUDGE + 1):
+			for i in range(1, (LEDGE_CLIMB if toward else LEDGE_NUDGE) + 1):
 				var lift := Vector2(0.0, -i)
 				if not test_move(t, lift) and not test_move(t.translated(lift), fwd):
 					global_position.y -= i
+					if i > LEDGE_NUDGE:
+						# subiu na beirada: pisa firme em vez de seguir caindo
+						velocity.y = minf(velocity.y, 0.0)
+						Fx.dust(global_position + Vector2(signf(velocity.x) * 4.0, 0.0), 3)
 					return
 
 
@@ -1611,6 +1617,20 @@ const SYNERGIES := {
 }
 
 var _synergies_seen := {}
+
+
+# Sinergia que nasceria se o herói pegasse esse item (arma com afixo ou
+# mutação). Vazio se não forma nenhuma. Mostrado no pedestal e no altar.
+func synergy_with(gear: Gear = null, mutation := "") -> String:
+	for id: String in SYNERGIES:
+		var syn: Dictionary = SYNERGIES[id]
+		if gear != null and gear.has(syn["affix"]) and has_mutation(syn["mutation"]):
+			return String(syn["title"])
+		if mutation == syn["mutation"]:
+			for w in weapons:
+				if w is Gear and (w as Gear).has(syn["affix"]):
+					return String(syn["title"])
+	return ""
 
 
 func has_synergy(id: String, g: Gear = null) -> bool:

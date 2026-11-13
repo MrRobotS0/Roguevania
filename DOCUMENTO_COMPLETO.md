@@ -1771,3 +1771,14 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 - **Clarões de luz:** `Fx.flash_light` acende uma PointLight2D que apaga em ~0,15 s em todo `Fx.impact` e no golpe do herói (até 8 ao mesmo tempo; nascem em `Fx.light_root`, a fase).
 - **Sombra de contato** (`ContactShadow`, filho de todo Actor): elipse no chão sob os pés, que encolhe e clareia com a altura do pulo (raio até 96 px).
 - Opções > Tela > EFEITOS DE TELA (`postfx`) desliga pós-processamento, clarões e sombras. "Piscadas reduzidas" corta aberração e ondas.
+
+## 38. Combate legível, beirada, ritmo e escolhas
+
+- **Aviso padrão:** todo inimigo com `telegraphing()` mostra um "!" vermelho acima da barra de vida, toca `warn.wav` (gerado por `gen_sfx.py`, só ele) e solta um clarão vermelho no início do preparo (`Enemy._announce`).
+- **Revezamento:** no máximo `MAX_ATTACKERS` (2) inimigos a menos de 170 px do herói atacam de cada vez. Quem chega a mais segura o preparo parado (o tempo do estado não anda) numa fila justa (`_queue`): quem esperou ataca antes de quem acabou de atacar. A vez dura o aviso + 0,7 s de tempo de jogo (`Engine.get_physics_frames`). Chefes não esperam; ninguém espera mais de 4 s. Teste `_attack_turns`.
+- **Seta fora da tela:** `Hud._draw_offscreen` aponta da borda para inimigo preparando golpe fora da tela (até 420 px).
+- **Subir na beirada:** segurando para a parede no ar, se o alto estiver até `LEDGE_CLIMB` (12 px) acima dos pés, o herói sobe (antes só 4 px).
+- **Celular em pé:** tela mais alta que 4:3 usa 480x270 com faixas (a visão ampla não vira coluna). Teste em `_scale`.
+- **Atirador de Vidro no 1º andar:** tiro a 195 px/s (era 250) e, com outro atirador a menos de 300 px, o primeiro tiro sai atrasado (não atiram juntos).
+- **Comparação no pedestal:** segunda linha "FORÇA 34 → 41 (TROCA X)" em verde/vermelho; força = dano por segundo do combo × nível (`Gear.strength`). Pedestal e altar de mutação avisam "SINERGIA: NOME" quando o item fecharia uma das 6 sinergias (`Player.synergy_with`).
+- Já existiam e foram conferidos: rolar cancela golpe a qualquer momento, quique no golpe para baixo, cura ao chegar na Passagem, ícones no minimapa.

@@ -46,7 +46,8 @@ func interact(p: Player) -> void:
 	var picks := choices(p)
 	var options: Array[Dictionary] = []
 	for m in picks:
-		options.append({"label": m["title"], "detail": m["detail"], "color": Color("b8f06a")})
+		var syn := p.synergy_with(null, String(m["id"]))
+		options.append({"label": m["title"], "detail": String(m["detail"]) + (("  · SINERGIA: " + syn) if syn != "" else ""), "color": Color("b8f06a")})
 	menu().open_choice("MUTAÇÃO", "O QUE O DEUS DEIXOU NO FUNDO DO CÁLICE. VALE ATÉ VOCÊ MORRER.", options,
 		func(i: int) -> void:
 			p.add_mutation(picks[i]["id"])

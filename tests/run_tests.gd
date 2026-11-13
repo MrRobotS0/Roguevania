@@ -91,6 +91,8 @@ func _ready() -> void:
 	await _case("rolagem deixa invencível", _roll_dodges)
 	await _case("combo da espada tira 10+12+26", _combo_damage)
 	await _case("batendo sem parar e trocando de lado, o golpe vira junto", _combo_turn)
+	await _case("cercado, no máximo 2 inimigos atacam de cada vez", _attack_turns)
+	await _case("armas comparam força no pedestal e o nível aumenta a força", _weapon_strength)
 	await _case("agarra a beirada e sobe muro de 4 blocos", _ledge_climb)
 	await _case("S + pulo desce da plataforma", _drop_through)
 	await _case("penitente avisa e acerta quem fica parado", _grunt_hits)
@@ -352,6 +354,38 @@ func _combo_turn() -> void:
 	input.wait(4)
 	await _run_until_idle()
 	_check(p.facing == -1, "continuou batendo para a direita")
+
+
+func _attack_turns() -> void:
+	await _load(FLAT)
+	var p := level.player
+	p._invuln = 999.0
+	for x: float in [-40.0, -24.0, 24.0, 40.0]:
+		level.spawn("grunt", p.global_position + Vector2(x, 0))
+	var most := 0
+	var waited := false
+	for i in 300:
+		await get_tree().physics_frame
+		p.hp = p.max_hp
+		var n := 0
+		for e: Enemy in level.enemies():
+			if e.telegraphing() and not e.waiting_turn():
+				n += 1
+			waited = waited or e.waiting_turn()
+		most = maxi(most, n)
+	_check(most <= Enemy.MAX_ATTACKERS, "%d atacando ao mesmo tempo" % most)
+	_check(waited, "ninguém esperou a vez")
+
+
+func _weapon_strength() -> void:
+	for res: Resource in Catalog.all_gear():
+		if not (res is WeaponData):
+			continue
+		var w: WeaponData = res
+		var g := Gear.of(w, 0)
+		var up := Gear.of(w, 3)
+		_check(g.strength() > 0, "%s sem força" % w.id)
+		_check(up.strength() > g.strength(), "%s +3 não é mais forte" % w.id)
 
 
 func _grunt_hits() -> void:
@@ -2343,11 +2377,14 @@ func _scale() -> void:
 	_check(Options.view_size(Vector2i(3440, 1440)) == Vector2i(860, 360), "ultrawide não abre os lados")
 	_check(Options.view_size(Vector2i(3840, 2160)).y <= Options.MAX_VIEW_H, "4K virou formiga")
 	_check(Options.view_size(Vector2i(1440, 810)) == Vector2i(480, 270), "janela padrão mudou")
+	_check(Options.view_size(Vector2i(1080, 2340)) == Vector2i(480, 270), "celular em pé virou coluna")
+	_check(Options.view_size(Vector2i(2340, 1080)).y == 270, "celular deitado mudou a altura")
 	Options.set_value("view", "padrao")
 	_check(Options.view_size(Vector2i(2560, 1440)) == Vector2i(480, 270), "visão padrão não fica em 480x270")
 	_check(get_tree().root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_KEEP, "visão padrão não mantém o formato")
 	Options.set_value("view", "ampla")
-	_check(get_tree().root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_EXPAND, "visão ampla não expande")
+	var tall := Options._tall(get_tree().root.size)   # janela falsa do headless pode ser quadrada
+	_check(tall or get_tree().root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_EXPAND, "visão ampla não expande")
 
 
 func _minimap() -> void:

@@ -198,6 +198,8 @@ func guard(_d: Damage) -> bool:
 
 
 func stagger(seconds: float) -> void:
+	_waiting = 0.0
+	_queue.erase(get_instance_id())
 	_stun = maxf(seconds, _stun if state == "stun" else 0.0)
 	add_status("stun", seconds)
 	set_state("stun")
@@ -250,16 +252,113 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
 		if state_time >= _stun:
 			set_state("chase")
+	elif _hold_turn(delta):
+		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
 	else:
 		var before := velocity.x
 		think(delta)
 		# andar ganha aceleração; bote e investida (salto grande) continuam secos
 		if uses_gravity and accel > 0.0 and absf(velocity.x - before) < 200.0:
 			velocity.x = move_toward(before, velocity.x, accel * delta)
+		_watch_telegraph()
+	_mark = maxf(_mark - delta, 0.0)
 	move_and_slide()
 	if body:
 		_update_sprite()
 	queue_redraw()
+
+
+# --- aviso e vez de atacar ------------------------------------------------------
+# Todo golpe inimigo começa igual: "!" vermelho na cabeça e o mesmo "tin-tin".
+# E no máximo MAX_ATTACKERS inimigos perto do herói atacam de cada vez: quem
+# chega a mais segura o preparo (parado, piscando) até alguém terminar.
+# Chefes não esperam a vez.
+const MAX_ATTACKERS := 2
+const NEAR := 170.0
+const TOKEN_HOLD := 700      # ms que a vez continua presa depois do aviso acabar
+const WAIT_MAX := 4.0      # segurança: ninguém fica preso para sempre
+const MARK_TIME := 0.45
+static var _tokens := {}     # instance_id -> até quando (ms) ele está atacando
+static var _queue: Array = []   # quem está esperando a vez, na ordem de chegada
+var _tele := false
+var _waiting := 0.0
+var _mark := 0.0
+
+
+# tempo do jogo em ms (quadros de física): pausa e hitstop não gastam a vez
+static func _now() -> int:
+	return Engine.get_physics_frames() * 1000 / Engine.physics_ticks_per_second
+
+
+func _near_player() -> bool:
+	return player != null and global_position.distance_to(player.global_position) < NEAR
+
+
+func _take_turn() -> bool:
+	if self is Boss or unstoppable or not _near_player():
+		return true
+	var now := _now()
+	var busy := 0
+	for id: int in _tokens.keys():
+		var o := instance_from_id(id) as Enemy
+		if int(_tokens[id]) < now or o == null or not is_instance_valid(o) or not o.alive() or not o.is_inside_tree():
+			_tokens.erase(id)
+		elif id != get_instance_id() and o._near_player():
+			busy += 1
+	if busy >= MAX_ATTACKERS:
+		return false
+	# fila justa: quem já está esperando ataca antes de quem acabou de atacar
+	_queue = _queue.filter(func(id: int) -> bool:
+		var q := instance_from_id(id) as Enemy
+		return q != null and is_instance_valid(q) and q.is_inside_tree() and q.alive() and q._waiting > 0.0)
+	var me := get_instance_id()
+	var ahead := _queue.find(me)
+	if ahead == -1 and not _queue.is_empty():
+		return false
+	if ahead > MAX_ATTACKERS - 1 - busy:
+		return false
+	_queue.erase(me)
+	_tokens[me] = now + TOKEN_HOLD
+	return true
+
+
+# Segurando o golpe esperando a vez: o preparo não anda.
+func _hold_turn(delta: float) -> bool:
+	if _waiting <= 0.0:
+		return false
+	state_time = maxf(state_time - delta, 0.0)
+	_waiting += delta
+	if _take_turn() or _waiting > WAIT_MAX or not telegraphing():
+		_waiting = 0.0
+		_queue.erase(get_instance_id())
+		_announce()
+		return false
+	return true
+
+
+func _watch_telegraph() -> void:
+	var tele := telegraphing()
+	if tele and not _tele:
+		if _take_turn():
+			_announce()
+		else:
+			_waiting = 0.001
+			if not _queue.has(get_instance_id()):
+				_queue.append(get_instance_id())
+	elif tele and _tokens.has(get_instance_id()):
+		_tokens[get_instance_id()] = _now() + TOKEN_HOLD
+	_tele = tele
+
+
+func _announce() -> void:
+	_mark = MARK_TIME
+	if player and global_position.distance_to(player.global_position) < 340.0:
+		Sfx.play("warn", -14.0, 0.03)
+	Fx.flash_light(center(), Palette.DANGER, 34.0, 0.5, 0.2)
+
+
+func waiting_turn() -> bool:
+	return _waiting > 0.0
 
 
 func think(_delta: float) -> void:
@@ -366,6 +465,8 @@ func _draw() -> void:
 		var spark := Palette.DANGER
 		spark.a = 0.8
 		Fx.burst(global_position + Vector2(randf_range(-w * 0.5, w * 0.5), -randf_range(0, h)), spark, 1, 10.0, 0.6, -40.0, 1.0)
+	if _mark > 0.0 and alive():
+		_draw_mark()
 	if Fx.debug:
 		draw_rect(Rect2(-w * 0.5, -h, w, h), Color(1, 0.8, 0.2, 0.8), false)
 		PixelFont.draw(self, state, Vector2(-10, -h - 18), Palette.UI_TEXT)
@@ -373,6 +474,20 @@ func _draw() -> void:
 
 func draw_body() -> void:
 	pass
+
+
+# "!" de aviso: salta para cima ao aparecer e some no fim.
+func _draw_mark() -> void:
+	var k := _mark / MARK_TIME
+	var pop := roundf(maxf(0.0, (k - 0.75) * 4.0) * 3.0)
+	var top := -maxf(float(h), sprite_top()) - 20.0 - pop   # acima da barra de vida
+	var c := Palette.DANGER if int(_mark * 20.0) % 2 == 0 else Palette.FLASH
+	var ink := Palette.UI_SHADOW
+	var x := -1.0
+	draw_rect(Rect2(x - 1, top - 1, 4, 7), ink)
+	draw_rect(Rect2(x - 1, top + 7, 4, 4), ink)
+	draw_rect(Rect2(x, top, 2, 5), c)
+	draw_rect(Rect2(x, top + 8, 2, 2), c)
 
 
 # Texto curto sobre a cabeça ("" = nada): desenhado pela EnemyBar, por cima de tudo.

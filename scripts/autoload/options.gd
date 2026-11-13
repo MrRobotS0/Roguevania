@@ -84,7 +84,7 @@ func _apply_scale() -> void:
 		root.size_changed.connect(_apply_scale)
 	# só troca o que mudou: mexer na escala pode avisar size_changed de novo
 	var size := view_size(root.size)
-	var aspect := Window.CONTENT_SCALE_ASPECT_KEEP if String(data.get("view", "ampla")) == "padrao" else Window.CONTENT_SCALE_ASPECT_EXPAND
+	var aspect := Window.CONTENT_SCALE_ASPECT_KEEP if (String(data.get("view", "ampla")) == "padrao" or _tall(root.size)) else Window.CONTENT_SCALE_ASPECT_EXPAND
 	# fonte NORMAL (lisa): desenha na resolução da tela para a letra não pixelar
 	var mode := Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if String(data.get("font", "")) == "sistema" else Window.CONTENT_SCALE_MODE_VIEWPORT
 	if root.content_scale_mode != mode:
@@ -97,8 +97,15 @@ func _apply_scale() -> void:
 		root.content_scale_aspect = aspect
 
 
+# Tela mais alta que 4:3 (celular em pé): abrir na vertical mostraria uma
+# coluna enorme de mundo; aí fica o 480x270 com faixas em cima e embaixo,
+# onde ficam os botões de toque.
+func _tall(window: Vector2i) -> bool:
+	return window.x > 0 and window.y * 4 > window.x * 3
+
+
 func view_size(window: Vector2i) -> Vector2i:
-	if String(data.get("view", "ampla")) == "padrao" or window.x <= 0 or window.y <= 0:
+	if String(data.get("view", "ampla")) == "padrao" or window.x <= 0 or window.y <= 0 or _tall(window):
 		return BASE
 	var fit := maxi(1, mini(window.x / BASE.x, window.y / BASE.y))   # maior pixel que ainda mostra 480x270
 	var k := maxi(mini(PIXEL, fit), ceili(window.y / float(MAX_VIEW_H)))

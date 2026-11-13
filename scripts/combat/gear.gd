@@ -42,5 +42,25 @@ func power() -> float:
 	return 1.0 + 0.15 * tier
 
 
+# Força da arma em dano por segundo do combo inteiro (ou do arco), já com o
+# nível. Serve para comparar duas armas no chão: "FORÇA 34 → 41".
+func strength() -> int:
+	if not is_weapon():
+		return 0
+	var w: WeaponData = data
+	var dmg := 0.0
+	var time := 0.0
+	if w.category == "bow":
+		dmg = float(w.shot.get("damage", 0.0)) * float(w.shot.get("count", 1))
+		time = float(w.shot.get("draw", 0.4)) + float(w.shot.get("recover", 0.2))
+	else:
+		for m: Dictionary in w.moves:
+			dmg += float(m.get("damage", 0.0))
+			time += float(m.get("startup", 0.0)) + float(m.get("active", 0.0)) + float(m.get("recover", 0.0))
+	if time <= 0.0:
+		return 0
+	return roundi(dmg / time * power())
+
+
 func stat() -> String:
 	return data.stat

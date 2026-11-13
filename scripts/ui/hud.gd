@@ -107,6 +107,7 @@ func _draw() -> void:
 		_draw_minimap(size)
 		_draw_slots(size)
 		_draw_prompt(size)
+		_draw_offscreen(size)
 		if is_instance_valid(boss) and boss.alive() and boss.state != "intro":
 			_draw_boss(size)
 	if player and is_instance_valid(player):
@@ -343,6 +344,33 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 		PixelFont.draw(self, "+%d" % g.tier, c + Vector2(1, 3), Palette.GOLD)
 
 
+# Ataque vindo de fora da tela: seta vermelha na borda, apontando para quem
+# está preparando o golpe ou o tiro (com a visão ampla isso é raro, mas acontece).
+func _draw_offscreen(size: Vector2) -> void:
+	if not player.is_inside_tree():
+		return
+	var xf := player.get_viewport().get_canvas_transform()
+	var screen := Rect2(Vector2.ZERO, size)
+	var mid := size * 0.5
+	for e: Enemy in player.get_tree().get_nodes_in_group("enemies"):
+		if not e.alive() or not e.telegraphing():
+			continue
+		var p := xf * e.center()
+		if screen.grow(-2.0).has_point(p):
+			continue
+		if e.global_position.distance_to(player.global_position) > 420.0:
+			continue
+		var dir := (p - mid).normalized()
+		var at := Vector2(clampf(p.x, 12.0, size.x - 12.0), clampf(p.y, 22.0, size.y - 12.0)).round()
+		var c := Palette.DANGER if int(e.state_time * 14.0) % 2 == 0 else Palette.FLASH
+		var side := Vector2(-dir.y, dir.x)
+		var tip := at + dir * 6.0
+		var a1 := at - dir * 3.0 + side * 5.0
+		var a2 := at - dir * 3.0 - side * 5.0
+		draw_colored_polygon(PackedVector2Array([tip + dir * 2.0, a1 + (a1 - at).normalized() * 2.0, a2 + (a2 - at).normalized() * 2.0]), Palette.UI_SHADOW)
+		draw_colored_polygon(PackedVector2Array([tip, a1, a2]), c)
+
+
 func _draw_prompt(size: Vector2) -> void:
 	if not player.is_inside_tree():   # herói saindo da cena (troca de fase)
 		return
@@ -357,15 +385,40 @@ func _draw_prompt(size: Vector2) -> void:
 		# a barra do chefe tem a fita do nome em cima: o aviso sobe para não cobrir
 		y -= _skin.height("header") + 4.0
 	var key_w := PixelFont.body_width(key) + 6.0
-	var w := maxf(PixelFont.body_width(title) + key_w + 6.0, PixelFont.body_width(detail)) + 14.0
-	var box := Rect2(roundf(size.x * 0.5 - w * 0.5), y - 5, roundf(w), 17.0 if detail == "" else 29.0)
+	# a segunda linha (comparação "FORÇA 34 → 41") vem depois de um 
+
+	var lines := detail.split("
+", false)
+	var w := PixelFont.body_width(title) + key_w + 6.0
+	for l in lines:
+		w = maxf(w, PixelFont.body_width(l))
+	w = minf(w + 14.0, size.x - 8.0)
+	y -= 12.0 * maxf(lines.size() - 1, 0)
+	var box := Rect2(roundf(size.x * 0.5 - w * 0.5), y - 5, roundf(w), 17.0 + 12.0 * lines.size())
 	_skin.panel(self, box, 1.0, 3.0)
 	var left := box.position.x + 7.0
 	draw_rect(Rect2(left - 2, y - 2, key_w, 11), _skin.color("dim"))
 	PixelFont.body(self, key, Vector2(left + 1, y), _skin.color("text"))
 	PixelFont.body(self, title, Vector2(left + key_w + 4, y), Palette.UI_TEXT)
-	if detail != "":
-		PixelFont.body(self, detail, Vector2(left, y + 12), Palette.UI_DIM)
+	for i in lines.size():
+		var c := Palette.UI_DIM
+		if i > 0:
+			c = _compare_color(lines[i])
+		PixelFont.body(self, lines[i], Vector2(left, y + 12 + 12 * i), c)
+
+
+# Verde se a arma do chão é mais forte, vermelho se é mais fraca.
+func _compare_color(line: String) -> Color:
+	var m := RegEx.create_from_string("([0-9]+) → ([0-9]+)").search(line)
+	if m == null:
+		return Palette.UI_TEXT
+	var a := int(m.get_string(1))
+	var b := int(m.get_string(2))
+	if b > a:
+		return Color("8fe07a")
+	if b < a:
+		return Palette.HURT
+	return Palette.UI_TEXT
 
 
 func _draw_boss(size: Vector2) -> void:
