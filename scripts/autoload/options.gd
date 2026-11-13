@@ -6,6 +6,7 @@ extends Node
 const DEFAULTS := {
 	"master": 0.8, "music": 0.7, "sfx": 0.8,
 	"fullscreen": false,
+	"view": "ampla",         # ampla = tela maior mostra mais do mundo | padrao = sempre 480x270
 	"shake": 1.0,            # 0 .. 1: quanto a tela treme
 	"flashes": true,         # false = sem piscar branco forte
 	"vibration": true,
@@ -57,9 +58,47 @@ func apply() -> void:
 		var want := DisplayServer.WINDOW_MODE_FULLSCREEN if data["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED
 		if DisplayServer.window_get_mode() != want:
 			DisplayServer.window_set_mode(want)
+	_apply_scale()
 	Controls.apply_bindings(data["keys"])
 	Palette.use_colorblind(bool(data.get("colorblind", false)))
 	PixelFont.use_face(String(data.get("font", "classica")))
+
+
+# Campo de visão. O jogo foi desenhado para 480x270 (1080p com pixel de 4x4).
+# Na visão AMPLA o pixel do jogo fica do tamanho que teria num monitor 1080p
+# (4 pixels da tela), então tela maior enxerga mais longe em vez de dar zoom:
+# 1920x1080 -> 480x270; 2560x1440 -> 640x360; ultrawide 3440x1440 -> 860x360.
+# Limites: nunca menos que 480x270 (tela pequena usa pixel menor) e nunca mais
+# que MAX_VIEW_H de altura (em 4K o pixel cresce para não virar formiga).
+# Na PADRÃO todo mundo vê 480x270, esticado até preencher.
+const PIXEL := 4
+const MAX_VIEW_H := 400
+const BASE := Vector2i(480, 270)
+var _hooked := false
+
+func _apply_scale() -> void:
+	var root := get_tree().root
+	if not _hooked:
+		_hooked = true
+		root.size_changed.connect(_apply_scale)
+	# só troca o que mudou: mexer na escala pode avisar size_changed de novo
+	var size := view_size(root.size)
+	var aspect := Window.CONTENT_SCALE_ASPECT_KEEP if String(data.get("view", "ampla")) == "padrao" else Window.CONTENT_SCALE_ASPECT_EXPAND
+	if root.content_scale_stretch != Window.CONTENT_SCALE_STRETCH_FRACTIONAL:
+		root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+	if root.content_scale_size != size:
+		root.content_scale_size = size
+	if root.content_scale_aspect != aspect:
+		root.content_scale_aspect = aspect
+
+
+func view_size(window: Vector2i) -> Vector2i:
+	if String(data.get("view", "ampla")) == "padrao" or window.x <= 0 or window.y <= 0:
+		return BASE
+	var fit := maxi(1, mini(window.x / BASE.x, window.y / BASE.y))   # maior pixel que ainda mostra 480x270
+	var k := maxi(mini(PIXEL, fit), ceili(window.y / float(MAX_VIEW_H)))
+	k = mini(k, fit)
+	return Vector2i(maxi(BASE.x, ceili(window.x / float(k))), maxi(BASE.y, ceili(window.y / float(k))))
 
 
 func shake_scale() -> float:

@@ -20,8 +20,14 @@ const BODY_LINE := 12      # 7 da letra + espaço para acento em cima e cedilha 
 # então nada no layout muda: só o desenho das letras. "classica" e "negrito" são
 # a tabela BODY; as outras vêm de FontTables (tools/gen_fontes.py). Letra que
 # falta numa fonte sai da clássica; os acentos são sempre os do jogo.
-const FACES := ["classica", "negrito", "pixelify", "silkscreen", "tiny5"]
-const FACE_NAMES := {"classica": "CLÁSSICA", "negrito": "NEGRITO"}
+const FACES := ["classica", "negrito", "pixelify", "silkscreen", "tiny5", "sistema"]
+const FACE_NAMES := {"classica": "CLÁSSICA", "negrito": "NEGRITO", "sistema": "SISTEMA"}
+# "sistema": a fonte normal do computador (Segoe UI no Windows, senão Arial e
+# afins), letras de largura variável. Sem suavização: na tela de 480x270
+# suavizar borra; assim ela fica nítida como a fonte de sistema do Windows.
+const SYSTEM_NAMES := ["Segoe UI", "Arial", "Helvetica", "Roboto", "Noto Sans", "DejaVu Sans", "sans-serif"]
+const SYSTEM_SIZE := 10
+static var _system: Font
 static var face := "classica"
 static var _table: Dictionary = {}
 static var _bold := false
@@ -31,6 +37,18 @@ static func use_face(id: String) -> void:
 	face = id if FACES.has(id) else "classica"
 	_bold = face == "negrito"
 	_table = FontTables.TABLES.get(face, {})
+	if face == "sistema" and _system == null:
+		var f := SystemFont.new()
+		f.font_names = PackedStringArray(SYSTEM_NAMES)
+		f.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		f.hinting = TextServer.HINTING_NORMAL
+		f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+		f.allow_system_fallback = true
+		_system = f
+
+
+static func system_font() -> Font:
+	return _system if face == "sistema" else null
 
 
 static func face_name(id: String) -> String:
@@ -199,6 +217,8 @@ static func _small_run(ci: CanvasItem, text: String, pos: Vector2, color: Color,
 
 static func body_width(text: String, scale := 1) -> int:
 	text = Lang.t(text)
+	if face == "sistema" and _system:
+		return ceili(_system.get_string_size(text.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, SYSTEM_SIZE * scale).x)
 	return maxi(text.length() * BODY_ADVANCE - 1, 0) * scale
 
 
@@ -215,6 +235,10 @@ static func body_centered(ci: CanvasItem, text: String, center: Vector2, color: 
 
 
 static func _body_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, scale: int) -> void:
+	if face == "sistema" and _system:
+		# pos é o canto de cima da letra de 7 px; draw_string pede a linha de base
+		ci.draw_string(_system, Vector2(roundf(pos.x), roundf(pos.y) + BODY_H * scale), text.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, SYSTEM_SIZE * scale, color)
+		return
 	var x := pos.x
 	for ch in text.to_upper():
 		var base := ch

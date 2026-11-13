@@ -163,6 +163,7 @@ func _ready() -> void:
 	await _case("minimapa aparece nos andares gerados e some na opção", _minimap)
 	await _case("fontes: todas na grade 5x7, trocam pela opção e não mudam o layout", _fonts)
 	await _case("teclas: habilidades no Q e no F, frasco no R", _new_keys)
+	await _case("visão ampla: tela maior vê mais do mundo, pixel inteiro, sem moldura", _scale)
 	await _case("guardião veterano e mestre aprendem golpes", _boss_veteran)
 	await _case("códice: marcos dão Essência uma vez só", _codex_rewards)
 
@@ -2294,7 +2295,11 @@ func _fonts() -> void:
 	for id: String in PixelFont.FACES:
 		Options.set_value("font", id)
 		_check(PixelFont.face == id, "a opção não trocou a fonte para %s" % id)
-		_check(PixelFont.body_width("FÚRIA E VIDA") == before, "a fonte %s mudou a largura do texto" % id)
+		if id == "sistema":
+			# fonte do computador: largura variável, mas nunca mais larga que a grade
+			_check(PixelFont.body_width("FÚRIA E VIDA") <= before, "a fonte do sistema estoura a largura")
+		else:
+			_check(PixelFont.body_width("FÚRIA E VIDA") == before, "a fonte %s mudou a largura do texto" % id)
 		for ch: String in FontTables.TABLES.get(id, {}):
 			var rows: Array = FontTables.TABLES[id][ch]
 			_check(rows.size() == PixelFont.BODY_H, "%s: %s não tem 7 linhas" % [id, ch])
@@ -2315,6 +2320,19 @@ func _new_keys() -> void:
 	_check(_has_key("skill2", KEY_F), "habilidade 2 não está no F")
 	_check(_has_key("heal", KEY_R), "frasco não está no R")
 	_check(not _has_key("heal", KEY_Q), "Q ainda bebe o frasco")
+
+
+func _scale() -> void:
+	_check(Options.view_size(Vector2i(1920, 1080)) == Vector2i(480, 270), "1080p não ficou 480x270")
+	_check(Options.view_size(Vector2i(2560, 1440)) == Vector2i(640, 360), "1440p não enxerga mais longe")
+	_check(Options.view_size(Vector2i(3440, 1440)) == Vector2i(860, 360), "ultrawide não abre os lados")
+	_check(Options.view_size(Vector2i(3840, 2160)).y <= Options.MAX_VIEW_H, "4K virou formiga")
+	_check(Options.view_size(Vector2i(1440, 810)) == Vector2i(480, 270), "janela padrão mudou")
+	Options.set_value("view", "padrao")
+	_check(Options.view_size(Vector2i(2560, 1440)) == Vector2i(480, 270), "visão padrão não fica em 480x270")
+	_check(get_tree().root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_KEEP, "visão padrão não mantém o formato")
+	Options.set_value("view", "ampla")
+	_check(get_tree().root.content_scale_aspect == Window.CONTENT_SCALE_ASPECT_EXPAND, "visão ampla não expande")
 
 
 func _minimap() -> void:

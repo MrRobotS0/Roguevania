@@ -344,6 +344,8 @@ func _draw_icon(g: Gear, c: Vector2) -> void:
 
 
 func _draw_prompt(size: Vector2) -> void:
+	if not player.is_inside_tree():   # herói saindo da cena (troca de fase)
+		return
 	var it := player.nearest_interactable()
 	if it == null:
 		return

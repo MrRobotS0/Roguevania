@@ -1755,3 +1755,10 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 **Fontes (Opções > Tela > Fonte).** Clássica, Negrito, Pixelify, Silkscreen e Tiny5. `tools/gen_fontes.py` converte as TTF de `tools/fontes` (SIL OFL 1.1) para a grade 5x7 em `scripts/ui/font_tables.gd`; o passo de 6 px não muda, então o layout é o mesmo em todas. Letra que falta sai da clássica; os acentos são sempre os do jogo.
 
 **Teclas.** Habilidades no Q e no F (U e I continuam valendo); frasco no R.
+
+## 36. Visão ampla (tela maior vê mais do mundo)
+
+- Campo de visão: o pixel do jogo fica com o tamanho que teria num 1080p (4 pixels da tela, `Options.PIXEL`), e a área visível é a tela dividida por isso: 1920x1080 → 480x270; 2560x1440 → 640x360; ultrawide 3440x1440 → 860x360. Tela maior enxerga mais longe em vez de dar zoom. Nunca menos que 480x270 e nunca mais que `MAX_VIEW_H` (400) de altura: em 4K o pixel cresce para 6. Vale no .exe e no navegador.
+- Código: `Options.view_size()` e `Options._apply_scale()` (ligado a `size_changed` da janela; `content_scale_aspect` EXPAND). Opções > Tela > VISÃO: AMPLA (padrão) ou PADRÃO (sempre 480x270, esticado, como antes).
+- `CameraRig._fit_limits()`: sala menor que a tela fica no meio na horizontal e com o chão no pé da tela. `Ambience`: partículas em fração da tela e `screen` dos shaders igual ao tamanho visível.
+- Fonte SISTEMA (Opções > Tela > Fonte): a fonte normal do computador (Segoe UI no Windows, senão Arial/Helvetica/Roboto) via `SystemFont`, tamanho 10 (maiúscula de 7 px, igual à grade), sem suavização para ficar nítida em 480x270. Largura variável, sempre mais estreita que a grade de 6 px. Só no texto de leitura (`PixelFont.body`); a fonte miúda dos números continua pixel.

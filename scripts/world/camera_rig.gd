@@ -18,11 +18,37 @@ func follow(who: Player, bounds: Vector2) -> void:
 	limit_top = 0
 	limit_right = int(bounds.x)
 	limit_bottom = int(bounds.y)
+	_bounds = bounds
+	_fit_limits()
 	global_position = who.global_position + Vector2(0, HEIGHT)
 	make_current()
 	reset_smoothing()
 	reset_physics_interpolation()
 	who.reset_physics_interpolation()
+
+
+# Na visão ampla (Options.view_size) a tela pode ser maior que uma sala
+# pequena: aí a sala fica no meio em vez de grudar na borda esquerda/de cima.
+var _bounds := Vector2.ZERO
+var _view := Vector2.ZERO
+
+func _fit_limits() -> void:
+	var view := get_viewport_rect().size
+	_view = view
+	if _bounds == Vector2.ZERO:
+		return
+	if _bounds.x < view.x:
+		limit_left = floori((_bounds.x - view.x) * 0.5)
+		limit_right = limit_left + ceili(view.x)
+	else:
+		limit_left = 0
+		limit_right = int(_bounds.x)
+	if _bounds.y < view.y:
+		limit_top = floori(_bounds.y - view.y)   # sobra em cima: o chão fica no pé da tela
+		limit_bottom = int(_bounds.y)
+	else:
+		limit_top = 0
+		limit_bottom = int(_bounds.y)
 
 
 func snap() -> void:
@@ -50,6 +76,8 @@ var _has_ref := false
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
 		return
+	if get_viewport_rect().size != _view:
+		_fit_limits()
 	var moving := absf(target.velocity.x) > 40.0
 	var want := target.facing * LOOK_AHEAD * (1.0 if moving else 0.6)
 	_look = move_toward(_look, want, LOOK_SPEED * delta)

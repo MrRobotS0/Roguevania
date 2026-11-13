@@ -123,7 +123,8 @@ func use(id: String) -> void:
 	rng.seed = hash(id)
 	_motes.clear()
 	for i in 70:
-		_motes.append([Vector2(rng.randf() * 480.0, rng.randf() * 270.0), rng.randf(), rng.randf_range(0.5, 1.5)])
+		# posição em fração da tela: com a visão ampla ela pode passar de 480x270
+		_motes.append([Vector2(rng.randf(), rng.randf()), rng.randf(), rng.randf_range(0.5, 1.5)])
 
 
 func _process(delta: float) -> void:
@@ -133,6 +134,8 @@ func _process(delta: float) -> void:
 	var vp := get_viewport_rect().size
 	_rays.size = vp
 	_fog.size = vp
+	(_rays.material as ShaderMaterial).set_shader_parameter("screen", vp)
+	(_fog.material as ShaderMaterial).set_shader_parameter("screen", vp)
 	queue_redraw()
 
 
@@ -144,7 +147,7 @@ func _draw() -> void:
 	var base: Color = _look["mote"]
 	var vp := get_viewport_rect().size
 	for m in _motes:
-		var p: Vector2 = m[0]
+		var p: Vector2 = m[0] * vp
 		var s: float = m[1]
 		var sp: float = m[2]
 		var pos := p

@@ -72,6 +72,7 @@ func _rows() -> Array:
 			rows = [
 				{"id": "font", "label": "FONTE", "value": PixelFont.face_name(PixelFont.face)},
 				{"id": "fullscreen", "label": "TELA CHEIA", "value": _yes("fullscreen")},
+				{"id": "view", "label": "VISÃO", "value": "PADRÃO" if Options.get_value("view") == "padrao" else "AMPLA"},
 				{"id": "shake", "label": "TREMOR DE TELA", "value": _pct("shake")},
 				{"id": "flashes", "label": "PISCADAS FORTES", "value": "NORMAIS" if Options.flashes() else "REDUZIDAS"},
 				{"id": "numbers", "label": "NÚMEROS DE DANO", "value": _yes("numbers")},
@@ -221,6 +222,9 @@ func _change(id: String, step: int) -> void:
 			var i := clampi(roundi(v * 10.0) + step, 0, 10)
 			Options.set_value(id, STEPS[i])
 			Sfx.play("ui_move", -10.0)
+		"view":
+			Options.set_value("view", "ampla" if Options.get_value("view") == "padrao" else "padrao")
+			Sfx.play("ui_move", -10.0)
 		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge":
 			Options.set_value(id, not Options.get_value(id))
 			Sfx.play("ui_move", -10.0)
@@ -239,7 +243,7 @@ func _confirm(id: String) -> void:
 			Sfx.play("ui_ok", -8.0)
 		"reset_keys":
 			Options.set_value("keys", {})
-		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge", "lang", "font":
+		"fullscreen", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge", "lang", "font", "view":
 			_change(id, 1)
 		_:
 			if _page == "keys" and REBINDABLE.has(id):
