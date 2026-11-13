@@ -27,7 +27,7 @@ sky = {
 "accent": Color(0.91, 0.64, 0.24, 1)
 }
 backdrop = "painted"
-weather = "ashstorm"
+weather = ""
 rooms_dir = "res://content/biomes/mar_de_cinzas/rooms"
 boss_room = "res://content/biomes/mar_de_cinzas/chefe/trono.txt"
 combat_rooms = 6

@@ -10,6 +10,7 @@ var screen: Screen
 var backdrop: Backdrop
 var ambience: Ambience
 var weather: Weather
+var post_fx: PostFx
 var foreground: Foreground
 var curtain: Curtain
 var map_view: MapView
@@ -59,6 +60,14 @@ func _ready() -> void:
 	add_child(air)
 	weather = Weather.new()
 	air.add_child(weather)
+
+	# pós-processamento (cor do domínio, aberração, ondas): acima do clima,
+	# abaixo da vinheta e do HUD
+	var post := CanvasLayer.new()
+	post.layer = 6
+	add_child(post)
+	post_fx = PostFx.new()
+	post.add_child(post_fx)
 
 	var lens := CanvasLayer.new()
 	lens.layer = 7
@@ -116,6 +125,7 @@ func _use_biome(b: BiomeData) -> void:
 	backdrop.sky = b.sky
 	backdrop.layers = b.layers
 	ambience.use(b.id)
+	post_fx.use_sky(b.sky)
 	foreground.style = b.backdrop
 	foreground.ink = b.ink
 

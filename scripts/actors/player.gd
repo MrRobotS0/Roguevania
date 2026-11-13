@@ -583,6 +583,9 @@ func current_move() -> Dictionary:
 	return m
 
 
+const TURN_WINDOW := 0.6   # fração do preparo do golpe em que ainda dá para virar
+
+
 func _attack_state(delta: float) -> void:
 	var g := weapon(_slot)
 	if g == null:
@@ -616,16 +619,28 @@ func _attack_state(delta: float) -> void:
 		if _cancel_into_jump():
 			return
 
+	# no começo do preparo o golpe ainda vira para a direção segurada
+	if not _swing_started and _state_time < startup * TURN_WINDOW:
+		var turn := pad.axis()
+		if turn != 0.0 and int(signf(turn)) != facing:
+			facing = int(signf(turn))
 	if _state_time >= startup and not _swing_started:
 		_swing_started = true
 		if is_on_floor():
 			velocity.x = facing * float(m.get("lunge", 0.0))
 		Sfx.play("swing_heavy" if m.get("shape", "") == "smash" else "swing", -6.0)
+		# clarão do golpe: a lâmina acende o que está na frente por um instante
+		Fx.flash_light(center() + Vector2(facing * 14.0, 0), Palette.SLASH, 52.0, 0.55, 0.12)
 	if _state_time >= startup and _state_time < active_end:
 		_check_swing(g, m)
 
 	var next := (_move_index + 1) % data.moves.size()
 	if _combo_queued and _state_time >= active_end + 0.03:
+		# batendo sem parar e trocando de lado: o próximo golpe já sai para a
+		# direção segurada (o combo continua, não recomeça)
+		var held := pad.axis()
+		if held != 0.0:
+			facing = int(signf(held))
 		_start_move(_slot, next)
 		return
 	# depois do golpe sair, a outra arma ou uma habilidade emendam direto
@@ -1219,6 +1234,7 @@ func hurt(d: Damage) -> bool:
 	Options.rumble(0.6, 0.4, 0.18)
 	Fx.burst(center(), Palette.HURT, 10, 140.0)
 	Fx.impact(center(), Palette.HURT, false)
+	Fx.kick(3.0)
 	Sfx.play("hurt")
 	if hp <= 0:
 		Fx.burst(center(), Palette.HURT, 26, 200.0, 0.7)

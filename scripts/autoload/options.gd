@@ -6,6 +6,7 @@ extends Node
 const DEFAULTS := {
 	"master": 0.8, "music": 0.7, "sfx": 0.8,
 	"fullscreen": false,
+	"postfx": true,          # efeitos de tela: cor, aberração, ondas, clarões
 	"view": "ampla",         # ampla = tela maior mostra mais do mundo | padrao = sempre 480x270
 	"shake": 1.0,            # 0 .. 1: quanto a tela treme
 	"flashes": true,         # false = sem piscar branco forte
@@ -84,6 +85,10 @@ func _apply_scale() -> void:
 	# só troca o que mudou: mexer na escala pode avisar size_changed de novo
 	var size := view_size(root.size)
 	var aspect := Window.CONTENT_SCALE_ASPECT_KEEP if String(data.get("view", "ampla")) == "padrao" else Window.CONTENT_SCALE_ASPECT_EXPAND
+	# fonte NORMAL (lisa): desenha na resolução da tela para a letra não pixelar
+	var mode := Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if String(data.get("font", "")) == "sistema" else Window.CONTENT_SCALE_MODE_VIEWPORT
+	if root.content_scale_mode != mode:
+		root.content_scale_mode = mode
 	if root.content_scale_stretch != Window.CONTENT_SCALE_STRETCH_FRACTIONAL:
 		root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 	if root.content_scale_size != size:

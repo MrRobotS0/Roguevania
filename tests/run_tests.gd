@@ -90,6 +90,7 @@ func _ready() -> void:
 	await _case("no ar, depois da tolerância, só sobra o pulo duplo", _no_air_jump)
 	await _case("rolagem deixa invencível", _roll_dodges)
 	await _case("combo da espada tira 10+12+26", _combo_damage)
+	await _case("batendo sem parar e trocando de lado, o golpe vira junto", _combo_turn)
 	await _case("agarra a beirada e sobe muro de 4 blocos", _ledge_climb)
 	await _case("S + pulo desce da plataforma", _drop_through)
 	await _case("penitente avisa e acerta quem fica parado", _grunt_hits)
@@ -338,6 +339,19 @@ func _combo_damage() -> void:
 	input.wait(30)
 	await _run_until_idle()
 	_check(_dealt(e) == 48, "tirou %d de vida (esperado 10+12+26)" % _dealt(e))
+
+
+func _combo_turn() -> void:
+	await _load(FLAT)
+	var p := level.player
+	p.facing = 1
+	input.then(["attack1"], 2).wait(10)
+	# segue batendo, agora segurando para a esquerda
+	for i in 3:
+		input.then(["attack1", "left"], 2).then(["left"], 10)
+	input.wait(4)
+	await _run_until_idle()
+	_check(p.facing == -1, "continuou batendo para a direita")
 
 
 func _grunt_hits() -> void:
@@ -2295,6 +2309,7 @@ func _fonts() -> void:
 	for id: String in PixelFont.FACES:
 		Options.set_value("font", id)
 		_check(PixelFont.face == id, "a opção não trocou a fonte para %s" % id)
+		_check((get_tree().root.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS) == (id == "sistema"), "%s: modo de desenho errado" % id)
 		if id == "sistema":
 			# fonte do computador: largura variável, mas nunca mais larga que a grade
 			_check(PixelFont.body_width("FÚRIA E VIDA") <= before, "a fonte do sistema estoura a largura")

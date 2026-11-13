@@ -30,6 +30,7 @@ func setup_body(layer: int) -> void:
 	add_child(holder)
 	collision_layer = layer
 	collision_mask = Room.WORLD_LAYER | Room.PLATFORM_LAYER
+	add_child(ContactShadow.new())
 
 
 func alive() -> bool:

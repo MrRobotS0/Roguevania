@@ -227,6 +227,7 @@ func _populate(with_camera: bool) -> void:
 	add_child(overlay)
 	overlay.add_child(Sparks.new())
 
+	Fx.light_root = self   # clarões dos golpes nascem aqui, junto do mundo iluminado
 	if with_camera:
 		camera = CameraRig.new()
 		add_child(camera)

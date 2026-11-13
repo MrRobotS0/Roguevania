@@ -221,6 +221,8 @@ func _die() -> void:
 	Fx.burst(center(), Palette.HIT, 14, 240.0, 0.45)
 	Fx.spray(center(), signf(_last_push.x), Palette.FLASH, 16, 320.0)
 	Fx.impact(center(), Palette.FLASH, true)
+	# onda de choque: forte em elite e chefe, um sopro nos comuns
+	Fx.wave(center(), 1.6 if (elite or self is Boss) else 0.5)
 	Fx.add_shake(3.5)
 	Sfx.play("enemy_die", -4.0)
 	if player:

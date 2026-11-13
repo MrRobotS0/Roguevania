@@ -12,6 +12,9 @@ var visibility := 1.0      # a tempestade encurta a visão dos inimigos
 var sparks: Node2D
 
 var _stop_token := 0
+var aberration := 0.0      # pixels de aberração cromática (PostFx; some sozinha)
+var light_root: Node2D     # a fase: onde nascem as luzes de impacto
+signal wave_requested(world_pos: Vector2, strength: float)
 var pain := 0.0            # 0..1: borda vermelha da tela quando o herói apanha (Vignette)
 
 
@@ -66,6 +69,45 @@ func streak(pos: Vector2, dir: float, color: Color) -> void:
 func impact(pos: Vector2, color: Color, big := false) -> void:
 	if is_instance_valid(sparks):
 		sparks.impact(pos, color, big)
+	flash_light(pos, color, 70.0 if big else 44.0, 1.4 if big else 0.9)
+	if big:
+		kick(2.0)
+
+
+# Clarão: uma luz de verdade que acende o cenário em volta do golpe e apaga
+# rápido (paredes, chão e inimigos perto ficam iluminados por um instante).
+const FLASH_LIGHTS := 8
+var _flashes: Array = []
+
+func flash_light(pos: Vector2, color: Color, radius: float, energy: float, life := 0.16) -> void:
+	if not is_instance_valid(light_root) or not light_root.is_inside_tree() or not Options.get_value("postfx"):
+		return
+	_flashes = _flashes.filter(func(l: Variant) -> bool: return is_instance_valid(l))
+	if _flashes.size() >= FLASH_LIGHTS:
+		return
+	var light := PointLight2D.new()
+	light.texture = Glow.texture()
+	light.texture_scale = radius * 2.0 / 128.0
+	light.color = color.lerp(Color.WHITE, 0.25)
+	light.energy = energy
+	light.global_position = pos
+	light_root.add_child(light)
+	_flashes.append(light)
+	var tw := light.create_tween()
+	tw.tween_property(light, "energy", 0.0, life).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_callback(light.queue_free)
+
+
+# Aberração cromática: as cores se separam um instante nas bordas da tela.
+func kick(amount: float) -> void:
+	if Options.flashes():
+		aberration = maxf(aberration, amount)
+
+
+# Onda de choque: a tela ondula num anel a partir do ponto (mundo).
+func wave(world_pos: Vector2, strength := 1.0) -> void:
+	if Options.flashes():
+		wave_requested.emit(world_pos, strength)
 
 
 func number(pos: Vector2, value: int, crit := false, tint := Color(0, 0, 0, 0)) -> void:
