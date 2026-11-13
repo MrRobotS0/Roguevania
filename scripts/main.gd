@@ -21,6 +21,7 @@ var _playing := false
 
 
 func _ready() -> void:
+	Controls.web_pause.connect(_on_web_pause)
 	var back := CanvasLayer.new()
 	back.layer = -10
 	add_child(back)
@@ -784,11 +785,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pause()
 
 
+# Navegador: saiu da tela cheia com Esc (sem Keyboard Lock): pausa sozinho.
+func _on_web_pause() -> void:
+	if _playing and not menu.is_open() and not options_screen.is_open():
+		_pause()
+
+
 func _pause() -> void:
 	if Run.stage_id == Run.BEIRA:
 		var calm: Array[Dictionary] = [
 			{"label": "CONTINUAR", "detail": ""},
-			{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},
+			{"label": "OPÇÕES", "detail": "SOM, TELA, FONTE, JOGO, TECLAS"},
 			{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
 			{"label": "VOLTAR AO TÍTULO", "detail": ""},
 		]
@@ -797,7 +804,7 @@ func _pause() -> void:
 		return
 	var options: Array[Dictionary] = [
 		{"label": "CONTINUAR", "detail": ""},
-		{"label": "OPÇÕES", "detail": "SOM, TELA, TREMOR, TECLAS"},
+		{"label": "OPÇÕES", "detail": "SOM, TELA, FONTE, JOGO, TECLAS"},
 		{"label": "COMANDOS", "detail": "TECLADO E CONTROLE"},
 		{"label": "SALVAR E SAIR", "detail": "CONTINUA DEPOIS, DO COMEÇO DESTE ANDAR"},
 		{"label": "DESISTIR DA PARTIDA", "detail": "VOLTA AO TÍTULO; A ESSÊNCIA SE PERDE"},
@@ -844,4 +851,4 @@ func _on_pause_pick(i: int) -> void:
 		_show_title()
 
 
-const CONTROLS := "M OU TAB (SEGURE): MAPA\nA / D  OU SETAS: ANDAR\nESPAÇO OU W: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nU: HABILIDADE 1   I: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nQ: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"
+const CONTROLS := "M OU TAB (SEGURE): MAPA\nA / D  OU SETAS: ANDAR\nESPAÇO OU W: PULAR (SEGURE PARA PULAR MAIS ALTO)\nJ: ARMA 1   K: ARMA 2   (MOUSE: ESQUERDO E DIREITO)\nQ: HABILIDADE 1   F: HABILIDADE 2\nSHIFT: ROLAR (INVENCÍVEL DURANTE A ROLAGEM)\nS + J NO AR: MERGULHO\nS + ESPAÇO: DESCER DA PLATAFORMA\nR: BEBER FRASCO   E: USAR / PEGAR\nESC: PAUSA   F1: DEBUG\n\nCONTROLE: A PULA, X E Y ARMAS, LB E RB HABILIDADES, B OU RT ROLA, LT CURA, CIMA USA"

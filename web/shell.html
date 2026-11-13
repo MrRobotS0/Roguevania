@@ -184,12 +184,12 @@ const engine = new Engine(GODOT_CONFIG);
     down: "BAIXANDO", wake: "DESPERTANDO", wait: "PREPARANDO", hello: "A cinza lembra de você, ", helloEnd: ".",
     mobile: "No celular: deite a tela e use os botões. Teclado ou controle bluetooth também funcionam.", rotate: "Gire o celular para jogar deitado.",
     fail: "O jogo não conseguiu abrir.", missing: "Faltam recursos no navegador para rodar o jogo:\n", retry: "TENTAR DE NOVO",
-    keys: [["A D", "andar"], ["ESPAÇO W", "pular"], ["J K", "armas"], ["SHIFT", "rolar"], ["Q", "curar"], ["E", "usar"]],
+    keys: [["A D", "andar"], ["ESPAÇO W", "pular"], ["J K", "armas"], ["Q F", "habilidades"], ["SHIFT", "rolar"], ["R", "curar"], ["E", "usar"]],
   } : {
     down: "DOWNLOADING", wake: "AWAKENING", wait: "PREPARING", hello: "The ash remembers you, ", helloEnd: ".",
     mobile: "On phones: turn it sideways and use the on-screen buttons. A bluetooth keyboard or gamepad works too.", rotate: "Turn your phone sideways to play.",
     fail: "The game couldn't start.", missing: "Your browser is missing features the game needs:\n", retry: "TRY AGAIN",
-    keys: [["A D", "move"], ["SPACE W", "jump"], ["J K", "weapons"], ["SHIFT", "roll"], ["Q", "heal"], ["E", "use"]],
+    keys: [["A D", "move"], ["SPACE W", "jump"], ["J K", "weapons"], ["Q F", "skills"], ["SHIFT", "roll"], ["R", "heal"], ["E", "use"]],
   };
 
   // a mesma lore da landing: uma linha de cada domínio enquanto espera
@@ -380,7 +380,32 @@ const engine = new Engine(GODOT_CONFIG);
     pad.addEventListener("contextmenu", e => e.preventDefault());
   }
 
+  // Tela cheia sempre: o primeiro clique ou tecla depois que o jogo abre já
+  // ocupa a tela toda, e volta a ocupar se o jogador sair dela. Em tela cheia o
+  // Esc fica com o jogo (Keyboard Lock, Chrome e Edge): é a pausa, não a saída;
+  // segurar Esc ainda sai. Sem o Keyboard Lock (Firefox, Safari) o Esc tira da
+  // tela cheia, e o jogo pausa sozinho para não seguir rodando sem ninguém ver.
+  function setupFullscreen() {
+    const root = document.documentElement;
+    if (!root.requestFullscreen) return;
+    const lock = () => {
+      if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(["Escape", "Tab"]).catch(() => {});
+    };
+    const enter = () => {
+      if (document.fullscreenElement) return;
+      root.requestFullscreen({ navigationUI: "hide" }).then(lock).catch(() => {});
+    };
+    addEventListener("pointerdown", enter, true);
+    addEventListener("keydown", enter, true);
+    document.addEventListener("fullscreenchange", () => {
+      if (document.fullscreenElement) { lock(); return; }
+      if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock();
+      if (window.mokshaPause) window.mokshaPause();
+    });
+  }
+
   function done() {
+    setupFullscreen();
     if (TOUCH) setupTouch();
     clearInterval(loreTimer);
     overlay.classList.add("gone");

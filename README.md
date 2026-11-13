@@ -23,9 +23,9 @@ A Wiki tem tudo: história, deuses, criaturas, armas e aparências.
 | Andar | A/D ou setas | analógico / direcional |
 | Pular | Espaço | A |
 | Armas | J / K ou mouse | X / Y |
-| Habilidades | U / I | LB / RB |
+| Habilidades | Q / F | LB / RB |
 | Rolar | Shift | B ou RT |
-| Curar | Q | LT |
+| Curar | R | LT |
 | Usar / pegar / ler | E | cima |
 | Mapa (segure) | M ou Tab | Select |
 | Pausa | Esc | Start |

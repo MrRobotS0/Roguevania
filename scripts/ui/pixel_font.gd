@@ -16,6 +16,26 @@ const BODY_H := 7
 const BODY_ADVANCE := 6
 const BODY_LINE := 12      # 7 da letra + espaço para acento em cima e cedilha embaixo
 
+# Fonte do texto (Opções > FONTE). Todas usam a mesma grade 5x7 e o mesmo passo,
+# então nada no layout muda: só o desenho das letras. "classica" e "negrito" são
+# a tabela BODY; as outras vêm de FontTables (tools/gen_fontes.py). Letra que
+# falta numa fonte sai da clássica; os acentos são sempre os do jogo.
+const FACES := ["classica", "negrito", "pixelify", "silkscreen", "tiny5"]
+const FACE_NAMES := {"classica": "CLÁSSICA", "negrito": "NEGRITO"}
+static var face := "classica"
+static var _table: Dictionary = {}
+static var _bold := false
+
+
+static func use_face(id: String) -> void:
+	face = id if FACES.has(id) else "classica"
+	_bold = face == "negrito"
+	_table = FontTables.TABLES.get(face, {})
+
+
+static func face_name(id: String) -> String:
+	return FACE_NAMES.get(id, FontTables.NAMES.get(id, id.to_upper()))
+
 const GLYPHS := {
 	"A": "010101111101101", "B": "110101110101110", "C": "011100100100011",
 	"D": "110101101101110", "E": "111100110100111", "F": "111100110100100",
@@ -202,17 +222,18 @@ static func _body_run(ci: CanvasItem, text: String, pos: Vector2, color: Color, 
 		if ACCENTS.has(ch):
 			base = ACCENTS[ch][0]
 			mark = ACCENTS[ch][1]
-		var rows: Array = BODY.get(base, BODY["?"])
+		var rows: Array = _table.get(base, BODY.get(base, BODY["?"]))
 		for r in BODY_H:
 			var row: String = rows[r]
 			var c := 0
 			while c < BODY_W:
-				# trechos seguidos viram um retângulo só
+				# trechos seguidos viram um retângulo só (negrito: um pixel a mais)
 				if row[c] == "#":
 					var start := c
 					while c < BODY_W and row[c] == "#":
 						c += 1
-					ci.draw_rect(Rect2(x + start * scale, pos.y + r * scale, (c - start) * scale, scale), color)
+					var run := c - start + (1 if _bold and c < BODY_W else 0)
+					ci.draw_rect(Rect2(x + start * scale, pos.y + r * scale, run * scale, scale), color)
 				else:
 					c += 1
 		if mark != "":

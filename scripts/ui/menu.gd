@@ -37,6 +37,7 @@ const TEXT_ROWS := 15        # linhas de texto visíveis; o resto rola
 var _opened_at := 0
 var _t := 0.0
 var _scroll := 0
+var _hit: Array = []          # [retângulo, índice] de cada linha desenhada (mouse)
 
 
 func _ready() -> void:
@@ -114,16 +115,69 @@ func _process(delta: float) -> void:
 	elif Input.is_action_just_pressed("down"):
 		_move(1)
 	elif Input.is_action_just_pressed("confirm"):
-		if _options[_index].get("disabled", false):
-			Sfx.play("block", -8.0)
-			return
-		var picked := _index
-		var cb := _on_pick
-		close()
-		Sfx.play("ui_ok", -6.0)
-		cb.call(picked)
+		_confirm()
 	elif Input.is_action_just_pressed("cancel") and _cancel_ok:
 		close()
+
+
+# Mouse: passar por cima escolhe a linha, clique confirma, roda rola.
+# Teclado e controle continuam iguais; o clique não vira golpe no jogo.
+static func row_at(node: CanvasItem, event: InputEvent, hits: Array) -> int:
+	if not (event is InputEventMouse):
+		return -1
+	var p: Vector2 = (node.make_input_local(event) as InputEventMouse).position
+	for h: Array in hits:
+		if (h[0] as Rect2).has_point(p):
+			return int(h[1])
+	return -1
+
+
+func _input(event: InputEvent) -> void:
+	if not _open or not (event is InputEventMouse):
+		return
+	if Engine.get_process_frames() - _opened_at < 2 or not Controls.ui_ready():
+		return
+	var i := row_at(self, event, _hit)
+	if event is InputEventMouseMotion:
+		if i >= 0 and i != _index:
+			_index = i
+			Sfx.play("ui_move", -12.0)
+		return
+	var b := event as InputEventMouseButton
+	if b == null or not b.pressed:
+		return
+	get_viewport().set_input_as_handled()
+	if _mode == "text":
+		if b.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_text_top = mini(_text_top + 3, maxi(_body.size() - TEXT_ROWS, 0))
+		elif b.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_text_top = maxi(_text_top - 3, 0)
+		elif b.button_index == MOUSE_BUTTON_LEFT:
+			close()
+		return
+	match b.button_index:
+		MOUSE_BUTTON_WHEEL_DOWN:
+			_move(1)
+		MOUSE_BUTTON_WHEEL_UP:
+			_move(-1)
+		MOUSE_BUTTON_LEFT:
+			if i >= 0:
+				_index = i
+				_confirm()
+		MOUSE_BUTTON_RIGHT:
+			if _cancel_ok:
+				close()
+
+
+func _confirm() -> void:
+	if _options[_index].get("disabled", false):
+		Sfx.play("block", -8.0)
+		return
+	var picked := _index
+	var cb := _on_pick
+	close()
+	Sfx.play("ui_ok", -6.0)
+	cb.call(picked)
 
 
 func _move(step: int) -> void:
@@ -214,6 +268,7 @@ func _draw() -> void:
 	y = box.position.y + head_h + 4.0
 
 	if _mode == "text":
+		_hit.clear()
 		for line in _body.slice(_text_top, _text_top + TEXT_ROWS):
 			PixelFont.body(self, line, Vector2(x, y), Palette.UI_TEXT)
 			y += LINE
@@ -227,11 +282,13 @@ func _draw() -> void:
 	# fica só no painel de baixo, e só do item escolhido
 	var with_icons := _options.any(func(o: Dictionary) -> bool: return o.get("icon") != null or o.has("figure"))
 	var text_x := x + (20.0 if with_icons else 4.0)
+	_hit.clear()
 	for i in range(_scroll, _scroll + rows):
 		var o := _options[i]
 		var disabled: bool = o.get("disabled", false)
 		var selected := i == _index
 		var row := Rect2(box.position.x + 4, y, WIDTH - 8, ROW_H - 1)
+		_hit.append([row, i])
 		if selected:
 			draw_rect(row, PICK)
 			draw_rect(Rect2(row.position, Vector2(2, row.size.y)), Palette.GOLD)

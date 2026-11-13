@@ -14,10 +14,10 @@ const KEYS := {
 	"jump": [KEY_SPACE, KEY_W],   # W também pula (e continua sendo "cima" nos menus)
 	"attack1": [KEY_J],
 	"attack2": [KEY_K],
-	"skill1": [KEY_U],
-	"skill2": [KEY_I],
+	"skill1": [KEY_Q, KEY_U],   # Q e F (U e I continuam valendo)
+	"skill2": [KEY_F, KEY_I],
 	"roll": [KEY_SHIFT, KEY_L],
-	"heal": [KEY_Q],
+	"heal": [KEY_R],
 	"interact": [KEY_E],
 	"pause": [KEY_ESCAPE],
 	"confirm": [KEY_ENTER, KEY_SPACE, KEY_J, KEY_E],
@@ -91,7 +91,7 @@ func _ready() -> void:
 # A última coisa que o jogador apertou decide se as dicas mostram teclado ou controle.
 
 const KEY_HINTS := {
-	"attack1": "J", "attack2": "K", "skill1": "U", "skill2": "I", "heal": "Q",
+	"attack1": "J", "attack2": "K", "skill1": "Q", "skill2": "F", "heal": "R",
 	"interact": "E", "confirm": "J/E", "cancel": "ESC", "move": "W/S", "roll": "SHIFT", "jump": "ESPAÇO/W", "map": "M",
 	"walk": "A/D", "down": "S",
 }
@@ -193,6 +193,8 @@ func _refresh_hints(custom: Dictionary) -> void:
 # o jogo e os menus recebem igual a uma tecla.
 
 var _touch_cb: JavaScriptObject   # precisa ficar guardado, senão o navegador perde a função
+var _pause_cb: JavaScriptObject
+signal web_pause
 
 func _touch_bridge() -> void:
 	if not OS.has_feature("web"):
@@ -201,10 +203,12 @@ func _touch_bridge() -> void:
 	JavaScriptBridge.get_interface("window").mokshaAction = _touch_cb
 	# tela só de toque: as dicas já começam com os nomes dos botões
 	touch_mode = bool(JavaScriptBridge.eval("matchMedia('(pointer: coarse)').matches", true))
-	# No celular a escala inteira deixa faixas pretas enormes (a tela raramente é
-	# múltipla de 480x270): lá o jogo estica até preencher a altura.
-	if touch_mode:
-		get_tree().root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+	# No navegador a escala inteira deixa faixas pretas em volta (a janela quase
+	# nunca é múltipla de 480x270): lá o jogo estica até preencher a tela.
+	get_tree().root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+	# saiu da tela cheia (Esc sem Keyboard Lock): o jogo pausa sozinho
+	_pause_cb = JavaScriptBridge.create_callback(func(_args: Array) -> void: web_pause.emit())
+	JavaScriptBridge.get_interface("window").mokshaPause = _pause_cb
 
 
 func _on_touch(args: Array) -> void:

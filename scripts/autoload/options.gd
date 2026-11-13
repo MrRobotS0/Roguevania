@@ -16,6 +16,7 @@ const DEFAULTS := {
 	"colorblind": false,     # avisos dos inimigos em azul e branco
 	"easy_dodge": false,     # rolagem invencível por mais tempo
 	"lang": "pt",            # pt | en (o nome do jogo fica igual)
+	"font": "classica",      # PixelFont.FACES: desenho das letras do texto
 	"keys": {},              # ação -> [physical keycode]
 }
 
@@ -51,12 +52,14 @@ func apply() -> void:
 	_volume("Master", float(data["master"]))
 	_volume("Music", float(data["music"]))
 	_volume("SFX", float(data["sfx"]))
-	if DisplayServer.get_name() != "headless":
+	# no navegador quem cuida da tela cheia é a página (web/shell.html)
+	if DisplayServer.get_name() != "headless" and not OS.has_feature("web"):
 		var want := DisplayServer.WINDOW_MODE_FULLSCREEN if data["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED
 		if DisplayServer.window_get_mode() != want:
 			DisplayServer.window_set_mode(want)
 	Controls.apply_bindings(data["keys"])
 	Palette.use_colorblind(bool(data.get("colorblind", false)))
+	PixelFont.use_face(String(data.get("font", "classica")))
 
 
 func shake_scale() -> float:

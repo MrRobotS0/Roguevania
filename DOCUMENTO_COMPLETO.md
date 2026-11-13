@@ -1739,3 +1739,19 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 **Tiros inimigos (`projectile.gd`).** Desenhados em dobro (o acerto não muda), com contorno escuro, brilho vermelho, rastro e clarão no disparo. O Atirador de Vidro mostra o tiro carregando no arco, linha grossa ao travar e um alvo fechando no herói.
 
 **Dano no herói.** Número vermelho e borda vermelha na tela (`Vignette`, `Fx.pain`), que respeita a opção de clarões.
+
+## 35. Navegador em tela cheia, mouse nos menus, fontes e teclas novas (v0.8.2)
+
+**Navegador (`web/shell.html`, `Controls._touch_bridge`).**
+- Escala fracionária sempre no navegador, não só no celular: sem as faixas pretas da escala inteira.
+- Tela cheia sozinha: o primeiro clique ou tecla depois que o jogo abre ocupa a tela, e volta a ocupar se o jogador sair dela.
+- Em tela cheia, Esc e Tab ficam com o jogo (Keyboard Lock, Chrome e Edge); segurar Esc ainda sai. Sem o Keyboard Lock (Firefox, Safari), o Esc sai da tela cheia e o jogo pausa sozinho (`window.mokshaPause` → `Controls.web_pause` → `main._on_web_pause`).
+- No navegador a opção TELA CHEIA some e `Options.apply` não mexe no modo da janela.
+
+**Mouse nos menus.** `Menu.row_at` acha a linha sob o mouse a partir dos retângulos guardados no `_draw`. Passar por cima escolhe, clique esquerdo confirma, roda rola. Vale para o Menu (pausa, Mercador, Vigia, estações), o título e as Opções (clique direito volta o valor). O clique é consumido e não vira golpe. Setas e Enter continuam iguais.
+
+**Opções em seções.** A lista única de 16 linhas passava da altura da tela. Agora: SOM, TELA, JOGO e TECLAS, cada uma com poucas linhas.
+
+**Fontes (Opções > Tela > Fonte).** Clássica, Negrito, Pixelify, Silkscreen e Tiny5. `tools/gen_fontes.py` converte as TTF de `tools/fontes` (SIL OFL 1.1) para a grade 5x7 em `scripts/ui/font_tables.gd`; o passo de 6 px não muda, então o layout é o mesmo em todas. Letra que falta sai da clássica; os acentos são sempre os do jogo.
+
+**Teclas.** Habilidades no Q e no F (U e I continuam valendo); frasco no R.

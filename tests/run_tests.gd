@@ -161,6 +161,8 @@ func _ready() -> void:
 	await _case("pedra do desafio: duas levas e a recompensa", _challenge_stone)
 	await _case("eventos do andar: desafio, pacto e mercador errante aparecem", _floor_events)
 	await _case("minimapa aparece nos andares gerados e some na opção", _minimap)
+	await _case("fontes: todas na grade 5x7, trocam pela opção e não mudam o layout", _fonts)
+	await _case("teclas: habilidades no Q e no F, frasco no R", _new_keys)
 	await _case("guardião veterano e mestre aprendem golpes", _boss_veteran)
 	await _case("códice: marcos dão Essência uma vez só", _codex_rewards)
 
@@ -2285,6 +2287,34 @@ func _floor_events() -> void:
 	_check(errant.price({"cost": 100}, level.player) == 80, "mercador errante sem desconto")
 	errant.free()
 	Run.active = false
+
+
+func _fonts() -> void:
+	var before := PixelFont.body_width("FÚRIA E VIDA")
+	for id: String in PixelFont.FACES:
+		Options.set_value("font", id)
+		_check(PixelFont.face == id, "a opção não trocou a fonte para %s" % id)
+		_check(PixelFont.body_width("FÚRIA E VIDA") == before, "a fonte %s mudou a largura do texto" % id)
+		for ch: String in FontTables.TABLES.get(id, {}):
+			var rows: Array = FontTables.TABLES[id][ch]
+			_check(rows.size() == PixelFont.BODY_H, "%s: %s não tem 7 linhas" % [id, ch])
+			for r: String in rows:
+				_check(r.length() == PixelFont.BODY_W, "%s: %s tem linha fora de 5 colunas" % [id, ch])
+	Options.set_value("font", "classica")
+
+
+func _has_key(action: String, code: int) -> bool:
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey and (ev as InputEventKey).physical_keycode == code:
+			return true
+	return false
+
+
+func _new_keys() -> void:
+	_check(_has_key("skill1", KEY_Q), "habilidade 1 não está no Q")
+	_check(_has_key("skill2", KEY_F), "habilidade 2 não está no F")
+	_check(_has_key("heal", KEY_R), "frasco não está no R")
+	_check(not _has_key("heal", KEY_Q), "Q ainda bebe o frasco")
 
 
 func _minimap() -> void:

@@ -153,11 +153,33 @@ func _process(delta: float) -> void:
 			_index = wrapi(_index + 1, 0, _options.size())
 			Sfx.play("ui_move", -12.0)
 		elif Input.is_action_just_pressed("confirm"):
-			# só Enter/Espaço/A: o clique do mouse (que só dá foco à janela) não escolhe nada
+			# Enter/Espaço/A; o clique do mouse entra pelo _input, só em cima de um item
 			pick(_options[_index][0])
 		return
 	if Input.is_action_just_pressed("confirm") or Input.is_action_just_pressed("attack1"):
 		confirmed.emit()
+
+
+# Mouse no título: passar por cima escolhe, clique entra. Nas telas de morte e
+# vitória o clique já vale (é o golpe 1).
+var _hit: Array = []
+
+func _input(event: InputEvent) -> void:
+	if not visible or mode != "title" or not (event is InputEventMouse):
+		return
+	if _t < 0.6 or _menu_open() or not Controls.ui_ready():
+		return
+	var i := Menu.row_at(self, event, _hit)
+	if i < 0:
+		return
+	if event is InputEventMouseMotion:
+		if i != _index:
+			_index = i
+			Sfx.play("ui_move", -12.0)
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		get_viewport().set_input_as_handled()
+		_index = i
+		pick(_options[i][0])
 
 
 # Também usado pelos testes.
@@ -257,9 +279,11 @@ func _sigil(at: Vector2, w: float) -> void:
 
 
 func _title_menu(top: Vector2) -> void:
+	_hit.clear()
 	for i in _options.size():
 		var label: String = _options[i][1]
 		var y := top.y + i * MENU_STEP
+		_hit.append([Rect2(top.x - 16.0, y - 6.0, 130.0, MENU_STEP), i])
 		var selected := i == _index
 		var x := top.x
 		if selected:
