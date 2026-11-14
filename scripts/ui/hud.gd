@@ -504,64 +504,171 @@ func _draw_status(size: Vector2) -> void:
 # --- minimapa ----------------------------------------------------------------------
 # Canto de cima, embaixo do ouro: o pedaço do andar em volta do herói, só o que
 # ele já viu (o mesmo do mapa grande, M / Tab). Só nos andares gerados.
+# Moldura nas cores do domínio; chão com a borda de cima clara, rocha funda
+# escura, plataformas em linha; os inimigos que o herói enxerga em vermelho
+# (branco quando vão bater); ícones para saída, baú, mercador, altar e portal;
+# a saída pulsa e, quando já foi vista mas está fora do quadro, vira uma seta
+# na borda. O herói é uma seta para onde está olhando, com um anel que respira.
 
 const MINI_W := 100.0
-const MINI_H := 46.0
+const MINI_H := 56.0
 const MINI_SCALE := 2
+const MINI_ENEMY_RANGE := 15.0   # em blocos: só os inimigos que o herói enxerga
 
 
 func _draw_minimap(size: Vector2) -> void:
 	if not Options.get_value("minimap") or Input.is_action_pressed("map"):
 		return
 	var level := player.get_parent() as Level
-	if level == null or level.room == null or level.kind != "gerada":
+	if level == null or not level.is_inside_tree() or level.room == null or level.kind != "gerada":
 		return
 	var room := level.room
-	var top := (44.0 if not player.blueprints.is_empty() else 31.0) + 9.0
+	var top := (44.0 if not player.blueprints.is_empty() else 31.0) + 11.0
 	var box := Rect2(size.x - 104.0, top, MINI_W, MINI_H)
-	var plate := Palette.UI_SHADOW
-	plate.a = 0.62
-	draw_rect(box, plate)
-	draw_rect(Rect2(box.position.x, box.end.y, box.size.x, 1), Color(Menu.FRAME, 0.5))
+	var th := _theme
+	_mini_frame(box, th)
 	var s := MINI_SCALE
 	var span := Vector2i(int(MINI_W) / s, int(MINI_H) / s)
 	var me := player.center() / Room.TILE
 	var x0 := clampi(int(me.x) - span.x / 2, 0, maxi(room.cols - span.x, 0))
 	var y0 := clampi(int(me.y) - span.y / 2, 0, maxi(room.rows - span.y, 0))
 	var origin := box.position + Vector2(maxf((MINI_W - room.cols * s) * 0.5, 0.0), maxf((MINI_H - room.rows * s) * 0.5, 0.0)).floor()
-	var air := Color("1b1726", 0.85)
-	var edge := Color("8a7fa0")
-	var rock := Color("4a3f60")
+	var light: Color = th["light"]
+	var frame: Color = th["frame"]
+	var air := Color(th["bg"], 1.0).lerp(light, 0.4)
+	air.a = 0.85
+	var rock := Color(th["dark"], 0.95)
+	var rock_dot := Color(frame.darkened(0.3), 0.9)
+	var edge := light.lerp(frame, 0.45)
+	var ground := light.lerp(frame, 0.1)
+	var plank := Color(light, 0.8)
 	for y in range(y0, mini(y0 + span.y, room.rows)):
 		for x in range(x0, mini(x0 + span.x, room.cols)):
 			if not level.seen(x, y):
 				continue
 			var at := origin + Vector2((x - x0) * s, (y - y0) * s)
+			var cell := Rect2(at, Vector2(s, s))
 			if room._solidish(x, y):
-				if not room._solidish(x + 1, y) or not room._solidish(x - 1, y) 						or not room._solidish(x, y + 1) or not room._solidish(x, y - 1):
-					draw_rect(Rect2(at, Vector2(s, s)), edge)
+				if not room._solidish(x, y - 1):
+					draw_rect(cell, ground)
+				elif not room._solidish(x + 1, y) or not room._solidish(x - 1, y) or not room._solidish(x, y + 1):
+					draw_rect(cell, edge)
+				else:
+					draw_rect(cell, rock)
+					if (x + y) % 3 == 0:
+						draw_rect(Rect2(at, Vector2(1, 1)), rock_dot)
 			else:
-				draw_rect(Rect2(at, Vector2(s, s)), air if room.cell(x, y) != Room.PLATFORM else rock)
+				draw_rect(cell, air)
+				if room.cell(x, y) == Room.PLATFORM:
+					draw_rect(Rect2(at, Vector2(s, 1)), plank)
+	var inner := box.grow(-1.0)
+	var pulse := 0.5 + 0.5 * sin(_t * 4.0)
+	# lugares marcados
 	for n in level.get_children():
-		var c := Color(0, 0, 0, 0)
+		if not (n is Node2D):
+			continue
+		var kind := ""
 		if n is ExitGate and n.visible:
-			c = Palette.ESSENCE
+			kind = "exit"
 		elif n is Chest and not n.opened:
-			c = Palette.GOLD
+			kind = "chest"
 		elif n is Merchant:
-			c = Palette.GOLD.lightened(0.3)
+			kind = "shop"
 		elif n is Altar or n is MutationAltar or n is RuneAltar or n is ChallengeStone or n is PactAltar:
-			c = Color("b8f06a")
+			kind = "altar"
 		elif n is Portal and n.found:
-			c = Portal.CORE
-		if c.a <= 0.0:
+			kind = "portal"
+		if kind == "":
 			continue
 		var cell := (n as Node2D).global_position / Room.TILE
 		if not level.seen(int(cell.x), int(cell.y) - 1):
 			continue
-		var p := origin + (cell - Vector2(x0, y0)) * s
-		if box.grow(-1.0).has_point(p):
-			draw_rect(Rect2(p - Vector2(1, 2), Vector2(3, 3)), c)
-	if int(_t * 4.0) % 2 == 0:
-		var p := origin + (me - Vector2(x0, y0)) * s
-		draw_rect(Rect2((p - Vector2(1, 1)).floor(), Vector2(3, 3)), Palette.HURT)
+		var p := (origin + (cell - Vector2(x0, y0)) * s + Vector2(0, -2)).floor()
+		if inner.grow(-2.0).has_point(p):
+			_mini_icon(kind, p, pulse)
+		elif kind == "exit":
+			_mini_edge_arrow(inner, p, Palette.ESSENCE)
+	# inimigos que o herói enxerga
+	for e in level.enemies():
+		var en := e as Enemy
+		if en == null or not en.alive():
+			continue
+		var ecell := en.center() / Room.TILE
+		if ecell.distance_to(me) > MINI_ENEMY_RANGE:
+			continue
+		var ep := (origin + (ecell - Vector2(x0, y0)) * s).floor()
+		if not inner.grow(-2.0).has_point(ep):
+			continue
+		var r := 2.0 if (en.elite or en is Boss) else 1.0
+		draw_rect(Rect2(ep - Vector2(r + 1, r + 1), Vector2(r * 2 + 2, r * 2 + 2)), Color(0, 0, 0, 0.6))
+		draw_rect(Rect2(ep - Vector2(r, r), Vector2(r * 2, r * 2)), Palette.FLASH if en.telegraphing() else Palette.DANGER)
+	# o herói
+	var hp := (origin + (me - Vector2(x0, y0)) * s).floor()
+	var ring := Palette.HURT
+	ring.a = 0.2 + 0.4 * (1.0 - pulse)
+	draw_arc(hp, 3.5 + 2.5 * pulse, 0.0, TAU, 16, ring, 1.0)
+	var f := float(player.facing)
+	draw_colored_polygon(PackedVector2Array([hp + Vector2(5 * f, 0), hp + Vector2(-3 * f, -4), hp + Vector2(-1 * f, 0), hp + Vector2(-3 * f, 4)]), Palette.UI_SHADOW)
+	draw_colored_polygon(PackedVector2Array([hp + Vector2(4 * f, 0), hp + Vector2(-2 * f, -3), hp + Vector2(0, 0), hp + Vector2(-2 * f, 3)]), Palette.FLASH)
+	draw_rect(Rect2(hp - Vector2(1, 1), Vector2(2, 2)), Palette.HURT)
+
+
+# Moldura nas cores do domínio: fundo, chanfro claro/escuro e os cantos em destaque.
+func _mini_frame(box: Rect2, th: Dictionary) -> void:
+	var o := box.grow(2.0)
+	draw_rect(o, Color(th["dark"], 0.9))
+	var bg: Color = th["bg"]
+	bg.a = 0.8
+	draw_rect(box, bg)
+	var light: Color = th["light"]
+	var frame: Color = th["frame"]
+	draw_rect(Rect2(o.position, Vector2(o.size.x, 1)), Color(light, 0.6))
+	draw_rect(Rect2(o.position, Vector2(1, o.size.y)), Color(light, 0.35))
+	draw_rect(Rect2(o.position.x, o.end.y - 1, o.size.x, 1), frame)
+	draw_rect(Rect2(o.end.x - 1, o.position.y, 1, o.size.y), frame)
+	var acc: Color = th["accent"]
+	var dark: Color = th["dark"]
+	for c: Vector2 in [o.position, Vector2(o.end.x - 3, o.position.y), Vector2(o.position.x, o.end.y - 3), o.end - Vector2(3, 3)]:
+		draw_rect(Rect2(c, Vector2(3, 3)), acc)
+		draw_rect(Rect2(c + Vector2(1, 1), Vector2(1, 1)), Color(dark, 1.0))
+
+
+# Ícones pequenos (com contorno escuro) para o que importa no andar.
+func _mini_icon(kind: String, p: Vector2, pulse: float) -> void:
+	var ink := Color(0, 0, 0, 0.75)
+	match kind:
+		"exit":
+			var glow := Palette.ESSENCE
+			glow.a = 0.15 + 0.35 * pulse
+			draw_rect(Rect2(p - Vector2(4, 5), Vector2(9, 10)), glow)
+			draw_rect(Rect2(p - Vector2(3, 4), Vector2(7, 8)), ink)
+			draw_rect(Rect2(p - Vector2(2, 3), Vector2(5, 6)), Palette.ESSENCE)
+			draw_rect(Rect2(p - Vector2(1, 2), Vector2(3, 5)), Palette.ESSENCE.darkened(0.6))
+		"chest":
+			draw_rect(Rect2(p - Vector2(3, 3), Vector2(7, 6)), ink)
+			draw_rect(Rect2(p - Vector2(2, 2), Vector2(5, 4)), Palette.GOLD)
+			draw_rect(Rect2(p - Vector2(2, 1), Vector2(5, 1)), Palette.GOLD.darkened(0.45))
+		"shop":
+			draw_rect(Rect2(p - Vector2(3, 3), Vector2(7, 7)), ink)
+			draw_rect(Rect2(p - Vector2(2, 2), Vector2(5, 5)), Palette.GOLD.lightened(0.3))
+			draw_rect(Rect2(p - Vector2(0, 1), Vector2(1, 3)), Palette.GOLD.darkened(0.5))
+		"altar":
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -4), p + Vector2(4, 0), p + Vector2(0, 4), p + Vector2(-4, 0)]), ink)
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -3), p + Vector2(3, 0), p + Vector2(0, 3), p + Vector2(-3, 0)]), Color("b8f06a"))
+		"portal":
+			draw_arc(p, 3.0, 0.0, TAU, 10, ink, 2.0)
+			draw_arc(p, 2.5, 0.0, TAU, 10, Portal.CORE, 1.0)
+
+
+# Seta na borda do quadro apontando a saída que já foi vista mas está longe.
+func _mini_edge_arrow(inner: Rect2, target: Vector2, color: Color) -> void:
+	var c := inner.get_center()
+	var d := target - c
+	if d.length() < 0.01:
+		return
+	d = d.normalized()
+	var k := minf((inner.size.x * 0.5 - 4.0) / maxf(absf(d.x), 0.001), (inner.size.y * 0.5 - 4.0) / maxf(absf(d.y), 0.001))
+	var at := (c + d * k).floor()
+	var side := Vector2(-d.y, d.x)
+	draw_colored_polygon(PackedVector2Array([at + d * 4.5, at - d * 3.0 + side * 3.5, at - d * 3.0 - side * 3.5]), Color(0, 0, 0, 0.7))
+	draw_colored_polygon(PackedVector2Array([at + d * 3.0, at - d * 2.0 + side * 2.5, at - d * 2.0 - side * 2.5]), Color(color, 0.6 + 0.4 * sin(_t * 5.0)))

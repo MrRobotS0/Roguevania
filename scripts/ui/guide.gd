@@ -18,6 +18,9 @@ const HINTS := {
 	"rolar": "{roll} ESQUIVAR",
 	"curar": "{heal} CURAR",
 	"mergulho": "NO AR: {down} + {attack1}",
+	"escudo": "ESCUDO! DE FRENTE ELE DEFENDE.
+{roll} ROLE POR TRÁS E BATA NAS COSTAS
+OU 3 GOLPES SEGUIDOS QUEBRAM O ESCUDO",
 }
 
 var level: Level
@@ -66,6 +69,10 @@ func _process(delta: float) -> void:
 	var p := level.player
 	if p == null or not is_instance_valid(p) or not p.alive():
 		return
+	# o escudo é urgente: aparece na hora do primeiro bloqueio, passando na frente
+	if _id != "escudo" and not seen("escudo") and _guard_blocked():
+		_start("escudo", p)
+		return
 	if _id == "":
 		_watch(p)
 		if not _queue.is_empty() and _banner_clock > 3.3:
@@ -85,6 +92,13 @@ func _start(id: String, p: Player) -> void:
 	_done = false
 	_flasks_at = p.flasks
 	_mark(id)
+
+
+func _guard_blocked() -> bool:
+	for e in level.enemies():
+		if e is ShieldGuard and e.blocked_once:
+			return true
+	return false
 
 
 func _want(id: String) -> void:
@@ -123,6 +137,8 @@ func _learned(id: String, p: Player) -> bool:
 			return p.flasks < _flasks_at
 		"mergulho":
 			return p.state == Player.State.DIVE
+		"escudo":
+			return p.state == Player.State.ROLL
 	return false
 
 
