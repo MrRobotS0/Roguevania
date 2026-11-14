@@ -179,6 +179,7 @@
 <footer><a href="/" data-t="home">Página inicial</a><a href="wiki.html">Wiki</a></footer>
 
 <script>
+  if (location.hostname === "www.moksha.com.br") location.replace("https://moksha.com.br" + location.pathname + location.search + location.hash);
   const T = {
     pt: {
       loading: "Carregando…", email: "E-mail", login: "E-mail ou usuário", user: "Nome de usuário",
@@ -208,6 +209,7 @@
         nome_invalido: "Use de 3 a 16 letras ou números (espaço e hífen podem, mas não no começo nem no fim).",
         nome_em_uso: "Esse nome já tem dono. Tente outro.", link_expirado: "Esse link venceu ou já foi usado. Peça outro em \"Esqueci a senha\".",
         sem_sessao: "Sua sessão acabou. Entre de novo.", rede: "Não deu para falar com o servidor. Confira sua internet.",
+        origem_invalida: "Abra o site pelo endereço moksha.com.br e tente de novo.",
         outro: "Algo deu errado. Tente de novo.",
       },
     },
@@ -235,6 +237,7 @@
         email_em_uso: "An account with that email already exists. Sign in or use \"Forgot password\".",
         login_invalido: "Wrong email/username or password.",
         usuario_invalido: "Username: 3 to 20 letters (no accents), numbers, dot, hyphen or underscore (start and end with a letter or number).",
+        origem_invalida: "Open the site at moksha.com.br and try again.",
         usuario_em_uso: "That username is taken. Try another.", muitas_tentativas: "Too many attempts. Wait a few minutes and try again.",
         nome_invalido: "Use 3 to 16 letters or numbers (spaces and hyphens are fine, but not at the start or end).",
         nome_em_uso: "That name is taken. Try another.", link_expirado: "That link expired or was already used. Ask for a new one under \"Forgot password\".",
@@ -289,11 +292,28 @@
 
   function errorText(code) { return T[lang].e[code] || T[lang].e.outro; }
 
+  // qual campo cada erro aponta (fica vermelho e recebe o foco)
+  const FIELD = { email_invalido: "email", email_em_uso: "email", usuario_invalido: "usuario", usuario_em_uso: "usuario",
+    senha_curta: "senha", senha_longa: "senha", senhas_diferentes: "senha2", nome_invalido: "nome", nome_em_uso: "nome" };
   function fail(form, code) {
     const box = form.querySelector(".msg.err");
     box.textContent = errorText(code);
     box.hidden = false;
+    form.querySelectorAll("[aria-invalid]").forEach(i => i.removeAttribute("aria-invalid"));
+    const input = FIELD[code] && form.querySelector(`[name="${FIELD[code]}"]`);
+    if (input) { input.setAttribute("aria-invalid", "true"); input.focus(); }
   }
+
+  // Usuário: tira acento e troca espaço por _ enquanto digita (era o erro mais comum no cadastro)
+  const USER_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{1,18}[A-Za-z0-9]$/;
+  function cleanUser(v) {
+    return v.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "_").replace(/[^A-Za-z0-9._-]/g, "").slice(0, 20);
+  }
+  document.querySelectorAll('input[name="usuario"]').forEach(inp => inp.addEventListener("input", () => {
+    const c = cleanUser(inp.value);
+    if (c !== inp.value) inp.value = c;
+    inp.removeAttribute("aria-invalid");
+  }));
 
   function busy(form, on) {
     const b = form.querySelector("button[type=submit]");
@@ -328,6 +348,10 @@
   });
 
   wire("f-criar", async (form, v) => {
+    v.email = v.email.trim();
+    v.usuario = cleanUser(v.usuario.trim()).replace(/^[._-]+|[._-]+$/g, "");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) return fail(form, "email_invalido");
+    if (!USER_OK.test(v.usuario)) return fail(form, "usuario_invalido");
     if (v.senha.length < 8) return fail(form, "senha_curta");
     if (v.senha !== v.senha2) return fail(form, "senhas_diferentes");
     const r = await api("POST", "/api/cadastro", { email: v.email, usuario: v.usuario, senha: v.senha });

@@ -150,7 +150,8 @@ const ip = req => String(req.headers["x-real-ip"] || req.socket.remoteAddress ||
 function sameSiteWrite(req) {
   if (!String(req.headers["content-type"] || "").startsWith("application/json")) return false;
   const origin = req.headers.origin;
-  return !origin || origin === SITE;
+  // o nginx manda www para o endereço sem www, mas uma aba antiga ainda pode estar no www
+  return !origin || origin === SITE || origin === SITE.replace("://", "://www.");
 }
 
 async function currentUser(req) {
