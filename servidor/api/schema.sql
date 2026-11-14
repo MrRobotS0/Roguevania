@@ -67,3 +67,18 @@ CREATE TABLE IF NOT EXISTS feedback (
 -- nome de usuário para entrar (além do e-mail); único sem diferenciar maiúsculas
 ALTER TABLE users ADD COLUMN IF NOT EXISTS username text;
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
+
+-- loja: cada pedido de compra (Mercado Pago). Só os "aprovado" valem.
+-- A conta apagada não apaga o pedido (registro financeiro): user_id vira NULL.
+CREATE TABLE IF NOT EXISTS purchases (
+  id            bigserial PRIMARY KEY,
+  user_id       bigint REFERENCES users(id) ON DELETE SET NULL,
+  item          text NOT NULL,
+  amount_cents  int NOT NULL,
+  status        text NOT NULL DEFAULT 'pendente',
+  mp_preference text,
+  mp_payment    text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS purchases_user ON purchases (user_id, status);

@@ -193,7 +193,7 @@
 
   /* em moksha.com.br a barra tem Wiki, Ranking e Entrar: no celular a Wiki sai (fica no rodapé) para o idioma caber */
   .bar .lang { display: flex; flex: none; }
-  @media (max-width: 520px) { .bar nav a[href="wiki.html"] { display: none; } .bar nav { gap: 6px; } .bar .lang button { min-width: 40px; padding: 0 8px; } .bar .btn.mini { padding-inline: 10px; } }
+  @media (max-width: 520px) { .bar nav a[href="wiki.html"], .bar nav a[href="/loja.html"] { display: none; } .bar nav { gap: 6px; } .bar .lang button { min-width: 40px; padding: 0 8px; } .bar .btn.mini { padding-inline: 10px; } }
   @media (max-width: 720px) {
     .bar .btn:not(.ghost) { display: none; }
     .track { gap: 8vw; padding-left: 11vw; padding-right: 11vw; }
@@ -413,8 +413,14 @@
     rank.dataset.i18n = "rank";
     rank.textContent = "Leaderboard";
     acct.before(rank);
+    const shop = document.createElement("a");
+    shop.className = "btn mini ghost";
+    shop.href = "/loja.html";
+    shop.dataset.i18n = "shop";
+    shop.textContent = "Store";
+    rank.before(shop);
     const foot = document.querySelector(".foot-links");
-    [["/ranking.html", "rank", "Leaderboard"], ["/privacidade.html", "privacy", "Privacy"]].forEach(([href, key, text]) => {
+    [["/loja.html", "shop", "Store"], ["/ranking.html", "rank", "Leaderboard"], ["/privacidade.html", "privacy", "Privacy"]].forEach(([href, key, text]) => {
       const a = document.createElement("a");
       a.href = href; a.dataset.i18n = key; a.textContent = text;
       foot.appendChild(a);
@@ -431,7 +437,7 @@
 
   const PT = {
     get: "Jogar grátis", download: "Baixar grátis",
-    signIn: "Entrar", playNow: "Jogar agora", rank: "Ranking", privacy: "Privacidade", verWeb: "NO NAVEGADOR · V0.8.5 · EN / PT",
+    signIn: "Entrar", playNow: "Jogar agora", rank: "Ranking", shop: "Loja", privacy: "Privacidade", verWeb: "NO NAVEGADOR · V0.8.5 · EN / PT",
     dlPWeb: "Grátis, no navegador. Crie uma conta e seu progresso vai junto. Teclado ou controle.",
     tagline: "Treze deuses sumiram.<br><b>Você é o que eles deixaram para trás.</b>",
     gEye: "13 GUARDIÕES", gT: "Cada deus deixou <span>um guardião</span>.",

@@ -7,6 +7,8 @@ extends Resource
 #   "essence"  compra com a Vigia (cost)
 #   "feat"     feito na conta inteira (feat: "boss" = derrotar o Imperador Cego,
 #              "deaths10" = morrer 10 vezes); feat_text explica na tela
+#   "loja"     comprada em moksha.com.br/loja (pack = de que pacote é); a conta
+#              diz quais tem (Meta.store_skins). Só visual, como todas as outras.
 
 @export var id := ""
 @export var title := ""
@@ -21,6 +23,7 @@ extends Resource
 @export var cost := 0
 @export var feat := ""
 @export var feat_text := ""
+@export var pack := ""
 # variações de cor (como cromas): {id, title, cloak, cloak_dark, hood, eye, scarf, cost}
 @export var chromas: Array = []
 
@@ -48,4 +51,6 @@ func how_to_get() -> String:
 			return "COMPRE COM A VIGIA · %d DE ESSÊNCIA" % cost
 		"feat":
 			return feat_text.to_upper()
+		"loja":
+			return "NA LOJA · MOKSHA.COM.BR/LOJA"
 	return ""

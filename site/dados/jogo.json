@@ -186,6 +186,16 @@
    "en": "Road cloak"
   },
   {
+   "id": "casa_kael",
+   "pt": "Estandarte de Kael",
+   "en": "Estandarte de kael"
+  },
+  {
+   "id": "casa_oram",
+   "pt": "Estandarte de Oram",
+   "en": "Estandarte de oram"
+  },
+  {
    "id": "casca_vidro",
    "pt": "Casca de Vidro",
    "en": "Glass shell"
@@ -194,6 +204,11 @@
    "id": "cinza_pura",
    "pt": "Cinza Pura",
    "en": "Pure ash"
+  },
+  {
+   "id": "cinza_sagrada",
+   "pt": "Cinza Sagrada",
+   "en": "Cinza sagrada"
   },
   {
    "id": "couro_fenda",
@@ -209,6 +224,11 @@
    "id": "escama_serpe",
    "pt": "Escama da Serpe",
    "en": "Wyrm scale"
+  },
+  {
+   "id": "fulgurante",
+   "pt": "Fulgurante",
+   "en": "Fulgurante"
   },
   {
    "id": "herdeiro_vesper",
@@ -241,6 +261,11 @@
    "en": "Closed eyes"
   },
   {
+   "id": "ouro_imperador",
+   "pt": "Ouro do Imperador",
+   "en": "Ouro do imperador"
+  },
+  {
    "id": "pele_ventre",
    "pt": "Pele do Ventre",
    "en": "Belly hide"
@@ -259,6 +284,11 @@
    "id": "tentaculo",
    "pt": "O Que Responde",
    "en": "The one who answers"
+  },
+  {
+   "id": "ultima_pagina",
+   "pt": "A Última Página",
+   "en": "A última página"
   },
   {
    "id": "vestes_afogadas",

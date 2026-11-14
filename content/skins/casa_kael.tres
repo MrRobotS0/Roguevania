@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "casa_kael"
+title = "Estandarte de Kael"
+unlock = "loja"
+pack = "casas"
+cloak = Color(0.165, 0.141, 0.125, 1)
+cloak_dark = Color(0.102, 0.086, 0.071, 1)
+hood = Color(0.043, 0.035, 0.031, 1)
+eye = Color(1.000, 0.353, 0.227, 1)
+scarf = Color(0.831, 0.627, 0.227, 1)
+lore = "Kael nunca perdeu uma batalha. Perdeu todas as outras coisas."
+chromas = [{"id": "forja", "title": "Forja", "cloak": "#4a2a1a", "cloak_dark": "#2e1a10", "hood": "#120a06", "eye": "#ffb03a", "scarf": "#ff6a2a", "cost": 0}, {"id": "osso", "title": "Osso", "cloak": "#c8bca0", "cloak_dark": "#8a8068", "hood": "#1a1610", "eye": "#ff5a3a", "scarf": "#2a2420", "cost": 0}]

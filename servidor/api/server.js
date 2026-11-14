@@ -277,7 +277,9 @@ const routes = {
     const { rows } = await pool.query(`SELECT data, rev FROM saves WHERE user_id = $1`, [u.id]);
     // cada abertura do jogo fica anotada (só a hora): mede quem volta e os primeiros minutos
     pool.query(`INSERT INTO openings (user_id) VALUES ($1)`, [u.id]).catch(() => {});
-    send(res, 200, { nome: u.name, data: rows[0] ? rows[0].data : null, rev: rows[0] ? Number(rows[0].rev) : 0 });
+    // compras: aparências da loja. Vêm sempre daqui (o save do jogador não decide o que ele comprou).
+    send(res, 200, { nome: u.name, data: rows[0] ? rows[0].data : null, rev: rows[0] ? Number(rows[0].rev) : 0,
+      compras: await ownedSkins(u.id) });
   },
 
   "PUT /api/save": async (req, res) => {
@@ -485,11 +487,168 @@ routes["GET /api/admin/resumo"] = async (req, res) => {
   send(res, 200, { contas, mortes_por_andar: onde, quem_mais_mata: quem, andares_alcancados: andares, primeiros_minutos: inicio, feedback: fb });
 };
 
+// --- loja: aparências (só visual) pagas com Pix ou cartão pelo Mercado Pago ------------
+// O preço vale o que está AQUI, nunca o que o navegador manda. Sem MP_ACCESS_TOKEN
+// a vitrine aparece, mas o botão de comprar avisa que ainda não abriu.
+// Fluxo: POST /api/loja/comprar cria o pedido e a preferência do Checkout Pro →
+// o jogador paga no Mercado Pago → o webhook avisa → buscamos o pagamento na API
+// deles (a fonte da verdade) e marcamos o pedido como aprovado (ou estornado).
+
+const LOJA = {
+  "pacote:casas": { pt: "Pacote Guerra das Casas", en: "War of the Houses Pack", centavos: 990,
+    skins: ["casa_oram", "casa_kael", "cinza_sagrada"] },
+  "pacote:profecia": { pt: "Pacote Profecia", en: "Prophecy Pack", centavos: 990,
+    skins: ["ouro_imperador", "fulgurante", "ultima_pagina"] },
+  "pacote:completo": { pt: "Coleção Completa", en: "Complete Collection", centavos: 1690,
+    skins: ["casa_oram", "casa_kael", "cinza_sagrada", "ouro_imperador", "fulgurante", "ultima_pagina"] },
+  "skin:casa_oram": { pt: "Estandarte de Oram", en: "Banner of Oram", centavos: 490, skins: ["casa_oram"] },
+  "skin:casa_kael": { pt: "Estandarte de Kael", en: "Banner of Kael", centavos: 490, skins: ["casa_kael"] },
+  "skin:cinza_sagrada": { pt: "Cinza Sagrada", en: "Sacred Ash", centavos: 490, skins: ["cinza_sagrada"] },
+  "skin:ouro_imperador": { pt: "Ouro do Imperador", en: "Emperor's Gold", centavos: 490, skins: ["ouro_imperador"] },
+  "skin:fulgurante": { pt: "Fulgurante", en: "Fulgurite", centavos: 490, skins: ["fulgurante"] },
+  "skin:ultima_pagina": { pt: "A Última Página", en: "The Last Page", centavos: 490, skins: ["ultima_pagina"] },
+};
+const MP_TOKEN = process.env.MP_ACCESS_TOKEN || "";
+const MP_API = "https://api.mercadopago.com";
+
+// aparências que a conta tem (pedidos aprovados)
+async function ownedSkins(userId) {
+  const { rows } = await pool.query(`SELECT item FROM purchases WHERE user_id = $1 AND status = 'aprovado'`, [userId]);
+  const out = new Set();
+  for (const r of rows) for (const s of (LOJA[r.item] || { skins: [] }).skins) out.add(s);
+  return [...out];
+}
+
+async function mp(method, path, body) {
+  const r = await fetch(MP_API + path, {
+    method, headers: { Authorization: `Bearer ${MP_TOKEN}`, "Content-Type": "application/json",
+      ...(method === "POST" ? { "X-Idempotency-Key": crypto.randomUUID() } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(`mercado pago ${r.status}: ${JSON.stringify(data).slice(0, 300)}`), { mp: true });
+  return data;
+}
+
+routes["GET /api/loja"] = async (req, res) => {
+  const u = await currentUser(req);
+  const itens = Object.entries(LOJA).map(([id, i]) => ({ id, pt: i.pt, en: i.en, centavos: i.centavos, skins: i.skins }));
+  send(res, 200, { itens, aberta: Boolean(MP_TOKEN), logado: Boolean(u), nome: u ? u.name : null,
+    tem: u ? await ownedSkins(u.id) : [] });
+};
+
+routes["POST /api/loja/comprar"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u) return fail(res, 401, "sem_sessao");
+  if (!u.name) return fail(res, 403, "sem_personagem");
+  if (!MP_TOKEN) return fail(res, 503, "loja_fechada");
+  if (limited("loja:" + u.id, 20, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const b = await readJson(req);
+  const item = LOJA[b.item];
+  if (!item) return fail(res, 400, "item_invalido");
+  const tem = new Set(await ownedSkins(u.id));
+  if (item.skins.every(s => tem.has(s))) return fail(res, 409, "ja_tem");
+  const { rows } = await pool.query(
+    `INSERT INTO purchases (user_id, item, amount_cents) VALUES ($1, $2, $3) RETURNING id`, [u.id, b.item, item.centavos]);
+  const id = rows[0].id;
+  const volta = `${SITE}/loja.html?pedido=${id}`;
+  const pref = await mp("POST", "/checkout/preferences", {
+    items: [{ id: b.item, title: `MOKSHA · ${item.pt}`, description: "Aparência para o herói (só visual)",
+      quantity: 1, currency_id: "BRL", unit_price: item.centavos / 100 }],
+    payer: { email: u.email },
+    external_reference: String(id),
+    notification_url: `${SITE}/api/loja/webhook`,
+    back_urls: { success: volta, pending: volta, failure: volta },
+    auto_return: "approved",
+    statement_descriptor: "MOKSHA",
+  });
+  await pool.query(`UPDATE purchases SET mp_preference = $1 WHERE id = $2`, [pref.id, id]);
+  send(res, 201, { ok: true, pedido: Number(id), url: pref.init_point });
+};
+
+// situação de um pedido (a página volta do Mercado Pago com ?pedido=N)
+routes["GET /api/loja/pedido"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u) return fail(res, 401, "sem_sessao");
+  const id = Number(new URL(req.url, "http://x").searchParams.get("id"));
+  if (!Number.isSafeInteger(id)) return fail(res, 400, "pedido_invalido");
+  let { rows } = await pool.query(`SELECT id, item, status FROM purchases WHERE id = $1 AND user_id = $2`, [id, u.id]);
+  if (!rows[0]) return fail(res, 404, "nao_encontrado");
+  // o webhook pode demorar: enquanto pendente, pergunta direto ao Mercado Pago
+  if (rows[0].status === "pendente" && MP_TOKEN && !limited("ped:" + id, 30, 10 * 60_000)) {
+    const busca = await mp("GET", `/v1/payments/search?external_reference=${id}&sort=date_created&criteria=desc`).catch(() => null);
+    for (const p of (busca && busca.results) || []) await applyPayment(p);
+    ({ rows } = await pool.query(`SELECT id, item, status FROM purchases WHERE id = $1`, [id]));
+  }
+  send(res, 200, { pedido: Number(rows[0].id), item: rows[0].item, situacao: rows[0].status });
+};
+
+// o pagamento (vindo da API do Mercado Pago) muda o pedido
+async function applyPayment(p) {
+  const id = Number(p.external_reference);
+  if (!Number.isSafeInteger(id)) return;
+  const { rows } = await pool.query(`SELECT item, amount_cents, status FROM purchases WHERE id = $1`, [id]);
+  if (!rows[0]) return;
+  let status = null;
+  if (p.status === "approved") {
+    const pago = Math.round(Number(p.transaction_amount) * 100);
+    if (p.currency_id !== "BRL" || pago < rows[0].amount_cents) {
+      console.error(`[loja] pedido ${id}: valor não confere (${p.transaction_amount} ${p.currency_id})`);
+      return;
+    }
+    status = "aprovado";
+  } else if (p.status === "refunded" || p.status === "charged_back") {
+    status = "estornado";
+  } else if ((p.status === "rejected" || p.status === "cancelled") && rows[0].status === "pendente") {
+    status = "recusado";
+  }
+  if (!status || status === rows[0].status) return;
+  await pool.query(`UPDATE purchases SET status = $1, mp_payment = $2, updated_at = now() WHERE id = $3`, [status, String(p.id), id]);
+  console.log(`[loja] pedido ${id} (${rows[0].item}): ${status}`);
+}
+
+// aviso do Mercado Pago. Não confiamos no conteúdo: só no id, que buscamos na API deles.
+routes["POST /api/loja/webhook"] = async (req, res) => {
+  const q = new URL(req.url, "http://x").searchParams;
+  const b = await readJson(req).catch(() => ({}));
+  const tipo = b.type || q.get("type") || q.get("topic");
+  const pid = String((b.data && b.data.id) || q.get("data.id") || q.get("id") || "");
+  send(res, 200, { ok: true });
+  if (!MP_TOKEN || tipo !== "payment" || !/^\d{1,20}$/.test(pid)) return;
+  try { await applyPayment(await mp("GET", `/v1/payments/${pid}`)); }
+  catch (e) { console.error("[loja] webhook:", e.message); }
+};
+
+// o dono dá um item de presente (testes, sorteios, suporte): vira um pedido aprovado de R$ 0
+routes["POST /api/admin/presentear"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u || !ADMINS.includes(u.email)) return fail(res, 403, "proibido");
+  const b = await readJson(req);
+  if (!LOJA[b.item]) return fail(res, 400, "item_invalido");
+  const { rows } = await pool.query(`SELECT user_id FROM characters WHERE lower(name) = lower($1)`, [String(b.nome || "").trim()]);
+  if (!rows[0]) return fail(res, 404, "nao_encontrado");
+  await pool.query(`INSERT INTO purchases (user_id, item, amount_cents, status, mp_payment) VALUES ($1, $2, 0, 'aprovado', 'presente')`,
+    [rows[0].user_id, b.item]);
+  console.log(`[loja] presente ${b.item} para ${b.nome} (por ${u.email})`);
+  send(res, 201, { ok: true });
+};
+
+routes["GET /api/admin/vendas"] = async (req, res) => {
+  const u = await currentUser(req);
+  if (!u || !ADMINS.includes(u.email)) return fail(res, 403, "proibido");
+  const { rows } = await pool.query(`SELECT p.id, p.item, p.amount_cents AS centavos, p.status AS situacao, p.created_at AS em, c.name AS nome
+      FROM purchases p LEFT JOIN characters c USING (user_id) ORDER BY p.id DESC LIMIT 100`);
+  const { rows: [tot] } = await pool.query(`SELECT coalesce(sum(amount_cents), 0)::int AS centavos, count(*)::int AS pedidos
+      FROM purchases WHERE status = 'aprovado'`);
+  send(res, 200, { total: tot, pedidos: rows });
+};
+
 const server = http.createServer(async (req, res) => {
   const path = req.url.split("?")[0];
   const handler = routes[`${req.method} ${path}`];
   if (!handler) return fail(res, 404, "nao_encontrado");
-  if (req.method !== "GET" && !sameSiteWrite(req)) return fail(res, 403, "origem_invalida");
+  // o webhook vem do Mercado Pago (outro site); ele não confia no corpo, só no id que busca na API deles
+  if (req.method !== "GET" && path !== "/api/loja/webhook" && !sameSiteWrite(req)) return fail(res, 403, "origem_invalida");
   try {
     await handler(req, res);
   } catch (e) {

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ultima_pagina"
+title = "A Última Página"
+unlock = "loja"
+pack = "profecia"
+cloak = Color(0.910, 0.863, 0.753, 1)
+cloak_dark = Color(0.690, 0.635, 0.518, 1)
+hood = Color(0.165, 0.141, 0.102, 1)
+eye = Color(1.000, 0.416, 0.227, 1)
+scarf = Color(0.165, 0.141, 0.102, 1)
+lore = "Escrita em todas as línguas, com uma frase só. Você sabe qual."
+chromas = [{"id": "tinta", "title": "Tinta", "cloak": "#1e1c24", "cloak_dark": "#121118", "hood": "#0a090e", "eye": "#ff6a3a", "scarf": "#e8dcc0", "cost": 0}]

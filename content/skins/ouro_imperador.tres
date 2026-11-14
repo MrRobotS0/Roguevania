@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ouro_imperador"
+title = "Ouro do Imperador"
+unlock = "loja"
+pack = "profecia"
+cloak = Color(0.784, 0.627, 0.251, 1)
+cloak_dark = Color(0.541, 0.416, 0.141, 1)
+hood = Color(0.165, 0.110, 0.063, 1)
+eye = Color(1.000, 0.949, 0.753, 1)
+scarf = Color(0.478, 0.118, 0.180, 1)
+closed_eyes = true
+lore = "Tecido para um imperador que não queria ver. Os olhos fechados vêm junto."
+chromas = [{"id": "eclipse", "title": "Eclipse", "cloak": "#1a1612", "cloak_dark": "#0e0c0a", "hood": "#0a0806", "eye": "#fff2c0", "scarf": "#c8a040", "cost": 0}]

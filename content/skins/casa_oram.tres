@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "casa_oram"
+title = "Estandarte de Oram"
+unlock = "loja"
+pack = "casas"
+cloak = Color(0.122, 0.420, 0.416, 1)
+cloak_dark = Color(0.075, 0.271, 0.267, 1)
+hood = Color(0.051, 0.122, 0.133, 1)
+eye = Color(0.949, 0.757, 0.306, 1)
+scarf = Color(0.910, 0.863, 0.753, 1)
+lore = "As cores da Casa Oram, que guarda a cinza em jarros de vidro e chama isso de fé."
+chromas = [{"id": "mare", "title": "Maré", "cloak": "#2a5a8a", "cloak_dark": "#1a3a5c", "hood": "#0c1624", "eye": "#f2c14e", "scarf": "#e8dcc0", "cost": 0}, {"id": "sal", "title": "Sal", "cloak": "#d8d4c8", "cloak_dark": "#98948a", "hood": "#22201c", "eye": "#1f6b6a", "scarf": "#1f6b6a", "cost": 0}]

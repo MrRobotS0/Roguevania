@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cinza_sagrada"
+title = "Cinza Sagrada"
+unlock = "loja"
+pack = "casas"
+cloak = Color(0.722, 0.690, 0.643, 1)
+cloak_dark = Color(0.494, 0.467, 0.424, 1)
+hood = Color(0.118, 0.102, 0.094, 1)
+eye = Color(1.000, 0.824, 0.478, 1)
+scarf = Color(0.949, 0.937, 0.902, 1)
+lore = "Coberto da cinza que as três Casas disputam. Nenhuma delas reconhece você."
+chromas = [{"id": "brasa_viva", "title": "Brasa Viva", "cloak": "#8a8078", "cloak_dark": "#5a544e", "hood": "#1a1210", "eye": "#ff8a3a", "scarf": "#ff6a2a", "cost": 0}]

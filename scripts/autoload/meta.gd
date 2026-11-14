@@ -18,6 +18,7 @@ var data := {}
 var cloud := false          # salvando na conta (só no navegador, com o save real)
 var player_name := ""       # nome do personagem criado no site
 var _rev := 0               # cada envio leva um número maior; o servidor ignora o que chegar atrasado
+var store_skins: Array = []  # aparências compradas na loja (vêm da conta, nunca do save)
 var _offline := false       # não leu a conta: não manda nada, para não sobrescrever o legado de verdade
 
 
@@ -107,9 +108,11 @@ func _load_cloud() -> void:
 		if cached is Dictionary:
 			player_name = String(cached.get("nome", ""))
 			_merge(cached.get("data"))
+			_set_store(cached.get("compras"))
 		return
 	player_name = String(body.get("nome", ""))
 	_rev = int(body.get("rev", 0))
+	_set_store(body.get("compras"))
 	if body.get("data") is Dictionary:
 		_merge(body["data"])
 		_write_cache()
@@ -141,7 +144,14 @@ func _save_cloud() -> void:
 func _write_cache() -> void:
 	var f := FileAccess.open(CLOUD_CACHE, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"nome": player_name, "rev": _rev, "data": data}))
+		f.store_string(JSON.stringify({"nome": player_name, "rev": _rev, "data": data, "compras": store_skins}))
+
+
+func _set_store(list: Variant) -> void:
+	store_skins = []
+	if list is Array:
+		for id in list:
+			store_skins.append(String(id))
 
 
 func _to_account_page() -> void:
@@ -191,6 +201,8 @@ func has_skin(s: SkinData) -> bool:
 			return is_unlocked(s.id)
 		"feat":
 			return feat_done(s.feat)
+		"loja":
+			return store_skins.has(s.id)
 	return true
 
 
@@ -712,6 +724,7 @@ func desktop_logout() -> void:
 	desk_token = ""
 	desk_user = ""
 	player_name = ""
+	store_skins = []
 	_desk_rev = 0
 	_desk_ready = false
 	_desk_write()
@@ -734,6 +747,7 @@ func _desk_pull() -> void:
 		return   # sem internet: segue local e tenta de novo na próxima abertura
 	var body: Dictionary = r["body"]
 	player_name = String(body.get("nome", player_name))
+	_set_store(body.get("compras"))
 	var cloud_rev := int(body.get("rev", 0))
 	# primeiro login neste PC: se aqui há mais partidas que na conta, fica o daqui
 	var keep_local := _desk_fresh and body.get("data") is Dictionary 		and int(data.get("runs", 0)) > int((body["data"] as Dictionary).get("runs", 0))

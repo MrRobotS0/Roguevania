@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Loja</title>
+<meta name="description" content="Aparências para o herói de MOKSHA. Só visual: nenhuma dá vantagem.">
+<meta property="og:title" content="MOKSHA · Loja">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="apple-touch-icon" href="img/icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="comum.js"></script>
+<style>
+  .card.shop { width: min(1040px, 100%); }
+  .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; margin-bottom: 18px; }
+  .top .lead { margin: 0; max-width: 56ch; }
+  .who-line { font: 400 13px var(--pixel); color: var(--dim); letter-spacing: .04em; }
+  .who-line a, .who-line b { color: var(--gold); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font: 400 12px var(--pixel); letter-spacing: .06em;
+    color: var(--ok); border: 2px solid rgba(143,224,138,.45); padding: 4px 10px; }
+  .badge::before { content: ""; width: 8px; height: 8px; background: currentColor; }
+  .notice { margin: 0 0 18px; }
+
+  /* pacotes */
+  .packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 14px; }
+  .pack, .skin { min-width: 0; }
+  .pack h3, .skin h3 { overflow-wrap: anywhere; }
+  .pack { position: relative; display: grid; grid-template-rows: auto 1fr auto; background: var(--bg); border: 2px solid var(--line); }
+  .pack.best { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(242,193,78,.18), 0 0 30px rgba(242,193,78,.12); }
+  .ribbon { position: absolute; top: -2px; right: -2px; z-index: 2; font: 700 11px var(--pixel); letter-spacing: .08em;
+    color: #1a0f04; background: var(--gold); padding: 5px 10px; }
+  .stage { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 0; height: 190px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 100%, rgba(242,193,78,.22), transparent 62%), linear-gradient(#1a1220, #0b0910 75%); }
+  .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+    background: repeating-linear-gradient(90deg, #2a1d18 0 8px, #241913 8px 16px); border-top: 2px solid #5a3e2a; }
+  .stage img { position: relative; z-index: 1; width: 87px; height: 120px; image-rendering: pixelated; margin: 0 -10px 18px; filter: drop-shadow(0 4px 0 rgba(0,0,0,.45)); }
+  .stage.six img { width: 65px; height: 90px; margin: 0 -9px 18px; }
+  .stage img:nth-child(2) { transform: translateY(-4px); z-index: 2; }
+  .pack .body { padding: 14px 16px 6px; }
+  .pack h3, .skin h3 { margin: 0 0 4px; font: 700 16px/1.25 var(--pixel); color: var(--text); letter-spacing: .03em; }
+  .pack p, .skin p { margin: 0; color: var(--dim); font-size: 15px; }
+  .names { margin-top: 8px !important; font-size: 14px !important; }
+  .buy { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; padding: 12px 16px 16px; }
+  .price { display: grid; line-height: 1.1; }
+  .price b { font: 700 22px var(--pixel); color: var(--gold); white-space: nowrap; }
+  .price s { font: 400 13px var(--body); color: var(--dim); }
+  .price em { font: 400 12px var(--pixel); color: var(--ok); font-style: normal; letter-spacing: .04em; }
+  .buy .btn { width: auto; min-width: 128px; margin: 0; font-size: 15px; min-height: 48px; padding: 10px 16px; }
+  .owned { font: 400 13px var(--pixel); color: var(--ok); letter-spacing: .05em; }
+
+  /* avulsas */
+  .skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+  .skin { display: grid; grid-template-rows: auto 1fr auto; background: var(--bg); border: 2px solid var(--line); }
+  .skin .stage { height: 150px; }
+  .skin .stage img { width: 72px; height: 99px; margin: 0 0 18px; }
+  .skin .body { padding: 12px 14px 4px; }
+  .skin .buy { padding: 10px 14px 14px; }
+  .skin .buy .btn { min-width: 0; flex: 1 1 110px; }
+  .swatches { display: flex; align-items: center; gap: 6px; margin-top: 10px; font: 400 11px var(--pixel); color: var(--dim); letter-spacing: .04em; }
+  .swatches i { width: 14px; height: 14px; border: 2px solid var(--line); }
+  .skin.has, .pack.has { border-color: rgba(143,224,138,.5); }
+
+  .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 22px; margin: 0; }
+  .faq div { border-top: 2px solid var(--line); padding-top: 10px; }
+  .faq dt { font-weight: 600; margin-bottom: 4px; }
+  .faq dd { margin: 0; color: var(--dim); font-size: 15px; }
+  .pay { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .pay span { font: 400 11px var(--pixel); letter-spacing: .06em; color: var(--text); border: 2px solid var(--line); padding: 4px 8px; }
+
+  @media (max-width: 480px) {
+    .stage { height: 160px; }
+    .stage img { width: 72px; height: 99px; }
+    .stage.six img { width: 52px; height: 72px; margin: 0 -8px 18px; }
+    .skins { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .skin .stage { height: 120px; }
+    .skin .stage img { width: 58px; height: 80px; }
+    .skin .buy { flex-direction: column; align-items: stretch; }
+    .skin .buy .btn { flex: none; min-height: 44px; font-size: 13px; }
+    .skin h3 { font-size: 12px; overflow-wrap: normal; }
+    .skin .body { padding: 10px 10px 2px; }
+    .skin .buy { padding: 8px 10px 12px; }
+    .skin .price b { font-size: 18px; }
+    .skin p.lore { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<header>
+  <a class="brand" href="/">MOKSHA</a>
+  <div class="lang" role="group" aria-label="Idioma">
+    <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+  <div class="card shop">
+    <div class="top">
+      <div>
+        <h1 data-pt="Loja" data-en="Store">Loja</h1>
+        <p class="lead" data-pt="Aparências para o herói, com variações de cor inclusas. Só visual: nenhuma dá vantagem em combate." data-en="Looks for the hero, colour variants included. Cosmetic only: none of them gives a combat advantage.">Aparências para o herói, com variações de cor inclusas. Só visual: nenhuma dá vantagem em combate.</p>
+      </div>
+      <p class="who-line" id="who" aria-live="polite"></p>
+    </div>
+
+    <p class="msg notice" id="notice" role="status" hidden></p>
+
+    <h2 data-pt="Pacotes" data-en="Packs">Pacotes</h2>
+    <div class="packs" id="packs"></div>
+
+    <h2 data-pt="Avulsas" data-en="Single looks">Avulsas</h2>
+    <div class="skins" id="skins"></div>
+
+    <h2 data-pt="Perguntas" data-en="Questions">Perguntas</h2>
+    <dl class="faq">
+      <div><dt data-pt="Como pago?" data-en="How do I pay?">Como pago?</dt>
+        <dd><span data-pt="Pelo Mercado Pago, sem sair da sua conta MOKSHA." data-en="Through Mercado Pago, linked to your MOKSHA account.">Pelo Mercado Pago, sem sair da sua conta MOKSHA.</span>
+          <div class="pay"><span>PIX</span><span data-pt="CARTÃO" data-en="CARD">CARTÃO</span><span data-pt="SALDO MP" data-en="MP BALANCE">SALDO MP</span></div></dd></div>
+      <div><dt data-pt="Quando a aparência chega?" data-en="When do I get it?">Quando a aparência chega?</dt>
+        <dd data-pt="Assim que o pagamento é aprovado (Pix leva segundos). Abra o jogo de novo e vista em OS MANTOS, na Beira." data-en="As soon as the payment is approved (Pix takes seconds). Reopen the game and wear it at THE CLOAKS, in the Edge.">Assim que o pagamento é aprovado (Pix leva segundos). Abra o jogo de novo e vista em OS MANTOS, na Beira.</dd></div>
+      <div><dt data-pt="Vale no PC também?" data-en="Does it work on PC too?">Vale no PC também?</dt>
+        <dd data-pt="Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA)." data-en="Yes. Purchases live on your account: in the browser and in the Windows game (sign in under EXTRAS > ACCOUNT).">Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA).</dd></div>
+      <div><dt data-pt="Me arrependi. E agora?" data-en="Changed my mind?">Me arrependi. E agora?</dt>
+        <dd data-pt="Você tem 7 dias para pedir o dinheiro de volta (Código de Defesa do Consumidor). Mande pelo botão de feedback do jogo com o número do pedido." data-en="You have 7 days to ask for a refund. Send it through the in-game feedback button with your order number.">Você tem 7 dias para pedir o dinheiro de volta (Código de Defesa do Consumidor). Mande pelo botão de feedback do jogo com o número do pedido.</dd></div>
+      <div><dt data-pt="Por que comprar?" data-en="Why buy?">Por que comprar?</dt>
+        <dd data-pt="O jogo é de graça e feito por uma pessoa só. Cada aparência paga o servidor e o próximo bioma." data-en="The game is free and made by one person. Every look pays for the server and the next biome.">O jogo é de graça e feito por uma pessoa só. Cada aparência paga o servidor e o próximo bioma.</dd></div>
+      <div><dt data-pt="E as aparências do jogo?" data-en="What about in-game looks?">E as aparências do jogo?</dt>
+        <dd data-pt="Continuam sendo ganhas jogando, com essência ou conquistas. A loja só tem aparências que não existem de outro jeito." data-en="Still earned by playing, with essence or achievements. The store only has looks you can't get any other way.">Continuam sendo ganhas jogando, com essência ou conquistas. A loja só tem aparências que não existem de outro jeito.</dd></div>
+    </dl>
+  </div>
+</main>
+<footer><a href="/" data-pt="Página inicial" data-en="Home">Página inicial</a><a href="wiki.html">Wiki</a><a href="ranking.html" data-pt="Ranking" data-en="Leaderboard">Ranking</a><a href="conta.html" data-pt="Conta" data-en="Account">Conta</a><a href="privacidade.html" data-pt="Privacidade" data-en="Privacy">Privacidade</a></footer>
+<script>
+  // Texto e cores de cada aparência (as cores das variações vêm de content/skins/*.tres).
+  const SKINS = {
+    casa_oram: { pt: "Estandarte de Oram", en: "Banner of Oram", cores: ["#1f6b6a", "#2a5a8a", "#d8d4c8"],
+      lore_pt: "As cores da Casa Oram, que guarda a cinza em jarros de vidro e chama isso de fé.",
+      lore_en: "House Oram's colours. They keep the ash in glass jars and call it faith." },
+    casa_kael: { pt: "Estandarte de Kael", en: "Banner of Kael", cores: ["#2a2420", "#4a2a1a", "#c8bca0"],
+      lore_pt: "Kael nunca perdeu uma batalha. Perdeu todas as outras coisas.",
+      lore_en: "Kael never lost a battle. It lost everything else." },
+    cinza_sagrada: { pt: "Cinza Sagrada", en: "Sacred Ash", cores: ["#b8b0a4", "#8a8078"],
+      lore_pt: "Coberto da cinza que as três Casas disputam. Nenhuma delas reconhece você.",
+      lore_en: "Covered in the ash the three Houses fight over. None of them claims you." },
+    ouro_imperador: { pt: "Ouro do Imperador", en: "Emperor's Gold", cores: ["#c8a040", "#1a1612"],
+      lore_pt: "Tecido para um imperador que não queria ver. Os olhos fechados vêm junto.",
+      lore_en: "Woven for an emperor who refused to see. The closed eyes come with it." },
+    fulgurante: { pt: "Fulgurante", en: "Fulgurite", cores: ["#3a7ad8", "#5a3a9a"],
+      lore_pt: "Vidro que lembra de ter sido raio. Brilha mais quando você está com medo.",
+      lore_en: "Glass that remembers being lightning. It glows brighter when you're afraid." },
+    ultima_pagina: { pt: "A Última Página", en: "The Last Page", cores: ["#e8dcc0", "#1e1c24"],
+      lore_pt: "Escrita em todas as línguas, com uma frase só. Você sabe qual.",
+      lore_en: "Written in every language, a single sentence. You know which one." },
+  };
+  const PACK_TEXT = {
+    "pacote:casas": ["Três estandartes da guerra pela cinza.", "Three banners from the war over the ash."],
+    "pacote:profecia": ["O que o livro profético previu, em tecido.", "What the book of prophecy foretold, in cloth."],
+    "pacote:completo": ["As seis aparências da loja, com todas as variações de cor.", "All six store looks, with every colour variant."],
+  };
+  const ERRORS = {
+    loja_fechada: ["A loja abre em breve: o pagamento ainda está sendo configurado.", "The store opens soon: payments are still being set up."],
+    ja_tem: ["Você já tem tudo o que vem nesse item.", "You already own everything in this item."],
+    sem_personagem: ["Crie seu personagem antes de comprar.", "Create your character before buying."],
+    muitas_tentativas: ["Muitas tentativas. Espere um pouco.", "Too many tries. Wait a bit."],
+    rede: ["Sem conexão. Tente de novo.", "No connection. Try again."],
+  };
+  const STATUS = {
+    aprovado: ["ok", "Pagamento aprovado! Abra o jogo de novo para vestir.", "Payment approved! Reopen the game to wear it."],
+    pendente: ["", "Esperando o pagamento. Pix costuma cair em segundos; esta página atualiza sozinha.", "Waiting for payment. Pix usually lands in seconds; this page updates by itself."],
+    recusado: ["err", "O pagamento foi recusado. Nada foi cobrado; tente outro meio.", "The payment was declined. Nothing was charged; try another method."],
+    estornado: ["err", "Esse pedido foi estornado.", "This order was refunded."],
+  };
+
+  let shop = null, buying = null;
+  const pedido = new URLSearchParams(location.search).get("pedido");
+  const money = c => (c / 100).toLocaleString(M.lang === "en" ? "en-US" : "pt-BR", { style: "currency", currency: "BRL" });
+  const img = id => M.el("img", { src: "img/skins/" + id + ".png", alt: "", width: "58", height: "80", loading: "lazy" });
+
+  function notice(kind, text) {
+    const n = document.getElementById("notice");
+    n.className = "msg notice" + (kind ? " " + kind : "");
+    n.textContent = text;
+    n.hidden = !text;
+  }
+
+  function buyArea(item, skins) {
+    const area = M.el("div", { class: "buy" });
+    const price = M.el("div", { class: "price" }, M.el("b", { text: money(item.centavos) }));
+    const single = shop.itens.filter(i => i.id.startsWith("skin:")).reduce((m, i) => (m[i.skins[0]] = i.centavos, m), {});
+    const full = skins.reduce((a, s) => a + (single[s] || 0), 0);
+    if (skins.length > 1 && full > item.centavos) {
+      price.append(M.el("s", { text: money(full) }), M.el("em", { text: M.t("ECONOMIZE ", "SAVE ") + Math.round(100 - item.centavos * 100 / full) + "%" }));
+    }
+    area.append(price);
+    const has = new Set(shop.tem);
+    if (skins.every(s => has.has(s))) {
+      area.append(M.el("span", { class: "owned", text: M.t("✓ VOCÊ TEM", "✓ OWNED") }));
+      return area;
+    }
+    let btn;
+    if (!shop.logado) {
+      btn = M.el("a", { class: "btn", href: "/conta.html?volta=/loja.html", text: M.t("Entrar", "Sign in") });
+    } else {
+      btn = M.el("button", { class: "btn", type: "button", text: shop.aberta ? M.t("Comprar", "Buy") : M.t("Em breve", "Soon") });
+      if (buying === item.id) { btn.disabled = true; btn.textContent = "…"; }
+      btn.addEventListener("click", () => buy(item));
+      btn.setAttribute("aria-label", M.t("Comprar ", "Buy ") + item[M.lang] + " · " + money(item.centavos));
+    }
+    area.append(btn);
+    return area;
+  }
+
+  function render() {
+    if (!shop) return;
+    const L = M.lang;
+    const who = document.getElementById("who");
+    who.replaceChildren();
+    if (shop.logado && shop.nome) who.append(M.t("Comprando para ", "Buying for "), M.el("b", { text: shop.nome }));
+    else if (shop.logado) who.append(M.el("a", { href: "/conta.html?volta=/loja.html", text: M.t("Crie seu personagem para comprar", "Create your character to buy") }));
+    else who.append(M.el("a", { href: "/conta.html?volta=/loja.html", text: M.t("Entre na conta para comprar", "Sign in to buy") }));
+
+    const has = new Set(shop.tem);
+    const packs = shop.itens.filter(i => i.id.startsWith("pacote:"));
+    document.getElementById("packs").replaceChildren(...packs.map(p => {
+      const all = p.skins.every(s => has.has(s));
+      const box = M.el("article", { class: "pack" + (p.id === "pacote:completo" ? " best" : "") + (all ? " has" : "") });
+      if (p.id === "pacote:completo") box.append(M.el("span", { class: "ribbon", text: M.t("MELHOR PREÇO", "BEST VALUE") }));
+      box.append(M.el("div", { class: "stage" + (p.skins.length > 3 ? " six" : "") }, ...p.skins.map(img)));
+      const t = PACK_TEXT[p.id] || ["", ""];
+      box.append(M.el("div", { class: "body" }, M.el("h3", { text: p[L] }), M.el("p", { text: L === "en" ? t[1] : t[0] }),
+        M.el("p", { class: "names", text: p.skins.map(s => SKINS[s] ? SKINS[s][L] : s).join(" · ") })));
+      box.append(buyArea(p, p.skins));
+      return box;
+    }));
+
+    const singles = shop.itens.filter(i => i.id.startsWith("skin:"));
+    document.getElementById("skins").replaceChildren(...singles.map(i => {
+      const id = i.skins[0], s = SKINS[id] || { pt: i.pt, en: i.en, cores: [] };
+      const box = M.el("article", { class: "skin" + (has.has(id) ? " has" : "") });
+      box.append(M.el("div", { class: "stage" }, img(id)));
+      const sw = M.el("div", { class: "swatches", title: M.t("Variações de cor inclusas", "Colour variants included") },
+        ...s.cores.map(c => { const e = M.el("i"); e.style.background = c; return e; }),
+        M.el("span", { text: s.cores.length + M.t(" CORES", " COLOURS") }));
+      box.append(M.el("div", { class: "body" }, M.el("h3", { text: s[L] }), M.el("p", { class: "lore", text: L === "en" ? s.lore_en : s.lore_pt }), sw));
+      box.append(buyArea(i, i.skins));
+      return box;
+    }));
+  }
+
+  async function buy(item) {
+    if (buying) return;
+    if (!shop.aberta) { notice("", M.t(ERRORS.loja_fechada[0], ERRORS.loja_fechada[1])); return; }
+    if (!shop.nome) { location.href = "/conta.html?volta=/loja.html"; return; }
+    buying = item.id; render();
+    const r = await M.api("POST", "/api/loja/comprar", { item: item.id });
+    if (r.ok && r.url) { location.href = r.url; return; }
+    buying = null; render();
+    if (r.status === 401) { location.href = "/conta.html?volta=/loja.html"; return; }
+    const e = ERRORS[r.erro] || ["Não deu para abrir o pagamento. Tente de novo.", "Couldn't open the payment. Try again."];
+    notice("err", M.t(e[0], e[1]));
+  }
+
+  async function load() {
+    const r = await M.api("GET", "/api/loja");
+    if (!r.ok) { notice("err", M.t("A loja não carregou. Recarregue a página.", "The store didn't load. Reload the page.")); return; }
+    shop = r;
+    if (!shop.aberta && !pedido) notice("", M.t(ERRORS.loja_fechada[0], ERRORS.loja_fechada[1]));
+    render();
+  }
+
+  // voltou do Mercado Pago: mostra a situação e pergunta de novo enquanto estiver pendente
+  async function watchOrder(tries = 0) {
+    const r = await M.api("GET", "/api/loja/pedido?id=" + encodeURIComponent(pedido));
+    if (!r.ok) return;
+    const st = STATUS[r.situacao] || STATUS.pendente;
+    notice(st[0], M.t("Pedido #", "Order #") + r.pedido + " · " + M.t(st[1], st[2]));
+    if (r.situacao === "aprovado") await load();
+    else if (r.situacao === "pendente" && tries < 40) setTimeout(() => watchOrder(tries + 1), tries < 10 ? 3000 : 8000);
+  }
+
+  M.onLang(render);
+  load().then(() => { if (pedido && /^\d+$/.test(pedido)) watchOrder(); });
+</script>
+</body>
+</html>

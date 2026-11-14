@@ -465,6 +465,8 @@ def skin_rows():
             how = bi("Já vem liberada", "Unlocked from the start")
         elif s.get("unlock") == "essence":
             how = bi("%d de essência" % s.get("cost", 0), "%d essence" % s.get("cost", 0))
+        elif s.get("unlock") == "loja":
+            how = bi("Na loja do site", "In the website store")
         else:
             how = bi(s.get("feat_text", "").capitalize(), sentence(EN.get(s.get("feat_text", ""), s.get("feat_text", ""))))
         chromas = len(re.findall(r'"id": ', open(os.path.join(ROOT, "content", "skins", sid + ".tres"), encoding="utf-8").read().split("chromas = ")[-1]))

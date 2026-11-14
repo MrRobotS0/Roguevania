@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fulgurante"
+title = "Fulgurante"
+unlock = "loja"
+pack = "profecia"
+cloak = Color(0.227, 0.478, 0.847, 1)
+cloak_dark = Color(0.141, 0.314, 0.561, 1)
+hood = Color(0.055, 0.102, 0.200, 1)
+eye = Color(0.910, 0.984, 1.000, 1)
+scarf = Color(0.624, 0.910, 1.000, 1)
+lore = "Vidro que lembra de ter sido raio. Brilha mais quando você está com medo."
+chromas = [{"id": "tempestade", "title": "Tempestade", "cloak": "#5a3a9a", "cloak_dark": "#3a2466", "hood": "#140c24", "eye": "#f0e0ff", "scarf": "#c8a8ff", "cost": 0}]

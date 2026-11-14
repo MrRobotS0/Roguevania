@@ -97,6 +97,12 @@ const SKINS := [
 	"res://content/skins/rei_esquecido.tres",
 	"res://content/skins/tentaculo.tres",
 	"res://content/skins/vestes_afogadas.tres",
+	"res://content/skins/casa_oram.tres",
+	"res://content/skins/casa_kael.tres",
+	"res://content/skins/cinza_sagrada.tres",
+	"res://content/skins/ouro_imperador.tres",
+	"res://content/skins/fulgurante.tres",
+	"res://content/skins/ultima_pagina.tres",
 ]
 
 const BIOMES := {
