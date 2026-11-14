@@ -205,11 +205,13 @@
         email_em_uso: "Já existe uma conta com esse e-mail. Entre ou use \"Esqueci a senha\".",
         login_invalido: "E-mail/usuário ou senha errados.",
         usuario_invalido: "Usuário: 3 a 20 letras sem acento, números, ponto, hífen ou sublinhado (começa e termina com letra ou número).",
-        usuario_em_uso: "Esse nome de usuário já tem dono. Tente outro.", muitas_tentativas: "Muitas tentativas. Espere alguns minutos e tente de novo.",
+        usuario_em_uso: "Esse nome de usuário já tem dono. Tente outro.", usuario_curto: "Pelo menos 3 caracteres.", nome_curto: "Pelo menos 3 letras.", muitas_tentativas: "Muitas tentativas. Espere alguns minutos e tente de novo.",
         nome_invalido: "Use de 3 a 16 letras ou números (espaço e hífen podem, mas não no começo nem no fim).",
         nome_em_uso: "Esse nome já tem dono. Tente outro.", link_expirado: "Esse link venceu ou já foi usado. Peça outro em \"Esqueci a senha\".",
         sem_sessao: "Sua sessão acabou. Entre de novo.", rede: "Não deu para falar com o servidor. Confira sua internet.",
         origem_invalida: "Abra o site pelo endereço moksha.com.br e tente de novo.",
+        livre: "✓ Disponível", conferindo: "Conferindo…",
+        email_em_uso_campo: "Esse e-mail já tem conta. Entre com ele ou use \"Esqueci a senha\".",
         outro: "Algo deu errado. Tente de novo.",
       },
     },
@@ -238,7 +240,9 @@
         login_invalido: "Wrong email/username or password.",
         usuario_invalido: "Username: 3 to 20 letters (no accents), numbers, dot, hyphen or underscore (start and end with a letter or number).",
         origem_invalida: "Open the site at moksha.com.br and try again.",
-        usuario_em_uso: "That username is taken. Try another.", muitas_tentativas: "Too many attempts. Wait a few minutes and try again.",
+        livre: "✓ Available", conferindo: "Checking…",
+        email_em_uso_campo: "That email already has an account. Sign in or use \"Forgot password\".",
+        usuario_em_uso: "That username is taken. Try another.", usuario_curto: "At least 3 characters.", nome_curto: "At least 3 letters.", muitas_tentativas: "Too many attempts. Wait a few minutes and try again.",
         nome_invalido: "Use 3 to 16 letters or numbers (spaces and hyphens are fine, but not at the start or end).",
         nome_em_uso: "That name is taken. Try another.", link_expirado: "That link expired or was already used. Ask for a new one under \"Forgot password\".",
         sem_sessao: "Your session ended. Sign in again.", rede: "Couldn't reach the server. Check your connection.",
@@ -295,13 +299,56 @@
   // qual campo cada erro aponta (fica vermelho e recebe o foco)
   const FIELD = { email_invalido: "email", email_em_uso: "email", usuario_invalido: "usuario", usuario_em_uso: "usuario",
     senha_curta: "senha", senha_longa: "senha", senhas_diferentes: "senha2", nome_invalido: "nome", nome_em_uso: "nome" };
+  // Aviso embaixo do campo (vermelho = corrigir; verde = ok). Fica no próprio label.
+  function fieldMsg(input, text, ok) {
+    let m = input.parentElement.querySelector(".field-msg");
+    if (!m) {
+      m = document.createElement("span");
+      m.className = "field-msg";
+      m.id = "fm-" + input.form.id + "-" + input.name;
+      m.setAttribute("aria-live", "polite");
+      input.after(m);
+      input.setAttribute("aria-describedby", m.id);
+    }
+    m.textContent = text || "";
+    m.classList.toggle("ok", Boolean(ok));
+    m.hidden = !text;
+    if (text && !ok) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+  }
+
   function fail(form, code) {
     const box = form.querySelector(".msg.err");
+    const input = FIELD[code] && form.querySelector(`[name="${FIELD[code]}"]`);
+    if (input) {
+      // o aviso vai para o campo; o quadro de baixo fica livre para o que não é de campo nenhum
+      box.hidden = true;
+      fieldMsg(input, errorText(code === "email_em_uso" ? "email_em_uso_campo" : code));
+      input.focus();
+      return;
+    }
     box.textContent = errorText(code);
     box.hidden = false;
-    form.querySelectorAll("[aria-invalid]").forEach(i => i.removeAttribute("aria-invalid"));
-    const input = FIELD[code] && form.querySelector(`[name="${FIELD[code]}"]`);
-    if (input) { input.setAttribute("aria-invalid", "true"); input.focus(); }
+  }
+
+  // Usuário e nome do personagem: confere formato e se está livre enquanto digita
+  function liveCheck(input, kind, clean) {
+    let timer = 0, seq = 0;
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      const v = clean(input.value);
+      if (!v) { fieldMsg(input, ""); return; }
+      const mine = ++seq;
+      timer = setTimeout(async () => {
+        if (kind === "usuario" && !USER_OK.test(v)) { fieldMsg(input, errorText(v.length < 3 ? "usuario_curto" : "usuario_invalido")); return; }
+        if (kind === "nome" && (v.length < 3)) { fieldMsg(input, errorText("nome_curto")); return; }
+        fieldMsg(input, errorText("conferindo"), true);
+        const r = await api("GET", "/api/disponivel?" + kind + "=" + encodeURIComponent(v));
+        if (mine !== seq) return;           // a pessoa já digitou outra coisa
+        if (!r.ok) { fieldMsg(input, ""); return; }
+        if (r.livre) fieldMsg(input, errorText("livre"), true);
+        else fieldMsg(input, errorText(r.erro));
+      }, 450);
+    });
   }
 
   // Usuário: tira acento e troca espaço por _ enquanto digita (era o erro mais comum no cadastro)
@@ -312,8 +359,14 @@
   document.querySelectorAll('input[name="usuario"]').forEach(inp => inp.addEventListener("input", () => {
     const c = cleanUser(inp.value);
     if (c !== inp.value) inp.value = c;
-    inp.removeAttribute("aria-invalid");
   }));
+  liveCheck(document.querySelector('#f-criar input[name="usuario"]'), "usuario", v => v.trim());
+  liveCheck(document.querySelector('#f-personagem input[name="nome"]'), "nome", v => v.normalize("NFC").replace(/\s+/g, " ").trim());
+  // mexeu no campo: some o aviso vermelho dele (os de usuário e nome o liveCheck cuida)
+  document.querySelectorAll("form input").forEach(inp => {
+    if (inp.name === "usuario" || inp.name === "nome") return;
+    inp.addEventListener("input", () => { if (inp.getAttribute("aria-invalid")) fieldMsg(inp, ""); });
+  });
 
   function busy(form, on) {
     const b = form.querySelector("button[type=submit]");

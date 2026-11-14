@@ -333,6 +333,27 @@ const routes = {
   },
 };
 
+// --- nome livre? (a página de conta pergunta enquanto a pessoa digita) -----------------
+// Só usuário e nome de personagem: o nome do personagem já é público (ranking, perfil).
+// E-mail não, para ninguém descobrir quem tem conta (ele é conferido só ao cadastrar).
+routes["GET /api/disponivel"] = async (req, res) => {
+  if (limited("disp:" + ip(req), 120, 10 * 60_000)) return fail(res, 429, "muitas_tentativas");
+  const q = new URL(req.url, "http://x").searchParams;
+  if (q.has("usuario")) {
+    const u = cleanUsername(q.get("usuario"));
+    if (!u) return send(res, 200, { livre: false, erro: "usuario_invalido" });
+    const { rowCount } = await pool.query(`SELECT 1 FROM users WHERE lower(username) = lower($1)`, [u]);
+    return send(res, 200, rowCount ? { livre: false, erro: "usuario_em_uso" } : { livre: true });
+  }
+  if (q.has("nome")) {
+    const n = cleanName(q.get("nome"));
+    if (!n) return send(res, 200, { livre: false, erro: "nome_invalido" });
+    const { rowCount } = await pool.query(`SELECT 1 FROM characters WHERE lower(name) = lower($1)`, [n]);
+    return send(res, 200, rowCount ? { livre: false, erro: "nome_em_uso" } : { livre: true });
+  }
+  fail(res, 400, "pedido_invalido");
+};
+
 // --- conta: trocar senha e excluir ---------------------------------------------------
 
 routes["POST /api/trocar-senha"] = async (req, res) => {

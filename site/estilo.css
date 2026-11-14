@@ -122,3 +122,7 @@
     .feats { grid-template-columns: minmax(0, 1fr); }
     footer a { margin: 4px 8px; }
   }
+
+  /* aviso embaixo do campo (conta.html): vermelho = corrigir, verde = ok */
+  .field-msg { font: 400 14px/1.35 var(--body); color: var(--blood); letter-spacing: 0; }
+  .field-msg.ok { color: var(--ok); }
