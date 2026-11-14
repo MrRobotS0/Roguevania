@@ -125,6 +125,7 @@ var skin: SkinData
 var _scarf: Array[Vector2] = []
 var _ghosts: Array = []          # rastros da rolagem/mergulho: [posição, tempo, quadro]
 var _ghost_clock := 0.0
+var _trail_clock := 0.0
 var _air_hangs := AIR_HANGS
 var _hang_move := false
 
@@ -636,7 +637,10 @@ func _attack_state(delta: float) -> void:
 			velocity.x = facing * float(m.get("lunge", 0.0))
 		Sfx.play("swing_heavy" if m.get("shape", "") == "smash" else "swing", -6.0)
 		# clarão do golpe: a lâmina acende o que está na frente por um instante
-		Fx.flash_light(center() + Vector2(facing * 14.0, 0), Palette.SLASH, 52.0, 0.55, 0.12)
+		var blade_fx := Cosmetics.worn("blade")
+		Fx.flash_light(center() + Vector2(facing * 14.0, 0), Color(String(blade_fx["color"])) if not blade_fx.is_empty() else Palette.SLASH, 52.0, 0.55, 0.12)
+		if not blade_fx.is_empty():
+			Fx.burst(center() + Vector2(facing * 16.0, -2.0), Color(String(blade_fx["spark"])), 5, 110.0, 0.25, 160.0, 1.0)
 	if _state_time >= startup and _state_time < active_end:
 		_check_swing(g, m)
 
@@ -1464,7 +1468,8 @@ func _draw_slash() -> void:
 		return
 	var fade := 1.0 - shown / span
 	var reach: Vector2 = m["reach"]
-	var color := Palette.SLASH.lerp(_blade_color(), 0.3)
+	var blade_fx := Cosmetics.worn("blade")
+	var color := Palette.SLASH.lerp(_blade_color(), 0.3) if blade_fx.is_empty() else Color(String(blade_fx["color"])).lerp(Palette.SLASH, 0.15)
 	color.a = 0.35 + 0.6 * fade
 
 	var points := PackedVector2Array()
@@ -1579,6 +1584,22 @@ func _update_ghosts(delta: float) -> void:
 	if body and (state == State.ROLL or state == State.DIVE) and _ghost_clock <= 0.0:
 		_ghost_clock = 0.035
 		_ghosts.append([global_position, 0.18, body.frame, facing])
+	# rastro da loja: partículas ao correr e rolar (só cor; não esconde nada)
+	_trail_clock -= delta
+	if _trail_clock <= 0.0 and state != State.DEAD:
+		var fx := Cosmetics.worn("trail")
+		var moving := absf(velocity.x) > 60.0 and is_on_floor()
+		if not fx.is_empty() and (moving or state == State.ROLL or state == State.DIVE):
+			_trail_clock = 0.05 if state == State.ROLL else 0.09
+			var c := Color(String(fx["particle"]))
+			var at := global_position + Vector2(-facing * 4.0, -3.0)
+			match String(fx["kind"]):
+				"sobe":
+					Fx.burst(at, c, 2, 25.0, 0.55, -140.0, 1.0, 10.0)
+				"cai":
+					Fx.burst(at + Vector2(0, -14), c, 2, 20.0, 0.6, 90.0, 1.0)
+				_:
+					Fx.burst(at + Vector2(0, -8), c, 1, 6.0, 0.5, 0.0, 1.0)
 
 
 # A folha importada já traz espada, capa e lenço desenhados à mão.
@@ -1595,7 +1616,8 @@ func _draw_ghosts() -> void:
 	var fh := float(m.get("h", 32))
 	for g in _ghosts:
 		var at: Vector2 = g[0] - global_position
-		var tint := skin.cloak.lightened(0.35) if not _drawn_art() else Color("ff6a7a")
+		var trail_fx := Cosmetics.worn("trail")
+		var tint := Color(String(trail_fx["color"])) if not trail_fx.is_empty() else (skin.cloak.lightened(0.35) if not _drawn_art() else Color("ff6a7a"))
 		tint.a = 0.5 * g[1] / 0.18
 		var f: int = g[2]
 		draw_set_transform(at, 0.0, Vector2(g[3], 1))

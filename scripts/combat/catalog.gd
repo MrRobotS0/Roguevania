@@ -103,6 +103,14 @@ const SKINS := [
 	"res://content/skins/ouro_imperador.tres",
 	"res://content/skins/fulgurante.tres",
 	"res://content/skins/ultima_pagina.tres",
+	"res://content/skins/abissal.tres",
+	"res://content/skins/coral_morto.tres",
+	"res://content/skins/voz_do_fundo.tres",
+	"res://content/skins/constelacao.tres",
+	"res://content/skins/aurora.tres",
+	"res://content/skins/sol_negro.tres",
+	"res://content/skins/brasa_eterna.tres",
+	"res://content/skins/inverno_longo.tres",
 ]
 
 const BIOMES := {

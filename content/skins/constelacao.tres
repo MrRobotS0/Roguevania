@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "constelacao"
+title = "Constelação"
+unlock = "loja"
+pack = "ceu"
+cloak = Color(0.102, 0.125, 0.314, 1)
+cloak_dark = Color(0.063, 0.078, 0.227, 1)
+hood = Color(0.027, 0.031, 0.094, 1)
+eye = Color(1.000, 0.949, 0.753, 1)
+scarf = Color(0.949, 0.757, 0.306, 1)
+lore = "Bordado com o mapa do céu de antes. Algumas estrelas já não estão lá."
+chromas = [{"id": "nebulosa", "title": "Nebulosa", "cloak": "#4a2060", "cloak_dark": "#2e1440", "hood": "#120818", "eye": "#ffd0f0", "scarf": "#ff8ac8", "cost": 0}]

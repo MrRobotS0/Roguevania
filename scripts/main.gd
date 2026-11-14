@@ -350,6 +350,47 @@ func open_weekly() -> void:
 		_on_title_option.call_deferred("weekly_go" if i == 0 else "weekly"))
 
 
+# Os Mantos: aparência do herói e os efeitos da loja (lâmina, rastro, filtro).
+func open_wardrobe() -> void:
+	var kinds := ["skin", "blade", "trail", "filter"]
+	var options: Array[Dictionary] = [{"label": "MANTOS", "detail": "A APARÊNCIA DO HERÓI · EM USO: " + Meta.current_skin().title.to_upper()}]
+	for kind in kinds.slice(1):
+		var k: Dictionary = Cosmetics.KINDS[kind]
+		var have := (k["list"] as Dictionary).keys().filter(func(id: String) -> bool: return Cosmetics.owned(id)).size()
+		var now := Cosmetics.worn(kind)
+		var detail := String(k["detail"]) + (" · EM USO: " + String(now["title"]).to_upper() if not now.is_empty() else "")
+		if have == 0:
+			detail = String(k["detail"]) + " · NA LOJA · MOKSHA.COM.BR/LOJA"
+		options.append({"label": "%s  ·  %d/%d" % [k["title"], have, (k["list"] as Dictionary).size()], "detail": detail,
+			"color": Palette.UI_TEXT if have > 0 else Palette.UI_DIM})
+	menu.open_choice("OS MANTOS", "SÓ MUDA O VISUAL.", options, func(i: int) -> void:
+		if i == 0:
+			open_skins.call_deferred()
+		else:
+			open_fx.call_deferred(kinds[i]))
+
+
+# Lâminas, rastros ou filtros: "nenhum" e os da loja (os que faltam ficam apagados).
+func open_fx(kind: String) -> void:
+	var k: Dictionary = Cosmetics.KINDS[kind]
+	var list: Dictionary = k["list"]
+	var ids: Array[String] = [""]
+	for id: String in list:
+		ids.append(id)
+	var now := Cosmetics.worn_id(kind)
+	var options: Array[Dictionary] = []
+	for id in ids:
+		var owned := id == "" or Cosmetics.owned(id)
+		var title := "NENHUM" if id == "" else String(list[id]["title"]).to_upper()
+		options.append({"label": title + ("  ·  EM USO" if id == now else ""), "disabled": not owned,
+			"detail": ("O PADRÃO DO JOGO" if id == "" else "SÓ VISUAL") if owned else "NA LOJA · MOKSHA.COM.BR/LOJA",
+			"color": Palette.GOLD if id == now else (Color(String(list[id]["color"])) if id != "" and owned else Palette.UI_TEXT)})
+	menu.open_choice(String(k["title"]), String(k["detail"]), options, func(i: int) -> void:
+		Cosmetics.wear(kind, ids[i])
+		open_fx.call_deferred(kind))
+	menu.select(maxi(ids.find(now), 0))
+
+
 # Escolha de aparência. As trancadas aparecem apagadas, dizendo como ganhar.
 func open_skins() -> void:
 	var list := Catalog.skins()
@@ -430,7 +471,7 @@ func _rebirth() -> void:
 func _on_station(kind: String) -> void:
 	match kind:
 		"mantos":
-			open_skins()
+			open_wardrobe()
 		"poco":
 			open_well()
 		"carroca":

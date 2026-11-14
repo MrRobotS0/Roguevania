@@ -8,7 +8,8 @@ extends ColorRect
 # - ondas de choque (distorção em anel) na morte de elite/chefe e nos críticos;
 # - meia-luz animada: um véu de luz quente que respira bem devagar;
 # - pontilhado ordenado (Bayer 4x4) de 1/255 para não formar degraus no degradê.
-# Opções > Tela > EFEITOS DE TELA desliga tudo.
+# - filtro da loja (Cosmetics.FILTERS): gradação de cor da tela inteira.
+# Opções > Tela > EFEITOS DE TELA desliga tudo, menos o filtro que o jogador escolheu.
 
 const SHADER := """
 shader_type canvas_item;
@@ -27,6 +28,29 @@ uniform vec4 wave1 = vec4(0.5, 0.5, -1.0, 0.0);
 uniform float aspect = 1.7778;
 uniform float time = 0.0;
 uniform float breathe = 0.0;
+uniform int filter_mode = 0;
+
+vec3 store_filter(vec3 c, vec2 frag) {
+	float l = dot(c, vec3(0.299, 0.587, 0.114));
+	if (filter_mode == 1) {          // Pergaminho: sépia
+		return mix(c, vec3(l) * vec3(1.08, 0.9, 0.66) + vec3(0.05, 0.025, 0.0), 0.85);
+	} else if (filter_mode == 2) {   // Luto: preto e branco duro, só o vermelho sobrevive
+		float g = smoothstep(0.04, 0.92, l);
+		float red = clamp((c.r - max(c.g, c.b) * 2.2) * 4.0, 0.0, 1.0);
+		return mix(vec3(g), c, red);
+	} else if (filter_mode == 3) {   // Fósforo: monitor verde com linhas
+		float scan = 0.82 + 0.18 * step(1.0, mod(frag.y, 3.0));
+		return (vec3(0.12, 1.0, 0.38) * pow(l, 0.9) * 1.15 + vec3(0.0, 0.035, 0.012)) * scan;
+	} else if (filter_mode == 4) {   // Sonho: sombras lilás, luzes ciano, tudo mais leve
+		vec3 duo = mix(vec3(0.32, 0.18, 0.46), vec3(0.78, 1.0, 0.96), l);
+		return mix(c, duo, 0.55) * 0.92 + 0.06;
+	} else if (filter_mode == 5) {   // Brasa: duotom quente
+		return mix(c, mix(vec3(0.14, 0.02, 0.05), vec3(1.0, 0.78, 0.36), l), 0.7);
+	} else if (filter_mode == 6) {   // Inverno: duotom frio
+		return mix(c, mix(vec3(0.03, 0.06, 0.15), vec3(0.86, 0.95, 1.0), l), 0.65);
+	}
+	return c;
+}
 
 vec2 wave_offset(vec2 uv, vec4 w) {
 	if (w.z < 0.0 || w.w <= 0.0) {
@@ -79,6 +103,7 @@ void fragment() {
 	float glow = (1.0 - SCREEN_UV.y) * (0.5 + 0.5 * sin(time * 0.35)) * breathe;
 	c += light_tint * glow * 0.035;
 	c = mix(base, c, grade);
+	c = store_filter(c, FRAGCOORD.xy);
 	c += bayer(FRAGCOORD.xy) / 255.0;
 	COLOR = vec4(clamp(c, 0.0, 1.0), 1.0);
 }
@@ -124,11 +149,22 @@ func _on_wave(world_pos: Vector2, strength: float) -> void:
 
 func _process(delta: float) -> void:
 	var on := bool(Options.get_value("postfx"))
-	visible = on
+	var mode := Cosmetics.filter_mode()
+	_mat.set_shader_parameter("filter_mode", mode)
+	visible = on or mode > 0
 	if not on:
 		_waves.clear()
 		Fx.aberration = 0.0
+		if mode > 0:
+			# só o filtro: sem gradação, aberração, ondas ou respiração
+			size = get_viewport_rect().size
+			_mat.set_shader_parameter("grade", 0.0)
+			_mat.set_shader_parameter("aberration", 0.0)
+			_mat.set_shader_parameter("breathe", 0.0)
+			_mat.set_shader_parameter("wave0", Vector4(0.5, 0.5, -1.0, 0.0))
+			_mat.set_shader_parameter("wave1", Vector4(0.5, 0.5, -1.0, 0.0))
 		return
+	_mat.set_shader_parameter("grade", 1.0)
 	_t += delta
 	var vp := get_viewport_rect().size
 	position = Vector2.ZERO

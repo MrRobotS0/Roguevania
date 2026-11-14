@@ -91,7 +91,7 @@
   {
    "id": "brasa_viva",
    "pt": "Brasa Viva",
-   "en": "Living ember",
+   "en": "Live ember",
    "detalhe_pt": "Vença com 2 brasas",
    "detalhe_en": "Win with 2 embers",
    "secreta": false
@@ -171,6 +171,11 @@
  ],
  "aparencias": [
   {
+   "id": "abissal",
+   "pt": "Abissal",
+   "en": "Abyssal"
+  },
+  {
    "id": "andarilho",
    "pt": "O Andarilho",
    "en": "The wanderer"
@@ -181,6 +186,16 @@
    "en": "Wing of the dreamed dragon"
   },
   {
+   "id": "aurora",
+   "pt": "Aurora",
+   "en": "Aurora"
+  },
+  {
+   "id": "brasa_eterna",
+   "pt": "Brasa Eterna",
+   "en": "Eternal ember"
+  },
+  {
    "id": "capa_estrada",
    "pt": "Capa da Estrada",
    "en": "Road cloak"
@@ -188,12 +203,12 @@
   {
    "id": "casa_kael",
    "pt": "Estandarte de Kael",
-   "en": "Estandarte de kael"
+   "en": "Banner of kael"
   },
   {
    "id": "casa_oram",
    "pt": "Estandarte de Oram",
-   "en": "Estandarte de oram"
+   "en": "Banner of oram"
   },
   {
    "id": "casca_vidro",
@@ -208,7 +223,17 @@
   {
    "id": "cinza_sagrada",
    "pt": "Cinza Sagrada",
-   "en": "Cinza sagrada"
+   "en": "Sacred ash"
+  },
+  {
+   "id": "constelacao",
+   "pt": "Constelação",
+   "en": "Constellation"
+  },
+  {
+   "id": "coral_morto",
+   "pt": "Coral Morto",
+   "en": "Dead coral"
   },
   {
    "id": "couro_fenda",
@@ -228,12 +253,17 @@
   {
    "id": "fulgurante",
    "pt": "Fulgurante",
-   "en": "Fulgurante"
+   "en": "Fulgurite"
   },
   {
    "id": "herdeiro_vesper",
    "pt": "Herdeiro Vesper",
    "en": "Vesper heir"
+  },
+  {
+   "id": "inverno_longo",
+   "pt": "Inverno Longo",
+   "en": "Long winter"
   },
   {
    "id": "manto_cinza",
@@ -263,7 +293,7 @@
   {
    "id": "ouro_imperador",
    "pt": "Ouro do Imperador",
-   "en": "Ouro do imperador"
+   "en": "Emperor's gold"
   },
   {
    "id": "pele_ventre",
@@ -281,6 +311,11 @@
    "en": "Penitent's sack"
   },
   {
+   "id": "sol_negro",
+   "pt": "Sol Negro",
+   "en": "Black sun"
+  },
+  {
    "id": "tentaculo",
    "pt": "O Que Responde",
    "en": "The one who answers"
@@ -288,12 +323,17 @@
   {
    "id": "ultima_pagina",
    "pt": "A Última Página",
-   "en": "A última página"
+   "en": "The last page"
   },
   {
    "id": "vestes_afogadas",
    "pt": "Vestes Afogadas",
    "en": "Drowned vestments"
+  },
+  {
+   "id": "voz_do_fundo",
+   "pt": "Voz do Fundo",
+   "en": "Voice from below"
   }
  ],
  "guardioes": [

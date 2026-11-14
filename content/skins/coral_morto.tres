@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "coral_morto"
+title = "Coral Morto"
+unlock = "loja"
+pack = "abismo"
+cloak = Color(0.910, 0.604, 0.541, 1)
+cloak_dark = Color(0.659, 0.400, 0.353, 1)
+hood = Color(0.165, 0.078, 0.086, 1)
+eye = Color(1.000, 0.949, 0.878, 1)
+scarf = Color(0.949, 0.847, 0.784, 1)
+lore = "Já foi vivo, colorido e cheio de gente pequena. Agora é só bonito."
+chromas = [{"id": "osso_branco", "title": "Osso Branco", "cloak": "#e8e4dc", "cloak_dark": "#a8a49c", "hood": "#1e1c1a", "eye": "#ff8a7a", "scarf": "#ff8a7a", "cost": 0}]

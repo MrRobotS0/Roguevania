@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "inverno_longo"
+title = "Inverno Longo"
+unlock = "loja"
+pack = "conjunto_geada"
+cloak = Color(0.847, 0.925, 0.973, 1)
+cloak_dark = Color(0.596, 0.690, 0.769, 1)
+hood = Color(0.102, 0.157, 0.220, 1)
+eye = Color(0.416, 0.910, 1.000, 1)
+scarf = Color(0.624, 0.910, 1.000, 1)
+lore = "Tecido nos Salões do Último Inverno. Não esquenta. Não precisa."
+chromas = [{"id": "geleira", "title": "Geleira", "cloak": "#4a8ab8", "cloak_dark": "#2e5a7a", "hood": "#0c1a28", "eye": "#f2fbff", "scarf": "#f2fbff", "cost": 0}]

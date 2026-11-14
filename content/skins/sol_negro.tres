@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sol_negro"
+title = "Sol Negro"
+unlock = "loja"
+pack = "ceu"
+cloak = Color(0.078, 0.063, 0.063, 1)
+cloak_dark = Color(0.039, 0.031, 0.031, 1)
+hood = Color(0.000, 0.000, 0.000, 1)
+eye = Color(1.000, 0.541, 0.165, 1)
+scarf = Color(1.000, 0.353, 0.102, 1)
+lore = "O sol que nasce em Carcosa. Não ilumina; só mostra onde está o resto."
+chromas = [{"id": "eclipse_rubro", "title": "Eclipse Rubro", "cloak": "#3a0a0e", "cloak_dark": "#240608", "hood": "#0a0203", "eye": "#ffd27a", "scarf": "#ff2a3a", "cost": 0}]

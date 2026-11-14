@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "brasa_eterna"
+title = "Brasa Eterna"
+unlock = "loja"
+pack = "conjunto_brasa"
+cloak = Color(0.784, 0.227, 0.078, 1)
+cloak_dark = Color(0.541, 0.141, 0.039, 1)
+hood = Color(0.125, 0.031, 0.024, 1)
+eye = Color(1.000, 0.878, 0.541, 1)
+scarf = Color(1.000, 0.690, 0.227, 1)
+lore = "Arde desde que o deus ardeu e ainda não terminou."
+chromas = [{"id": "carvao", "title": "Carvão", "cloak": "#2a2422", "cloak_dark": "#1a1614", "hood": "#0a0808", "eye": "#ff7a2a", "scarf": "#ff5a1a", "cost": 0}]

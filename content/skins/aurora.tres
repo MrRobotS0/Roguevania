@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkinData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/skin_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "aurora"
+title = "Aurora"
+unlock = "loja"
+pack = "ceu"
+cloak = Color(0.165, 0.659, 0.471, 1)
+cloak_dark = Color(0.102, 0.439, 0.314, 1)
+hood = Color(0.047, 0.102, 0.141, 1)
+eye = Color(0.910, 0.984, 1.000, 1)
+scarf = Color(0.722, 0.541, 1.000, 1)
+lore = "A luz que dança no céu dos Salões quando o inverno esquece de ser cruel."
+chromas = [{"id": "polar", "title": "Polar", "cloak": "#9ad8ff", "cloak_dark": "#6a98b8", "hood": "#141e2a", "eye": "#ffffff", "scarf": "#6affc8", "cost": 0}]

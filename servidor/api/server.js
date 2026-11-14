@@ -494,20 +494,48 @@ routes["GET /api/admin/resumo"] = async (req, res) => {
 // o jogador paga no Mercado Pago → o webhook avisa → buscamos o pagamento na API
 // deles (a fonte da verdade) e marcamos o pedido como aprovado (ou estornado).
 
-const LOJA = {
-  "pacote:casas": { pt: "Pacote Guerra das Casas", en: "War of the Houses Pack", centavos: 990,
-    skins: ["casa_oram", "casa_kael", "cinza_sagrada"] },
-  "pacote:profecia": { pt: "Pacote Profecia", en: "Prophecy Pack", centavos: 990,
-    skins: ["ouro_imperador", "fulgurante", "ultima_pagina"] },
-  "pacote:completo": { pt: "Coleção Completa", en: "Complete Collection", centavos: 1690,
-    skins: ["casa_oram", "casa_kael", "cinza_sagrada", "ouro_imperador", "fulgurante", "ultima_pagina"] },
-  "skin:casa_oram": { pt: "Estandarte de Oram", en: "Banner of Oram", centavos: 490, skins: ["casa_oram"] },
-  "skin:casa_kael": { pt: "Estandarte de Kael", en: "Banner of Kael", centavos: 490, skins: ["casa_kael"] },
-  "skin:cinza_sagrada": { pt: "Cinza Sagrada", en: "Sacred Ash", centavos: 490, skins: ["cinza_sagrada"] },
-  "skin:ouro_imperador": { pt: "Ouro do Imperador", en: "Emperor's Gold", centavos: 490, skins: ["ouro_imperador"] },
-  "skin:fulgurante": { pt: "Fulgurante", en: "Fulgurite", centavos: 490, skins: ["fulgurante"] },
-  "skin:ultima_pagina": { pt: "A Última Página", en: "The Last Page", centavos: 490, skins: ["ultima_pagina"] },
+// tipo: "pacote" | "conjunto" | "manto" | "lamina" | "rastro" | "filtro". conteudo: ids que o jogo entende
+// (aparências em content/skins, efeitos em scripts/combat/cosmetics.gd).
+const MANTOS = {
+  casa_oram: ["Estandarte de Oram", "Banner of Oram"], casa_kael: ["Estandarte de Kael", "Banner of Kael"],
+  cinza_sagrada: ["Cinza Sagrada", "Sacred Ash"], ouro_imperador: ["Ouro do Imperador", "Emperor's Gold"],
+  fulgurante: ["Fulgurante", "Fulgurite"], ultima_pagina: ["A Última Página", "The Last Page"],
+  abissal: ["Abissal", "Abyssal"], coral_morto: ["Coral Morto", "Dead Coral"], voz_do_fundo: ["Voz do Fundo", "Voice from Below"],
+  constelacao: ["Constelação", "Constellation"], aurora: ["Aurora", "Aurora"], sol_negro: ["Sol Negro", "Black Sun"],
 };
+const LAMINAS = {
+  lamina_brasa: ["Corte de Brasa", "Ember Cut"], lamina_geada: ["Corte de Geada", "Frost Cut"], lamina_vazio: ["Corte do Vazio", "Void Cut"],
+  lamina_ouro: ["Corte Dourado", "Golden Cut"], lamina_sangue: ["Corte de Sangue", "Blood Cut"], lamina_espectro: ["Corte Espectral", "Spectral Cut"],
+};
+const RASTROS = {
+  rastro_brasa: ["Rastro de Brasas", "Ember Trail"], rastro_geada: ["Rastro de Geada", "Frost Trail"], rastro_petalas: ["Rastro de Pétalas", "Petal Trail"],
+  rastro_vazio: ["Rastro do Vazio", "Void Trail"], rastro_ouro: ["Rastro Dourado", "Golden Trail"], rastro_estrelas: ["Rastro de Estrelas", "Star Trail"],
+};
+const FILTROS = {
+  filtro_pergaminho: ["Filtro Pergaminho", "Parchment Filter"], filtro_luto: ["Filtro Luto", "Mourning Filter"],
+  filtro_fosforo: ["Filtro Fósforo", "Phosphor Filter"], filtro_sonho: ["Filtro Sonho", "Dream Filter"],
+  filtro_brasa: ["Filtro Brasa", "Ember Filter"], filtro_inverno: ["Filtro Inverno", "Winter Filter"],
+};
+const SO_CONJUNTO = ["brasa_eterna", "inverno_longo"];   // mantos que só vêm nos conjuntos
+const LOJA = {
+  "pacote:casas": { tipo: "pacote", pt: "Pacote Guerra das Casas", en: "War of the Houses Pack", centavos: 990, conteudo: ["casa_oram", "casa_kael", "cinza_sagrada"] },
+  "pacote:profecia": { tipo: "pacote", pt: "Pacote Profecia", en: "Prophecy Pack", centavos: 990, conteudo: ["ouro_imperador", "fulgurante", "ultima_pagina"] },
+  "pacote:abismo": { tipo: "pacote", pt: "Pacote Abismo", en: "Abyss Pack", centavos: 990, conteudo: ["abissal", "coral_morto", "voz_do_fundo"] },
+  "pacote:ceu": { tipo: "pacote", pt: "Pacote Céu Antigo", en: "Old Sky Pack", centavos: 990, conteudo: ["constelacao", "aurora", "sol_negro"] },
+  "pacote:laminas": { tipo: "pacote", pt: "Arsenal de Lâminas", en: "Blade Arsenal", centavos: 990, conteudo: Object.keys(LAMINAS) },
+  "pacote:rastros": { tipo: "pacote", pt: "Coleção de Rastros", en: "Trail Collection", centavos: 990, conteudo: Object.keys(RASTROS) },
+  "pacote:filtros": { tipo: "pacote", pt: "Caixa de Filtros", en: "Filter Box", centavos: 690, conteudo: Object.keys(FILTROS) },
+  "conjunto:brasa": { tipo: "conjunto", pt: "Conjunto Brasa Eterna", en: "Eternal Ember Set", centavos: 1290,
+    conteudo: ["brasa_eterna", "lamina_brasa", "rastro_brasa", "filtro_brasa"] },
+  "conjunto:geada": { tipo: "conjunto", pt: "Conjunto Inverno Longo", en: "Long Winter Set", centavos: 1290,
+    conteudo: ["inverno_longo", "lamina_geada", "rastro_geada", "filtro_inverno"] },
+  "pacote:completo": { tipo: "pacote", pt: "Tudo da Loja", en: "Everything", centavos: 3990,
+    conteudo: [...Object.keys(MANTOS), ...SO_CONJUNTO, ...Object.keys(LAMINAS), ...Object.keys(RASTROS), ...Object.keys(FILTROS)] },
+};
+for (const [grupo, tipo, centavos] of [[MANTOS, "manto", 490], [LAMINAS, "lamina", 290], [RASTROS, "rastro", 290], [FILTROS, "filtro", 190]])
+  for (const [id, [pt, en]] of Object.entries(grupo)) LOJA[`${tipo}:${id}`] = { tipo, pt, en, centavos, conteudo: [id] };
+// os pedidos antigos usavam "skin:<id>"
+for (const id of Object.keys(MANTOS)) LOJA[`skin:${id}`] = { ...LOJA[`manto:${id}`], oculto: true };
 const MP_TOKEN = process.env.MP_ACCESS_TOKEN || "";
 const MP_API = "https://api.mercadopago.com";
 
@@ -515,7 +543,7 @@ const MP_API = "https://api.mercadopago.com";
 async function ownedSkins(userId) {
   const { rows } = await pool.query(`SELECT item FROM purchases WHERE user_id = $1 AND status = 'aprovado'`, [userId]);
   const out = new Set();
-  for (const r of rows) for (const s of (LOJA[r.item] || { skins: [] }).skins) out.add(s);
+  for (const r of rows) for (const s of (LOJA[r.item] || { conteudo: [] }).conteudo) out.add(s);
   return [...out];
 }
 
@@ -532,7 +560,8 @@ async function mp(method, path, body) {
 
 routes["GET /api/loja"] = async (req, res) => {
   const u = await currentUser(req);
-  const itens = Object.entries(LOJA).map(([id, i]) => ({ id, pt: i.pt, en: i.en, centavos: i.centavos, skins: i.skins }));
+  const itens = Object.entries(LOJA).filter(([, i]) => !i.oculto)
+    .map(([id, i]) => ({ id, tipo: i.tipo, pt: i.pt, en: i.en, centavos: i.centavos, conteudo: i.conteudo }));
   send(res, 200, { itens, aberta: Boolean(MP_TOKEN), logado: Boolean(u), nome: u ? u.name : null,
     tem: u ? await ownedSkins(u.id) : [] });
 };
@@ -545,15 +574,15 @@ routes["POST /api/loja/comprar"] = async (req, res) => {
   if (limited("loja:" + u.id, 20, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
   const b = await readJson(req);
   const item = LOJA[b.item];
-  if (!item) return fail(res, 400, "item_invalido");
+  if (!item || item.oculto) return fail(res, 400, "item_invalido");
   const tem = new Set(await ownedSkins(u.id));
-  if (item.skins.every(s => tem.has(s))) return fail(res, 409, "ja_tem");
+  if (item.conteudo.every(s => tem.has(s))) return fail(res, 409, "ja_tem");
   const { rows } = await pool.query(
     `INSERT INTO purchases (user_id, item, amount_cents) VALUES ($1, $2, $3) RETURNING id`, [u.id, b.item, item.centavos]);
   const id = rows[0].id;
   const volta = `${SITE}/loja.html?pedido=${id}`;
   const pref = await mp("POST", "/checkout/preferences", {
-    items: [{ id: b.item, title: `MOKSHA · ${item.pt}`, description: "Aparência para o herói (só visual)",
+    items: [{ id: b.item, title: `MOKSHA · ${item.pt}`, description: "Item cosmético para o herói (só visual)",
       quantity: 1, currency_id: "BRL", unit_price: item.centavos / 100 }],
     payer: { email: u.email },
     external_reference: String(id),
