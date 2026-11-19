@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA · Loja</title>
+<meta name="description" content="Aparências para o herói de MOKSHA. Só visual: nenhuma dá vantagem.">
+<meta property="og:title" content="MOKSHA · Loja">
+<meta property="og:image" content="https://moksha.com.br/img/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icone-32.png">
+<link rel="apple-touch-icon" href="img/icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="comum.js"></script>
+<style>
+  .card.shop { width: min(1040px, 100%); }
+  .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; margin-bottom: 18px; }
+  .top .lead { margin: 0; max-width: 56ch; }
+  .who-line { font: 400 13px var(--pixel); color: var(--dim); letter-spacing: .04em; }
+  .who-line a, .who-line b { color: var(--gold); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font: 400 12px var(--pixel); letter-spacing: .06em;
+    color: var(--ok); border: 2px solid rgba(143,224,138,.45); padding: 4px 10px; }
+  .badge::before { content: ""; width: 8px; height: 8px; background: currentColor; }
+  .notice { margin: 0 0 18px; }
+
+  /* pacotes */
+  .packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 14px; }
+  .pack, .skin { min-width: 0; }
+  .pack h3, .skin h3 { overflow-wrap: anywhere; }
+  .pack { position: relative; display: grid; grid-template-rows: auto 1fr auto; background: var(--bg); border: 2px solid var(--line); }
+  .pack.best { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(242,193,78,.18), 0 0 30px rgba(242,193,78,.12); }
+  .ribbon { position: absolute; top: -2px; right: -2px; z-index: 2; font: 700 11px var(--pixel); letter-spacing: .08em;
+    color: #1a0f04; background: var(--gold); padding: 5px 10px; }
+  .stage { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 0; height: 190px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 100%, rgba(242,193,78,.22), transparent 62%), linear-gradient(#1a1220, #0b0910 75%); }
+  .stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px;
+    background: repeating-linear-gradient(90deg, #2a1d18 0 8px, #241913 8px 16px); border-top: 2px solid #5a3e2a; }
+  .stage img { position: relative; z-index: 1; width: 87px; height: 120px; image-rendering: pixelated; margin: 0 -10px 18px; filter: drop-shadow(0 4px 0 rgba(0,0,0,.45)); }
+  .stage.six img { width: 65px; height: 90px; margin: 0 -9px 18px; }
+  .stage img:nth-child(2) { transform: translateY(-4px); z-index: 2; }
+  .pack .body { padding: 14px 16px 6px; }
+  .pack h3, .skin h3 { margin: 0 0 4px; font: 700 16px/1.25 var(--pixel); color: var(--text); letter-spacing: .03em; }
+  .pack p, .skin p { margin: 0; color: var(--dim); font-size: 15px; }
+  .names { margin-top: 8px !important; font-size: 14px !important; }
+  .buy { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; padding: 12px 16px 16px; }
+  .price { display: grid; line-height: 1.1; }
+  .price b { font: 700 22px var(--pixel); color: var(--gold); white-space: nowrap; }
+  .price s { font: 400 13px var(--body); color: var(--dim); }
+  .price em { font: 400 12px var(--pixel); color: var(--ok); font-style: normal; letter-spacing: .04em; }
+  .buy .btn { width: auto; min-width: 128px; margin: 0; font-size: 15px; min-height: 48px; padding: 10px 16px; }
+  .owned { font: 400 13px var(--pixel); color: var(--ok); letter-spacing: .05em; }
+
+  /* avulsas */
+  .skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+  .skin { display: grid; grid-template-rows: auto 1fr auto; background: var(--bg); border: 2px solid var(--line); }
+  .skin .stage { height: 150px; }
+  .skin .stage img { width: 72px; height: 99px; margin: 0 0 18px; }
+  .skin .body { padding: 12px 14px 4px; }
+  .skin .buy { padding: 10px 14px 14px; }
+  .skin .buy .btn { min-width: 0; flex: 1 1 110px; }
+  .swatches { display: flex; align-items: center; gap: 6px; margin-top: 10px; font: 400 11px var(--pixel); color: var(--dim); letter-spacing: .04em; }
+  .swatches i { width: 14px; height: 14px; border: 2px solid var(--line); }
+  .skin.has, .pack.has { border-color: rgba(143,224,138,.5); }
+
+  .tabs { position: sticky; top: 0; z-index: 5; padding: 8px 0; margin: 0 0 4px; background: rgba(13,10,18,.96); }
+  .tabs a { font: 400 12px var(--pixel); letter-spacing: .05em; color: var(--dim); background: var(--bg); border: 2px solid var(--line);
+    min-height: 40px; padding: 0 12px; display: inline-flex; align-items: center; text-decoration: none; }
+  .tabs a:hover { color: var(--gold); border-color: var(--gold); }
+  .sec { scroll-margin-top: 64px; }
+  .sec > p { margin: -4px 0 12px; color: var(--dim); font-size: 15px; }
+  .mosaic { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #000; height: 190px; }
+  .mosaic img, .shot img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+  .shot { height: 150px; background: #000; }
+  .set { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: 190px; background: #000; gap: 2px; overflow: hidden; }
+  .set .stage { height: 100%; }
+  .set .thumbs { display: grid; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 2px; height: 100%; min-height: 0; overflow: hidden; }
+  .set .thumbs img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; min-height: 0; }
+  .count { position: absolute; left: 8px; top: 8px; z-index: 2; font: 700 11px var(--pixel); letter-spacing: .06em; color: var(--text);
+    background: rgba(7,6,11,.85); border: 2px solid var(--line); padding: 3px 8px; }
+  .skin { position: relative; }
+  .pack.support { grid-template-rows: auto auto; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-color: rgba(242,193,78,.45); }
+  .pack.support .body { padding: 16px; }
+  .pack.support p { max-width: 62ch; }
+  @media (max-width: 640px) { .pack.support { grid-template-columns: 1fr; } }
+  .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 22px; margin: 0; }
+  .faq div { border-top: 2px solid var(--line); padding-top: 10px; }
+  .faq dt { font-weight: 600; margin-bottom: 4px; }
+  .faq dd { margin: 0; color: var(--dim); font-size: 15px; }
+  .pay { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .pay span { font: 400 11px var(--pixel); letter-spacing: .06em; color: var(--text); border: 2px solid var(--line); padding: 4px 8px; }
+
+  @media (max-width: 480px) {
+    .stage { height: 160px; }
+    .stage img { width: 72px; height: 99px; }
+    .stage.six img { width: 52px; height: 72px; margin: 0 -8px 18px; }
+    .skins { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .skin .stage { height: 120px; }
+    .skin .stage img { width: 58px; height: 80px; }
+    .skin .buy { flex-direction: column; align-items: stretch; }
+    .skin .buy .btn { flex: none; min-height: 44px; font-size: 13px; }
+    .skin h3 { font-size: 12px; overflow-wrap: normal; }
+    .skin .body { padding: 10px 10px 2px; }
+    .skin .buy { padding: 8px 10px 12px; }
+    .skin .price b { font-size: 18px; }
+    .skin p.lore { display: none; }
+    .mosaic, .set, .set .stage { height: 150px; }
+    .shot { height: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<header>
+  <a class="brand" href="/">MOKSHA</a>
+  <div class="lang" role="group" aria-label="Idioma">
+    <button type="button" data-set-lang="pt" aria-pressed="true">PT</button>
+    <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+  <div class="card shop">
+    <div class="top">
+      <div>
+        <h1 data-pt="Loja" data-en="Store">Loja</h1>
+        <p class="lead" data-pt="Mantos para o herói, cores para o golpe, rastros e filtros para a tela. Só visual: nada aqui dá vantagem em combate." data-en="Cloaks for the hero, colours for your swing, trails and screen filters. Cosmetic only: nothing here gives a combat advantage.">Mantos para o herói, cores para o golpe, rastros e filtros para a tela. Só visual: nada aqui dá vantagem em combate.</p>
+      </div>
+      <p class="who-line" id="who" aria-live="polite"></p>
+    </div>
+
+    <p class="msg notice" id="notice" role="status" hidden></p>
+
+    <nav class="tabs" id="tabs" aria-label="Seções"></nav>
+    <div id="sections"></div>
+
+    <h2 data-pt="Perguntas" data-en="Questions">Perguntas</h2>
+    <dl class="faq">
+      <div><dt data-pt="Como pago?" data-en="How do I pay?">Como pago?</dt>
+        <dd><span data-pt="Pelo Stripe, numa página segura de pagamento ligada à sua conta MOKSHA. Na fatura do cartão aparece PRUMO DADOS, a empresa que recebe pelo MOKSHA." data-en="Through Stripe, on a secure payment page linked to your MOKSHA account. Your card statement shows PRUMO DADOS, the company that receives payments for MOKSHA.">Pelo Stripe, numa página segura de pagamento ligada à sua conta MOKSHA. Na fatura do cartão aparece PRUMO DADOS, a empresa que recebe pelo MOKSHA.</span>
+          <div class="pay"><span data-pt="CARTÃO" data-en="CARD">CARTÃO</span><span>APPLE PAY</span></div></dd></div>
+      <div><dt data-pt="Quando o item chega?" data-en="When do I get it?">Quando o item chega?</dt>
+        <dd data-pt="Assim que o pagamento é aprovado. Comprando pela loja do jogo (EXTRAS > LOJA), o item aparece sozinho; comprando aqui, abra o jogo de novo. Escolha em OS MANTOS, na Beira." data-en="As soon as the payment is approved. Bought in the game store (EXTRAS > STORE), it shows up by itself; bought here, reopen the game. Pick it at THE CLOAKS, in the Edge.">Assim que o pagamento é aprovado. Comprando pela loja do jogo (EXTRAS > LOJA), o item aparece sozinho; comprando aqui, abra o jogo de novo. Escolha em OS MANTOS, na Beira.</dd></div>
+      <div><dt data-pt="Vale no PC também?" data-en="Does it work on PC too?">Vale no PC também?</dt>
+        <dd data-pt="Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA)." data-en="Yes. Purchases live on your account: in the browser and in the Windows game (sign in under EXTRAS > ACCOUNT).">Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA).</dd></div>
+      <div><dt data-pt="Me arrependi. E agora?" data-en="Changed my mind?">Me arrependi. E agora?</dt>
+        <dd data-pt="Você tem 7 dias para pedir o dinheiro de volta (Código de Defesa do Consumidor). Mande pelo botão de feedback do jogo com o número do pedido." data-en="You have 7 days to ask for a refund. Send it through the in-game feedback button with your order number.">Você tem 7 dias para pedir o dinheiro de volta (Código de Defesa do Consumidor). Mande pelo botão de feedback do jogo com o número do pedido.</dd></div>
+      <div><dt data-pt="Por que comprar?" data-en="Why buy?">Por que comprar?</dt>
+        <dd data-pt="O jogo é de graça e feito por uma pessoa só. Cada compra paga o servidor e o próximo bioma." data-en="The game is free and made by one person. Every purchase pays for the server and the next biome.">O jogo é de graça e feito por uma pessoa só. Cada compra paga o servidor e o próximo bioma.</dd></div>
+      <div><dt data-pt="E as aparências do jogo?" data-en="What about in-game looks?">E as aparências do jogo?</dt>
+        <dd data-pt="Continuam sendo ganhas jogando, com essência ou conquistas. A loja só tem itens que não existem de outro jeito." data-en="Still earned by playing, with essence or achievements. The store only has items you can't get any other way.">Continuam sendo ganhas jogando, com essência ou conquistas. A loja só tem itens que não existem de outro jeito.</dd></div>
+    </dl>
+  </div>
+</main>
+<footer><a href="/" data-pt="Página inicial" data-en="Home">Página inicial</a><a href="wiki.html">Wiki</a><a href="ranking.html" data-pt="Ranking" data-en="Leaderboard">Ranking</a><a href="conta.html" data-pt="Conta" data-en="Account">Conta</a><a href="privacidade.html" data-pt="Privacidade" data-en="Privacy">Privacidade</a></footer>
+<script src="loja.js"></script>
+</body>
+</html>
