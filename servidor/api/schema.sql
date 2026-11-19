@@ -82,3 +82,8 @@ CREATE TABLE IF NOT EXISTS purchases (
   updated_at    timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS purchases_user ON purchases (user_id, status);
+-- Stripe: gateway 'stripe' | 'mp'; gw_ref = sessão do Checkout; gw_payment = PaymentIntent
+ALTER TABLE purchases ADD COLUMN IF NOT EXISTS gateway text NOT NULL DEFAULT 'mp';
+ALTER TABLE purchases ADD COLUMN IF NOT EXISTS gw_ref text;
+ALTER TABLE purchases ADD COLUMN IF NOT EXISTS gw_payment text;
+CREATE INDEX IF NOT EXISTS purchases_gw_payment ON purchases (gw_payment);

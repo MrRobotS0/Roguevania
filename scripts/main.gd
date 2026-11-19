@@ -179,7 +179,8 @@ func _on_title_option(id: String) -> void:
 			menu.open_text("ESTATÍSTICAS", Meta.stats_text())
 		"extras":
 			# o que saiu do menu principal: uma lista curta à parte
-			var list: Array = Screen.EXTRAS.duplicate()
+			var list: Array = [["store", "LOJA"]]
+			list.append_array(Screen.EXTRAS)
 			if OS.has_feature("web"):
 				list.append_array(Screen.WEB_EXTRAS)
 			elif Meta.desktop_account_enabled():
@@ -187,12 +188,15 @@ func _on_title_option(id: String) -> void:
 			var options: Array[Dictionary] = []
 			for o in list:
 				options.append({"label": o[1], "detail": "ABRE EM OUTRA ABA" if Screen.WEB_EXTRAS.has(o) else
+					("MANTOS, LÂMINAS, RASTROS E FILTROS. SÓ VISUAL" if o[0] == "store" else
 					(("CONECTADO: " + Meta.player_name.to_upper()) if o[0] == "account" and Meta.desk_logged_in() else
-					("PROGRESSO JUNTO COM MOKSHA.COM.BR" if o[0] == "account" else ""))})
+					("PROGRESSO JUNTO COM MOKSHA.COM.BR" if o[0] == "account" else "")))})
 			menu.open_choice("EXTRAS", "", options, func(i: int) -> void:
 				_on_title_option.call_deferred(String(list[i][0])))
 		"account":
 			account_screen.open()
+		"store":
+			open_store()
 		"ranking", "feedback":
 			open_site_page(Screen.WEB_PAGES[id])
 		"profile":
@@ -340,6 +344,263 @@ func _fetch_json(url: String) -> Variant:
 	return JSON.parse_string((r[3] as PackedByteArray).get_string_from_utf8())
 
 
+# --- loja (a mesma de moksha.com.br/loja.html) ----------------------------------------
+# Lista o catálogo da API, abre o pagamento do Stripe no navegador e fica
+# perguntando pelo pedido: quando o pagamento cai, o item aparece sem reiniciar.
+
+const STORE_GROUPS := [
+	{"title": "PACOTES E CONJUNTOS", "tipos": ["pacote", "conjunto"], "detail": "MAIS BARATO QUE CADA UM. O MANTO DOS CONJUNTOS SÓ EXISTE NELES"},
+	{"title": "MANTOS", "tipos": ["manto"], "detail": "A APARÊNCIA DO HERÓI, COM AS VARIAÇÕES DE COR"},
+	{"title": "LÂMINAS", "tipos": ["lamina"], "detail": "A COR DO GOLPE, DO CLARÃO E DAS FAÍSCAS"},
+	{"title": "RASTROS", "tipos": ["rastro"], "detail": "O QUE FICA PARA TRÁS QUANDO VOCÊ ROLA E CORRE"},
+	{"title": "FILTROS", "tipos": ["filtro"], "detail": "AS CORES DA TELA INTEIRA. LIGA E DESLIGA QUANDO QUISER"},
+	{"title": "APOIAR O MOKSHA", "tipos": ["apoio"], "detail": "VOCÊ ESCOLHE O VALOR. NÃO LIBERA ITEM: É SÓ APOIO"},
+]
+const STORE_WATCH_TRIES := 200     # ~15 min perguntando pelo pedido
+var _shop: Dictionary = {}
+var _shop_busy := false
+var _shop_order := 0               # pedido em acompanhamento (0 = nenhum)
+var _shop_url := ""
+var _shop_item: Dictionary = {}
+
+
+func open_store() -> void:
+	if _shop_busy:
+		return
+	_shop_busy = true
+	Fx.toast("CARREGANDO A LOJA")
+	var r := await Meta.api(HTTPClient.METHOD_GET, "/api/loja")
+	_shop_busy = false
+	var body: Dictionary = r.get("body", {})
+	if int(r["status"]) != 200 or not body.get("itens") is Array:
+		menu.open_text("LOJA", "SEM CONEXÃO COM A LOJA AGORA.\n\nELA TAMBÉM FICA EM MOKSHA.COM.BR/LOJA.HTML")
+		return
+	_shop = body
+	if bool(_shop.get("logado", false)):
+		Meta.apply_store(_shop.get("tem"))
+	_store_groups()
+
+
+func _store_items_of(group: Dictionary) -> Array:
+	var out: Array = []
+	for i in _shop.get("itens", []):
+		if (group["tipos"] as Array).has(String(i.get("tipo", ""))):
+			out.append(i)
+	return out
+
+
+func _store_owns(item: Dictionary) -> bool:
+	if bool(item.get("livre", false)):
+		return false
+	for id in item.get("conteudo", []):
+		if not Meta.store_skins.has(String(id)):
+			return false
+	return true
+
+
+func _store_name(item: Dictionary) -> String:
+	return String(item.get("en" if Lang.lang == "en" else "pt", "?")).to_upper()
+
+
+func _store_who() -> String:
+	if not bool(_shop.get("aberta", false)):
+		return "A LOJA ABRE EM BREVE: O PAGAMENTO AINDA ESTÁ SENDO PREPARADO."
+	if not Meta.can_buy():
+		return "PARA COMPRAR, ENTRE NA SUA CONTA EM EXTRAS > CONTA."
+	if _shop.get("nome") == null:
+		return "CRIE SEU PERSONAGEM EM MOKSHA.COM.BR PARA COMPRAR."
+	return "COMPRANDO PARA %s. SÓ VISUAL: NADA DÁ VANTAGEM." % String(_shop["nome"]).to_upper()
+
+
+func _store_groups() -> void:
+	var groups: Array = []
+	for g in STORE_GROUPS:
+		if not _store_items_of(g).is_empty():
+			groups.append(g)
+	var options: Array[Dictionary] = []
+	for g in groups:
+		var items := _store_items_of(g)
+		var mine := 0
+		for it in items:
+			if _store_owns(it):
+				mine += 1
+		var price := ""
+		if not (g["tipos"] as Array).has("apoio"):
+			price = ("SEUS: %d DE %d" % [mine, items.size()]) if mine > 0 else ("%d ITENS" % items.size())
+		else:
+			price = "VALOR LIVRE"
+		options.append({"label": g["title"], "detail": g["detail"], "price": price,
+			"price_color": Menu.OWNED if mine > 0 else Palette.GOLD})
+	menu.open_choice("LOJA", _store_who(), options, func(i: int) -> void:
+		_store_list.call_deferred(groups[i]))
+
+
+func _store_money(cents: int) -> String:
+	return "R$ %d,%02d" % [cents / 100, cents % 100]
+
+
+func _store_list(group: Dictionary) -> void:
+	var items := _store_items_of(group)
+	var options: Array[Dictionary] = []
+	for it in items:
+		var owns := _store_owns(it)
+		var price := "É SEU" if owns else ("VALOR LIVRE" if bool(it.get("livre", false)) else _store_money(int(it.get("centavos", 0))))
+		var o := {"label": _store_name(it), "price": price, "disabled": owns, "owned": owns,
+			"price_color": Menu.OWNED if owns else Palette.GOLD, "detail": _store_detail(it)}
+		var ids: Array = it.get("conteudo", [])
+		if ids.size() == 1 and ResourceLoader.exists("res://content/skins/%s.tres" % String(ids[0])):
+			o["figure"] = Catalog.skin(String(ids[0])).colors()
+		options.append(o)
+	menu.open_choice(String(group["title"]), _store_who(), options, func(i: int) -> void:
+		_store_buy.call_deferred(items[i]))
+
+
+# O que vem dentro, com os nomes da própria loja.
+func _store_detail(it: Dictionary) -> String:
+	if bool(it.get("livre", false)):
+		return "O JOGO É DE GRAÇA E FEITO POR UMA PESSOA SÓ. VOCÊ ESCOLHE O VALOR NA PÁGINA DE PAGAMENTO."
+	var ids: Array = it.get("conteudo", [])
+	if ids.size() == 1:
+		return "SÓ VISUAL. DEPOIS DE COMPRAR, ESCOLHA EM OS MANTOS, NA BEIRA."
+	if ids.size() > 6:
+		return "%d ITENS: TUDO O QUE A LOJA TEM, ATÉ OS MANTOS DOS CONJUNTOS." % ids.size()
+	var by_id := {}
+	for other in _shop.get("itens", []):
+		var c: Array = other.get("conteudo", [])
+		if c.size() == 1:
+			by_id[String(c[0])] = _store_name(other)
+	var names: PackedStringArray = []
+	for id in ids:
+		names.append(String(by_id.get(String(id), String(id).to_upper())))
+	return " · ".join(names)
+
+
+func _store_buy(item: Dictionary) -> void:
+	if not bool(_shop.get("aberta", false)):
+		Fx.toast("A LOJA ABRE EM BREVE")
+		_store_groups()
+		return
+	if not Meta.can_buy():
+		menu.open_choice("LOJA", "A COMPRA FICA NA SUA CONTA MOKSHA: VALE NO PC E NO NAVEGADOR.",
+			[{"label": "ENTRAR NA CONTA"}, {"label": "VOLTAR"}], _store_login_pick)
+		return
+	if _shop.get("nome") == null:
+		menu.open_text("LOJA", "CRIE SEU PERSONAGEM EM MOKSHA.COM.BR/CONTA.HTML PARA COMPRAR.")
+		return
+	if _shop_busy:
+		return
+	_shop_busy = true
+	Fx.toast("ABRINDO O PAGAMENTO")
+	var r := await Meta.api(HTTPClient.METHOD_POST, "/api/loja/comprar",
+		{"item": String(item["id"]), "origem": "jogo", "lang": Lang.lang})
+	_shop_busy = false
+	var st := int(r["status"])
+	var body: Dictionary = r.get("body", {})
+	if st == 201 and String(body.get("url", "")) != "":
+		_shop_url = String(body["url"])
+		_shop_item = item
+		var watching := _shop_order != 0
+		_shop_order = int(body.get("pedido", 0))
+		_store_open_url(_shop_url)
+		_store_waiting()
+		if not watching:
+			_store_watch()
+		return
+	var why := String(body.get("erro", ""))
+	if st == 401:
+		menu.open_text("LOJA", "A SESSÃO DA CONTA ACABOU. ENTRE DE NOVO EM EXTRAS > CONTA.")
+	elif why == "ja_tem":
+		Fx.toast("VOCÊ JÁ TEM TUDO O QUE VEM NESSE ITEM")
+		_store_groups()
+	elif why == "muitas_tentativas":
+		menu.open_text("LOJA", "MUITAS TENTATIVAS. ESPERE UM POUCO E TENTE DE NOVO.")
+	elif st == 0:
+		menu.open_text("LOJA", "SEM CONEXÃO COM A LOJA AGORA. TENTE DE NOVO.")
+	else:
+		menu.open_text("LOJA", "NÃO DEU PARA ABRIR O PAGAMENTO. TENTE DE NOVO.")
+
+
+func _store_login_pick(i: int) -> void:
+	if i == 0:
+		account_screen.open.call_deferred()
+	else:
+		_store_groups.call_deferred()
+
+
+func _store_open_url(url: String) -> void:
+	if OS.has_feature("web"):
+		# o clique acabou de acontecer, então o navegador deixa abrir outra aba; se bloquear, vai nesta mesma
+		JavaScriptBridge.eval("(function(u){var w=window.open(u,'_blank');if(!w)location.href=u;})(%s)" % JSON.stringify(url), true)
+	else:
+		OS.shell_open(url)
+
+
+func _store_waiting() -> void:
+	menu.open_choice("PAGAMENTO", "PAGUE NO NAVEGADOR E VOLTE: QUANDO O PAGAMENTO CAIR, O APOIO CHEGA SOZINHO."
+		if bool(_shop_item.get("livre", false)) else "PAGUE NO NAVEGADOR E VOLTE: QUANDO O PAGAMENTO CAIR, O ITEM APARECE SOZINHO.",
+		[{"label": "JÁ PAGUEI: CONFERIR AGORA"}, {"label": "ABRIR O PAGAMENTO DE NOVO"}, {"label": "VOLTAR À LOJA"}],
+		_store_waiting_pick)
+
+
+func _store_waiting_pick(i: int) -> void:
+	if i == 0:
+		_store_check_now.call_deferred()
+	elif i == 1:
+		_store_open_url(_shop_url)
+		_store_waiting.call_deferred()
+	else:
+		_store_groups.call_deferred()
+
+
+func _store_check_now() -> void:
+	var st := await _store_order_status()
+	if st == "pendente":
+		Fx.toast("O PAGAMENTO AINDA NÃO CAIU")
+		_store_waiting()
+	elif st != "aprovado":
+		_store_groups()
+
+
+# Situação do pedido em acompanhamento; quando aprova, libera e avisa.
+func _store_order_status() -> String:
+	if _shop_order == 0:
+		return ""
+	var order := _shop_order
+	var r := await Meta.api(HTTPClient.METHOD_GET, "/api/loja/pedido?id=%d" % order)
+	if int(r["status"]) != 200 or order != _shop_order:
+		return "pendente"
+	var st := String(r["body"].get("situacao", "pendente"))
+	if st == "pendente":
+		return st
+	_shop_order = 0
+	if st == "aprovado":
+		var item := _shop_item
+		var got := await Meta.api(HTTPClient.METHOD_GET, "/api/loja")
+		if int(got["status"]) == 200:
+			_shop = got["body"]
+			Meta.apply_store(_shop.get("tem"))
+		if bool(item.get("livre", false)):
+			Fx.banner("OBRIGADO PELO APOIO", "ISSO PAGA O SERVIDOR E O PRÓXIMO BIOMA")
+		else:
+			Fx.banner("COMPRA LIBERADA", "%s   ·   ESCOLHA EM OS MANTOS, NA BEIRA" % _store_name(item))
+		if menu.is_open():
+			_store_groups()
+	elif st == "recusado":
+		Fx.toast("O PAGAMENTO NÃO PASSOU. NADA FOI COBRADO")
+	return st
+
+
+# Pergunta sozinho enquanto o pedido estiver pendente (o jogador pode estar jogando).
+func _store_watch() -> void:
+	for t in STORE_WATCH_TRIES:
+		await get_tree().create_timer(3.0 if t < 20 else 6.0, true).timeout
+		if _shop_order == 0:
+			return
+		if await _store_order_status() != "pendente":
+			return
+	_shop_order = 0
+
+
 func open_weekly() -> void:
 	var list := Run.week_rules(Run.this_week())
 	var options: Array[Dictionary] = [{"label": "COMEÇAR", "detail": "O MESMO MAPA E AS MESMAS REGRAS PARA TODOS ATÉ SEGUNDA"}]
@@ -360,7 +621,7 @@ func open_wardrobe() -> void:
 		var now := Cosmetics.worn(kind)
 		var detail := String(k["detail"]) + (" · EM USO: " + String(now["title"]).to_upper() if not now.is_empty() else "")
 		if have == 0:
-			detail = String(k["detail"]) + " · NA LOJA · MOKSHA.COM.BR/LOJA"
+			detail = String(k["detail"]) + " · NA LOJA · EXTRAS > LOJA"
 		options.append({"label": "%s  ·  %d/%d" % [k["title"], have, (k["list"] as Dictionary).size()], "detail": detail,
 			"color": Palette.UI_TEXT if have > 0 else Palette.UI_DIM})
 	menu.open_choice("OS MANTOS", "SÓ MUDA O VISUAL.", options, func(i: int) -> void:
@@ -383,7 +644,7 @@ func open_fx(kind: String) -> void:
 		var owned := id == "" or Cosmetics.owned(id)
 		var title := "NENHUM" if id == "" else String(list[id]["title"]).to_upper()
 		options.append({"label": title + ("  ·  EM USO" if id == now else ""), "disabled": not owned,
-			"detail": ("O PADRÃO DO JOGO" if id == "" else "SÓ VISUAL") if owned else "NA LOJA · MOKSHA.COM.BR/LOJA",
+			"detail": ("O PADRÃO DO JOGO" if id == "" else "SÓ VISUAL") if owned else "NA LOJA · EXTRAS > LOJA",
 			"color": Palette.GOLD if id == now else (Color(String(list[id]["color"])) if id != "" and owned else Palette.UI_TEXT)})
 	menu.open_choice(String(k["title"]), String(k["detail"]), options, func(i: int) -> void:
 		Cosmetics.wear(kind, ids[i])
@@ -836,7 +1097,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pause()
 
 
-# Navegador: saiu da tela cheia com Esc (sem Keyboard Lock): pausa sozinho.
+# Navegador: saiu da tela cheia com o Esc do navegador: pausa sozinho.
 func _on_web_pause() -> void:
 	if _playing and not menu.is_open() and not options_screen.is_open():
 		_pause()

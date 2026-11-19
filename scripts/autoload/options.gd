@@ -143,3 +143,16 @@ func _volume(bus: String, linear: float) -> void:
 	if i >= 0:
 		AudioServer.set_bus_volume_db(i, linear_to_db(maxf(linear, 0.0001)))
 		AudioServer.set_bus_mute(i, linear <= 0.001)
+
+
+# Navegador: a tela cheia é da página (web/shell.html). Pedir precisa de um
+# clique ou tecla recente, e a escolha na tela de opções é exatamente isso.
+func web_fullscreen() -> bool:
+	if not OS.has_feature("web"):
+		return bool(data["fullscreen"])
+	return bool(JavaScriptBridge.eval("Boolean(window.mokshaIsFullscreen && window.mokshaIsFullscreen())", true))
+
+
+func web_set_fullscreen(on: bool) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.mokshaFullscreen && window.mokshaFullscreen(%s)" % ("true" if on else "false"), true)

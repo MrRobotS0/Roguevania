@@ -117,6 +117,7 @@ func _ready() -> void:
 	await _case("sala do chefe carrega com o imperador", _boss_room)
 	await _case("sala de treino carrega", _training_room)
 	await _case("aparências: trancadas, compradas, feitos e salvas", _skins)
+	await _case("loja do jogo: catálogo da API, preço e o que já é seu", _store_catalog)
 	await _case("fonte tem toda letra dos textos do jogo", _font_covers_text)
 	await _case("rota: Mar, passagem, escolha de andar, Trono", _route)
 	await _case("gerador: os 3 andares com loja, cofre, runa e relógio", _generator_floors)
@@ -2450,3 +2451,28 @@ func _codex_rewards() -> void:
 	_check(Meta.take_codex_bonus() == 0, "bônus entregue duas vezes")
 	_check(Meta.next_codex_text("creatures").contains("10 DE 20"), Meta.next_codex_text("creatures"))
 	Meta.use_path("user://teste.save", true)
+
+
+func _store_catalog() -> void:
+	var m: Node2D = load("res://scripts/main.gd").new()
+	var pack := {"id": "pacote:casas", "tipo": "pacote", "pt": "Pacote Guerra das Casas", "en": "War Pack", "centavos": 990,
+		"conteudo": ["casa_oram", "casa_kael"]}
+	var oram := {"id": "manto:casa_oram", "tipo": "manto", "pt": "Estandarte de Oram", "en": "Banner of Oram", "centavos": 490, "conteudo": ["casa_oram"]}
+	var kael := {"id": "manto:casa_kael", "tipo": "manto", "pt": "Estandarte de Kael", "en": "Banner of Kael", "centavos": 490, "conteudo": ["casa_kael"]}
+	var apoio := {"id": "apoio", "tipo": "apoio", "pt": "Apoiar o MOKSHA", "en": "Support MOKSHA", "centavos": 0, "livre": true, "conteudo": []}
+	m._shop = {"itens": [pack, oram, kael, apoio], "aberta": true, "logado": true, "nome": "Teste"}
+	var old: Array = Meta.store_skins.duplicate()
+	var old_lang: String = Lang.lang
+	Lang.lang = "pt"
+	Meta.store_skins = ["casa_oram"]
+	_check(m._store_money(990) == "R$ 9,90" and m._store_money(3990) == "R$ 39,90" and m._store_money(190) == "R$ 1,90", "preço em reais")
+	_check(m._store_items_of(m.STORE_GROUPS[0]).size() == 1 and m._store_items_of(m.STORE_GROUPS[1]).size() == 2, "itens por grupo")
+	_check(m._store_owns(oram) and not m._store_owns(kael) and not m._store_owns(pack), "o que já é seu")
+	_check(not m._store_owns(apoio), "o apoio nunca fica como já comprado")
+	_check(m._store_detail(pack) == "ESTANDARTE DE ORAM · ESTANDARTE DE KAEL", "o pacote diz o que vem dentro: " + m._store_detail(pack))
+	var fresh: Array = Meta.apply_store(["casa_oram", "casa_kael"])
+	_check(fresh == ["casa_kael"] and Meta.store_skins.size() == 2, "a compra nova chega sem reiniciar")
+	_check(Cosmetics.owned("casa_kael"), "o item comprado já vale")
+	Meta.store_skins = old
+	Lang.lang = old_lang
+	m.free()

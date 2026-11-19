@@ -81,8 +81,11 @@ func _rows() -> Array:
 				{"id": "timer", "label": "CRONÔMETRO NA TELA", "value": _yes("timer")},
 			]
 			if OS.has_feature("web"):
-				# no navegador o jogo já fica sempre em tela cheia (web/shell.html)
-				rows = rows.filter(func(r: Dictionary) -> bool: return r["id"] != "fullscreen")
+				# no navegador quem manda é a página (web/shell.html): a opção mostra o estado de agora
+				Options.data["fullscreen"] = Options.web_fullscreen()
+				for r in rows:
+					if r["id"] == "fullscreen":
+						r["value"] = _yes("fullscreen")
 		"jogo":
 			rows = [
 				{"id": "lang", "label": "IDIOMA", "value": Lang.NAMES[Lang.lang]},
@@ -228,6 +231,8 @@ func _change(id: String, step: int) -> void:
 			Sfx.play("ui_move", -10.0)
 		"fullscreen", "postfx", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge":
 			Options.set_value(id, not Options.get_value(id))
+			if id == "fullscreen" and OS.has_feature("web"):
+				Options.web_set_fullscreen(bool(Options.get_value(id)))
 			Sfx.play("ui_move", -10.0)
 
 

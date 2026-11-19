@@ -52,5 +52,5 @@ func how_to_get() -> String:
 		"feat":
 			return feat_text.to_upper()
 		"loja":
-			return "NA LOJA · MOKSHA.COM.BR/LOJA"
+			return "NA LOJA · EXTRAS > LOJA"
 	return ""

@@ -380,27 +380,29 @@ const engine = new Engine(GODOT_CONFIG);
     pad.addEventListener("contextmenu", e => e.preventDefault());
   }
 
-  // Tela cheia sempre: o primeiro clique ou tecla depois que o jogo abre já
-  // ocupa a tela toda, e volta a ocupar se o jogador sair dela. Em tela cheia o
-  // Esc fica com o jogo (Keyboard Lock, Chrome e Edge): é a pausa, não a saída;
-  // segurar Esc ainda sai. Sem o Keyboard Lock (Firefox, Safari) o Esc tira da
-  // tela cheia, e o jogo pausa sozinho para não seguir rodando sem ninguém ver.
+  // Tela cheia: o primeiro clique ou tecla depois que o jogo abre ocupa a tela
+  // toda, uma vez só. O Esc é do navegador e tira da tela cheia, como o aviso
+  // dele promete; o jogo pausa sozinho. Para voltar: OPÇÕES > TELA > TELA CHEIA
+  // (window.mokshaFullscreen) ou F11. Antes, qualquer tecla pedia a tela cheia de
+  // novo, e o próprio Esc que saía dela já fazia voltar.
   function setupFullscreen() {
     const root = document.documentElement;
     if (!root.requestFullscreen) return;
-    const lock = () => {
-      if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(["Escape", "Tab"]).catch(() => {});
+    const go = () => root.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    const first = () => {
+      removeEventListener("pointerdown", first, true);
+      removeEventListener("keydown", first, true);
+      if (!document.fullscreenElement) go();
     };
-    const enter = () => {
-      if (document.fullscreenElement) return;
-      root.requestFullscreen({ navigationUI: "hide" }).then(lock).catch(() => {});
+    addEventListener("pointerdown", first, true);
+    addEventListener("keydown", first, true);
+    window.mokshaIsFullscreen = () => Boolean(document.fullscreenElement);
+    window.mokshaFullscreen = on => {
+      if (on && !document.fullscreenElement) go();
+      else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
     };
-    addEventListener("pointerdown", enter, true);
-    addEventListener("keydown", enter, true);
     document.addEventListener("fullscreenchange", () => {
-      if (document.fullscreenElement) { lock(); return; }
-      if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock();
-      if (window.mokshaPause) window.mokshaPause();
+      if (!document.fullscreenElement && window.mokshaPause) window.mokshaPause();
     });
   }
 

@@ -80,6 +80,10 @@
   .count { position: absolute; left: 8px; top: 8px; z-index: 2; font: 700 11px var(--pixel); letter-spacing: .06em; color: var(--text);
     background: rgba(7,6,11,.85); border: 2px solid var(--line); padding: 3px 8px; }
   .skin { position: relative; }
+  .pack.support { grid-template-rows: auto auto; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-color: rgba(242,193,78,.45); }
+  .pack.support .body { padding: 16px; }
+  .pack.support p { max-width: 62ch; }
+  @media (max-width: 640px) { .pack.support { grid-template-columns: 1fr; } }
   .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 22px; margin: 0; }
   .faq div { border-top: 2px solid var(--line); padding-top: 10px; }
   .faq dt { font-weight: 600; margin-bottom: 4px; }
@@ -133,10 +137,10 @@
     <h2 data-pt="Perguntas" data-en="Questions">Perguntas</h2>
     <dl class="faq">
       <div><dt data-pt="Como pago?" data-en="How do I pay?">Como pago?</dt>
-        <dd><span data-pt="Pelo Mercado Pago, sem sair da sua conta MOKSHA." data-en="Through Mercado Pago, linked to your MOKSHA account.">Pelo Mercado Pago, sem sair da sua conta MOKSHA.</span>
-          <div class="pay"><span>PIX</span><span data-pt="CARTÃO" data-en="CARD">CARTÃO</span><span data-pt="SALDO MP" data-en="MP BALANCE">SALDO MP</span></div></dd></div>
+        <dd><span data-pt="Pelo Stripe, numa página segura de pagamento ligada à sua conta MOKSHA. Na fatura do cartão aparece PRUMO DADOS, a empresa que recebe pelo MOKSHA." data-en="Through Stripe, on a secure payment page linked to your MOKSHA account. Your card statement shows PRUMO DADOS, the company that receives payments for MOKSHA.">Pelo Stripe, numa página segura de pagamento ligada à sua conta MOKSHA. Na fatura do cartão aparece PRUMO DADOS, a empresa que recebe pelo MOKSHA.</span>
+          <div class="pay"><span data-pt="CARTÃO" data-en="CARD">CARTÃO</span><span>APPLE PAY</span></div></dd></div>
       <div><dt data-pt="Quando o item chega?" data-en="When do I get it?">Quando o item chega?</dt>
-        <dd data-pt="Assim que o pagamento é aprovado (Pix leva segundos). Abra o jogo de novo e escolha em OS MANTOS, na Beira (mantos, lâminas, rastros e filtros)." data-en="As soon as the payment is approved (Pix takes seconds). Reopen the game and pick it at THE CLOAKS, in the Edge (cloaks, blades, trails and filters).">Assim que o pagamento é aprovado (Pix leva segundos). Abra o jogo de novo e escolha em OS MANTOS, na Beira (mantos, lâminas, rastros e filtros).</dd></div>
+        <dd data-pt="Assim que o pagamento é aprovado. Comprando pela loja do jogo (EXTRAS > LOJA), o item aparece sozinho; comprando aqui, abra o jogo de novo. Escolha em OS MANTOS, na Beira." data-en="As soon as the payment is approved. Bought in the game store (EXTRAS > STORE), it shows up by itself; bought here, reopen the game. Pick it at THE CLOAKS, in the Edge.">Assim que o pagamento é aprovado. Comprando pela loja do jogo (EXTRAS > LOJA), o item aparece sozinho; comprando aqui, abra o jogo de novo. Escolha em OS MANTOS, na Beira.</dd></div>
       <div><dt data-pt="Vale no PC também?" data-en="Does it work on PC too?">Vale no PC também?</dt>
         <dd data-pt="Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA)." data-en="Yes. Purchases live on your account: in the browser and in the Windows game (sign in under EXTRAS > ACCOUNT).">Sim. A compra fica na conta: no navegador e no jogo para Windows (entrando na conta em EXTRAS > CONTA).</dd></div>
       <div><dt data-pt="Me arrependi. E agora?" data-en="Changed my mind?">Me arrependi. E agora?</dt>

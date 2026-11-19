@@ -673,6 +673,7 @@ func _desk_write() -> void:
 func _desk_request(method: int, api: String, body: Variant = null) -> Dictionary:
 	var http := HTTPRequest.new()
 	http.timeout = 12.0
+	http.process_mode = Node.PROCESS_MODE_ALWAYS   # a loja e a conta pedem com o jogo pausado
 	add_child(http)
 	var headers := PackedStringArray(["Content-Type: application/json", "User-Agent: MOKSHA-GAME"])
 	if desk_token != "":
@@ -782,3 +783,28 @@ func _desk_push() -> void:
 		desk_token = ""
 		_desk_write()
 		account_changed.emit()
+
+
+# --- loja (a mesma de moksha.com.br/loja.html) ---------------------------------------
+# No navegador o pedido vai com o cookie do site; no Windows, com a sessão de
+# EXTRAS > CONTA. O que a conta tem vem sempre do servidor, nunca do save.
+
+func api(method: int, api_path: String, body: Variant = null) -> Dictionary:
+	return await _desk_request(method, api_path, body)
+
+
+# Comprar exige conta: no navegador sempre há; no Windows, só depois de entrar.
+func can_buy() -> bool:
+	return OS.has_feature("web") or desk_logged_in()
+
+
+# Troca a lista do que a conta tem e devolve o que chegou de novo.
+func apply_store(list: Variant) -> Array:
+	var before := store_skins.duplicate()
+	_set_store(list)
+	if cloud:
+		_write_cache()
+	var fresh: Array = store_skins.filter(func(id: String) -> bool: return not before.has(id))
+	if not fresh.is_empty():
+		account_changed.emit()
+	return fresh

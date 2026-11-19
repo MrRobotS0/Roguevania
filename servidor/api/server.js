@@ -113,7 +113,8 @@ function send(res, status, body, headers = {}) {
 
 const fail = (res, status, code) => send(res, status, { erro: code });
 
-function readJson(req) {
+// o corpo como veio (o webhook do Stripe assina os bytes exatos)
+function readRaw(req) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
@@ -122,12 +123,15 @@ function readJson(req) {
       if (size > MAX_BODY) { reject(Object.assign(new Error("grande"), { status: 413 })); req.destroy(); return; }
       chunks.push(c);
     });
-    req.on("end", () => {
-      try { resolve(chunks.length ? JSON.parse(Buffer.concat(chunks).toString("utf8")) : {}); }
-      catch { reject(Object.assign(new Error("json"), { status: 400 })); }
-    });
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     req.on("error", reject);
   });
+}
+
+async function readJson(req) {
+  const raw = await readRaw(req);
+  try { return raw ? JSON.parse(raw) : {}; }
+  catch { throw Object.assign(new Error("json"), { status: 400 }); }
 }
 
 function cookies(req) {
@@ -558,8 +562,21 @@ for (const [grupo, tipo, centavos] of [[MANTOS, "manto", 490], [LAMINAS, "lamina
   for (const [id, [pt, en]] of Object.entries(grupo)) LOJA[`${tipo}:${id}`] = { tipo, pt, en, centavos, conteudo: [id] };
 // os pedidos antigos usavam "skin:<id>"
 for (const id of Object.keys(MANTOS)) LOJA[`skin:${id}`] = { ...LOJA[`manto:${id}`], oculto: true };
+// apoio com valor livre: quem paga escolhe quanto na página do Stripe. Não dá item.
+LOJA["apoio"] = { tipo: "apoio", pt: "Apoiar o MOKSHA", en: "Support MOKSHA", centavos: 0, livre: true, conteudo: [] };
 const MP_TOKEN = process.env.MP_ACCESS_TOKEN || "";
 const MP_API = "https://api.mercadopago.com";
+
+// Stripe: quando há chave, é ele que cobra (o Mercado Pago fica só para os pedidos antigos).
+// Todo item é cobrado no produto "Moksha" (preço montado aqui, nunca o que o cliente manda);
+// o apoio usa o preço de valor livre. A conta do Stripe é dividida com outro site: tudo que
+// é nosso leva metadata app=moksha, e o resto é ignorado.
+const ST_KEY = process.env.STRIPE_SECRET_KEY || "";
+const ST_HOOK = process.env.STRIPE_WEBHOOK_SECRET || "";
+const ST_PRODUCT = process.env.STRIPE_PRODUCT || "prod_VeuT1gQAqv8rQ0";
+const ST_PRICE_FREE = process.env.STRIPE_PRICE_APOIO || "price_1UdaefH9yAgBXFNgZG11E5Mk";
+const GATEWAY = ST_KEY ? "stripe" : (MP_TOKEN ? "mp" : "");
+const vendavel = i => !i.oculto && (!i.livre || GATEWAY === "stripe");
 
 // aparências que a conta tem (pedidos aprovados)
 async function ownedSkins(userId) {
@@ -580,11 +597,44 @@ async function mp(method, path, body) {
   return data;
 }
 
+// --- Stripe (API por formulário; sem biblioteca) ---
+function stForm(obj, prefix = "", out = new URLSearchParams()) {
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) continue;
+    const key = prefix ? `${prefix}[${k}]` : k;
+    if (typeof v === "object") stForm(v, key, out); else out.append(key, String(v));
+  }
+  return out;
+}
+
+async function stripe(method, path, body) {
+  const r = await fetch("https://api.stripe.com/v1" + path, {
+    method, headers: { Authorization: `Bearer ${ST_KEY}`, "Content-Type": "application/x-www-form-urlencoded",
+      ...(method === "POST" ? { "Idempotency-Key": crypto.randomUUID() } : {}) },
+    body: body ? stForm(body).toString() : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`stripe ${r.status}: ${JSON.stringify(data.error || data).slice(0, 300)}`);
+  return data;
+}
+
+// cabeçalho Stripe-Signature: t=...,v1=... (HMAC-SHA256 de "t.corpo"); vale por 5 minutos
+function stripeSigned(raw, header) {
+  if (!ST_HOOK) return true;   // sem segredo: seguimos só pelo que buscamos na API deles
+  const parts = Object.fromEntries(String(header || "").split(",").map(p => p.split("=")).filter(p => p.length === 2)
+    .map(([k, v]) => [k.trim(), v.trim()]));
+  const sigs = String(header || "").split(",").filter(p => p.trim().startsWith("v1=")).map(p => p.trim().slice(3));
+  const t = Number(parts.t);
+  if (!t || Math.abs(Date.now() / 1000 - t) > 300 || !sigs.length) return false;
+  const want = Buffer.from(crypto.createHmac("sha256", ST_HOOK).update(`${t}.${raw}`).digest("hex"));
+  return sigs.some(s => s.length === want.length && crypto.timingSafeEqual(Buffer.from(s), want));
+}
+
 routes["GET /api/loja"] = async (req, res) => {
   const u = await currentUser(req);
-  const itens = Object.entries(LOJA).filter(([, i]) => !i.oculto)
-    .map(([id, i]) => ({ id, tipo: i.tipo, pt: i.pt, en: i.en, centavos: i.centavos, conteudo: i.conteudo }));
-  send(res, 200, { itens, aberta: Boolean(MP_TOKEN), logado: Boolean(u), nome: u ? u.name : null,
+  const itens = Object.entries(LOJA).filter(([, i]) => vendavel(i))
+    .map(([id, i]) => ({ id, tipo: i.tipo, pt: i.pt, en: i.en, centavos: i.centavos, livre: Boolean(i.livre), conteudo: i.conteudo }));
+  send(res, 200, { itens, aberta: Boolean(GATEWAY), pagamento: GATEWAY, logado: Boolean(u), nome: u ? u.name : null,
     tem: u ? await ownedSkins(u.id) : [] });
 };
 
@@ -592,17 +642,41 @@ routes["POST /api/loja/comprar"] = async (req, res) => {
   const u = await currentUser(req);
   if (!u) return fail(res, 401, "sem_sessao");
   if (!u.name) return fail(res, 403, "sem_personagem");
-  if (!MP_TOKEN) return fail(res, 503, "loja_fechada");
+  if (!GATEWAY) return fail(res, 503, "loja_fechada");
   if (limited("loja:" + u.id, 20, 60 * 60_000)) return fail(res, 429, "muitas_tentativas");
   const b = await readJson(req);
   const item = LOJA[b.item];
-  if (!item || item.oculto) return fail(res, 400, "item_invalido");
+  if (!item || !vendavel(item)) return fail(res, 400, "item_invalido");
   const tem = new Set(await ownedSkins(u.id));
-  if (item.conteudo.every(s => tem.has(s))) return fail(res, 409, "ja_tem");
+  if (!item.livre && item.conteudo.every(s => tem.has(s))) return fail(res, 409, "ja_tem");
   const { rows } = await pool.query(
-    `INSERT INTO purchases (user_id, item, amount_cents) VALUES ($1, $2, $3) RETURNING id`, [u.id, b.item, item.centavos]);
+    `INSERT INTO purchases (user_id, item, amount_cents, gateway) VALUES ($1, $2, $3, $4) RETURNING id`,
+    [u.id, b.item, item.centavos, GATEWAY]);
   const id = rows[0].id;
-  const volta = `${SITE}/loja.html?pedido=${id}`;
+  // o jogo pede a volta para a página que diz "pode voltar ao jogo"
+  const volta = `${SITE}/loja.html?pedido=${id}${b.origem === "jogo" ? "&jogo=1" : ""}`;
+  const en = b.lang === "en";
+  if (GATEWAY === "stripe") {
+    const nome = en ? item.en : item.pt;
+    const line = item.livre ? { price: ST_PRICE_FREE, quantity: 1 }
+      : { price_data: { currency: "brl", unit_amount: item.centavos, product: ST_PRODUCT }, quantity: 1 };
+    const meta = { app: "moksha", pedido: String(id), item: b.item };
+    const s = await stripe("POST", "/checkout/sessions", {
+      mode: "payment",
+      line_items: [line],
+      client_reference_id: String(id),
+      customer_email: u.email,
+      metadata: meta,
+      payment_intent_data: { metadata: meta, description: `MOKSHA · ${item.pt}`, statement_descriptor_suffix: "MOKSHA" },
+      custom_text: { submit: { message: item.livre
+        ? (en ? "Thank you! You choose the amount. Support does not unlock items." : "Obrigado! Você escolhe o valor. O apoio não libera itens.")
+        : (en ? `${nome}: cosmetic only, it changes looks and nothing else.` : `${nome}: item cosmético, só muda o visual.`) } },
+      locale: en ? "en" : "pt-BR",
+      success_url: volta, cancel_url: volta,
+    });
+    await pool.query(`UPDATE purchases SET gw_ref = $1 WHERE id = $2`, [s.id, id]);
+    return send(res, 201, { ok: true, pedido: Number(id), url: s.url });
+  }
   const pref = await mp("POST", "/checkout/preferences", {
     items: [{ id: b.item, title: `MOKSHA · ${item.pt}`, description: "Item cosmético para o herói (só visual)",
       quantity: 1, currency_id: "BRL", unit_price: item.centavos / 100 }],
@@ -623,10 +697,15 @@ routes["GET /api/loja/pedido"] = async (req, res) => {
   if (!u) return fail(res, 401, "sem_sessao");
   const id = Number(new URL(req.url, "http://x").searchParams.get("id"));
   if (!Number.isSafeInteger(id)) return fail(res, 400, "pedido_invalido");
-  let { rows } = await pool.query(`SELECT id, item, status FROM purchases WHERE id = $1 AND user_id = $2`, [id, u.id]);
+  let { rows } = await pool.query(`SELECT id, item, status, gateway, gw_ref FROM purchases WHERE id = $1 AND user_id = $2`, [id, u.id]);
   if (!rows[0]) return fail(res, 404, "nao_encontrado");
-  // o webhook pode demorar: enquanto pendente, pergunta direto ao Mercado Pago
-  if (rows[0].status === "pendente" && MP_TOKEN && !limited("ped:" + id, 30, 10 * 60_000)) {
+  // o webhook pode demorar: enquanto pendente, pergunta direto ao Stripe ou ao Mercado Pago
+  if (rows[0].status === "pendente" && rows[0].gateway === "stripe" && rows[0].gw_ref && ST_KEY
+      && !limited("ped:" + id, 60, 10 * 60_000)) {
+    const s = await stripe("GET", `/checkout/sessions/${encodeURIComponent(rows[0].gw_ref)}`).catch(() => null);
+    if (s) await applyStripeSession(s);
+    ({ rows } = await pool.query(`SELECT id, item, status FROM purchases WHERE id = $1`, [id]));
+  } else if (rows[0].status === "pendente" && rows[0].gateway !== "stripe" && MP_TOKEN && !limited("ped:" + id, 30, 10 * 60_000)) {
     const busca = await mp("GET", `/v1/payments/search?external_reference=${id}&sort=date_created&criteria=desc`).catch(() => null);
     for (const p of (busca && busca.results) || []) await applyPayment(p);
     ({ rows } = await pool.query(`SELECT id, item, status FROM purchases WHERE id = $1`, [id]));
@@ -670,6 +749,60 @@ routes["POST /api/loja/webhook"] = async (req, res) => {
   catch (e) { console.error("[loja] webhook:", e.message); }
 };
 
+// A sessão do Checkout (buscada na API do Stripe, nunca a do corpo do aviso) muda o pedido.
+async function applyStripeSession(s) {
+  if (!s || !s.metadata || s.metadata.app !== "moksha") return;
+  const id = Number(s.metadata.pedido || s.client_reference_id);
+  if (!Number.isSafeInteger(id)) return;
+  const { rows } = await pool.query(`SELECT item, amount_cents, status, gw_ref FROM purchases WHERE id = $1`, [id]);
+  if (!rows[0] || (rows[0].gw_ref && rows[0].gw_ref !== s.id)) return;
+  let status = null;
+  if (s.payment_status === "paid") {
+    if (s.currency !== "brl" || Number(s.amount_total) < rows[0].amount_cents) {
+      console.error(`[loja] pedido ${id}: valor não confere (${s.amount_total} ${s.currency})`);
+      return;
+    }
+    status = "aprovado";
+  } else if (s.status === "expired" && rows[0].status === "pendente") {
+    status = "recusado";
+  }
+  if (!status || status === rows[0].status) return;
+  const pi = typeof s.payment_intent === "string" ? s.payment_intent : (s.payment_intent && s.payment_intent.id) || null;
+  // no apoio o valor é o que a pessoa escolheu
+  await pool.query(`UPDATE purchases SET status = $1, gw_payment = $2, amount_cents = GREATEST(amount_cents, $3),
+      updated_at = now() WHERE id = $4`, [status, pi, status === "aprovado" ? Number(s.amount_total) : 0, id]);
+  console.log(`[loja] pedido ${id} (${rows[0].item}): ${status}`);
+}
+
+// estorno ou disputa: o item sai da conta
+async function stripeChargeBack(chargeId) {
+  const ch = await stripe("GET", `/charges/${encodeURIComponent(chargeId)}`);
+  // só mexe em pedido nosso: o PaymentIntent precisa estar gravado num pedido da loja
+  const pi = typeof ch.payment_intent === "string" ? ch.payment_intent : (ch.payment_intent && ch.payment_intent.id);
+  if (!pi || !(ch.refunded || ch.disputed)) return;
+  const { rowCount } = await pool.query(`UPDATE purchases SET status = 'estornado', updated_at = now()
+      WHERE gateway = 'stripe' AND gw_payment = $1 AND status = 'aprovado'`, [pi]);
+  if (rowCount) console.log(`[loja] pagamento ${pi}: estornado`);
+}
+
+// aviso do Stripe. Confere a assinatura e, mesmo assim, só usa o id do que busca na API deles.
+routes["POST /api/loja/stripe"] = async (req, res) => {
+  const raw = await readRaw(req);
+  if (!ST_KEY || !stripeSigned(raw, req.headers["stripe-signature"])) return fail(res, 400, "assinatura");
+  let ev;
+  try { ev = JSON.parse(raw); } catch { return fail(res, 400, "json"); }
+  send(res, 200, { ok: true });
+  const obj = (ev.data && ev.data.object) || {};
+  try {
+    if (String(ev.type).startsWith("checkout.session.") && /^cs_[A-Za-z0-9_]+$/.test(obj.id || ""))
+      await applyStripeSession(await stripe("GET", `/checkout/sessions/${obj.id}`));
+    else if (ev.type === "charge.refunded" && /^(ch|py)_[A-Za-z0-9_]+$/.test(obj.id || ""))
+      await stripeChargeBack(obj.id);
+    else if (ev.type === "charge.dispute.created" && /^(ch|py)_[A-Za-z0-9_]+$/.test(obj.charge || ""))
+      await stripeChargeBack(obj.charge);
+  } catch (e) { console.error("[loja] stripe:", e.message); }
+};
+
 // o dono dá um item de presente (testes, sorteios, suporte): vira um pedido aprovado de R$ 0
 routes["POST /api/admin/presentear"] = async (req, res) => {
   const u = await currentUser(req);
@@ -699,7 +832,8 @@ const server = http.createServer(async (req, res) => {
   const handler = routes[`${req.method} ${path}`];
   if (!handler) return fail(res, 404, "nao_encontrado");
   // o webhook vem do Mercado Pago (outro site); ele não confia no corpo, só no id que busca na API deles
-  if (req.method !== "GET" && path !== "/api/loja/webhook" && !sameSiteWrite(req)) return fail(res, 403, "origem_invalida");
+  if (req.method !== "GET" && path !== "/api/loja/webhook" && path !== "/api/loja/stripe" && !sameSiteWrite(req))
+    return fail(res, 403, "origem_invalida");
   try {
     await handler(req, res);
   } catch (e) {

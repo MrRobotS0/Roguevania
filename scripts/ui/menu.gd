@@ -22,6 +22,7 @@ const SUB := Color("9a8fb4")
 const DETAIL := Color("e6dff2")
 const DISABLED := Color("625a78")
 const DISABLED_PRICE := Color("8a4a52")
+const OWNED := Color("8fe08a")       # "É SEU" na loja: apagado, mas não é "não dá"
 
 var _open := false
 var _mode := ""
@@ -309,7 +310,7 @@ func _draw() -> void:
 		PixelFont.body(self, _fit(String(o["label"]).to_upper(), room), Vector2(text_x, ty), label_color)
 		if price != "":
 			var pc: Color = o.get("price_color", Palette.GOLD)
-			PixelFont.body(self, price, Vector2(box.end.x - PAD - price_w, ty), DISABLED_PRICE if disabled else pc)
+			PixelFont.body(self, price, Vector2(box.end.x - PAD - price_w, ty), DISABLED_PRICE if disabled and not o.get("owned", false) else pc)
 		y += ROW_H
 	if _scroll > 0:
 		PixelFont.body(self, "↑", Vector2(box.end.x - 9, box.position.y + head_h - 2), SUB)

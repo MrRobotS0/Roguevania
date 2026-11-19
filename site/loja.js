@@ -1,4 +1,4 @@
-// Loja (loja.html): vitrine, compra pelo Mercado Pago e acompanhamento do pedido.
+// Loja (loja.html): vitrine, compra pelo Stripe e acompanhamento do pedido.
 // O catálogo e os preços vêm de /api/loja (servidor/api/server.js); aqui ficam só
 // os textos de vitrine e as imagens de cada item.
 (function () {
@@ -32,6 +32,8 @@
     { id: "laminas", pt: "Lâminas", en: "Blades", tipos: ["lamina"], sub: KIND_TEXT.lamina },
     { id: "rastros", pt: "Rastros", en: "Trails", tipos: ["rastro"], sub: KIND_TEXT.rastro },
     { id: "filtros", pt: "Filtros", en: "Filters", tipos: ["filtro"], sub: KIND_TEXT.filtro },
+    { id: "apoiar", pt: "Apoiar", en: "Support", tipos: ["apoio"],
+      sub: ["Sem item, só apoio: você escolhe o valor na hora de pagar.", "No item, just support: you choose the amount when you pay."] },
   ];
   const PACK_TEXT = {
     "pacote:casas": ["Três estandartes da guerra pela cinza.", "Three banners from the war over the ash."],
@@ -53,14 +55,17 @@
     rede: ["Sem conexão. Tente de novo.", "No connection. Try again."],
   };
   const STATUS = {
-    aprovado: ["ok", "Pagamento aprovado! Abra o jogo de novo e escolha em OS MANTOS.", "Payment approved! Reopen the game and pick it at THE CLOAKS."],
-    pendente: ["", "Esperando o pagamento. Pix costuma cair em segundos; esta página atualiza sozinha.", "Waiting for payment. Pix usually lands in seconds; this page updates by itself."],
+    aprovado: ["ok", "Pagamento aprovado! Escolha o item em OS MANTOS, na Beira.", "Payment approved! Pick it at THE CLOAKS, in the Edge."],
+    apoio: ["ok", "Apoio recebido. Muito obrigado!", "Support received. Thank you so much!"],
+    pendente: ["", "Esperando a confirmação do pagamento; esta página atualiza sozinha.", "Waiting for the payment to be confirmed; this page updates by itself."],
     recusado: ["err", "O pagamento foi recusado. Nada foi cobrado; tente outro meio.", "The payment was declined. Nothing was charged; try another method."],
     estornado: ["err", "Esse pedido foi estornado.", "This order was refunded."],
   };
 
   let shop = null, buying = null, names = {}, single = {};
-  const pedido = new URLSearchParams(location.search).get("pedido");
+  const QS = new URLSearchParams(location.search);
+  const pedido = QS.get("pedido");
+  const fromGame = QS.get("jogo") === "1";
   const L = () => M.lang;
   const money = c => (c / 100).toLocaleString(L() === "en" ? "en-US" : "pt-BR", { style: "currency", currency: "BRL" });
   const kindOf = id => id.startsWith("lamina_") ? "lamina" : id.startsWith("rastro_") ? "rastro" : id.startsWith("filtro_") ? "filtro" : "manto";
@@ -98,7 +103,7 @@
 
   function buyArea(item) {
     const area = M.el("div", { class: "buy" });
-    const price = M.el("div", { class: "price" }, M.el("b", { text: money(item.centavos) }));
+    const price = M.el("div", { class: "price" }, M.el("b", { text: item.livre ? M.t("Valor livre", "Pay what you want") : money(item.centavos) }));
     const full = item.conteudo.reduce((a, id) => a + (single[id] || 0), 0);
     if (item.conteudo.length > 1 && full > item.centavos) {
       price.append(M.el("s", { text: money(full) }), M.el("em", { text: M.t("ECONOMIZE ", "SAVE ") + Math.round(100 - item.centavos * 100 / full) + "%" }));
@@ -106,7 +111,7 @@
     area.append(price);
     const has = new Set(shop.tem);
     const missing = item.conteudo.filter(id => !has.has(id)).length;
-    if (!missing) {
+    if (!missing && !item.livre) {
       area.append(M.el("span", { class: "owned", text: M.t("✓ VOCÊ TEM", "✓ OWNED") }));
       return area;
     }
@@ -114,16 +119,26 @@
     if (!shop.logado) {
       btn = M.el("a", { class: "btn", href: "/conta.html?volta=/loja.html", text: M.t("Entrar", "Sign in") });
     } else {
-      btn = M.el("button", { class: "btn", type: "button", text: shop.aberta ? M.t("Comprar", "Buy") : M.t("Em breve", "Soon") });
+      const verb = item.livre ? M.t("Apoiar", "Support") : M.t("Comprar", "Buy");
+      btn = M.el("button", { class: "btn", type: "button", text: shop.aberta ? verb : M.t("Em breve", "Soon") });
       if (buying === item.id) { btn.disabled = true; btn.textContent = "…"; }
       btn.addEventListener("click", () => buy(item));
-      btn.setAttribute("aria-label", M.t("Comprar ", "Buy ") + item[L()] + " · " + money(item.centavos));
+      btn.setAttribute("aria-label", item.livre ? M.t("Apoiar o MOKSHA com o valor que quiser", "Support MOKSHA with any amount")
+        : M.t("Comprar ", "Buy ") + item[L()] + " · " + money(item.centavos));
     }
     area.append(btn);
     return area;
   }
 
   function card(item) {
+    if (item.livre) {
+      const box = M.el("article", { class: "pack support" },
+        M.el("div", { class: "body" }, M.el("h3", { text: item[L()] }),
+          M.el("p", { text: M.t("O jogo é de graça e feito por uma pessoa só. Se ele vale alguma coisa para você, este é o jeito de dizer: você escolhe o valor na página de pagamento.",
+            "The game is free and made by one person. If it's worth something to you, this is the way to say it: you choose the amount on the payment page.") })));
+      box.append(buyArea(item));
+      return box;
+    }
     const has = new Set(shop.tem);
     const big = item.conteudo.length > 1;
     const all = item.conteudo.every(id => has.has(id));
@@ -176,7 +191,7 @@
     if (!shop.aberta) { notice("", M.t(ERRORS.loja_fechada[0], ERRORS.loja_fechada[1])); return; }
     if (!shop.nome) { location.href = "/conta.html?volta=/loja.html"; return; }
     buying = item.id; render();
-    const r = await M.api("POST", "/api/loja/comprar", { item: item.id });
+    const r = await M.api("POST", "/api/loja/comprar", { item: item.id, lang: L() });
     if (r.ok && r.url) { location.href = r.url; return; }
     buying = null; render();
     if (r.status === 401) { location.href = "/conta.html?volta=/loja.html"; return; }
@@ -194,12 +209,13 @@
     render();
   }
 
-  // voltou do Mercado Pago: mostra a situação e pergunta de novo enquanto estiver pendente
+  // voltou do pagamento: mostra a situação e pergunta de novo enquanto estiver pendente
   async function watchOrder(tries = 0) {
     const r = await M.api("GET", "/api/loja/pedido?id=" + encodeURIComponent(pedido));
     if (!r.ok) return;
-    const st = STATUS[r.situacao] || STATUS.pendente;
-    notice(st[0], M.t("Pedido #", "Order #") + r.pedido + " · " + M.t(st[1], st[2]));
+    const st = r.item === "apoio" && r.situacao === "aprovado" ? STATUS.apoio : (STATUS[r.situacao] || STATUS.pendente);
+    const back = fromGame && r.situacao === "aprovado" ? M.t(" Pode voltar ao jogo: ele libera sozinho.", " You can go back to the game: it unlocks by itself.") : "";
+    notice(st[0], M.t("Pedido #", "Order #") + r.pedido + " · " + M.t(st[1], st[2]) + back);
     if (r.situacao === "aprovado") await load();
     else if (r.situacao === "pendente" && tries < 40) setTimeout(() => watchOrder(tries + 1), tries < 10 ? 3000 : 8000);
   }

@@ -206,7 +206,7 @@ func _touch_bridge() -> void:
 	# No navegador a escala inteira deixa faixas pretas em volta (a janela quase
 	# nunca é múltipla de 480x270): lá o jogo estica até preencher a tela.
 	get_tree().root.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
-	# saiu da tela cheia (Esc sem Keyboard Lock): o jogo pausa sozinho
+	# saiu da tela cheia (Esc do navegador): o jogo pausa sozinho
 	_pause_cb = JavaScriptBridge.create_callback(func(_args: Array) -> void: web_pause.emit())
 	JavaScriptBridge.get_interface("window").mokshaPause = _pause_cb
 
