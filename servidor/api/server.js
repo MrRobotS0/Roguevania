@@ -574,7 +574,7 @@ const MP_API = "https://api.mercadopago.com";
 const ST_KEY = process.env.STRIPE_SECRET_KEY || "";
 const ST_HOOK = process.env.STRIPE_WEBHOOK_SECRET || "";
 const ST_PRODUCT = process.env.STRIPE_PRODUCT || "prod_VeuT1gQAqv8rQ0";
-const ST_PRICE_FREE = process.env.STRIPE_PRICE_APOIO || "price_1UdaefH9yAgBXFNgZG11E5Mk";
+const ST_PRICE_FREE = process.env.STRIPE_PRICE_APOIO || "price_1UdbIxH9yAgBXFNg6AWBPO7j";
 const GATEWAY = ST_KEY ? "stripe" : (MP_TOKEN ? "mp" : "");
 const vendavel = i => !i.oculto && (!i.livre || GATEWAY === "stripe");
 
