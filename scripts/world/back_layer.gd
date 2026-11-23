@@ -5,6 +5,11 @@ extends Node2D
 # mais que a base), tremula no calor, ondula debaixo d'água e ganha a névoa
 # da distância. O deslocamento anda de pixel inteiro em pixel inteiro, para
 # a pixel art continuar nítida. Quem diz o quanto de cada coisa é o Backdrop.
+#
+# Movimento em fração de pixel, com amostragem suave: o jogo desenha a 480x270
+# e amplia, e preso a pixel inteiro uma camada lenta (a de longe anda menos de
+# 1 px por segundo) avançava aos saltos — parecia rodar a 10 quadros por
+# segundo. Parada, a camada continua nítida (cai no centro dos pixels).
 
 const SHADER := """
 shader_type canvas_item;
@@ -27,8 +32,8 @@ void fragment() {
 	off += sin(TIME * 2.7 + y * 140.0) * heat * y * y;
 	off += sin(TIME * 1.1 + y * 18.0 + uv.x * 3.0) * wave;
 	float lift = sin(TIME * 0.9 + uv.x * 14.0) * wave * 0.6;
-	uv.x += floor(off + 0.5) / tex_size.x;
-	uv.y += floor(lift + 0.5) / tex_size.y;
+	uv.x += off / tex_size.x;
+	uv.y += lift / tex_size.y;
 	vec4 c = texture(TEXTURE, uv);
 	c.rgb = mix(c.rgb, fog.rgb, fog_amount * mix(0.55, 1.0, y));
 	c.rgb *= 1.0 + glow * (0.5 + 0.5 * sin(TIME * glow_speed + uv.x * 4.0));
@@ -59,7 +64,7 @@ func _init() -> void:
 	material = ShaderMaterial.new()
 	(material as ShaderMaterial).shader = shader()
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func set_param(name: String, value: Variant) -> void:
@@ -88,12 +93,12 @@ func _draw() -> void:
 		return
 	if _still:
 		# o céu fica parado (só pode respirar)
-		draw_texture(tex, Vector2(0, floorf(sin(_t * 0.25 + bob_phase) * bob)))
+		draw_texture(tex, Vector2(0, sin(_t * 0.25 + bob_phase) * bob))
 		return
 	var lw := float(tex.get_width())
-	var x0 := floorf(-fposmod(_at.x * scroll + _drift_x, lw))
+	var x0 := -fposmod(_at.x * scroll + _drift_x, lw)
 	var y0 := clampf(-(_at.y - 400.0) * lift, -30.0, 30.0)
-	y0 = floorf(y0 + sin(_t * 0.35 + bob_phase) * bob)
+	y0 += sin(_t * 0.35 + bob_phase) * bob
 	var x := x0
 	while x < _size.x:
 		draw_texture(tex, Vector2(x, y0))

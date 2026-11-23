@@ -1839,3 +1839,5 @@ Pedido dele: "jogando não sinto profundidade nenhuma, sombra nenhuma, e o fundo
 - O cenário anda sozinho e segue o mouse de leve (`Backdrop._idle_view`), mostrando a distância entre as camadas.
 - Poeira desfocada (discos em pixel) passa perto da lente.
 - O giro, o brilho, a poeira e o mouse desligam com a opção de efeitos de tela (`postfx`).
+
+**Fundo liso (v0.9.2).** Ele reclamou que o fundo parecia rodar a 10 quadros por segundo. Medido: em 15 de 23 capturas seguidas (a cada 69 ms) o fundo não tinha se mexido, porque as camadas andavam presas a pixel inteiro da tela de 480x270 e as lentas avançavam aos saltos. Agora `BackLayer` anda em fração de pixel com amostragem suave (`TEXTURE_FILTER_LINEAR`): 0 de 23 parados. Preço: o fundo fica um pouco macio, o que funciona como profundidade de campo (o mundo jogável continua nítido). Para medir de novo: capturar uma sequência com Playwright e contar os pares sem mudança.
