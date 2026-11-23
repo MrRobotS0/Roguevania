@@ -24,7 +24,7 @@ func _c(key: String, fallback: Color) -> Color:
 func _draw() -> void:
 	var size := get_viewport_rect().size
 	var cam := get_viewport().get_camera_2d()
-	var at := cam.get_screen_center_position() if cam else Vector2.ZERO
+	var at := cam.get_screen_center_position() if cam else _idle_view(size)
 	var painted := style in ["dunes", "painted"]
 	for c in get_children():
 		(c as CanvasItem).visible = painted
@@ -33,6 +33,21 @@ func _draw() -> void:
 			_dunes(size, at)
 		_:
 			_columns_bg(size, at)
+
+
+# Sem câmera (o título): a vista anda sozinha, devagar, e segue um pouco o
+# mouse. As camadas andam em velocidades diferentes, e é isso que mostra a
+# distância entre elas.
+var _look := Vector2.ZERO
+
+
+func _idle_view(size: Vector2) -> Vector2:
+	var want := Vector2.ZERO
+	if Options.get_value("postfx"):
+		var m := get_viewport().get_mouse_position() / size - Vector2(0.5, 0.5)
+		want = m.clamp(Vector2(-0.5, -0.5), Vector2(0.5, 0.5)) * Vector2(160.0, 80.0)
+	_look = _look.lerp(want, clampf(get_process_delta_time() * 2.5, 0.0, 1.0))
+	return Vector2(_t * 9.0, 400.0) + _look
 
 
 # Camadas pintadas por tools/gen_backdrop.py (índices de paleta), pintadas

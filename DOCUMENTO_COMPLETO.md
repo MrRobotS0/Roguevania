@@ -1832,3 +1832,10 @@ Pedido dele: "jogando não sinto profundidade nenhuma, sombra nenhuma, e o fundo
 - Achado com o robô rodando em 5 commits em paralelo (git worktree).
 - Depois do conserto, as 10 partidas passam do 1º andar.
 - O Colosso matava nas 3 lutas, em 11 s em média, contra 0 de 5 do Lobo (mesmo nível, outro caminho): os golpes foram nivelados com os do Lobo.
+
+**Título com profundidade (v0.9.1).**
+- Logo MOKSHA como bloco de ouro: 10 camadas empilhadas para trás, com a pilha balançando devagar (parece girar no ar), e um brilho que corre letra a letra.
+- Botões viraram placas: a escolhida sobe 2 px com mola de 0,12 s, mostra a lateral e acende em ouro; as outras ficam como vultos rebaixados.
+- O cenário anda sozinho e segue o mouse de leve (`Backdrop._idle_view`), mostrando a distância entre as camadas.
+- Poeira desfocada (discos em pixel) passa perto da lente.
+- O giro, o brilho, a poeira e o mouse desligam com a opção de efeitos de tela (`postfx`).
