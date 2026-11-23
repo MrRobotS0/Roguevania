@@ -31,5 +31,7 @@ static func attach(parent: Node2D, color: Color, radius: float, energy: float, o
 	light.color = color
 	light.energy = energy
 	light.position = offset
+	# acima do plano: com o relevo, acende o lado das coisas que olha para ela
+	light.height = radius * 0.4
 	parent.add_child(light)
 	return light

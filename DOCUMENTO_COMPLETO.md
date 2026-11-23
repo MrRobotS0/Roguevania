@@ -1782,3 +1782,53 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 - **Atirador de Vidro no 1º andar:** tiro a 195 px/s (era 250) e, com outro atirador a menos de 300 px, o primeiro tiro sai atrasado (não atiram juntos).
 - **Comparação no pedestal:** segunda linha "FORÇA 34 → 41 (TROCA X)" em verde/vermelho; força = dano por segundo do combo × nível (`Gear.strength`). Pedestal e altar de mutação avisam "SINERGIA: NOME" quando o item fecharia uma das 6 sinergias (`Player.synergy_with`).
 - Já existiam e foram conferidos: rolar cancela golpe a qualquer momento, quique no golpe para baixo, cura ao chegar na Passagem, ícones no minimapa.
+
+---
+
+## 39. Profundidade (efeito 3D) e o robô de volta (v0.9.0, 23/11/2026)
+
+Pedido dele: "jogando não sinto profundidade nenhuma, sombra nenhuma, e o fundo deveria ser animado, mais vivo", nos 13 domínios, e também "um efeito 3D no personagem".
+
+**Relevo (normal maps).**
+- `python tools/gen_normais.py` grava `<folha>_n.png` para herói, inimigos, chefes, cenário (`props`, `beira`) e os 13 atlas de blocos.
+- A altura de cada pixel vem do próprio desenho: a distância até a borda abaula o corpo, e a luminância faz o claro saltar.
+- Nos blocos, cada célula de 16 px abaula só nos lados abertos (a linha do atlas é a máscara).
+- Rodar de novo depois de importar arte nova.
+- `SpriteSheet.lit(folha, textura)` junta a textura e o relevo num `CanvasTexture`. Só se embrulha na hora de desenhar, porque quem lê pixels (barra de vida, `get_image`) continua usando a textura original.
+
+**Luz (`scripts/world/depth.gd`).**
+- Cada domínio tem a sua luz principal (`DirectionalLight2D`): de onde vem, cor, força e altura, na tabela `Depth.KEYS`. Exemplos: lua fria nos Salões, brasa vinda de baixo na Forja e no Ventre, sol baixo e dourado no Bosque.
+- Há também uma luz de contorno fraca e rasante, vinda do lado oposto.
+- A penumbra (`CanvasModulate`) desceu para ×0,86.
+- As luzes pontuais (`Glow`, clarões do `Fx`) ganharam altura, para acender o lado das coisas virado para elas.
+
+**Terreno vira bloco (`Room.draw_depth`, camada entre o fundo e os blocos).**
+- Sombra do terreno na parede do fundo, em duas camadas deslocadas para o lado contrário da luz (`Depth.shadow_side`).
+- Face de cima de 5 px: a primeira linha do bloco esticada e mais clara, com uma quina de luz; o herói pisa dentro dela.
+
+**Sombra no chão (`ContactShadows`).** Elipse em pixel embaixo do herói e dos inimigos, no chão logo abaixo. Encolhe e clareia com a altura, e no pulo mostra onde vai cair.
+
+**Herói (`HeroVolume`).**
+- Espessura: duas cópias escuras empilhadas atrás, 1 px para o lado da sombra cada (sprite stacking de lado).
+- Giro de carta ao trocar de lado (0,09 s, só visual).
+- A linha de contorno em pixel (shader) existe, mas está desligada (`RIM_ON`): o desenho tem vãos largos entre a capa e o braço, e ela acendia uma linha no meio do corpo.
+
+**Fundo vivo (`BackLayer`, `Fauna`, `Backdrop.LIFE`).**
+- Cada camada pintada virou um nó com shader próprio: balanço (o alto balança mais), tremor de calor, ondulação de água e pulso de luz. O deslocamento é sempre em pixel inteiro.
+- Cada camada também tem deriva sozinha (nuvens), respiração vertical e a névoa da distância (perspectiva atmosférica).
+- Entre a camada de longe e a do meio passa a fauna: aves (Mar, Torre, Penhascos), morcegos (Salões, Cavernas), corvos (Necrópole), brasas (Forja), folhas (Jardim, Bosque), peixes (Catedral), olhos que abrem e piscam (Carcosa), estrelas cadentes (Observatório) e esporos (Ventre).
+
+**Como ver sem abrir janela.**
+- `scripts/debug/vitrine.gd` passa pelos domínios com o herói imortal. Com janela: `--path . res://scripts/debug/vitrine.tscn`.
+- No navegador, liga pelo argumento `--vitrine`, que o `main.gd` lê.
+- Exportar a versão web, trocar o `"args":[]` do index.html por `["--","--vitrine","--dominios=...","--segundos=7"]` e fotografar com Playwright num Chrome sem janela (`--headless=new --use-angle=d3d11`), servindo com COOP/COEP. O título da aba vira "VITRINE <domínio>" quando o domínio está montado.
+- O modelo web não aceita trocar a cena pela linha de comando ("compiled without support for path overrides"), nem em debug: por isso o argumento.
+- Medido assim: 60 quadros/s a 1440×810 com tudo ligado.
+
+**Robô (item 5 da lista de 23/11).**
+- Desde a v0.8.1 ele não saía da passagem: as 10 partidas acabavam por tempo no 1º andar.
+- Causa: o `JumpMap.path` devolve vazio também quando já se está na célula vizinha do alvo. Com o herói freando mais rápido (0.8.1), o robô parava a 16 px da porta e marcava as três saídas como impossíveis.
+- Corrigido em `bot.gd`: "do lado" não é "sem caminho".
+- Achado com o robô rodando em 5 commits em paralelo (git worktree).
+- Depois do conserto, as 10 partidas passam do 1º andar.
+- O Colosso matava nas 3 lutas, em 11 s em média, contra 0 de 5 do Lobo (mesmo nível, outro caminho): os golpes foram nivelados com os do Lobo.

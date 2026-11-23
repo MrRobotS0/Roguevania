@@ -97,7 +97,7 @@ func _setup_sprite() -> void:
 	body = Sprite2D.new()
 	body.centered = false
 	body.region_enabled = true
-	body.texture = _tex
+	body.texture = SpriteSheet.lit(sheet, _tex)
 	add_child(body)
 	_update_sprite()
 
@@ -121,11 +121,11 @@ func _update_sprite() -> void:
 	body.scale = _pose() * _draw_scale
 	body.position = Vector2(_kick_offset(), 0)
 	if flash > 0.0 and Options.flashes():
-		body.texture = _white
+		body.texture = SpriteSheet.lit(sheet, _white)
 	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
-		body.texture = _warn
+		body.texture = SpriteSheet.lit(sheet, _warn)
 	else:
-		body.texture = _tex
+		body.texture = SpriteSheet.lit(sheet, _tex)
 
 
 # Pixels do quadro atual, em coordenadas do mundo (a morte vira cinza com eles).

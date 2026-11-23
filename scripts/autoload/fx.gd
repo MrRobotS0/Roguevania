@@ -90,6 +90,7 @@ func flash_light(pos: Vector2, color: Color, radius: float, energy: float, life 
 	light.texture_scale = radius * 2.0 / 128.0
 	light.color = color.lerp(Color.WHITE, 0.25)
 	light.energy = energy
+	light.height = radius * 0.4
 	light.global_position = pos
 	light_root.add_child(light)
 	_flashes.append(light)

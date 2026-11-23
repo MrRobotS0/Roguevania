@@ -170,6 +170,7 @@ func _ready() -> void:
 	await _case("visão ampla: tela maior vê mais do mundo, pixel inteiro, sem moldura", _scale)
 	await _case("guardião veterano e mestre aprendem golpes", _boss_veteran)
 	await _case("códice: marcos dão Essência uma vez só", _codex_rewards)
+	await _case("profundidade: relevo, luz do domínio, sombra no chão e fundo vivo", _depth)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -2476,3 +2477,30 @@ func _store_catalog() -> void:
 	Meta.store_skins = old
 	Lang.lang = old_lang
 	m.free()
+
+
+func _depth() -> void:
+	# toda folha usada por herói, inimigo, blocos e cenário tem mapa de relevo
+	for sheet in ["hero_g", "archer", "wolf", "emperor", "props", "tiles_mar_de_cinzas", "tiles_bosque"]:
+		var base: Texture2D = load("res://assets/sprites/%s.png" % sheet)
+		var t := SpriteSheet.lit(sheet, base)
+		_check(t is CanvasTexture and (t as CanvasTexture).normal_texture != null, "%s sem relevo" % sheet)
+	# cada domínio: luz própria, sombra do terreno e camadas do fundo com vida
+	for id: String in Catalog.BIOMES.keys():
+		_check(Depth.KEYS.has(id), "%s sem luz do domínio" % id)
+		_check(Backdrop.LIFE.has(id), "%s sem fundo vivo" % id)
+		_check(Fauna.KINDS.has(id), "%s sem fauna" % id)
+	Run.new_run(6)
+	if level:
+		remove_child(level)
+		level.queue_free()
+	level = Level.new()
+	add_child(level)
+	level.build_generated(Catalog.biome("bosque"), 11, false)
+	await _frames(3)
+	var lights := level.find_children("*", "DirectionalLight2D", false, false)
+	_check(lights.size() == 2, "andar com %d luzes direcionais (esperado: domínio + contorno)" % lights.size())
+	_check(level.get_children().any(func(n: Node) -> bool: return n is ContactShadows), "sem sombra no chão")
+	var p := level.player
+	_check(p.body.texture is CanvasTexture, "herói desenhado sem relevo")
+	Run.active = false

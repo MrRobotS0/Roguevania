@@ -144,7 +144,7 @@ func _ready() -> void:
 	add_to_group("player")
 	if skin == null:
 		skin = Meta.current_skin()
-	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.8, Vector2(0, -12))
+	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.6, Vector2(0, -12))
 	_setup_look()
 
 
@@ -1284,6 +1284,7 @@ const SHEET := "hero_g"
 
 var body: Sprite2D
 var _front: Node2D
+var _volume: HeroVolume
 var _tex: ImageTexture
 var _white: ImageTexture
 var _hand := Vector2(4, -12)
@@ -1295,7 +1296,7 @@ func refresh_look() -> void:
 	var pal := HeroLook.palette(skin.colors(Meta.chroma_of(skin)))
 	_tex = SpriteSheet.texture(SHEET, pal)
 	_white = SpriteSheet.texture(SHEET, pal, true)
-	body.texture = _tex
+	body.texture = SpriteSheet.lit(SHEET, _tex)
 
 
 func _setup_look() -> void:
@@ -1303,8 +1304,13 @@ func _setup_look() -> void:
 	_tex = SpriteSheet.texture(SHEET, pal)
 	_white = SpriteSheet.texture(SHEET, pal, true)
 	body = SpriteSheet.make_sprite(SHEET)
-	body.texture = _tex
+	body.texture = SpriteSheet.lit(SHEET, _tex)
 	add_child(body)
+	# espessura, giro e contorno de luz (scripts/actors/hero_volume.gd)
+	var biome_id: String = room.tiles_id if room else ""
+	_volume = HeroVolume.new()
+	_volume.attach(self, body, room.shadow_side if room else 1.0,
+		Color(Color(Depth.key_of(biome_id)["color"]).lerp(Color.WHITE, 0.25), 0.5))
 	_front = Node2D.new()
 	add_child(_front)
 	_front.draw.connect(_draw_front)
@@ -1383,7 +1389,10 @@ func _update_body() -> void:
 		stretch = Vector2(1.0 + _squash * 0.2, 1.0 - _squash * 0.18)
 	body.scale = stretch
 	body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 16.0) % 2 == 0)
-	body.texture = _white if flash > 0.0 and Options.flashes() else _tex
+	var plain := _white if flash > 0.0 and Options.flashes() else _tex
+	body.texture = SpriteSheet.lit(SHEET, plain)
+	if _volume:
+		_volume.update(get_physics_process_delta_time(), facing, plain)
 	_front.queue_redraw()
 
 

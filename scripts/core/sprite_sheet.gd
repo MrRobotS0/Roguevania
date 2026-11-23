@@ -96,6 +96,33 @@ static func _color_texture(sheet: String, src: Image, palette: PackedColorArray,
 	return tex
 
 
+# A mesma textura com o mapa de relevo (<folha>_n.png, de tools/gen_normais.py)
+# junto: as luzes 2D passam a acender um lado do desenho e sombrear o outro.
+# Sem o mapa, volta a textura como veio. A original continua valendo para
+# quem lê pixels (get_image), por isso só se embrulha na hora de desenhar.
+static var _lit := {}
+static var _normals := {}
+
+
+static func lit(sheet: String, tex: Texture2D) -> Texture2D:
+	if tex == null:
+		return null
+	var key := tex.get_rid()
+	if _lit.has(key):
+		return _lit[key]
+	if not _normals.has(sheet):
+		var path := "res://assets/sprites/%s_n.png" % sheet
+		_normals[sheet] = load(path) if ResourceLoader.exists(path) else null
+	var out: Texture2D = tex
+	if _normals[sheet] != null:
+		var ct := CanvasTexture.new()
+		ct.diffuse_texture = tex
+		ct.normal_texture = _normals[sheet]
+		out = ct
+	_lit[key] = out
+	return out
+
+
 # Sprite2D pronto para a folha: pés na origem, quadros de `size`.
 static func make_sprite(sheet: String) -> Sprite2D:
 	var m := meta(sheet)
@@ -140,7 +167,7 @@ static func region_sprite(sheet: String, palette: PackedColorArray, anim: String
 	var fw := int(m.get("w", 32))
 	var fh := int(m.get("h", 32))
 	var s := Sprite2D.new()
-	s.texture = texture(sheet, palette)
+	s.texture = lit(sheet, texture(sheet, palette))
 	s.centered = false
 	s.region_enabled = true
 	s.offset = Vector2(-fw * 0.5, -fh + 2)

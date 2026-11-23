@@ -54,9 +54,9 @@ Feito:
 Fila (todos pedidos por ele):
 - [x] Inimigos mais vivos (2ª passada): perseguição mais rápida, menos tempo parado.
 - [x] HUD temático por domínio (cada domínio com a sua moldura).
-- [~] Pixel art: feito animação por golpe do combo e fundos em cor cheia; faltam blocos do chão e inimigos.
+- [x] Pixel art: animação por golpe do combo, fundos em cor cheia, blocos do chão dos 13 domínios e as folhas de todos os inimigos e chefes (§27 do DOCUMENTO_COMPLETO; conferido em 23/11: as 64 folhas usadas pelo código existem, todas em cor cheia).
 - [x] Inglês e português, com o seletor nas opções. Nome: MOKSHA.
-- [ ] Robô + equilíbrio medido (o robô ainda estoura o tempo nas fases em teia).
+- [x] Robô + equilíbrio medido: em 23/11 o robô voltou a sair do 1º andar (prendia na porta da passagem desde a 0.8.1) e o Colosso foi nivelado com o Lobo (docs/ROBO.md).
 - [x] Exportar .exe (build/) e landing page 3D (site/). Falta publicar: Release com o zip + GitHub Pages.
 
 # Quarta rodada — o grande update (04/11, noite: "o maior update de conteúdo da história")
@@ -72,3 +72,12 @@ Fila (todos pedidos por ele):
 - [x] salas desenhadas para os 6 domínios novos: 5 por domínio (`tools/salas_especiais.py`, rodar depois de `salas_andares.py`)
 - [x] golpe próprio para os 18 inimigos novos e mecânica própria para os 6 guardiões novos
 - [x] nenhum lugar sem saída: `tools/validar_salas.py` exige voltar a todas as portas de qualquer ponto, e `tools/validar_mapas.py` confere os mapas montados
+
+# Profundidade — o efeito 3D (23/11, v0.9.0; §39 do DOCUMENTO_COMPLETO)
+
+- [x] relevo (normal maps) em herói, inimigos, chefes, cenário e blocos dos 13 domínios
+- [x] luz própria de cada domínio + luz de contorno
+- [x] sombra do terreno na parede do fundo e face de cima dos blocos
+- [x] sombra no chão embaixo de cada personagem
+- [x] herói com espessura (sprite stacking) e giro de carta
+- [x] fundo vivo: balanço, calor, água, pulso, nuvens, névoa da distância e fauna em cada domínio

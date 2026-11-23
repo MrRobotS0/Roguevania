@@ -22,6 +22,11 @@ var _playing := false
 
 
 func _ready() -> void:
+	# só para fotografar a arte (scripts/debug/vitrine.gd); jogador nunca passa isto
+	if "--vitrine" in OS.get_cmdline_user_args():
+		var v: Node = load("res://scripts/debug/vitrine.gd").new()
+		v.set("main", self)
+		add_child.call_deferred(v)
 	Controls.web_pause.connect(_on_web_pause)
 	var back := CanvasLayer.new()
 	back.layer = -10
@@ -122,6 +127,7 @@ func _load_backdrop_preview() -> void:
 func _use_biome(b: BiomeData) -> void:
 	hud.use_theme(b.id)
 	backdrop.style = b.backdrop
+	backdrop.biome_id = b.id
 	backdrop.sky = b.sky
 	backdrop.layers = b.layers
 	ambience.use(b.id)

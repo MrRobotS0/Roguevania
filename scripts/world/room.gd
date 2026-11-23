@@ -324,9 +324,12 @@ class Chunk:
 	var room: Room
 	var area: Rect2i
 	var back := false
+	var shade := false
 
 	func _draw() -> void:
-		if back:
+		if shade:
+			room.draw_depth(self, area)
+		elif back:
 			room.draw_decor(self, area)
 		else:
 			room.draw_area(self, area)
@@ -374,6 +377,14 @@ func _build_chunks() -> void:
 			behind.back = true
 			behind.z_index = -1
 			add_child(behind)
+			# sombra do terreno na parede do fundo e a face de cima dos blocos
+			# (entre o fundo e os blocos; os personagens ficam por cima)
+			var depth_layer := Chunk.new()
+			depth_layer.room = self
+			depth_layer.area = area
+			depth_layer.shade = true
+			depth_layer.z_index = -1
+			add_child(depth_layer)
 			var chunk := Chunk.new()
 			chunk.room = self
 			chunk.area = area
@@ -553,6 +564,67 @@ func draw_area(ci: CanvasItem, area: Rect2i) -> void:
 					_draw_plank(ci, x, y)
 
 
+# --- profundidade: o terreno vira bloco -----------------------------------------
+# A sombra que o terreno joga na parede do fundo (para baixo e para o lado da
+# luz do domínio), a face de cima dos blocos vista um pouco de cima e o
+# escuro embaixo das plataformas. É o que separa o chão do cenário.
+const SHADOW_NEAR := Vector2(4, 5)
+const SHADOW_FAR := Vector2(9, 11)
+const TOP_FACE := 5             # px da face de cima (o herói pisa dentro dela)
+var shadow_side := 1.0          # 1 = sombra cai para a direita (luz da esquerda)
+
+
+func _blocky(x: int, y: int) -> bool:
+	var c := cell(x, y)
+	return c == SOLID or c == CRACKED or c == PLATFORM or (c == FAKE and not _revealed.has(Vector2i(x, y)))
+
+
+func draw_depth(ci: CanvasItem, area: Rect2i) -> void:
+	var near := Color(0, 0, 0, 0.34)
+	var far := Color(0, 0, 0, 0.16)
+	var o1 := Vector2(SHADOW_NEAR.x * shadow_side, SHADOW_NEAR.y)
+	var o2 := Vector2(SHADOW_FAR.x * shadow_side, SHADOW_FAR.y)
+	var y0 := maxi(area.position.y, 0)
+	var y1 := mini(area.end.y, rows)
+	var x0 := maxi(area.position.x, 0)
+	var x1 := mini(area.end.x, cols)
+	for y in range(y0, y1):
+		for x in range(x0, x1):
+			if not _blocky(x, y):
+				continue
+			var plank := cell(x, y) == PLATFORM
+			var r := Rect2(Vector2(x, y) * TILE, Vector2(TILE, 6 if plank else TILE))
+			# sombra: só do que encosta no ar (dentro da rocha não se vê)
+			if not (_blocky(x - 1, y) and _blocky(x + 1, y) and _blocky(x, y - 1) and _blocky(x, y + 1)):
+				ci.draw_rect(Rect2(r.position + o2, r.size), far)
+				ci.draw_rect(Rect2(r.position + o1, r.size), near)
+			if not _blocky(x, y - 1):
+				_top_face(ci, x, y, plank)
+
+
+# A face de cima: a primeira linha do próprio bloco esticada e mais clara,
+# com uma quina de luz na frente. O herói pisa dentro dela, como num degrau
+# visto um pouco de cima.
+func _top_face(ci: CanvasItem, x: int, y: int, plank: bool) -> void:
+	if _atlas == null:
+		_load_atlas()
+	var p := Vector2(x, y) * TILE
+	var mask := 1 | (0 if _solidish(x + 1, y) else 2) | (0 if _solidish(x - 1, y) else 8)
+	var row := ATLAS_PLANK if plank else mask
+	var src := Rect2((_hash(x, y) % 4) * TILE, row * TILE + 1, TILE, 2)
+	var lift := Color(1.4, 1.36, 1.3, 1.0)
+	ci.draw_texture_rect_region(_atlas, Rect2(p + Vector2(0, -TOP_FACE), Vector2(TILE, TOP_FACE)), src, lift)
+	var edge := Color(1, 1, 1, 0.32)
+	ci.draw_rect(Rect2(p + Vector2(0, -1), Vector2(TILE, 1)), edge)
+	var back := Color(0, 0, 0, 0.25)
+	ci.draw_rect(Rect2(p + Vector2(0, -TOP_FACE), Vector2(TILE, 1)), back)
+	# a quina da ponta: a face termina inclinada, não num corte reto
+	if not _blocky(x - 1, y):
+		ci.draw_rect(Rect2(p + Vector2(0, -TOP_FACE), Vector2(1, TOP_FACE - 1)), Color(0, 0, 0, 0.3))
+	if not _blocky(x + 1, y):
+		ci.draw_rect(Rect2(p + Vector2(TILE - 1, -TOP_FACE), Vector2(1, TOP_FACE - 1)), Color(0, 0, 0, 0.3))
+
+
 func _hash(x: int, y: int) -> int:
 	return ((x * 73856093) ^ (y * 19349663)) & 0xff
 
@@ -598,7 +670,8 @@ func _tile(ci: CanvasItem, x: int, y: int, row: int, col: int, tint := Color.WHI
 func _load_atlas() -> void:
 	var path := "res://assets/sprites/tiles_%s.png" % tiles_id
 	_real_tiles = tiles_id != "" and ResourceLoader.exists(path)
-	_atlas = load(path) if _real_tiles else SpriteSheet.texture("tiles", tile_palette())
+	_atlas = SpriteSheet.lit("tiles_" + tiles_id, load(path)) if _real_tiles \
+		else SpriteSheet.lit("tiles", SpriteSheet.texture("tiles", tile_palette()))
 
 
 func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:

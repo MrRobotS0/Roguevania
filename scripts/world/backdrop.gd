@@ -25,6 +25,9 @@ func _draw() -> void:
 	var size := get_viewport_rect().size
 	var cam := get_viewport().get_camera_2d()
 	var at := cam.get_screen_center_position() if cam else Vector2.ZERO
+	var painted := style in ["dunes", "painted"]
+	for c in get_children():
+		(c as CanvasItem).visible = painted
 	match style:
 		"dunes", "painted":
 			_dunes(size, at)
@@ -86,27 +89,92 @@ func _palette() -> PackedColorArray:
 	])
 
 
+# Cada camada pintada é um nó próprio (BackLayer) com vida: nuvens que andam
+# sozinhas, mata que balança, água que ondula, calor que tremula, carne que
+# pulsa, e a névoa da distância (a de longe some no ar). Entre a camada de
+# longe e a do meio passa a fauna do domínio (Fauna). O que cada domínio faz:
+#   drift: px/s andando sozinha   bob: px de respiração   sway: px de balanço no alto
+#   heat: tremor de calor          wave: ondulação de água  glow: pulso de luz
+#   fog: quanto a névoa da distância cobre a camada
+const LIFE := {
+	"mar_de_cinzas": {"far": {"drift": 3.0, "fog": 0.30}, "mid": {"bob": 1.0, "fog": 0.14}, "near": {"heat": 0.8}},
+	"saloes": {"far": {"fog": 0.30, "glow": 0.08, "glow_speed": 0.4}, "mid": {"bob": 1.0, "fog": 0.12}, "near": {}},
+	"forja_rubra": {"sky": {"glow": 0.15, "glow_speed": 0.8}, "far": {"heat": 1.5, "fog": 0.28, "glow": 0.12},
+		"mid": {"heat": 1.2, "fog": 0.1}, "near": {"heat": 1.0}},
+	"necropole": {"far": {"sway": 1.5, "fog": 0.30, "glow": 0.14, "glow_speed": 0.3}, "mid": {"sway": 3.0, "sway_speed": 0.5, "fog": 0.12},
+		"near": {"sway": 2.5}},
+	"torre_babel": {"far": {"drift": 2.5, "fog": 0.30}, "mid": {"fog": 0.12}, "near": {}},
+	"jardim_primordial": {"far": {"sway": 2.0, "fog": 0.28}, "mid": {"sway": 4.0, "sway_speed": 0.7, "fog": 0.12},
+		"near": {"sway": 4.0, "sway_speed": 0.9}},
+	"catedral": {"sky": {"wave": 1.0}, "far": {"wave": 1.5, "fog": 0.34}, "mid": {"wave": 2.0, "fog": 0.14}, "near": {"wave": 1.5}},
+	"carcosa": {"far": {"glow": 0.22, "glow_speed": 0.45, "fog": 0.25}, "mid": {"sway": 1.5, "sway_speed": 0.4, "glow": 0.1, "fog": 0.1},
+		"near": {"sway": 1.0}},
+	"observatorio": {"far": {"drift": 1.5, "bob": 2.0, "fog": 0.25}, "mid": {"bob": 2.0, "fog": 0.1}, "near": {"bob": 1.0}},
+	"ventre": {"far": {"wave": 2.5, "glow": 0.25, "glow_speed": 1.4, "fog": 0.3}, "mid": {"wave": 3.5, "glow": 0.18, "glow_speed": 1.4, "fog": 0.12},
+		"near": {"wave": 2.0}},
+	"penhascos": {"far": {"drift": 4.0, "bob": 2.0, "fog": 0.30}, "mid": {"drift": 1.5, "bob": 3.0, "fog": 0.12}, "near": {"bob": 1.5}},
+	"cavernas": {"far": {"fog": 0.35, "glow": 0.12, "glow_speed": 0.3}, "mid": {"bob": 2.0, "fog": 0.14}, "near": {"bob": 1.0}},
+	"bosque": {"far": {"sway": 2.0, "fog": 0.28}, "mid": {"sway": 4.0, "sway_speed": 0.6, "fog": 0.12}, "near": {"sway": 4.0, "sway_speed": 0.7}},
+}
+const DEFAULT_LIFE := {"far": {"fog": 0.28}, "mid": {"bob": 1.0, "fog": 0.12}, "near": {}}
+
+var biome_id := ""
+var _nodes := {}
+var _fauna: Fauna
+var _life_for := ""
+
+
+func _build_layers() -> void:
+	if not _nodes.is_empty():
+		return
+	for name in ["bd_sky", "bd_far", "fauna", "bd_mid", "bd_near"]:
+		if name == "fauna":
+			_fauna = Fauna.new()
+			add_child(_fauna)
+			continue
+		var n := BackLayer.new()
+		add_child(n)
+		_nodes[name] = n
+
+
+func _apply_life() -> void:
+	_life_for = biome_id + "|" + layers
+	var life: Dictionary = LIFE.get(biome_id, DEFAULT_LIFE)
+	var fog := _c("glow", Palette.SKY_GLOW).lerp(_c("sky1", Palette.SKY_1), 0.4)
+	var i := 0
+	for name: String in _nodes:
+		var n: BackLayer = _nodes[name]
+		var cfg: Dictionary = life.get(name.trim_prefix("bd_"), {})
+		n.tex = _layer(name)
+		n.foot = _foot(n.tex)
+		n.drift = cfg.get("drift", 0.0)
+		n.bob = cfg.get("bob", 0.0)
+		n.bob_phase = i * 1.7
+		for k in ["sway", "heat", "wave", "glow"]:
+			n.set_param(k, float(cfg.get(k, 0.0)))
+		n.set_param("sway_speed", float(cfg.get("sway_speed", 0.6)))
+		n.set_param("glow_speed", float(cfg.get("glow_speed", 0.5)))
+		n.set_param("fog", fog)
+		n.set_param("fog_amount", float(cfg.get("fog", 0.0)))
+		i += 1
+	_fauna.use(biome_id, Color(_c("sky0", Palette.SKY_0).darkened(0.35), 0.75), _c("sun", Color.WHITE).lerp(_c("glow", Palette.SKY_GLOW), 0.3))
+
+
 func _dunes(size: Vector2, at: Vector2) -> void:
-	draw_texture(_layer("bd_sky"), Vector2.ZERO)
-	for l in LAYERS:
-		var tex := _layer(l[0])
-		var lw := float(tex.get_width())
-		var x0 := -fposmod(at.x * float(l[1]), lw)
-		var y0 := clampf(-(at.y - 400.0) * float(l[2]), -30.0, 30.0)
-		x0 = floorf(x0)
-		y0 = floorf(y0)
-		draw_texture(tex, Vector2(x0, y0))
-		draw_texture(tex, Vector2(x0 + lw, y0))
-		if y0 < 0.0:
-			# o pé da camada não pode deixar buraco embaixo
-			draw_rect(Rect2(0, size.y + y0 - 1, size.x, -y0 + 1), _foot(tex))
-	# cinza caindo devagar
-	var ash := _c("sun", Color.WHITE)
-	ash.a = 0.18
-	for i in 40:
-		var px := fposmod(i * 97.0 - _t * (8.0 + i % 5) - at.x * 0.3, size.x)
-		var py := fposmod(i * 53.0 + _t * (12.0 + i % 7), size.y)
-		draw_rect(Rect2(px, py, 1, 1), ash)
+	_build_layers()
+	if _life_for != biome_id + "|" + layers or _painted_for != sky:
+		_apply_life()
+	var delta := get_process_delta_time()
+	for name: String in _nodes:
+		var n: BackLayer = _nodes[name]
+		var still := name == "bd_sky"
+		var par: Array = [0.0, 0.0]
+		for l in LAYERS:
+			if l[0] == name:
+				par = [l[1], l[2]]
+		n.scroll = par[0]
+		n.lift = par[1]
+		n.place(delta, at, size, _t, still)
 
 
 func _columns_bg(size: Vector2, at: Vector2) -> void:

@@ -192,7 +192,12 @@ func _make_room(b: BiomeData) -> void:
 	if b:
 		room.colors = b.room_colors()
 		room.tiles_id = b.id
+	# a sombra do terreno cai para o lado contrário da luz do domínio
+	room.shadow_side = Depth.shadow_side(b.id if b else "")
 	add_child(room)
+	var shadows := ContactShadows.new()
+	shadows.room = room
+	add_child(shadows)
 
 
 func _populate(with_camera: bool) -> void:
@@ -219,8 +224,10 @@ func _populate(with_camera: bool) -> void:
 	# O mundo fica na penumbra e as luzes (fogo, Essência, herói) devolvem a
 	# cor. Partículas e números ficam numa camada própria, fora da sombra.
 	var shade := CanvasModulate.new()
-	shade.color = biome.sky.get("ambient", AMBIENT) if biome else AMBIENT
+	shade.color = Depth.shade_color(biome.sky.get("ambient", AMBIENT) if biome else AMBIENT)
 	add_child(shade)
+	add_child(Depth.key_light(biome.id if biome else ""))
+	add_child(Depth.rim_light(biome.id if biome else "", biome.sky if biome else {}))
 	var overlay := CanvasLayer.new()
 	overlay.layer = 1
 	overlay.follow_viewport_enabled = true

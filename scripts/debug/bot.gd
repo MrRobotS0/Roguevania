@@ -279,7 +279,11 @@ func _navigate(delta: float) -> void:
 	if player.is_on_floor() and (_path.is_empty() or _replan <= 0.0 or not _on_track(here)):
 		_path = nav.path(here, _goal_cell)
 		_replan = 2.0
-		if _path.is_empty() and nav.knows(here):
+		# caminho vazio também quer dizer "já está do lado": aí só falta andar
+		# até ele (o herói freia em menos espaço desde a 0.8.1 e para a uma
+		# célula da porta; antes isso fazia o robô desistir das três saídas)
+		var beside := absi(here.x - _goal_cell.x) <= 1 and absi(here.y - _goal_cell.y) <= 2
+		if _path.is_empty() and nav.knows(here) and not beside:
 			_skip.append(_goal)
 			_goal = null
 			return
@@ -350,6 +354,11 @@ func _watch_progress(delta: float, here: Vector2i) -> void:
 		player.velocity = Vector2.ZERO
 		_progress_clock = 0.0
 		_best_left = 999999
+	elif _progress_clock > STUCK_SKIP and _goal:
+		# do lado do alvo e sem chegar nele: desiste deste e escolhe outro
+		_skip.append(_goal)
+		_goal = null
+		_progress_clock = 0.0
 	elif _progress_clock > STUCK_JUMP and player.is_on_floor() and _frame % 40 == 0:
 		_press("jump")
 		_dir(-1.0 if rng.randf() < 0.5 else 1.0)
