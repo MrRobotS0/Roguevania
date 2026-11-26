@@ -11,7 +11,7 @@ extends Node
 # morre, quanto tempo cada andar leva, quem mais machuca e onde ficou preso.
 
 const STAGE_LIMIT := 420.0      # s de jogo num andar antes de desistir dele
-const SAVE := "user://robo.save"
+var save_path := "user://robo.save"   # --save=user://outro.save para rodar robôs em paralelo
 
 var main: Node
 var bot := Bot.new()
@@ -43,7 +43,8 @@ func _ready() -> void:
 			"semente": seed0 = int(kv[1])
 			"saida": out_path = kv[1]
 			"rastro": bot.trace = kv[1] == "1"
-	Meta.use_path(SAVE, true)
+			"save": save_path = kv[1]
+	Meta.use_path(save_path, true)
 	Meta.data["intro_seen"] = true
 	Options.data["hints"] = false
 	Sfx.muted = true
@@ -202,7 +203,7 @@ func _finish() -> void:
 	var f := FileAccess.open(out_path, FileAccess.WRITE)
 	if f:
 		f.store_string(text)
-	var raw := FileAccess.open(SAVE.get_basename() + "_partidas.json", FileAccess.WRITE)
+	var raw := FileAccess.open(save_path.get_basename() + "_partidas.json", FileAccess.WRITE)
 	if raw:
 		raw.store_string(JSON.stringify(results, "  "))
 	print("relatório: " + ProjectSettings.globalize_path(out_path))

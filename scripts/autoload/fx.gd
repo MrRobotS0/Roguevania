@@ -23,6 +23,11 @@ var pain := 0.0            # 0..1: borda vermelha da tela quando o herói apanha
 const STOP_CHAIN := 0.12
 var _stop_chain_until := 0.0
 
+# 1.0 no jogo. A vitrine de filmagem (--lento) roda o mundo mais devagar e o vídeo é
+# acelerado depois; a parada do golpe volta para esse ritmo e dura o mesmo no vídeo.
+var base_time_scale := 1.0
+
+
 func hitstop(seconds: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if now < _stop_chain_until and seconds < 0.15:    # o golpe final do chefe pesa sempre
@@ -31,9 +36,9 @@ func hitstop(seconds: float) -> void:
 	_stop_token += 1
 	var token := _stop_token
 	Engine.time_scale = 0.02
-	await get_tree().create_timer(seconds, true, false, true).timeout
+	await get_tree().create_timer(seconds / base_time_scale, true, false, true).timeout
 	if token == _stop_token:
-		Engine.time_scale = 1.0
+		Engine.time_scale = base_time_scale
 
 
 func add_shake(amount: float) -> void:

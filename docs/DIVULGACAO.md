@@ -100,15 +100,44 @@ itch, e para isso é preciso uma versão sem conta.
 >
 > **Play free in your browser: https://moksha.com.br**
 
-## Trailer (30 s)
+## Vídeos e screenshots (gerados, sem abrir janela)
 
-Roteiro curto, gravado do jogo no navegador em tela cheia (OBS, 60 fps):
+Tudo sai do jogo de verdade: o robô joga imortal num Chrome sem janela e a tela é
+gravada a 60 qps.
 
-1. 0–3 s: logo MOKSHA sobre o Mar de Cinzas, música do título.
-2. 3–12 s: corrida e combate no Mar de Cinzas (combo, rolagem, pulo duplo).
-3. 12–20 s: cortes rápidos de 4 domínios (Forja, Carcosa, Observatório, Ventre).
-4. 20–26 s: um guardião (Lobo da Longa Noite ou Colosso), golpe final.
-5. 26–30 s: morte → renasce na Beira → "Jogue grátis: moksha.com.br".
+```
+python tools/filmar.py            # grava as 20 cenas (título, 13 domínios, 6 guardiões): ~15 min
+python tools/montar_videos.py     # monta tudo em build/divulgacao/: ~9 min
+python tools/montar_videos.py vertical_1 quadrado   # refaz só esses
+```
+
+| Arquivo | Para quê |
+|---|---|
+| `trailer_pt.mp4` / `trailer_en.mp4` | 31 s, 1920×1080, 60 qps: YouTube, itch ("Gameplay video"), site |
+| `vertical_1_*.mp4`, `vertical_2_*.mp4` | 18 s, 1080×1920: Reels, TikTok, YouTube Shorts |
+| `quadrado_*.mp4` | 18 s, 1080×1080: feed do Instagram e Facebook |
+| `screenshots/melhores/` | as 10 melhores em 1920×1080 (itch, Steam, posts) |
+| `screenshots/` | todas as 60 (3 por cena) |
+
+O roteiro (que trecho de cada cena entra) fica em `TRAILER` e `VERTICAIS`, no
+`montar_videos.py`. Os inícios foram escolhidos olhando as folhas de contato
+(`build/filmagem/contato/`). Se uma cena nova for gravada, o robô joga de outro
+jeito e os inícios precisam ser conferidos de novo. Nos verticais, evite chefe
+de arena fixa (Dragão, Trono): a câmera não segue o herói e o recorte do meio
+perde a ação.
+
+Trilha: `chefe_final.wav` no trailer e `chefe.wav` nos curtos, ambas do jogo.
+As letras usam as fontes do site (Silkscreen e Pixelify Sans).
+
+**Legenda sugerida para os posts:**
+
+> Treze deuses sumiram. Você é o que eles deixaram. ⚔️ MOKSHA é um roguelite de
+> ação em pixel art, grátis no navegador: moksha.com.br
+> #indiegame #pixelart #roguelite #gamedev #godot #jogosindie
+
+> Thirteen gods vanished. You are what they left behind. MOKSHA is a pixel-art
+> action roguelite, free in your browser: moksha.com.br
+> #indiegame #pixelart #roguelite #gamedev #godotengine
 
 ## Link compartilhado
 

@@ -105,7 +105,7 @@ func _think(delta: float) -> void:
 		_fight(e)
 		return
 	_why = "andando"
-	if player.hp < player.max_hp * 0.5 and player.flasks > 0 and player.is_on_floor() and _nearest_enemy_distance() > 140.0:
+	if player.hp < player.max_hp * 0.5 and player.flasks > 0 and _nearest_enemy_distance() > 100.0:
 		_press("heal")
 		return
 	_navigate(delta)
@@ -192,7 +192,12 @@ func _fight(e: Enemy) -> void:
 			return
 	elif _reacted.has(e.get_instance_id()) and not e.telegraphing():
 		_reacted.erase(e.get_instance_id())
-	if player.hp < player.max_hp * 0.35 and player.flasks > 0 and dist > 80.0 and player.is_on_floor():
+	# como um jogador: bebe na janela em que o inimigo não está avisando golpe,
+	# recuando enquanto bebe (o herói anda devagar bebendo). Antes só bebia
+	# longe dele (> 80 px), o que contra guardião nunca acontecia: morria com
+	# os dois frascos no bolso.
+	if player.hp < player.max_hp * 0.45 and player.flasks > 0 and not e.telegraphing() and dist > 36.0:
+		_dir(-toward)
 		_press("heal")
 		return
 	for slot in 2:
