@@ -114,6 +114,7 @@ python tools/trailer_cinema.py    # trailer de cinema (usa as cenas parado_/cine
 
 | Arquivo | Para quê |
 |---|---|
+| `trailerfilme2_pt.mp4` / `_en.mp4` | 81 s, trailer "de filme" com cenas em pixel art feitas só para ele (Mar de Cinzas sem fim, os 13 tronos apagando, o herói saindo da brasa, o guardião atrás da duna, a tempestade, o Imperador no trono, o logo de brasas) e trilha sintetizada no ritmo dos cortes. `python tools/trailer_filme2.py` (~9 min na 1ª vez; depois reaproveita as cenas, use `--refazer-cenas` para redesenhar). |
 | `trailer_cinema_pt.mp4` / `_en.mp4` | 98 s, trailer de cinema: história em cartelas, tomadas sem HUD com faixas pretas, guardiões em câmera lenta com nome e frase, informações do jogo. `python tools/trailer_cinema.py` (~4 min por idioma). |
 | `trailer_pt.mp4` / `trailer_en.mp4` | 31 s, 1920×1080, 60 qps: YouTube, itch ("Gameplay video"), site |
 | `vertical_1_*.mp4`, `vertical_2_*.mp4` | 18 s, 1080×1920: Reels, TikTok, YouTube Shorts |
