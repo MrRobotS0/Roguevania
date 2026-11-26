@@ -1841,3 +1841,74 @@ Pedido dele: "jogando não sinto profundidade nenhuma, sombra nenhuma, e o fundo
 - O giro, o brilho, a poeira e o mouse desligam com a opção de efeitos de tela (`postfx`).
 
 **Fundo liso (v0.9.2).** Ele reclamou que o fundo parecia rodar a 10 quadros por segundo. Medido: em 15 de 23 capturas seguidas (a cada 69 ms) o fundo não tinha se mexido, porque as camadas andavam presas a pixel inteiro da tela de 480x270 e as lentas avançavam aos saltos. Agora `BackLayer` anda em fração de pixel com amostragem suave (`TEXTURE_FILTER_LINEAR`): 0 de 23 parados. Preço: o fundo fica um pouco macio, o que funciona como profundidade de campo (o mundo jogável continua nítido). Para medir de novo: capturar uma sequência com Playwright e contar os pares sem mudança.
+
+## 40. Pixel art mais viva: objetos 3D em fatias, brilho próprio, mato, chão molhado e efeitos desenhados (v0.10.0, 26/11/2026)
+
+Pedido dele: "vamos melhorar ainda mais visualmente o moksha, procure mais pixel art na internet,
+mais técnicas de pixel art como sprite stacking...". O levantamento completo (o que existe, o que
+entrou, o que fica para depois, e as fontes) está em `docs/TECNICAS_VISUAIS.md`.
+
+**Sprite stacking de verdade (`Stack`).** Objeto feito de fatias horizontais, cada uma sendo o
+objeto visto de cima numa altura, desenhadas com 1 px de diferença. Girar as fatias gira o objeto
+em 3D.
+- `Stack.from_voxels(w, h, d, cor)` monta os modelos por código.
+- `Stack.from_image(desenho, espessura)` dá corpo a qualquer ícone: cada linha vira uma fatia.
+- `draw(..., tilt, tint, outline)`: `tilt` é quanto da vista de cima aparece; `outline` põe o
+  contorno de 1 px dos personagens.
+- Onde está:
+  - **Baú** (`Chest`): 3/4, respira, e ao abrir pula e dá uma volta inteira; a tampa some e mostra o ouro.
+  - **Moedas** (`EssenceOrb` de ouro): em pé, girando.
+  - **Item no pedestal** (`Pickup`): o ícone girando com 2 px de espessura.
+  - **Planta** (`BlueprintDrop`): rolo de papel girando.
+- Ver sem abrir o jogo: vitrine com `--pilhas=1` põe baús, item e moedas ao lado do herói.
+
+**Brilho próprio (mapas de emissão).**
+- `python tools/gen_emissao.py [--previa]` gera `<folha>_e.png` com os pixels que emitem luz.
+- Um pixel emite quando é claro, colorido e mais claro que a vizinhança: um ponto de luz, e não
+  uma armadura clara. O branco só conta se for um ponto isolado (olho).
+- Se mais de 4,5% da folha acender, o corte sobe. Folha sem brilho não ganha arquivo.
+- `Enemy._attach_emission` desenha esse mapa por cima do corpo, somando luz, fora da penumbra e
+  pulsando devagar. O glow espalha.
+- No escuro acendem: olhos de goblin e de caveira, chifres em brasa, as runas do Arquiteto, os
+  pontos do dragão. Rodar de novo depois de importar arte nova.
+
+**Mato vivo (`Grass`).**
+- Fios de 1 px em touceiras na face de cima dos blocos, em 8 domínios, cada um com o seu tipo
+  (`Grass.GRASS`): grama, juncos de cinza, algas, cílios de carne etc.
+- O vento vem em balanço miúdo e em rajadas que correm pelo chão. Quem passa abre o mato, que
+  volta com mola.
+- Duas camadas: uma atrás dos personagens e outra na beira, cobrindo os pés.
+- Desempenho no navegador:
+  - os fios ficam ordenados por x e só se percorre a faixa da tela;
+  - a mola só trabalha em quem foi empurrado;
+  - o resto segue o vento direto;
+  - medido: 60 qps no Jardim (antes da otimização, 47).
+
+**Chão molhado (`Reflection`).**
+- Na frente de cada trecho de chão aparece o que está em cima (herói, inimigos, baús), espelhado,
+  tingido na cor do domínio, ondulando em pixel inteiro e sumindo para baixo, com brilho correndo.
+- O espelho começa acima da face de cima do bloco.
+- O shader lê a tela (`hint_screen_texture`). A escala tela/mundo sai de `dFdy(UV)`, então
+  funciona na visão ampla e em qualquer zoom.
+- Domínios: Catedral, Cavernas, Ventre, Observatório e Salões.
+
+**Efeitos desenhados à mão (`Vfx`, `Fx.vfx`).**
+- Origem: pacote CC0 "Free Pixel Effects Pack" (CodeManu e Davit Masia, OpenGameArt).
+- Para baixar e importar:
+  ```
+  python tools/baixar_arte.py free-pixel-effects-pack
+  python tools/importar_efeitos.py
+  ```
+  Saem `assets/sprites/vfx_<nome>.png` e `vfx.json`. Os nomes são do que o desenho mostra, não
+  do arquivo original.
+- Onde aparecem:
+  - anel de impacto a cada golpe;
+  - estrela de quatro pontas no crítico;
+  - alma que sobe do corpo na morte;
+  - estouro azul em elite e chefe;
+  - explosão nas bombas e no afixo explosivo;
+  - chama animada em pé em quem queima (pequena ou alta conforme o tamanho), no lugar dos retângulos.
+- Ficam fora da luz da fase (são luz) e desligam com EFEITOS DE TELA.
+
+**Armadilha.** Quem lê os blocos da sala tem que nascer em `Level._populate`. Em `_make_room` o
+mapa ainda não foi carregado, e grama e reflexo saíam vazios, sem erro nenhum.

@@ -28,6 +28,8 @@ var robo := false
 var hud := true
 var bot: Bot
 var _level: Level
+var pilhas := false        # --pilhas=1: baús, item e moedas ao lado do herói (ver o sprite stacking)
+var _pilhas_level: Level
 
 
 func _ready() -> void:
@@ -39,6 +41,7 @@ func _ready() -> void:
 			"dominios": stages = Array(kv[1].split(","))
 			"segundos": seconds = float(kv[1])
 			"robo": robo = kv[1] == "1"
+			"pilhas": pilhas = kv[1] == "1"
 			"hud": hud = kv[1] != "0"
 			"lento": Fx.base_time_scale = float(kv[1])
 	# os menus pausam o jogo; a vitrine precisa continuar para responder
@@ -95,6 +98,9 @@ func _process(delta: float) -> void:
 			bot.rng.seed = 7
 			lv.player.pad = bot
 			bot.setup(lv.player, lv)
+	if pilhas and lv and is_instance_valid(lv.player) and lv != _pilhas_level:
+		_pilhas_level = lv
+		_spawn_stacks(lv)
 	if not hud and main and main.hud:
 		main.hud.visible = false
 	if robo and main:
@@ -110,3 +116,23 @@ func _process(delta: float) -> void:
 	if _clock >= seconds and _i < stages.size():
 		_clock = -999.0
 		_next()
+
+
+# Objetos montados em fatias (Stack) perto do herói, no chão dele.
+func _spawn_stacks(lv: Level) -> void:
+	var at := lv.player.global_position
+	var chest := Chest.new()
+	chest.level = lv
+	chest.position = at + Vector2(44, 0)
+	lv.add_child(chest)
+	var cursed := Chest.new()
+	cursed.cursed = true
+	cursed.level = lv
+	cursed.position = at + Vector2(84, 0)
+	lv.add_child(cursed)
+	var item := Pickup.new()
+	item.gear = Catalog.random_gear(lv.rng, 1)
+	item.level = lv
+	item.position = at + Vector2(-40, 0)
+	lv.add_child(item)
+	lv.drop_gold(at + Vector2(20, -30), 40)

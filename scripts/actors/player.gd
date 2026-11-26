@@ -1727,6 +1727,7 @@ func _affix_after(g: Gear, d: Damage, target: Enemy) -> void:
 				blast.source = self
 				e.hurt(blast)
 		Fx.burst(target.center(), Palette.BURN, 16, 150.0, 0.35, 200.0, 2.0)
+		Fx.vfx("explosao", target.center(), 2.0)
 		Sfx.play("boom", -10.0)
 	var echo := 0.35 if has_synergy("eco_faminto", g) else 0.2
 	if g.has("eco") and randf() < echo and is_instance_valid(target) and target.alive():

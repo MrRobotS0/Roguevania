@@ -201,6 +201,21 @@ func _make_room(b: BiomeData) -> void:
 
 
 func _populate(with_camera: bool) -> void:
+	# (o mapa já está carregado aqui: quem lê os blocos nasce agora)
+	# mato vivo no chão (atrás e na frente dos pés), onde o domínio tem
+	if biome and Grass.has_grass(biome.id) and Options.get_value("postfx"):
+		for front in [false, true]:
+			var g := Grass.new()
+			g.room = room
+			g.biome_id = biome.id
+			g.front = front
+			add_child(g)
+	# chão molhado que espelha quem está em cima
+	if biome and Reflection.is_wet(biome.id) and Options.get_value("postfx"):
+		var wet := Reflection.new()
+		wet.room = room
+		wet.biome_id = biome.id
+		add_child(wet)
 	player = Player.new()
 	player.room = room
 	player.position = room.player_spawn

@@ -71,6 +71,21 @@ func streak(pos: Vector2, dir: float, color: Color) -> void:
 		sparks.streak(pos, dir, color)
 
 
+# Efeito em pixel art (Vfx) solto no mundo, num ponto. `offset` desloca o
+# desenho (a alma nasce do centro e sobe). Desligado com os efeitos de tela.
+func vfx(name: String, pos: Vector2, speed := 1.0, flip := false, offset := Vector2.ZERO) -> Vfx:
+	if not is_instance_valid(light_root) or not light_root.is_inside_tree() or not Options.get_value("postfx"):
+		return null
+	var v := Vfx.make(name, speed)
+	if v == null:
+		return null
+	v.offset = offset
+	v.flip_h = flip
+	light_root.add_child(v)
+	v.global_position = pos.round()
+	return v
+
+
 func impact(pos: Vector2, color: Color, big := false) -> void:
 	if is_instance_valid(sparks):
 		sparks.impact(pos, color, big)

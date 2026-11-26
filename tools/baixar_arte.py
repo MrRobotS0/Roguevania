@@ -34,6 +34,8 @@ PACKS = [
     "pixel-wolf", "pixel-predator-plant-mob-character", "animated-statue",
     # ícones dos itens (armas, habilidades, mutações): pixel art pronta
     "496-pixel-art-icons-for-medievalfantasy-rpg", "fantasy-icon-pack-by-ravenmore-0",
+    # efeitos (golpe, fogo, explosão, magia), todos CC0 — garimpo de 26/11
+    "pixel-fx-pack", "free-pixel-effects-pack", "free-vfx-asset-pack", "animated-particle-effects-1",
 ]
 
 

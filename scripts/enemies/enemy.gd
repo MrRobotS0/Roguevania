@@ -35,6 +35,7 @@ var _anim := 0.0
 var sheet := ""
 var look := ""               # paleta (vazio = a da própria folha)
 var body: Sprite2D
+var _emit: Sprite2D         # o que brilha sozinho (olhos, fogo): <folha>_e.png, de tools/gen_emissao.py
 const KICK_TIME := 0.14      # o corpo recua alguns pixels com o golpe e volta
 var _kick := 0.0
 var _kick_dir := 0.0
@@ -99,7 +100,26 @@ func _setup_sprite() -> void:
 	body.region_enabled = true
 	body.texture = SpriteSheet.lit(sheet, _tex)
 	add_child(body)
+	_attach_emission()
 	_update_sprite()
+
+
+# Brilho próprio: os pixels que emitem luz, por cima do corpo, sem a penumbra
+# da fase e somando cor (o glow da tela espalha). No escuro, os olhos acendem.
+func _attach_emission() -> void:
+	var path := "res://assets/sprites/%s_e.png" % sheet
+	if not ResourceLoader.exists(path) or not Options.get_value("postfx"):
+		return
+	_emit = Sprite2D.new()
+	_emit.texture = load(path)
+	_emit.centered = false
+	_emit.region_enabled = true
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_emit.material = mat
+	_emit.self_modulate = Color(1, 1, 1, 0.85)
+	body.add_child(_emit)
 
 
 # Qual animação e quadro mostrar agora: [nome, índice]. Cada inimigo responde.
@@ -120,6 +140,12 @@ func _update_sprite() -> void:
 	body.flip_h = facing < 0
 	body.scale = _pose() * _draw_scale
 	body.position = Vector2(_kick_offset(), 0)
+	if _emit:
+		_emit.region_rect = body.region_rect
+		_emit.offset = body.offset
+		_emit.flip_h = body.flip_h
+		# pulsa devagar, cada um no seu tempo
+		_emit.self_modulate.a = 0.7 + 0.25 * sin(_anim * 2.3 + float(get_instance_id() % 11))
 	if flash > 0.0 and Options.flashes():
 		body.texture = SpriteSheet.lit(sheet, _white)
 	elif telegraphing() and int(state_time * 16.0) % 2 == 0:
@@ -184,6 +210,8 @@ func hurt(d: Damage) -> bool:
 		Fx.streak(center(), d.dir, Palette.UI_CRIT if d.crit else Palette.SLASH)
 		Fx.spray(center() + Vector2(d.dir * w * 0.3, 0), d.dir, Palette.UI_CRIT if d.crit else Palette.HIT, 12 if d.crit else 7, 260.0 if d.crit else 190.0)
 		Fx.impact(center() + Vector2(-d.dir * 3.0, 0), Palette.UI_CRIT if d.crit else Palette.FLASH, d.crit)
+		# anel de impacto desenhado (crítico: a estrela de quatro pontas)
+		Fx.vfx("estrela" if d.crit else "golpe", center() + Vector2(-d.dir * 3.0, 0), 1.5 if d.crit else 1.7, d.dir < 0)
 	if hp <= 0:
 		_die()
 		return true
@@ -223,6 +251,10 @@ func _die() -> void:
 	Fx.burst(center(), Palette.HIT, 14, 240.0, 0.45)
 	Fx.spray(center(), signf(_last_push.x), Palette.FLASH, 16, 320.0)
 	Fx.impact(center(), Palette.FLASH, true)
+	# a alma sobe do corpo; elite e chefe estouram em luz
+	Fx.vfx("alma", center(), 1.0, randf() < 0.5, Vector2(0, -16))
+	if elite or self is Boss:
+		Fx.vfx("estilhaco", center(), 0.9)
 	# onda de choque: forte em elite e chefe, um sopro nos comuns
 	Fx.wave(center(), 1.6 if (elite or self is Boss) else 0.5)
 	Fx.add_shake(3.5)

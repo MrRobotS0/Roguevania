@@ -19,6 +19,7 @@ var flash := 0.0
 var _burn_clock := 0.0
 var _tint := Color(0, 0, 0, 0)
 var _burn_light: PointLight2D
+var _burn_fx: Vfx               # a chama desenhada que acompanha a queimadura
 
 
 func setup_body(layer: int) -> void:
@@ -72,8 +73,17 @@ func tick_statuses(delta: float) -> void:
 		if _burn_light:
 			_burn_light.queue_free()
 			_burn_light = null
+			if is_instance_valid(_burn_fx):
+				_burn_fx.queue_free()
+			_burn_fx = null
 		else:
 			_burn_light = Glow.attach(self, Palette.BURN, 40.0, 0.8, Vector2(0, -h * 0.5))
+			if Options.get_value("postfx"):
+				# chama em pé: pequena em quem é pequeno, alta nos grandes
+				_burn_fx = Vfx.make("tocha" if w <= 18 else "fogo", 1.0, true)
+				_burn_fx.position = Vector2(0, -h * 0.55).round()
+				_burn_fx.self_modulate = Color(1, 1, 1, 0.9)
+				add_child(_burn_fx)
 	if has_status("burn") and alive():
 		_burn_clock -= delta
 		if _burn_clock <= 0.0:
@@ -138,7 +148,7 @@ func end_tint() -> void:
 
 
 func draw_statuses(t: float) -> void:
-	if has_status("burn"):
+	if has_status("burn") and not is_instance_valid(_burn_fx):
 		for i in 3:
 			var fx := -w * 0.5 + 2 + i * (w - 4) * 0.5
 			var fh := 3.0 + fmod(t * 9.0 + i * 1.7, 3.0)

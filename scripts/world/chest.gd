@@ -8,12 +8,13 @@ const CURSE_KILLS := 10
 
 var cursed := false
 var opened := false
-var _body: Sprite2D
+var _hop := 0.0                # pulo e meia-volta ao abrir
 
 
 func _ready() -> void:
 	super._ready()
-	_body = prop("chest_cursed" if cursed else "chest")
+	# o baú é uma pilha de fatias (sprite stacking): um objeto 3D de verdade,
+	# virado de 3/4 e respirando de leve (ver Stack)
 	if cursed:
 		Glow.attach(self, Color("8f5fd0"), 40.0, 0.7, Vector2(0, -8))
 
@@ -47,7 +48,7 @@ func interact(p: Player) -> void:
 
 func _open(p: Player) -> void:
 	opened = true
-	SpriteSheet.set_region(_body, "props", "chest_cursed" if cursed else "chest", 1)
+	_hop = 1.0
 	Sfx.play("pickup")
 	var lv: Level = level
 	var bonus := 2 if cursed else 0
@@ -62,3 +63,16 @@ func _open(p: Player) -> void:
 		lv.drop_blueprint(global_position + Vector2(0, -14))
 	Fx.burst(global_position + Vector2(0, -10), Palette.GOLD, 16, 110.0, 0.5, 200.0)
 	p.gear_changed.emit()
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	_hop = move_toward(_hop, 0.0, delta * 2.2)
+
+
+func _draw() -> void:
+	# sombra no chão, embaixo da pilha
+	draw_rect(Rect2(-9, -1, 18, 2), Color(0, 0, 0, 0.35))
+	var lift := -roundf(sin(_hop * PI) * 6.0)
+	var angle := -0.42 + 0.05 * sin(_t * 0.9) + (1.0 - _hop) * TAU * (1.0 if _hop > 0.0 else 0.0)
+	Stack.chest(opened, cursed).draw(self, Vector2(0, 1 + lift), angle, 0.5, Color.WHITE, true)

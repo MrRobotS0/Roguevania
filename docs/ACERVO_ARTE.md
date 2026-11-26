@@ -109,3 +109,13 @@ Estes ficaram de fora por terem um quadro só (sem animação):
 - ✅ **Fera-Musgo:** Frost Guardian (chierit) recolorido para musgo escuro.
 - ✅ **Gárgula:** morcego do bestiário recolorido para pedra.
 - ✅ **Penitente:** fantasy-warrior dessaturado. **Guarda da Casa:** esqueleto de escudo do Luiz Melo.
+
+## Efeitos (26/11/2026)
+
+| Arte | Autor / licença | Usado como |
+|---|---|---|
+| ✅ Free Pixel Effects Pack | CodeManu e Davit Masia · CC0 | 14 efeitos do jogo (`vfx_*.png`): impacto, crítico, alma, explosão, fogo, gelo... |
+| 🟢 Pixel FX Pack, Animated Particle Effects #1 | CodeManu; para · CC0 | baixados, reserva |
+| 🟢 Castle Platformer (Jetrel), Whimsy Hallow (Crumpaloo) | CC0 | cenários para salas novas |
+
+Lista completa, com as técnicas visuais, em `docs/TECNICAS_VISUAIS.md`.

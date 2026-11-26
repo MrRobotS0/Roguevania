@@ -173,6 +173,7 @@ func explode() -> void:
 			d.unblockable = true
 			t.hurt(d)
 	Fx.burst(global_position, Palette.BURN, 22, 160.0, 0.45, 200.0, 3.0, 40.0)
+	Fx.vfx("explosao", global_position, 1.0)
 	Fx.burst(global_position, Palette.DUST, 10, 90.0, 0.6, 50.0, 3.0)
 	Fx.add_shake(3.5)
 	Sfx.play("boom")

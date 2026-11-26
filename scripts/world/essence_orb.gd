@@ -45,10 +45,8 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	if kind == "gold":
-		var spin := absf(sin(_t * 8.0))
-		var w := maxf(1.0, roundf(3.0 * spin))
-		draw_rect(Rect2(-w * 0.5, -1.5, w, 3), Palette.GOLD)
-		draw_rect(Rect2(-w * 0.5, -1.5, w, 1), Palette.GOLD.lightened(0.4))
+		# moeda em pé, girando em 3D (sprite stacking, ver Stack.coin)
+		Stack.coin().draw(self, Vector2(0, 3), _t * 9.0 + float(get_instance_id() % 7), 0.3)
 		return
 	var c := Palette.ESSENCE
 	c.a = 0.6 + 0.4 * sin(_t * 12.0)

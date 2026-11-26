@@ -61,6 +61,16 @@ func interact(p: Player) -> void:
 		queue_free()
 
 
+static var _stacks := {}
+
+
+static func _stack_of(tex: Texture2D) -> Stack:
+	var key := tex.get_rid()
+	if not _stacks.has(key):
+		_stacks[key] = Stack.from_image(tex.get_image(), 2)
+	return _stacks[key]
+
+
 func _draw() -> void:
 	var bob := sin(_t * 3.0) * 2.0
 	var glow: Color = gear.data.color
@@ -69,7 +79,9 @@ func _draw() -> void:
 	var c: Color = gear.data.color
 	var tex := GearIcon.of(gear.data)
 	if tex:
-		draw_texture(tex, Vector2(-8, roundf(-25 + bob)))
+		# o ícone ganha corpo e gira no ar (sprite stacking: cada linha do
+		# desenho é uma fatia com 2 px de espessura)
+		_stack_of(tex).draw(self, Vector2(0, roundf(-10 + bob)), _t * 1.7, 0.16, Color.WHITE, true)
 	elif gear.is_weapon():
 		var data: WeaponData = gear.data
 		match data.category:
