@@ -23,6 +23,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import musica_fremen  # noqa: E402  (a voz que canta e acelera)
 import trailer_cinema as tc  # noqa: E402  (cartelas, tomadas do jogo, concatenação)
 
 RAIZ = tc.RAIZ
@@ -675,30 +676,32 @@ def trailer(lang, L, cenas, pg_logo):
     def preto(dur):
         m.cartela(L.cartela("", ""), dur)
 
+    marcas = {}
     preto(1.6)
-    ev.append((0.0, vento(200), 1.0))
-    ev.append((0.8, zumbido(32), 0.8))
+    ev.append((0.0, vento(200), 0.6))
+    marcas["mar"] = m.t
     cena(cenas["mar"], 8.0)
-    ev.append((m.t, braam(5.0), 1.0))
+    ev.append((m.t, braam(5.0), 0.5))
     m.cartela(L.cartela(*t["c1"]), 2.6)
-    ev.append((m.t, zumbido(8, 32.7), 0.6))
+    marcas["tronos"] = m.t
     for q in APAGAR:
-        ev.append((m.t + q, tambor(110, 50, 1.0, 0.8), 0.8))
+        ev.append((m.t + q, tambor(110, 50, 1.0, 0.8), 0.45))
     cena(cenas["tronos"], 7.0)
-    ev.append((m.t, braam(5.0, 32.7), 1.0))
+    ev.append((m.t, braam(5.0, 32.7), 0.55))
     m.cartela(L.cartela(*t["c2"]), 2.6)
-    ev.append((m.t, coro(7.0, 98), 0.9))
-    ev.append((m.t + 0.5, coro(6.5, 147, (400, 750, 2600)), 0.5))
+    marcas["brasa"] = m.t
     cena(cenas["brasa"], 6.4)
-    ev.append((m.t, braam(6.0, 36.7, 1.3), 1.2))
+    ev.append((m.t, braam(6.0, 36.7, 1.3), 0.7))
+    marcas["c3"] = m.t
     m.cartela(L.cartela(*t["c3"]), 3.0)
-    ev.append((m.t + ACENDE, braam(5.0, 30.9, 1.2), 1.1))
-    ev.append((m.t + 0.2, tambor(70, 30, 3.0, 0.6), 0.7))
+    ev.append((m.t + ACENDE, braam(5.0, 30.9, 1.2), 0.75))
+    marcas["guardiao"] = m.t
     cena(cenas["guardiao"], 6.0)
     m.cartela(L.cartela(*t["c4"]), 3.0)
 
     # Ato 2: cortes rápidos, tambores no pulso
     ato2 = m.t
+    marcas["ato2"] = ato2
     seq = [("tormenta", 0.0, 1.4), ("cine_mar_de_cinzas", 6.0, 1.2), ("lento_lobo", 13.5, 1.4), ("tormenta", 1.4, 1.1),
            ("cine_carcosa", 7.5, 1.1), ("lento_dragao_sonhado", 11.5, 1.4), ("q1", 0, 1.3), ("lento_colosso", 9.0, 1.2),
            ("cine_torre_babel", 13.5, 1.0), ("lento_rei_sem_rosto", 18.0, 1.2), ("q2", 0, 1.3), ("lento_astronomo", 11.0, 1.2),
@@ -715,26 +718,23 @@ def trailer(lang, L, cenas, pg_logo):
         else:
             m.tomada(c, ini, dur, flash=i in braams_em)
     fim_ato2 = m.t
-    batida = 60 / 100
-    k = ato2
-    while k < fim_ato2 - 0.05:
-        ev.append((k, tambor(95, 45, 0.9, 1.0), 0.9))
-        ev.append((k + batida / 2, tambor(160, 90, 0.4, 0.5), 0.45))
-        k += batida
-    ev.append((fim_ato2 - 3.0, subida(3.0), 1.0))
+    marcas["fim_ato2"] = fim_ato2
+    ev.append((fim_ato2 - 3.0, subida(3.0), 0.7))
     # corte seco para o silêncio
     preto(1.2)
     for b in np.arange(0.3, 6.8, 0.9):
-        ev.append((m.t + b, coracao(), 0.9))
-    ev.append((m.t + 0.4, coro(6.2, 82, (500, 900, 2700)), 0.7))
+        ev.append((m.t + b, coracao(), 0.55))
+    marcas["imperador"] = m.t
     cena(cenas["imperador"], 7.0, L.legenda(t["imperador"]))
     preto(1.0)
     ev.append((m.t + 3.35, braam(7.0, 27.5, 1.5), 1.3))
     ev.append((m.t + 3.35, ler_wav(os.path.join(sfx, "bell.wav")), 0.6))
-    ev.append((m.t, zumbido(6), 0.5))
+    marcas["logo"] = m.t
     cena(cenas["logo"], 6.0, L.png("<div class='centro' style='padding-top:520px'><div class='genero'>%s</div></div>" % t["genero"]))
-    ev.append((m.t, coro(5.5, 110), 0.5))
     m.cartela(L.final(tc.TXT[lang]), 5.5)
+    musica = musica_fremen.compor(marcas, m.t + 1)
+    ev.append((0.0, musica / (np.abs(musica).max() + 1e-9) * 1.6, 1.0))
+    print("  marcas", {k: round(v, 1) for k, v in marcas.items()})
 
     wav = os.path.join(TMP, "trilha_%s.wav" % lang)
     salvar_wav(wav, trilha(m.t, ev, []))
