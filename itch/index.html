@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOKSHA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Tela de entrada do itch.io: o jogo roda em moksha.com.br (conta, loja e ranking moram lá).
+     Mesmas cores e botão do site (site/index.html). */
+  :root {
+    --bg: #07060b;
+    --text: #f2ecff;
+    --dim: #a99dc2;
+    --gold: #f2c14e;
+    --gold-dk: #7a4a10;
+    --focus: #8ff7e8;
+    --pixel: "Silkscreen", monospace;
+    --body: "Pixelify Sans", system-ui, sans-serif;
+    /* 960x540 é o tamanho do embed; tudo escala junto com a moldura */
+    --u: min(100vw / 960, 100vh / 540);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font-family: var(--body); display: grid; }
+
+  .cena { position: relative; display: grid; align-content: center; padding-left: calc(72 * var(--u));
+    background: url(mar.png) center / cover no-repeat; image-rendering: pixelated; }
+  /* escurece o lado do texto, como na imagem de compartilhamento */
+  .cena::before { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(7,6,11,.92) 0%, rgba(7,6,11,.72) 45%, rgba(7,6,11,.15) 100%),
+                linear-gradient(0deg, rgba(7,6,11,.7) 0%, transparent 40%); }
+  .cena > * { position: relative; }
+
+  .heroi { position: absolute; right: calc(150 * var(--u)); bottom: calc(48 * var(--u)); height: calc(78 * 2 * var(--u)); width: auto;
+    image-rendering: pixelated; pointer-events: none; }
+
+  h1 { font: 700 calc(92 * var(--u)) / 1 var(--pixel); color: var(--gold); letter-spacing: .04em;
+    text-shadow: 0 calc(6 * var(--u)) 0 var(--gold-dk); }
+  .lema { margin-top: calc(26 * var(--u)); font: 400 calc(26 * var(--u)) / 1.45 var(--body); }
+  .lema span { display: block; color: var(--gold); }
+
+  .acoes { margin-top: calc(40 * var(--u)); display: flex; align-items: center; gap: calc(24 * var(--u)); flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: calc(14 * var(--u)); text-decoration: none; cursor: pointer;
+    font: 700 calc(24 * var(--u)) var(--pixel); color: #1a0f04; background: var(--gold);
+    padding: calc(18 * var(--u)) calc(36 * var(--u)); min-height: max(44px, calc(64 * var(--u)));
+    box-shadow: inset -4px -4px 0 #c08a24, inset 4px 4px 0 #ffe08a, 0 6px 0 var(--gold-dk), 0 0 0 4px var(--bg);
+    transition: transform .08s steps(2), box-shadow .08s steps(2); touch-action: manipulation; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(5px);
+    box-shadow: inset -4px -4px 0 #c08a24, inset 4px 4px 0 #ffe08a, 0 1px 0 var(--gold-dk), 0 0 0 4px var(--bg); }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
+  .btn svg { width: calc(22 * var(--u)); height: calc(22 * var(--u)); flex: none; }
+
+  .onde { font: 400 max(12px, calc(15 * var(--u))) / 1.5 var(--pixel); color: var(--dim); letter-spacing: .06em; }
+  .onde b { color: var(--text); font-weight: 400; }
+
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main class="cena">
+  <img class="heroi" src="heroi.png" alt="">
+  <h1>MOKSHA</h1>
+  <p class="lema" data-pt="Treze deuses sumiram.|Você é o que eles deixaram." data-en="Thirteen gods vanished.|You are what they left behind.">
+    Treze deuses sumiram. <span>Você é o que eles deixaram.</span>
+  </p>
+  <div class="acoes">
+    <a class="btn" href="https://moksha.com.br/?ref=itch" target="_blank" rel="noopener">
+      <svg viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M2 1h1v1h1v1h1v1h-1v1h-1v1h-1z"/></svg>
+      <span class="rotulo">JOGAR</span>
+    </a>
+    <p class="onde"><span class="dica">ABRE EM OUTRA ABA</span><br><b>MOKSHA.COM.BR</b></p>
+  </div>
+</main>
+<script>
+  // inglês para quem não tem o navegador em português
+  if (!/^pt/i.test(navigator.language || "")) {
+    document.documentElement.lang = "en";
+    const lema = document.querySelector(".lema");
+    const [a, b] = lema.dataset.en.split("|");
+    lema.innerHTML = a + " <span>" + b + "</span>";
+    document.querySelector(".rotulo").textContent = "PLAY";
+    document.querySelector(".dica").textContent = "OPENS IN A NEW TAB";
+  }
+</script>
+</body>
+</html>

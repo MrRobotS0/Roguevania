@@ -12,27 +12,36 @@ Em itch.io → Dashboard → **Create new project**. Os campos aparecem nesta or
 | **Project URL** | `moksha` (fica `<seu-usuario>.itch.io/moksha`) |
 | **Short description or tagline** | Treze deuses sumiram. Você é o que eles deixaram. (ou a versão em inglês: Thirteen gods vanished. You are what they left behind.) |
 | **Classification** | **Games** |
-| **Kind of project** | **Downloadable**: você sobe o `.zip` do Windows. Não use HTML: o build web precisa de COOP/COEP e fala com a API do moksha.com.br, então no itch daria erro. |
+| **Kind of project** | **HTML**: o jogo é de navegador. A página do itch mostra uma tela de entrada com o botão JOGAR, que abre o moksha.com.br em outra aba (lá ficam conta, loja e ranking). |
 | **Release status** | **In development**: a versão é 0.9.x. Mude para Released quando sair a 1.0. |
 
 ### Pricing
 
 **No payments**. O jogo é grátis e a loja de aparências já cobra pelo Stripe
-dentro do jogo. Para receber gorjeta também pelo itch, use **Donate**, com
+no moksha.com.br. Para receber gorjeta também pelo itch, use **Donate**, com
 sugestão de US$ 2. O itch fica com uma parte do que entrar por ele (a parte é
 você quem define, e o padrão é 10%).
 
 ### Uploads
 
-1. **Upload files** → `build/Moksha-windows.zip` (≈ 53 MB, o mesmo do Release
-   do GitHub). Marque **Windows** no arquivo. No PC dá para jogar sem conta: a
-   conta só é pedida na loja.
-2. Opcional: **Add External file**, com o nome "Jogar no navegador" e o link
-   https://moksha.com.br.
+1. Rode `python tools/empacotar_itch.py`. Ele gera `build/itch/moksha-itch.zip`
+   (a tela de entrada, com uns 30 KB) e `build/itch/capa.png`.
+2. **Upload files** → `moksha-itch.zip` e marque **This file will be played in
+   the browser**.
+3. **Embed options**:
+   - **Embed in page** (não use "Click to launch in fullscreen": seria um clique
+     a mais antes do botão JOGAR);
+   - **Viewport dimensions**: 960 × 540;
+   - **Mobile friendly**: marcado, com **Orientation: Landscape**;
+   - **Fullscreen button**: desmarcado (a tela não é o jogo).
 
-A cada versão nova é preciso subir o zip de novo. Para o upload automático, use
-o `butler`, a ferramenta de linha de comando do itch:
-`butler push build/Moksha-windows.zip <usuario>/moksha:windows --userversion X.Y.Z`.
+Não precisa subir de novo a cada versão: o botão sempre abre o jogo atualizado
+no moksha.com.br. O código da tela fica em `itch/index.html`. Ela fica em
+português, ou em inglês quando o navegador não está em português.
+
+O itch pode deixar fora das buscas uma página que só manda para outro site. Se
+o jogo não aparecer nas buscas, a saída é rodar o build web dentro do próprio
+itch, e para isso é preciso uma versão sem conta.
 
 ### Details
 
@@ -50,7 +59,7 @@ o `butler`, a ferramenta de linha de comando do itch:
 
 | Campo | O que pôr |
 |---|---|
-| **Platforms** | Windows (sai do arquivo que você marcou) |
+| **Platforms** | HTML5 (sai do arquivo marcado como "played in the browser") |
 | **Made with** | Godot |
 | **Inputs** | Keyboard, Mouse, Xbox controller, Gamepad (any) |
 | **Accessibility** | Configurable controls (as teclas mudam em Opções > Teclas) |
@@ -63,17 +72,11 @@ o `butler`, a ferramenta de linha de comando do itch:
 
 ### Imagens e vídeo
 
-- **Cover image**: 630×500 (no mínimo 315×250). Recorte de `site/img/og.png`.
+- **Cover image**: `build/itch/capa.png` (630×500, gerada pelo `empacotar_itch.py`).
 - **Screenshots**: de 3 a 5, tiradas jogando (título, Beira, combate, um guardião).
 - **Gameplay video or trailer**: link do YouTube do trailer (roteiro abaixo).
 - Depois de salvar, **Edit theme** muda cor e fundo da página: use o fundo
   escuro e o dourado do site.
-
-### Download & install instructions (campo opcional)
-
-> Baixe, extraia o zip e abra `Moksha.exe`. Se o Windows avisar "O Windows
-> protegeu o computador", clique em **Mais informações → Executar assim mesmo**
-> (o jogo não tem assinatura digital paga).
 
 **Description:**
 
