@@ -32,7 +32,8 @@ func use(code: String) -> void:
 func _load(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	for line in FileAccess.get_file_as_string(path).split("\n"):
+	# CRLF (arquivo salvo no Windows) não pode deixar um "\r" grudado no inglês
+	for line in FileAccess.get_file_as_string(path).replace("\r", "").split("\n"):
 		if line.begins_with(";") or not line.contains(" = "):
 			continue
 		var cut := line.find(" = ")
