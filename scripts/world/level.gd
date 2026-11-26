@@ -216,6 +216,23 @@ func _populate(with_camera: bool) -> void:
 		wet.room = room
 		wet.biome_id = biome.id
 		add_child(wet)
+	# sombra que as tochas jogam na parede do fundo (só em lugar fechado)
+	if biome and TorchShadows.has_shadows(biome.id) and Options.get_value("postfx"):
+		var torch := TorchShadows.new()
+		torch.room = room
+		torch.biome_id = biome.id
+		add_child(torch)
+	# sombra de nuvens correndo pelo chão (só a céu aberto)
+	if biome and CloudShadows.has_clouds(biome.id) and Options.get_value("postfx"):
+		var clouds := CloudShadows.new()
+		clouds.biome_id = biome.id
+		add_child(clouds)
+	# poças nas valas rasas, com superfície de molas
+	if biome and Puddles.has_water(biome.id) and Options.get_value("postfx"):
+		var water := Puddles.new()
+		water.room = room
+		water.biome_id = biome.id
+		add_child(water)
 	player = Player.new()
 	player.room = room
 	player.position = room.player_spawn

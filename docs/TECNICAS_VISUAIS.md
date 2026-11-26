@@ -19,8 +19,8 @@ Legenda:
 | **Mapas de emissão**: olhos, fogo, runas e cristais brilham no escuro | 🆕 | `tools/gen_emissao.py` → `<folha>_e.png` (49 folhas); `Enemy._attach_emission`, somando luz e fora da penumbra |
 | Sombra de contato e sombra do terreno na parede do fundo | ✅ | `ContactShadows`, `Room.draw_depth` |
 | Bloco com face de cima (2.5D: o herói pisa dentro dela) | ✅ | `Room._top_face` |
-| Sombra de luz projetada (`LightOccluder2D`: a tocha não atravessa a parede) | 🔜 | funciona no Compatibility; o custo no navegador precisa ser medido |
-| Sombra de nuvens correndo pelo chão (Dynamic 2D Grass, jogos de mundo aberto) | 🔜 | só nos domínios a céu aberto; precisa mascarar o céu |
+| **Sombra projetada pelas tochas** na parede do fundo: blocos e personagens perto do fogo | 🆕 v0.11 | `TorchShadows`, só em lugar fechado (Forja, Catedral, Cavernas, Ventre). As luzes 2D não chegam ao fundo pintado (outra camada), então a sombra é desenhada: a casca do bloco empurrada para longe do fogo e a silhueta de quem passa, maior e tremendo com a chama |
+| **Sombra de nuvens** correndo pelo chão | 🆕 v0.11 | `CloudShadows`: uma luz que subtrai, com textura de ruído sem emenda, em 3x3 ladrilhos que andam com o vento. Só escurece a camada do mundo, nunca o céu. Em 6 domínios a céu aberto |
 | Iluminação global 2D (radiance cascades, campo de distância) | ⛔ | pesada demais para WebGL; não existe pronta para Godot |
 
 ## 3D feito de 2D
@@ -44,7 +44,7 @@ Legenda:
 | Fauna de fundo (aves, morcegos, peixes, olhos) | ✅ | `Fauna` |
 | **Grama interativa**: fios de 1 px que balançam com rajadas e se abrem quando alguém passa | 🆕 | `Grass`, em 8 domínios (grama, juncos de cinza, algas, cílios de carne...), uma camada atrás e outra cobrindo os pés |
 | **Chão molhado com reflexo**: o que está em cima aparece espelhado, ondulando | 🆕 | `Reflection` (lê a tela), em Catedral, Cavernas, Ventre, Observatório e Salões |
-| Água 2D com molas (superfície que ondula quando algo cai) | 🔜 | precisa de poças nas salas |
+| **Poças com superfície de molas** | 🆕 v0.11 | `Puddles`: nas valas rasas que as salas já têm (2 a 8 blocos, degrau de até 2). Colunas de 2 px ligadas por molas; quem entra caindo espirra, e quem anda deixa marola. Cobrem os pés. Fora da Forja (lava falsa enganaria) |
 | Raios de luz e névoa lisos | ✅ | `Ambience` (sem pontilhado) |
 
 ## Movimento e impacto
@@ -54,7 +54,7 @@ Legenda:
 | Squash & stretch, smear (arco do golpe), rastro na rolagem | ✅ | `Player` |
 | Piscar branco, hitstop, tremor, aberração cromática, onda de choque | ✅ | `Fx`, `PostFx` |
 | **Efeitos desenhados à mão** (pacote CC0) | 🆕 | `Vfx`: anel de impacto a cada golpe, estrela de quatro pontas no crítico, alma que sobe do corpo na morte, estouro de luz em elite/chefe, explosão de verdade nas bombas e no afixo explosivo, chama animada na queimadura |
-| Câmera em subpixel (desenha 1 px a mais e desliza a imagem ampliada) | 🔜 | a melhora de fluidez mais forte que sobrou; mexe na base da tela, pede cuidado com HUD e PostFx |
+| **Câmera lisa** (subpixel) | 🆕 v0.11 | a tela desenha na resolução real (`CONTENT_SCALE_MODE_CANVAS_ITEMS`, o mesmo da fonte lisa) e a câmera anda em quartos de pixel; o fundo volta a ser nítido nesse modo. Opções > Tela > CÂMERA: LISA (padrão) ou EM PIXEL. Medido: 60 qps a 1920x1080 nos dois |
 | Girar pixel art sem serrilhar (RotSprite / cleanEdge) | 🔜 | para armas e objetos que giram |
 | Dissolver por ruído na morte | ⛔ | a morte em cinza já faz isso, com as cores do corpo |
 | Pontilhado (dithering) por cima do cenário | ⛔ | ele não gostou (v0.4.1): transparência sempre lisa |

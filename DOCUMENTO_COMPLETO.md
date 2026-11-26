@@ -1912,3 +1912,51 @@ em 3D.
 
 **Armadilha.** Quem lê os blocos da sala tem que nascer em `Level._populate`. Em `_make_room` o
 mapa ainda não foi carregado, e grama e reflexo saíam vazios, sem erro nenhum.
+
+## 41. Câmera lisa, sombra das tochas, sombra de nuvens e poças de molas (v0.11.0, 26/11/2026)
+
+As quatro que tinham ficado para depois no §40. Ele pediu "faz as 4 que sobraram".
+
+**Câmera lisa** (Opções > Tela > CÂMERA: LISA | EM PIXEL; `smooth_cam`, padrão ligado).
+- Com ela, `Options._apply_scale` usa `CONTENT_SCALE_MODE_CANVAS_ITEMS`, igual à fonte lisa: a tela
+  desenha na resolução real e a câmera anda em quartos de pixel, em vez de saltar de pixel em pixel
+  do jogo quando anda devagar.
+- Nesse modo o `BackLayer` volta ao filtro nítido. O suave só existia para esconder os saltos.
+- Medido no navegador a 1920x1080: 60 qps com e sem a câmera lisa.
+- O teste `_fonts` confere o modo com e sem a opção.
+
+**Sombra das tochas (`TorchShadows`).**
+- Onde: só em lugar fechado (Forja, Catedral, Cavernas, Ventre).
+- Por que é desenhada: as luzes 2D não acendem o fundo pintado, que fica em outra camada. Então a
+  sombra é desenhada na parede, a partir de cada braseiro.
+- **Blocos:** o contorno do bloco e o mesmo contorno empurrado até o fim do alcance (`REACH` 120),
+  juntos numa casca convexa, escura junto do bloco e sumindo.
+- **Personagens:** a silhueta do quadro atual, deslocada para longe do fogo e maior, mais forte de
+  perto, tremendo com a chama.
+- O material é `UNSHADED`. Recebendo a luz do domínio, a sombra saía rosada.
+- `add_light(spot)` registra um braseiro novo.
+
+**Sombra de nuvens (`CloudShadows`).**
+- É uma `PointLight2D` em `BLEND_MODE_SUB` com ruído sem emenda, que vira sombra só nos morros,
+  com borda macia.
+- São 3x3 luzes, cada uma de um período (1024 px), andando com o vento e voltando um período
+  inteiro. O salto não aparece.
+- A luz só age na camada do mundo: escurece chão, blocos e gente, nunca o céu.
+- Força e vento por domínio, em 6 domínios a céu aberto (`OUTDOOR`).
+
+**Poças (`Puddles`).**
+- Onde nascem: nas valas rasas das salas, com 2 a 8 blocos de ar sobre chão, parede dos dois lados
+  e degrau de até 2 blocos.
+- Água de 7 px, em colunas de 2 px com mola. Cada coluna puxa as vizinhas (duas passadas) e há uma
+  marola miúda permanente.
+- Entrar caindo afunda forte e espirra gotas com som; andar deixa rastro.
+- Aparência apenas: não muda o pulo nem a corrida.
+- Cor por domínio. A Forja fica fora (lava que não queima enganaria).
+
+**Vitrine.**
+- `--pilhas=1` também põe um braseiro do lado do herói.
+- `--poca=1` larga o herói na poça mais perto.
+- `--camlisa=0|1` força a câmera, para medir.
+
+**Baú (`Stack.chest`).** Casca de 2 voxels: com o tilt, cada fatia mostra 1 px da frente, e a casca
+de 1 voxel deixava o baú listrado.

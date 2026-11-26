@@ -19,6 +19,7 @@ const DEFAULTS := {
 	"easy_dodge": false,     # rolagem invencível por mais tempo
 	"lang": "pt",            # pt | en (o nome do jogo fica igual)
 	"font": "classica",      # PixelFont.FACES: desenho das letras do texto
+	"smooth_cam": true,      # câmera lisa: desliza em fração de pixel (a tela desenha na resolução real)
 	"keys": {},              # ação -> [physical keycode]
 }
 
@@ -86,7 +87,10 @@ func _apply_scale() -> void:
 	var size := view_size(root.size)
 	var aspect := Window.CONTENT_SCALE_ASPECT_KEEP if (String(data.get("view", "ampla")) == "padrao" or _tall(root.size)) else Window.CONTENT_SCALE_ASPECT_EXPAND
 	# fonte NORMAL (lisa): desenha na resolução da tela para a letra não pixelar
-	var mode := Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if String(data.get("font", "")) == "sistema" else Window.CONTENT_SCALE_MODE_VIEWPORT
+	# câmera lisa: idem. O mundo continua em pixel do jogo, mas a câmera anda
+	# em quartos de pixel (a fração que, presa à grade de 480x270, fazia a tela
+	# avançar aos trancos quando ela anda devagar)
+	var mode := Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if (String(data.get("font", "")) == "sistema" or bool(data.get("smooth_cam", true))) else Window.CONTENT_SCALE_MODE_VIEWPORT
 	if root.content_scale_mode != mode:
 		root.content_scale_mode = mode
 	if root.content_scale_stretch != Window.CONTENT_SCALE_STRETCH_FRACTIONAL:

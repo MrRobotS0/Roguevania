@@ -2345,7 +2345,12 @@ func _fonts() -> void:
 	for id: String in PixelFont.FACES:
 		Options.set_value("font", id)
 		_check(PixelFont.face == id, "a opção não trocou a fonte para %s" % id)
-		_check((get_tree().root.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS) == (id == "sistema"), "%s: modo de desenho errado" % id)
+		# resolução real: fonte lisa OU câmera lisa (padrão); em pixel do jogo só sem as duas
+		var smooth := bool(Options.get_value("smooth_cam"))
+		_check((get_tree().root.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS) == (id == "sistema" or smooth), "%s: modo de desenho errado" % id)
+		Options.set_value("smooth_cam", false)
+		_check((get_tree().root.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS) == (id == "sistema"), "%s: câmera em pixel não voltou ao modo do jogo" % id)
+		Options.set_value("smooth_cam", smooth)
 		if id == "sistema":
 			# fonte do computador: largura variável, mas nunca mais larga que a grade
 			_check(PixelFont.body_width("FÚRIA E VIDA") <= before, "a fonte do sistema estoura a largura")

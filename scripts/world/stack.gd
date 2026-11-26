@@ -110,8 +110,10 @@ static func chest(open: bool, cursed: bool) -> Stack:
 	var D := 10
 	var lid_from := 8
 	_cache[key] = from_voxels(W, H, D, func(x: int, y: int, z: int) -> Color:
-		var edge_x := x == 0 or x == W - 1
-		var edge_z := z == 0 or z == D - 1
+		# casca de 2 voxels: com o tilt, cada fatia mostra 1 px da frente, e
+		# uma casca de 1 voxel (meio pixel) deixava o baú listrado
+		var edge_x := x <= 1 or x >= W - 2
+		var edge_z := z <= 1 or z >= D - 2
 		var shell := edge_x or edge_z
 		if open and y >= lid_from:
 			return Color(0, 0, 0, 0)
@@ -122,13 +124,13 @@ static func chest(open: bool, cursed: bool) -> Stack:
 				return Color("f2c14e") if (x + z) % 3 else Color("ffe28a")
 			return Color(0, 0, 0, 0)
 		var c := wood
-		if (x + y * 3) % 5 == 0 and not edge_x:
-			c = wood.darkened(0.18)                   # veio das tábuas
+		if x % 4 == 1 and not edge_x and z >= D - 2:
+			c = wood.darkened(0.18)                   # junta entre as tábuas (na frente)
 		if y == lid_from - 1:
 			c = wood.darkened(0.35)                   # a fresta da tampa
 		if x == 3 or x == W - 4 or y == 0 or (y == H - 1 and not open and (edge_x or edge_z)):
 			c = iron                                  # cintas e borda
-		if z == D - 1 and absi(x - W / 2) <= 1 and y >= lid_from - 3 and y <= lid_from:
+		if z >= D - 2 and absi(x - W / 2) <= 1 and y >= lid_from - 3 and y <= lid_from:
 			c = lock                                  # fecho na frente
 		return c)
 	return _cache[key]

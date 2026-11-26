@@ -79,6 +79,12 @@ var _still := false
 
 func place(delta: float, at: Vector2, size: Vector2, t: float, still: bool) -> void:
 	_drift_x += drift * delta
+	# na câmera lisa (tela na resolução real) a fração de pixel já anda
+	# sozinha: o pixel do fundo volta a ser nítido. Em pixel do jogo, o filtro
+	# suave é o que impede a camada lenta de avançar aos trancos.
+	var want := CanvasItem.TEXTURE_FILTER_NEAREST if get_tree().root.content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS else CanvasItem.TEXTURE_FILTER_LINEAR
+	if texture_filter != want:
+		texture_filter = want
 	if tex:
 		set_param("tex_size", Vector2(tex.get_size()))
 	_at = at

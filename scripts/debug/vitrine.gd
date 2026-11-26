@@ -28,6 +28,8 @@ var robo := false
 var hud := true
 var bot: Bot
 var _level: Level
+var _cam := -1             # --camlisa=0|1: força a câmera lisa (medir o custo)
+var poca := false          # --poca=1: larga o herói dentro da poça mais perto (ver a água de molas)
 var pilhas := false        # --pilhas=1: baús, item e moedas ao lado do herói (ver o sprite stacking)
 var _pilhas_level: Level
 
@@ -42,6 +44,8 @@ func _ready() -> void:
 			"segundos": seconds = float(kv[1])
 			"robo": robo = kv[1] == "1"
 			"pilhas": pilhas = kv[1] == "1"
+			"poca": poca = kv[1] == "1"
+			"camlisa": _cam = int(kv[1])
 			"hud": hud = kv[1] != "0"
 			"lento": Fx.base_time_scale = float(kv[1])
 	# os menus pausam o jogo; a vitrine precisa continuar para responder
@@ -49,6 +53,9 @@ func _ready() -> void:
 	Meta.use_path("user://vitrine.save", true)
 	Meta.data["intro_seen"] = true
 	Options.data["hints"] = false
+	if _cam >= 0:
+		Options.data["smooth_cam"] = _cam == 1
+		Options.apply()
 	Sfx.muted = true
 	# pelo jogo (main.gd com --vitrine, como no navegador) ou sozinha
 	if main == null:
@@ -98,9 +105,12 @@ func _process(delta: float) -> void:
 			bot.rng.seed = 7
 			lv.player.pad = bot
 			bot.setup(lv.player, lv)
-	if pilhas and lv and is_instance_valid(lv.player) and lv != _pilhas_level:
+	if (pilhas or poca) and lv and is_instance_valid(lv.player) and lv != _pilhas_level:
 		_pilhas_level = lv
-		_spawn_stacks(lv)
+		if pilhas:
+			_spawn_stacks(lv)
+		if poca:
+			_drop_in_puddle(lv)
 	if not hud and main and main.hud:
 		main.hud.visible = false
 	if robo and main:
@@ -123,7 +133,7 @@ func _spawn_stacks(lv: Level) -> void:
 	var at := lv.player.global_position
 	var chest := Chest.new()
 	chest.level = lv
-	chest.position = at + Vector2(44, 0)
+	chest.position = at + Vector2(54, 0)
 	lv.add_child(chest)
 	var cursed := Chest.new()
 	cursed.cursed = true
@@ -136,3 +146,29 @@ func _spawn_stacks(lv: Level) -> void:
 	item.position = at + Vector2(-40, 0)
 	lv.add_child(item)
 	lv.drop_gold(at + Vector2(20, -30), 40)
+	# um braseiro do lado: sombra do herói e dos blocos na parede
+	var fire := Brazier.new()
+	fire.position = at + Vector2(-26, 0)
+	lv.add_child(fire)
+	for n in lv.get_children():
+		if n is TorchShadows:
+			(n as TorchShadows).add_light(fire.position)
+
+
+func _drop_in_puddle(lv: Level) -> void:
+	for n in lv.get_children():
+		if n is Puddles:
+			var best := Rect2()
+			var dist := INF
+			for pool in (n as Puddles)._pools:
+				var r: Rect2 = pool[0]
+				var d := r.get_center().distance_to(lv.player.global_position)
+				if d < dist:
+					dist = d
+					best = r
+			if dist < INF:
+				lv.player.global_position = Vector2(best.get_center().x, best.position.y - 48)
+				lv.player.reset_physics_interpolation()
+				if lv.camera:
+					lv.camera.snap()
+				print("POCA ", best)
