@@ -109,10 +109,12 @@ gravada a 60 qps.
 python tools/filmar.py            # grava as 20 cenas (título, 13 domínios, 6 guardiões): ~15 min
 python tools/montar_videos.py     # monta tudo em build/divulgacao/: ~9 min
 python tools/montar_videos.py vertical_1 quadrado   # refaz só esses
+python tools/trailer_cinema.py    # trailer de cinema (usa as cenas parado_/cine_/lento_)
 ```
 
 | Arquivo | Para quê |
 |---|---|
+| `trailer_cinema_pt.mp4` / `_en.mp4` | 98 s, trailer de cinema: história em cartelas, tomadas sem HUD com faixas pretas, guardiões em câmera lenta com nome e frase, informações do jogo. `python tools/trailer_cinema.py` (~4 min por idioma). |
 | `trailer_pt.mp4` / `trailer_en.mp4` | 31 s, 1920×1080, 60 qps: YouTube, itch ("Gameplay video"), site |
 | `vertical_1_*.mp4`, `vertical_2_*.mp4` | 18 s, 1080×1920: Reels, TikTok, YouTube Shorts |
 | `quadrado_*.mp4` | 18 s, 1080×1080: feed do Instagram e Facebook |

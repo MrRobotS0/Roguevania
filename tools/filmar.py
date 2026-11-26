@@ -62,6 +62,18 @@ CENAS = {
     "dragao_sonhado": ("dragao_sonhado", 26),
     "trono": ("trono", 30),
 }
+# Tomadas de cinema (trailer_cinema em montar_videos.py): sem HUD; "parado" = sem robô
+# (o herói fica na entrada e a câmera, quieta); chefes em câmera lenta de verdade
+# (--lento: o mundo anda devagar e o navegador continua desenhando a 60 qps).
+for _d in ("mar_de_cinzas", "catedral", "observatorio", "penhascos", "carcosa", "jardim_primordial", "bosque",
+           "necropole", "torre_babel", "beira"):
+    CENAS["parado_" + _d] = (_d, 9, {"robo": 0, "hud": 0})
+for _d in ("mar_de_cinzas", "forja_rubra", "carcosa", "ventre", "torre_babel", "jardim_primordial", "necropole",
+           "saloes", "catedral", "cavernas"):
+    CENAS["cine_" + _d] = (_d, 20, {"hud": 0})
+for _d in ("lobo", "colosso", "mae_raiz", "dragao_sonhado", "astronomo", "rei_sem_rosto", "insaciavel", "raposa",
+           "o_que_responde", "trono"):
+    CENAS["lento_" + _d] = (_d, 14, {"hud": 0, "lento": 0.5})
 
 GRAVAR_JS = """async (segundos) => {
   const c = document.querySelector('#canvas');
@@ -107,13 +119,17 @@ def exportar():
         sys.exit("export falhou")
 
 
-def pagina_da_cena(nome, estagio, segundos):
+def pagina_da_cena(nome, estagio, segundos, opcoes=None):
+    opcoes = opcoes or {}
     html = open(os.path.join(WEB, "index.html"), encoding="utf-8").read()
     args = ["--", "--vitrine", "--dominios=" + estagio, "--segundos=%d" % (segundos + 60)]
-    if estagio != "titulo":
+    if estagio != "titulo" and opcoes.get("robo", 1):
         args.append("--robo=1")
-    if LENTO != 1.0:
-        args.append("--lento=%g" % LENTO)
+    if not opcoes.get("hud", 1):
+        args.append("--hud=0")
+    lento = opcoes.get("lento", LENTO)
+    if lento != 1.0:
+        args.append("--lento=%g" % lento)
     html2, n = re.subn(r'"args":\[[^\]]*\]', '"args":' + json.dumps(args), html, count=1)
     if n != 1:
         sys.exit("não achei GODOT_CONFIG.args no index.html")
@@ -134,8 +150,10 @@ def main():
         nav = p.chromium.launch(channel="chrome", args=["--headless=new", "--use-angle=d3d11", "--enable-gpu",
                                                         "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"])
         for nome in nomes:
-            estagio, segundos = CENAS[nome]
-            arq = pagina_da_cena(nome, estagio, segundos)
+            estagio, segundos, *resto = CENAS[nome]
+            opcoes = resto[0] if resto else {}
+            lento = opcoes.get("lento", LENTO)
+            arq = pagina_da_cena(nome, estagio, segundos / lento, opcoes)
             ctx = nav.new_context(viewport={"width": 960, "height": 540}, accept_downloads=True)
             pg = ctx.new_page()
             pg.goto("http://127.0.0.1:%d/%s" % (PORTA, arq))
@@ -147,12 +165,12 @@ def main():
                 continue
             # o robô precisa de uns segundos para sair da porta e achar briga
             time.sleep(2)
-            real = segundos / LENTO
+            real = segundos / lento
             with pg.expect_download(timeout=(real + 60) * 1000) as dl:
                 tipo = pg.evaluate(GRAVAR_JS, real)
             destino = os.path.join(CENAS_DIR, nome + ".webm")
             dl.value.save_as(destino)
-            json.dump({"lento": LENTO, "segundos": segundos}, open(os.path.join(CENAS_DIR, nome + ".json"), "w"))
+            json.dump({"lento": lento, "segundos": segundos}, open(os.path.join(CENAS_DIR, nome + ".json"), "w"))
             # foto final em 1080p (o jogo redesenha no tamanho novo: pixel 4x, sem ampliar depois)
             pg.set_viewport_size({"width": 1920, "height": 1080})
             for i in range(3):

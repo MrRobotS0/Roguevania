@@ -8,6 +8,7 @@ extends Node
 #
 # --robo=1 põe o robô (scripts/debug/bot.gd) para jogar: anda, luta e usa
 # habilidade, ainda imortal. É o que tools/filmar.py grava para o trailer.
+# --hud=0 esconde o HUD (tomadas de cinema do trailer).
 # --lento=0.5 roda o mundo na metade da velocidade: o navegador sem janela desenha
 # ~30 qps e o vídeo acelerado 2x sai com 60.
 # "titulo" na lista de domínios mostra a tela de título.
@@ -24,6 +25,7 @@ var seconds := 6.0
 var _i := -1
 var _clock := 0.0
 var robo := false
+var hud := true
 var bot: Bot
 var _level: Level
 
@@ -37,6 +39,7 @@ func _ready() -> void:
 			"dominios": stages = Array(kv[1].split(","))
 			"segundos": seconds = float(kv[1])
 			"robo": robo = kv[1] == "1"
+			"hud": hud = kv[1] != "0"
 			"lento": Fx.base_time_scale = float(kv[1])
 	# os menus pausam o jogo; a vitrine precisa continuar para responder
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -92,6 +95,8 @@ func _process(delta: float) -> void:
 			bot.rng.seed = 7
 			lv.player.pad = bot
 			bot.setup(lv.player, lv)
+	if not hud and main and main.hud:
+		main.hud.visible = false
 	if robo and main:
 		if main.cutscene.is_open():
 			main.cutscene.advance()
