@@ -52,7 +52,9 @@ const TABLE := {
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
 	"pocas": [false, true, true],
-	"mato": [1, 2, 2],                       # 0 = sem; 1 = só a camada de trás; 2 = as duas
+	# 0 = sem; 1 = só a camada de trás; 2 = as duas. A da frente é o que mais pesa nos domínios
+	# de mato: no Jardim, em 768p, a MÉDIA ia de 43 para 60 qps sem ela.
+	"mato": [1, 1, 2],
 	"ar": [30, 70, 70],                      # partículas do ar de cada domínio
 }
 # o que "efeitos de tela" desligado apaga, seja qual for o nível

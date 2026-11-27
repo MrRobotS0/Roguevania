@@ -182,7 +182,7 @@ DOMINIOS = {
     "catedral": dict(tree=["pilar_rostos", "estatua_encapuzada"],
                      column=["pedestal", "pedestal_vela", "coluna_quebrada", "coluna_hera", "gargula"],
                      bones=["ossada"], shards=["vela", "velas_altar"], chain=["lanterna"]),
-    "carcosa": dict(tree=["poste_lanternas", "nicho_mascara", "pilar_rostos"], column=["gargula", "bloco_rosto", "bandeira"],
+    "carcosa": dict(tree=["poste_lanternas", "nicho_mascara", "pilar_rostos"], column=["gargula", "bandeira"],
                     banner=["cortina"], chain=["lanterna"]),
     "observatorio": dict(tree=["cristal_rubro"], column=["cristal_baixo"], bones=["pedra_clara"],
                          shards=["cristais_rosa", "cristal_rosa", "pedra_cristal"]),
