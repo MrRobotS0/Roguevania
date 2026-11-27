@@ -17,24 +17,7 @@ const RIM_ON := false
 const TURN_TIME := 0.09
 const BACK := [Color(0.42, 0.38, 0.46), Color(0.26, 0.23, 0.3)]
 
-const RIM_SHADER := """
-shader_type canvas_item;
-render_mode unshaded;
-uniform vec4 rim : source_color = vec4(1.0, 0.95, 0.85, 0.5);
-uniform float side = 1.0;   // de que lado da folha a borda acende (+1 = direita)
-void fragment() {
-	vec4 c = texture(TEXTURE, UV);
-	// só a borda de fora: o vão precisa ter 2 px (entre braço e corpo não acende)
-	float e1 = texture(TEXTURE, UV + vec2(TEXTURE_PIXEL_SIZE.x * side, 0.0)).a;
-	float e2 = texture(TEXTURE, UV + vec2(TEXTURE_PIXEL_SIZE.x * side * 2.0, 0.0)).a;
-	float up = texture(TEXTURE, UV - vec2(0.0, TEXTURE_PIXEL_SIZE.y)).a;
-	float up2 = texture(TEXTURE, UV - vec2(0.0, TEXTURE_PIXEL_SIZE.y * 2.0)).a;
-	float solid = step(0.5, c.a);
-	float k = solid * (1.0 - step(0.5, e1)) * (1.0 - step(0.5, e2));
-	k = max(k, solid * (1.0 - step(0.5, up)) * (1.0 - step(0.5, up2)) * 0.4);
-	COLOR = vec4(rim.rgb, rim.a * k * COLOR.a);
-}
-"""
+const RIM_SHADER := preload("res://shaders/contorno_heroi.gdshader")
 
 static var _rim_shader: Shader
 
@@ -58,8 +41,7 @@ func attach(owner: Node2D, sprite: Sprite2D, light_side: float, rim_color: Color
 		return
 	rim = Sprite2D.new()
 	if _rim_shader == null:
-		_rim_shader = Shader.new()
-		_rim_shader.code = RIM_SHADER
+		_rim_shader = RIM_SHADER
 	var m := ShaderMaterial.new()
 	m.shader = _rim_shader
 	m.set_shader_parameter("rim", rim_color)
