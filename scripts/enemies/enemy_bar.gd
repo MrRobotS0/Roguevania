@@ -16,7 +16,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	queue_redraw()
+	if is_instance_valid(enemy) and enemy.on_screen():
+		queue_redraw()
 
 
 # Altura do desenho parado acima dos pés. Os quadros têm folga transparente,

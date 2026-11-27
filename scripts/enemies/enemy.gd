@@ -295,9 +295,30 @@ func _physics_process(delta: float) -> void:
 		_watch_telegraph()
 	_mark = maxf(_mark - delta, 0.0)
 	move_and_slide()
-	if body:
-		_update_sprite()
-	queue_redraw()
+	# fora da tela ele pensa e anda igual; só não gasta quadro trocando de pose nem redesenhando
+	if on_screen():
+		if body:
+			_update_sprite()
+		queue_redraw()
+
+
+# --- o que a câmera vê -------------------------------------------------------------
+# Um andar tem uns 45 inimigos e a tela mostra meia dúzia. O retângulo visível é
+# calculado uma vez por passo de física e vale para todos.
+const VIEW_MARGIN := 64.0
+static var _view := Rect2()
+static var _view_step := -1
+
+
+func on_screen() -> bool:
+	var step := Engine.get_physics_frames()
+	if step != _view_step:
+		_view_step = step
+		var xf := get_viewport().get_canvas_transform().affine_inverse()
+		_view = Rect2(xf * Vector2.ZERO, xf.basis_xform(get_viewport_rect().size))
+	# a margem cobre o desenho inteiro (chefes passam de 200 px de largura)
+	var reach := VIEW_MARGIN + maxf(_frame_size.x, _frame_size.y) * _draw_scale * 0.5
+	return _view.grow(reach).has_point(global_position)
 
 
 # --- aviso e vez de atacar ------------------------------------------------------

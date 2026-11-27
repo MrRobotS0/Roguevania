@@ -10,6 +10,11 @@ const LOOK_DOWN := 46.0        # caindo rápido, a câmera desce para mostrar on
 var target: Player
 
 
+func _init() -> void:
+	# com interpolação de física o Godot já força isto (e avisa a cada fase): fica dito
+	process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
+
+
 func follow(who: Player, bounds: Vector2) -> void:
 	target = who
 	_has_ref = false
