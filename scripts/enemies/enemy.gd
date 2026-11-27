@@ -99,6 +99,7 @@ func _setup_sprite() -> void:
 	body.centered = false
 	body.region_enabled = true
 	body.texture = SpriteSheet.lit(sheet, _tex)
+	body.light_mask = Depth.MUNDO | Depth.PERSONAGENS
 	add_child(body)
 	_attach_emission()
 	_update_sprite()

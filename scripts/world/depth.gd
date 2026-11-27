@@ -27,6 +27,15 @@ const KEYS := {
 	"bosque":            {"from": -60.0,  "color": Color("ffc070"), "energy": 0.66, "height": 0.5},
 }
 const DEFAULT := {"from": -30.0, "color": Color("ffe8c8"), "energy": 0.55, "height": 0.5}
+
+# Máscaras de luz (CanvasItem.light_mask x Light2D.range_item_cull_mask).
+# O herói carrega uma lamparina que acende o cenário em volta; se ela também o
+# acendesse, somada à luz do domínio, ele estourava (a capa virava uma mancha e
+# entrava no brilho). Por isso o corpo do herói fica num bit só dele: toda luz do
+# mundo alcança MUNDO e HEROI, e a lamparina, só MUNDO.
+const MUNDO := 1
+const HEROI := 2
+const PERSONAGENS := 4       # herói e inimigos: a luz própria dos personagens
 const SHADE_DIM := 0.86      # a penumbra fica mais escura: o resto vem da luz
 
 
@@ -45,6 +54,7 @@ static func key_light(biome_id: String) -> DirectionalLight2D:
 	# o padrão aponta para baixo (luz vinda de cima); girar muda de onde vem
 	light.rotation_degrees = -float(k["from"])
 	light.blend_mode = Light2D.BLEND_MODE_ADD
+	light.range_item_cull_mask = MUNDO | HEROI
 	return light
 
 
@@ -59,6 +69,7 @@ static func rim_light(biome_id: String, sky: Dictionary) -> DirectionalLight2D:
 	light.height = 0.08
 	light.rotation_degrees = -(float(k["from"]) + 180.0)
 	light.blend_mode = Light2D.BLEND_MODE_ADD
+	light.range_item_cull_mask = MUNDO | HEROI
 	return light
 
 

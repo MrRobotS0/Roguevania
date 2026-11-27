@@ -144,7 +144,7 @@ func _ready() -> void:
 	add_to_group("player")
 	if skin == null:
 		skin = Meta.current_skin()
-	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.6, Vector2(0, -12))
+	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.6, Vector2(0, -12)).range_item_cull_mask = Depth.MUNDO
 	_setup_look()
 
 
@@ -1305,6 +1305,7 @@ func _setup_look() -> void:
 	_white = SpriteSheet.texture(SHEET, pal, true)
 	body = SpriteSheet.make_sprite(SHEET)
 	body.texture = SpriteSheet.lit(SHEET, _tex)
+	body.light_mask = Depth.HEROI | Depth.PERSONAGENS
 	add_child(body)
 	# espessura, giro e contorno de luz (scripts/actors/hero_volume.gd)
 	var biome_id: String = room.tiles_id if room else ""

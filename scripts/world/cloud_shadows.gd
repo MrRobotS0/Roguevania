@@ -74,6 +74,7 @@ func _ready() -> void:
 	_light.color = Color(1, 1, 1)
 	_light.energy = float(cfg["dark"])
 	_light.height = 2000.0          # de cima: o relevo quase não interfere
+	_light.range_item_cull_mask = Depth.MUNDO | Depth.HEROI
 	add_child(_light)
 
 

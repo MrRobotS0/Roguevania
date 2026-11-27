@@ -51,11 +51,13 @@ func _ready() -> void:
 	env.background_mode = Environment.BG_CANVAS
 	env.background_canvas_max_layer = 6
 	env.glow_enabled = true
-	env.glow_intensity = 0.95
-	env.glow_strength = 1.0
+	# No renderer da web só valem intensidade, bloom e limiar (strength e blend_mode são
+	# ignorados; a mistura é sempre "screen"). O 2D é desenhado sem faixa alta, então o
+	# limiar fica abaixo de 1: com 0,74 toda superfície clara entrava no brilho (a capa do
+	# herói, a face de cima do chão). Em 0,9 passam o fogo, a essência, os olhos, os clarões.
+	env.glow_intensity = 0.8
 	env.glow_bloom = 0.0
-	env.glow_hdr_threshold = 0.74
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	env.glow_hdr_threshold = 0.9
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)

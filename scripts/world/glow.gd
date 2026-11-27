@@ -54,5 +54,6 @@ static func attach(parent: Node2D, color: Color, radius: float, energy: float, o
 	light.position = offset
 	# acima do plano: com o relevo, acende o lado das coisas que olha para ela
 	light.height = radius * 0.4
+	light.range_item_cull_mask = Depth.MUNDO | Depth.HEROI
 	parent.add_child(light)
 	return light
