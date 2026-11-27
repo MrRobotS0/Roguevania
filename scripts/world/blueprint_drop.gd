@@ -35,25 +35,8 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
-static var _paper: Stack
-
-
-# A planta enrolada: papel com riscos azuis e os rolos escuros nas pontas,
-# montada em fatias para girar no ar (sprite stacking).
-static func _model() -> Stack:
-	if _paper == null:
-		var img := Image.create(8, 7, false, Image.FORMAT_RGBA8)
-		var paper := Color("e8dcc0")
-		img.fill_rect(Rect2i(0, 0, 8, 7), Palette.UI_SHADOW)
-		img.fill_rect(Rect2i(1, 1, 6, 5), paper)
-		img.fill_rect(Rect2i(0, 1, 1, 5), paper.darkened(0.3))
-		img.fill_rect(Rect2i(7, 1, 1, 5), paper.darkened(0.3))
-		img.fill_rect(Rect2i(2, 2, 4, 1), Color("3a6aa0"))
-		img.fill_rect(Rect2i(2, 4, 3, 1), Color("3a6aa0"))
-		_paper = Stack.from_image(img, 2)
-	return _paper
-
-
+# A planta enrolada (papel com riscos azuis e os rolos escuros nas pontas) gira no
+# ar em fatias: o desenho vem de tools/gen_pilhas.py.
 func _draw() -> void:
 	var bob := roundf(sin(_t * 3.0) * 1.5) if _rest else 0.0
-	_model().draw(self, Vector2(0, -2 + bob), _t * 2.2, 0.2)
+	Stack.of("planta").draw(self, Vector2(0, -2 + bob), _t * 2.2)

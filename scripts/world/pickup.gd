@@ -61,14 +61,10 @@ func interact(p: Player) -> void:
 		queue_free()
 
 
-static var _stacks := {}
-
-
-static func _stack_of(tex: Texture2D) -> Stack:
-	var key := tex.get_rid()
-	if not _stacks.has(key):
-		_stacks[key] = Stack.from_image(tex.get_image(), 2)
-	return _stacks[key]
+# O ícone do item em fatias, girando (tools/gen_pilhas.py). Sem ícone, null.
+func _pile() -> Stack:
+	var icon := String(gear.data.get("icon")) if gear.data.get("icon") != null else ""
+	return Stack.of("item_" + icon.get_file().get_basename()) if icon != "" else null
 
 
 func _draw() -> void:
@@ -77,11 +73,11 @@ func _draw() -> void:
 	glow.a = 0.25 + 0.15 * sin(_t * 4.0)
 	draw_rect(Rect2(-6, -24 + bob, 12, 14), glow)
 	var c: Color = gear.data.color
-	var tex := GearIcon.of(gear.data)
-	if tex:
+	var pile := _pile()
+	if pile:
 		# o ícone ganha corpo e gira no ar (sprite stacking: cada linha do
 		# desenho é uma fatia com 2 px de espessura)
-		_stack_of(tex).draw(self, Vector2(0, roundf(-10 + bob)), _t * 1.7, 0.16, Color.WHITE, true)
+		pile.draw(self, Vector2(0, roundf(-10 + bob)), _t * 1.7)
 	elif gear.is_weapon():
 		var data: WeaponData = gear.data
 		match data.category:

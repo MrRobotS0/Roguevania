@@ -1,136 +1,51 @@
 class_name Stack
 extends RefCounted
 
-# Sprite stacking: um objeto em 3D feito de fatias horizontais finas (cada
-# uma é o objeto visto de cima, numa altura), desenhadas uma em cima da outra
-# com 1 px de diferença. Girar todas as fatias juntas gira o objeto em 3D de
-# verdade, sem modelo 3D nem quadros desenhados para cada ângulo.
+# Sprite stacking: um objeto em 3D feito de fatias horizontais finas (cada uma é o
+# objeto visto de cima, numa altura), empilhadas com 1 px de diferença. Girar as
+# fatias juntas gira o objeto em 3D, sem modelo 3D nem quadros desenhados à mão.
 #
-#   tilt: quanto da vista de cima aparece (0 = de lado puro; 0.5 = 3/4).
-#   As fatias de baixo saem mais escuras: é isso que vira a lateral do objeto.
+# As pilhas vêm prontas de tools/gen_pilhas.py: cada objeto é uma tira com o giro
+# completo em 32 quadros, já rasterizados na grade do jogo (com contorno e a
+# lateral mais escura). Aqui só se escolhe o quadro do ângulo. Girar as fatias na
+# hora, na placa de vídeo, saía fora da grade na câmera lisa: baú serrilhado e
+# item do pedestal virando um rabisco quando ficava de lado.
 #
-# Dois jeitos de montar:
-#   from_voxels(w, h, d, cor(x, y, z))  y = 0 é a fatia do chão;
-#   from_image(desenho, espessura)      cada linha do desenho vira uma fatia
-#                                       (o desenho ganha corpo e gira como peça).
+#   Stack.of("bau").draw(self, base, angulo)
+#
+# Nomes: bau, bau_aberto, bau_maldito, bau_maldito_aberto, moeda, planta e
+# item_<id> para cada ícone de assets/icons/<id>_16.png.
 
-var texture: ImageTexture
-var w := 1
-var d := 1
-var n := 1
-var tops := PackedInt32Array()   # fatias que são tampa (mais claras)
-
-
-static func from_voxels(sw: int, sh: int, sd: int, color: Callable) -> Stack:
-	var img := Image.create(sw * sh, sd, false, Image.FORMAT_RGBA8)
-	for y in sh:
-		for z in sd:
-			for x in sw:
-				var c: Color = color.call(x, y, z)
-				if c.a > 0.0:
-					img.set_pixel(y * sw + x, z, c)
-	var s := Stack.new()
-	s.w = sw
-	s.d = sd
-	s.n = sh
-	s.texture = ImageTexture.create_from_image(img)
-	return s
-
-
-static func from_image(src: Image, depth := 2) -> Stack:
-	var img := src.duplicate() as Image
-	if img.is_compressed():
-		img.decompress()
-	img.convert(Image.FORMAT_RGBA8)
-	var sw := img.get_width()
-	var sh := img.get_height()
-	return from_voxels(sw, sh, depth, func(x: int, y: int, z: int) -> Color:
-		var c := img.get_pixel(x, sh - 1 - y)
-		if c.a < 0.5:
-			return Color(0, 0, 0, 0)
-		# a face de trás é mais escura: de lado se vê a espessura
-		return c if z == depth - 1 else c.darkened(0.45))
-
-
-# Desenha a pilha com a base em `at` (coordenadas do `ci`).
-func draw(ci: CanvasItem, at: Vector2, angle: float, tilt := 0.45, tint := Color.WHITE, outline := false) -> void:
-	var base := at.round()
-	if outline:
-		# contorno escuro de 1 px, como o dos personagens: a pilha inteira
-		# desenhada em preto, deslocada para os quatro lados, antes da cor
-		for o in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
-			for i in n:
-				var oxf := Transform2D(0.0, Vector2(1.0, tilt), 0.0, base + o + Vector2(0, -i)) * Transform2D(angle, Vector2.ZERO)
-				ci.draw_set_transform_matrix(oxf)
-				ci.draw_texture_rect_region(texture, Rect2(-w * 0.5, -d * 0.5, w, d), Rect2(i * w, 0, w, d), Color("0b0910"))
-	for i in n:
-		var k := 0.62 + 0.38 * float(i) / maxf(n - 1, 1)
-		if i == n - 1:
-			k = 1.12
-		var c := Color(tint.r * k, tint.g * k, tint.b * k, tint.a)
-		var xf := Transform2D(0.0, Vector2(1.0, tilt), 0.0, base + Vector2(0, -i)) * Transform2D(angle, Vector2.ZERO)
-		ci.draw_set_transform_matrix(xf)
-		ci.draw_texture_rect_region(texture, Rect2(-w * 0.5, -d * 0.5, w, d), Rect2(i * w, 0, w, d), c)
-	ci.draw_set_transform_matrix(Transform2D.IDENTITY)
-
-
-# --- modelos -------------------------------------------------------------------
-
+static var _atlas: Texture2D
+static var _items := {}
+static var _frames := 32
 static var _cache := {}
 
-
-# Moeda de ouro em pé (gira em volta do eixo de cima).
-static func coin() -> Stack:
-	if not _cache.has("coin"):
-		var gold := Color("f2c14e")
-		_cache["coin"] = from_voxels(7, 7, 2, func(x: int, y: int, _z: int) -> Color:
-			var dx := x - 3
-			var dy := y - 3
-			var r2 := dx * dx + dy * dy
-			if r2 > 10:
-				return Color(0, 0, 0, 0)
-			if r2 > 6:
-				return gold.darkened(0.25)          # aro
-			return gold.lightened(0.25) if (dx + dy) < 0 else gold)
-	return _cache["coin"]
+var _strip := Rect2()        # o primeiro quadro da tira, no atlas
+var _origin := Vector2.ZERO  # onde fica o centro da base dentro do quadro
 
 
-# Baú de madeira com cintas de ferro e fecho de ouro (a frente é z = D - 1:
-# com o tilt, z maior fica mais embaixo na tela, mais perto de quem olha). `open` tira a tampa e
-# mostra o ouro dentro. `cursed`: madeira roxa e ferro preto.
-static func chest(open: bool, cursed: bool) -> Stack:
-	var key := "chest_%s_%s" % [open, cursed]
-	if _cache.has(key):
-		return _cache[key]
-	var wood := Color("6a3f8a") if cursed else Color("7a4a2c")
-	var iron := Color("1c1620") if cursed else Color("3a3236")
-	var lock := Color("c08fff") if cursed else Color("f2c14e")
-	var W := 16
-	var H := 12
-	var D := 10
-	var lid_from := 8
-	_cache[key] = from_voxels(W, H, D, func(x: int, y: int, z: int) -> Color:
-		# casca de 2 voxels: com o tilt, cada fatia mostra 1 px da frente, e
-		# uma casca de 1 voxel (meio pixel) deixava o baú listrado
-		var edge_x := x <= 1 or x >= W - 2
-		var edge_z := z <= 1 or z >= D - 2
-		var shell := edge_x or edge_z
-		if open and y >= lid_from:
-			return Color(0, 0, 0, 0)
-		var lid_top := not open and y == H - 1
-		if not shell and y > 0 and not lid_top:
-			# por dentro: oco; aberto, o ouro aparece no alto
-			if open and y == lid_from - 1:
-				return Color("f2c14e") if (x + z) % 3 else Color("ffe28a")
-			return Color(0, 0, 0, 0)
-		var c := wood
-		if x % 4 == 1 and not edge_x and z >= D - 2:
-			c = wood.darkened(0.18)                   # junta entre as tábuas (na frente)
-		if y == lid_from - 1:
-			c = wood.darkened(0.35)                   # a fresta da tampa
-		if x == 3 or x == W - 4 or y == 0 or (y == H - 1 and not open and (edge_x or edge_z)):
-			c = iron                                  # cintas e borda
-		if z >= D - 2 and absi(x - W / 2) <= 1 and y >= lid_from - 3 and y <= lid_from:
-			c = lock                                  # fecho na frente
-		return c)
-	return _cache[key]
+static func of(name: String) -> Stack:
+	if _atlas == null:
+		var tex: Texture2D = load("res://assets/sprites/pilhas.png")
+		_atlas = SpriteSheet.lit("pilhas", tex)
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/pilhas.json"))
+		if parsed is Dictionary:
+			_items = parsed.get("itens", {})
+			_frames = int(parsed.get("frames", 32))
+	if not _cache.has(name):
+		var s: Stack = null
+		if _items.has(name):
+			var m: Dictionary = _items[name]
+			s = Stack.new()
+			s._strip = Rect2(float(m["x"]), float(m["y"]), float(m["w"]), float(m["h"]))
+			s._origin = Vector2(float(m["ox"]), float(m["oy"]))
+		_cache[name] = s
+	return _cache[name]
+
+
+# Desenha com o centro da base em `at` (coordenadas do `ci`), girado de `angle`.
+func draw(ci: CanvasItem, at: Vector2, angle: float, tint := Color.WHITE) -> void:
+	var frame := posmod(roundi(angle / TAU * _frames), _frames)
+	var src := Rect2(_strip.position + Vector2(frame * _strip.size.x, 0), _strip.size)
+	ci.draw_texture_rect_region(_atlas, Rect2(at.round() - _origin, _strip.size), src, tint)

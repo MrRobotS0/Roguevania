@@ -1,0 +1,517 @@
+{
+ "frames": 32,
+ "itens": {
+  "bau": {
+   "x": 0,
+   "y": 0,
+   "w": 24,
+   "h": 26,
+   "ox": 12,
+   "oy": 18
+  },
+  "bau_aberto": {
+   "x": 0,
+   "y": 26,
+   "w": 24,
+   "h": 26,
+   "ox": 12,
+   "oy": 18
+  },
+  "bau_maldito": {
+   "x": 0,
+   "y": 52,
+   "w": 24,
+   "h": 26,
+   "ox": 12,
+   "oy": 18
+  },
+  "bau_maldito_aberto": {
+   "x": 0,
+   "y": 78,
+   "w": 24,
+   "h": 26,
+   "ox": 12,
+   "oy": 18
+  },
+  "moeda": {
+   "x": 0,
+   "y": 104,
+   "w": 12,
+   "h": 15,
+   "ox": 6,
+   "oy": 10
+  },
+  "planta": {
+   "x": 0,
+   "y": 119,
+   "w": 14,
+   "h": 13,
+   "ox": 7,
+   "oy": 9
+  },
+  "item_adagas_gemeas": {
+   "x": 0,
+   "y": 132,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_brasa": {
+   "x": 0,
+   "y": 156,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_dunas": {
+   "x": 0,
+   "y": 180,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_inverno": {
+   "x": 0,
+   "y": 204,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_ossos": {
+   "x": 0,
+   "y": 228,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_prece": {
+   "x": 0,
+   "y": 252,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_raposa": {
+   "x": 0,
+   "y": 276,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_arco_sonho": {
+   "x": 0,
+   "y": 300,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_armadilha_laminas": {
+   "x": 0,
+   "y": 324,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_besta_carcosa": {
+   "x": 0,
+   "y": 348,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_bile_acida": {
+   "x": 0,
+   "y": 372,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_bordao_andarilho": {
+   "x": 0,
+   "y": 396,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_calice": {
+   "x": 0,
+   "y": 420,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_cetro_astronomo": {
+   "x": 0,
+   "y": 444,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_cetro_nomes": {
+   "x": 0,
+   "y": 468,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_chicote_espinhos": {
+   "x": 0,
+   "y": 492,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_clava_votiva": {
+   "x": 0,
+   "y": 516,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_corrente_ferreiro": {
+   "x": 0,
+   "y": 540,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_cutelo_glutao": {
+   "x": 0,
+   "y": 564,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_dentes_chao": {
+   "x": 0,
+   "y": 588,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_dentes_ventre": {
+   "x": 0,
+   "y": 612,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_egide_bronze": {
+   "x": 0,
+   "y": 636,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_escudo_eremita": {
+   "x": 0,
+   "y": 660,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_espada_cerimonial": {
+   "x": 0,
+   "y": 684,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_espada_estrada": {
+   "x": 0,
+   "y": 708,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_espada_rei": {
+   "x": 0,
+   "y": 732,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_espirito_cinza": {
+   "x": 0,
+   "y": 756,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_estrela_cadente": {
+   "x": 0,
+   "y": 780,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_fogo_raposa": {
+   "x": 0,
+   "y": 804,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_foice_inverno": {
+   "x": 0,
+   "y": 828,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_frasco": {
+   "x": 0,
+   "y": 852,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_garras_parasita": {
+   "x": 0,
+   "y": 876,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_granada_cinzas": {
+   "x": 0,
+   "y": 900,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_grito_carpideira": {
+   "x": 0,
+   "y": 924,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_laco_salteador": {
+   "x": 0,
+   "y": 948,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lamina_devaneio": {
+   "x": 0,
+   "y": 972,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lamina_luto": {
+   "x": 0,
+   "y": 996,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lanca_peregrino": {
+   "x": 0,
+   "y": 1020,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lanca_pesadelo": {
+   "x": 0,
+   "y": 1044,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lanca_vidro": {
+   "x": 0,
+   "y": 1068,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_lanterna_caida": {
+   "x": 0,
+   "y": 1092,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_machado_carrasco": {
+   "x": 0,
+   "y": 1116,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_machado_touro": {
+   "x": 0,
+   "y": 1140,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_mao_cova": {
+   "x": 0,
+   "y": 1164,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_martelo_forja": {
+   "x": 0,
+   "y": 1188,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_olho_sonho": {
+   "x": 0,
+   "y": 1212,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_onda_catedral": {
+   "x": 0,
+   "y": 1236,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_pao": {
+   "x": 0,
+   "y": 1260,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_pesadelo_vivo": {
+   "x": 0,
+   "y": 1284,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_picareta_escavador": {
+   "x": 0,
+   "y": 1308,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_prece_lancada": {
+   "x": 0,
+   "y": 1332,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_punhal_cego": {
+   "x": 0,
+   "y": 1356,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_punhos_bronze": {
+   "x": 0,
+   "y": 1380,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_raiz_viva": {
+   "x": 0,
+   "y": 1404,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_sacola_bombas": {
+   "x": 0,
+   "y": 1428,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_sino_carcosa": {
+   "x": 0,
+   "y": 1452,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_torreta_vidro": {
+   "x": 0,
+   "y": 1476,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  },
+  "item_tridente_afogado": {
+   "x": 0,
+   "y": 1500,
+   "w": 22,
+   "h": 24,
+   "ox": 11,
+   "oy": 19
+  }
+ }
+}

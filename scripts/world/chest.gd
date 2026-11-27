@@ -75,4 +75,5 @@ func _draw() -> void:
 	draw_rect(Rect2(-9, -1, 18, 2), Color(0, 0, 0, 0.35))
 	var lift := -roundf(sin(_hop * PI) * 6.0)
 	var angle := -0.42 + 0.05 * sin(_t * 0.9) + (1.0 - _hop) * TAU * (1.0 if _hop > 0.0 else 0.0)
-	Stack.chest(opened, cursed).draw(self, Vector2(0, 1 + lift), angle, 0.5, Color.WHITE, true)
+	var pile := Stack.of("bau%s%s" % ["_maldito" if cursed else "", "_aberto" if opened else ""])
+	pile.draw(self, Vector2(0, 1 + lift), angle)
