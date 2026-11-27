@@ -26,6 +26,8 @@ import re
 
 from PIL import Image
 
+import reescalar_folhas
+
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 ART = os.path.join(ROOT, "arte_externa")
 OUT = os.path.join(ROOT, "assets", "sprites")
@@ -351,8 +353,8 @@ SOURCES.update({
     "k1_idle": ("auto", IT + "medieval_king_pack/**/Idle.png"), "k1_run": ("auto", IT + "medieval_king_pack/**/Run.png"),
     "k1_a1": ("auto", IT + "medieval_king_pack/**/Attack_1.png"), "k1_a2": ("auto", IT + "medieval_king_pack/**/Attack_2.png"),
     "k1_hit": ("auto", IT + "medieval_king_pack/**/Hit.png"),
-    "mw1_idle": ("auto", IT + "medieval_warrior_pack/**/Idle.png"), "mw1_run": ("auto", IT + "medieval_warrior_pack/**/Run.png"),
-    "mw1_a1": ("auto", IT + "medieval_warrior_pack/**/Attack1.png"), "mw1_a2": ("auto", IT + "medieval_warrior_pack/**/Attack2.png"),
+    "mw1_idle": ("fw", IT + "medieval_warrior_pack/**/Idle.png", 184), "mw1_run": ("fw", IT + "medieval_warrior_pack/**/Run.png", 184),
+    "mw1_a1": ("fw", IT + "medieval_warrior_pack/**/Attack1.png", 184), "mw1_a2": ("fw", IT + "medieval_warrior_pack/**/Attack2.png", 184),
     "mw2_idle": ("auto", IT + "medieval_warrior_pack_2/**/Idle.png"), "mw2_run": ("auto", IT + "medieval_warrior_pack_2/**/Run.png"),
     "mw2_a1": ("auto", IT + "medieval_warrior_pack_2/**/Attack1.png"),
     "hk2_idle": ("auto", IT + "hero_knight_2/**/Idle.png"), "hk2_run": ("auto", IT + "hero_knight_2/**/Run.png"),
@@ -442,7 +444,7 @@ NOVAS = {
     "boss_wyrm": (six(seq("dragon_idle", range(6)), seq("dragon_idle", range(6)), seq("dragon_breath", [1]),
                       seq("dragon_breath", [4]), seq("dragon_tail", [3, 6]), seq("dragon_idle", [0])), {"flip": True, "scale": 2}),
     # ===== Bosque Errante: domínio do deus que caminhava
-    "highwayman": (six(seq("mw1_idle", range(8)), seq("mw1_run", range(8)), seq("mw1_a1", [1]), seq("mw1_a1", [2]),
+    "highwayman": (six(seq("mw1_idle", range(6)), seq("mw1_run", range(8)), seq("mw1_a1", [1]), seq("mw1_a1", [2]),
                        seq("mw1_a2", [0, 1]), seq("mw1_idle", [0])), {"draw_scale": 0.55}),
     "wanderer": ({"idle": seq("mw2_idle", range(8)), "walk": seq("mw2_run", range(8)), "windup": seq("mw2_a1", [1]),
                   "attack": seq("mw2_a1", [3]), "stun": seq("mw2_idle", [0])}, {}),
@@ -682,6 +684,8 @@ def main():
         d.text((px, py + im.height), name, fill=(255, 230, 140, 255))
         d.line([(px, py + im.height - 2), (px + im.width, py + im.height - 2)], fill=(90, 200, 90, 255))
     prev.save(os.path.join(PREV, "inimigos.png"))
+    # folha com draw_scale sai daqui no tamanho da arte: regrava no tamanho em que o jogo a mostra
+    reescalar_folhas.regravar()
 
 
 if __name__ == "__main__":

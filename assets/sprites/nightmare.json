@@ -1,7 +1,7 @@
 {
- "w": 124,
- "h": 91,
- "size": 124,
+ "w": 99,
+ "h": 73,
+ "size": 99,
  "color": true,
  "anims": {
   "idle": {
@@ -24,6 +24,5 @@
    "frames": 4,
    "fps": 8
   }
- },
- "draw_scale": 0.8
+ }
 }
