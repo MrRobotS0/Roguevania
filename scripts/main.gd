@@ -59,6 +59,8 @@ func _ready() -> void:
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)
+	env.glow_enabled = Graficos.on("brilho")
+	Graficos.changed.connect(func() -> void: env.glow_enabled = Graficos.on("brilho"))
 
 	var air := CanvasLayer.new()
 	air.layer = 5
@@ -937,6 +939,7 @@ func start_run(seed_value := -1, heat := 0, plus := 0) -> void:
 
 
 func _load_stage() -> void:
+	Graficos.hold()
 	ambience.modulate.a = 1.0
 	_clear_level()
 	Engine.time_scale = 1.0

@@ -26,6 +26,7 @@ Sfx="*res://scripts/autoload/sfx.gd"
 Meta="*res://scripts/autoload/meta.gd"
 Run="*res://scripts/autoload/run.gd"
 Options="*res://scripts/autoload/options.gd"
+Graficos="*res://scripts/autoload/graficos.gd"
 Music="*res://scripts/autoload/music.gd"
 Lang="*res://scripts/autoload/lang.gd"
 

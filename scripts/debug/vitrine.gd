@@ -31,6 +31,7 @@ var _level: Level
 var _cam := -1             # --camlisa=0|1: força a câmera lisa (medir o custo)
 var poca := false          # --poca=1: larga o herói dentro da poça mais perto (ver a água de molas)
 var pilhas := false        # --pilhas=1: baús, item e moedas ao lado do herói (ver o sprite stacking)
+var _quality := ""         # --qualidade=baixo|medio|alto: fixa o nível gráfico (sem isso, AUTO)
 var _pilhas_level: Level
 
 
@@ -48,6 +49,7 @@ func _ready() -> void:
 			"camlisa": _cam = int(kv[1])
 			"hud": hud = kv[1] != "0"
 			"lento": Fx.base_time_scale = float(kv[1])
+			"qualidade": _quality = kv[1]
 	# os menus pausam o jogo; a vitrine precisa continuar para responder
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Meta.use_path("user://vitrine.save", true)
@@ -55,6 +57,9 @@ func _ready() -> void:
 	Options.data["hints"] = false
 	if _cam >= 0:
 		Options.data["smooth_cam"] = _cam == 1
+		Options.apply()
+	if _quality != "":
+		Options.data["quality"] = _quality
 		Options.apply()
 	Sfx.muted = true
 	# pelo jogo (main.gd com --vitrine, como no navegador) ou sozinha

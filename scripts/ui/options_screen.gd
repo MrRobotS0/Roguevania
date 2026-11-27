@@ -74,6 +74,7 @@ func _rows() -> Array:
 				{"id": "fullscreen", "label": "TELA CHEIA", "value": _yes("fullscreen")},
 				{"id": "view", "label": "VISÃO", "value": "PADRÃO" if Options.get_value("view") == "padrao" else "AMPLA"},
 				{"id": "smooth_cam", "label": "CÂMERA", "value": "LISA" if Options.get_value("smooth_cam") else "EM PIXEL"},
+				{"id": "quality", "label": "QUALIDADE", "value": Graficos.label()},
 				{"id": "postfx", "label": "EFEITOS DE TELA", "value": _yes("postfx")},
 				{"id": "shake", "label": "TREMOR DE TELA", "value": _pct("shake")},
 				{"id": "flashes", "label": "PISCADAS FORTES", "value": "NORMAIS" if Options.flashes() else "REDUZIDAS"},
@@ -230,6 +231,10 @@ func _change(id: String, step: int) -> void:
 		"view":
 			Options.set_value("view", "ampla" if Options.get_value("view") == "padrao" else "padrao")
 			Sfx.play("ui_move", -10.0)
+		"quality":
+			var q := wrapi(Graficos.CHOICES.find(Graficos.choice) + step, 0, Graficos.CHOICES.size())
+			Graficos.choose(Graficos.CHOICES[q])
+			Sfx.play("ui_move", -10.0)
 		"fullscreen", "postfx", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge", "smooth_cam":
 			Options.set_value(id, not Options.get_value(id))
 			if id == "fullscreen" and OS.has_feature("web"):
@@ -250,7 +255,7 @@ func _confirm(id: String) -> void:
 			Sfx.play("ui_ok", -8.0)
 		"reset_keys":
 			Options.set_value("keys", {})
-		"fullscreen", "postfx", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge", "lang", "font", "view", "smooth_cam":
+		"fullscreen", "postfx", "flashes", "vibration", "timer", "hints", "numbers", "minimap", "colorblind", "easy_dodge", "lang", "font", "view", "smooth_cam", "quality":
 			_change(id, 1)
 		_:
 			if _page == "keys" and REBINDABLE.has(id):

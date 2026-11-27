@@ -29,7 +29,8 @@
   *, *::before, *::after { box-sizing: border-box; }
   html, body, #canvas { margin: 0; padding: 0; border: 0; }
   body { color: var(--text); background: var(--bg); overflow: hidden; touch-action: none; }
-  #canvas { display: block; }
+  /* o canvas ocupa a janela; em quantos pixels ele é desenhado quem decide é fitCanvas() */
+  #canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
   #canvas:focus { outline: none; }
 
   #status { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px;
@@ -172,6 +173,42 @@ $GODOT_HEAD_INCLUDE
 <script>
 const GODOT_CONFIG = $GODOT_CONFIG;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+
+// Resolução de desenho. O jogo amplia cada pixel dele k vezes para caber na tela (k
+// sai de nativeK, a mesma conta de Options.view_size). Desenhar todos os pixels da
+// tela é o que mais pesa em vídeo integrado, então o nível gráfico escolhe em quantos
+// desenhar (1 ou 2 por pixel do jogo, ou todos) e o navegador estica o resto: a área
+// de jogo é a mesma. Com a política 0 o Godot não mexe no tamanho do canvas; quem
+// manda é fitCanvas(). Chamado pelo jogo: window.mokshaRenderScale(k), 0 = todos.
+GODOT_CONFIG.canvasResizePolicy = 0;
+const canvasEl = document.getElementById("canvas");
+let renderK = 0;
+function nativeK(w, h) {
+  const fit = Math.max(1, Math.min(Math.floor(w / 480), Math.floor(h / 270)));
+  return Math.min(Math.max(Math.min(4, fit), Math.ceil(h / 400)), fit);
+}
+function fitCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.floor(innerWidth * dpr)), h = Math.max(1, Math.floor(innerHeight * dpr));
+  let cw = w, ch = h, crisp = true;
+  // tela em pé (celular): o jogo mostra 480x270 com faixas; ali não vale a pena reduzir
+  if (renderK > 0 && h * 4 <= w * 3) {
+    const k = nativeK(w, h);
+    if (renderK < k) {
+      cw = Math.ceil(w / k) * renderK;
+      ch = Math.ceil(h / k) * renderK;
+      crisp = k % renderK === 0;
+    }
+  }
+  if (canvasEl.width !== cw || canvasEl.height !== ch) { canvasEl.width = cw; canvasEl.height = ch; }
+  // esticar por número inteiro fica nítido; por número quebrado, suavizar evita pixel torto
+  canvasEl.style.imageRendering = crisp ? "pixelated" : "auto";
+}
+window.mokshaRenderScale = k => { renderK = Math.max(0, k | 0); fitCanvas(); };
+addEventListener("resize", fitCanvas);
+document.addEventListener("fullscreenchange", fitCanvas);
+fitCanvas();
+
 const engine = new Engine(GODOT_CONFIG);
 
 (function () {

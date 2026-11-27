@@ -20,8 +20,12 @@ const DEFAULTS := {
 	"lang": "pt",            # pt | en (o nome do jogo fica igual)
 	"font": "classica",      # PixelFont.FACES: desenho das letras do texto
 	"smooth_cam": true,      # câmera lisa: desliza em fração de pixel (a tela desenha na resolução real)
+	"quality": "auto",       # auto | baixo | medio | alto (scripts/autoload/graficos.gd)
+	"quality_auto": "alto",  # o nível em que o AUTO parou da última vez nesta máquina
 	"keys": {},              # ação -> [physical keycode]
 }
+
+signal changed
 
 var data := {}
 
@@ -64,6 +68,7 @@ func apply() -> void:
 	Controls.apply_bindings(data["keys"])
 	Palette.use_colorblind(bool(data.get("colorblind", false)))
 	PixelFont.use_face(String(data.get("font", "classica")))
+	changed.emit()
 
 
 # Campo de visão. O jogo foi desenhado para 480x270 (1080p com pixel de 4x4).
