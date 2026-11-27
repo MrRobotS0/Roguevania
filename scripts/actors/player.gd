@@ -1266,6 +1266,12 @@ func _hurt_state(delta: float) -> void:
 		_enter(State.MOVE)
 
 
+# Quanto da queda já passou (0 vivo, 1 quando a tela de morte abre): o pós-processamento
+# fecha a tela em volta do herói nesse tempo.
+func dying() -> float:
+	return clampf(_state_time / 1.1, 0.0, 1.0) if state == State.DEAD else 0.0
+
+
 func _dead_state(delta: float) -> void:
 	_gravity(delta)
 	velocity.x = move_toward(velocity.x, 0.0, 400.0 * delta)

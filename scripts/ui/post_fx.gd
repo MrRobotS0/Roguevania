@@ -4,7 +4,9 @@ extends ColorRect
 # Pós-processamento da tela (entre o mundo e o HUD), num shader só:
 # - gradação de cor por domínio: sombras puxadas para a cor do céu, luzes para
 #   a cor do sol, contraste e saturação um pouco acima (a pixel art "acende");
-# - aberração cromática que pulsa nos golpes fortes e quando o herói apanha;
+# - aberração cromática: um pulso curto nos golpes fortes e quando o herói apanha
+#   (no máximo 1,4 pixel do jogo na borda; antes passava de 3 e durava a dor inteira);
+# - quadro de impacto (Fx.impact_until) e a morte do herói (Player.dying);
 # - ondas de choque (distorção em anel) na morte de elite/chefe e nos críticos;
 # - meia-luz animada: um véu de luz quente que respira bem devagar;
 # - pontilhado ordenado (Bayer 4x4) de 1/255 para não formar degraus no degradê.
@@ -18,6 +20,8 @@ const SHADER := preload("res://shaders/pos_processo.gdshader")
 const WAVE_TIME := 0.55
 const HEAT_RADIUS := 26.0     # px do jogo: meia largura da coluna de ar quente
 const HEAT_FORCE := 0.9       # px do jogo de desvio no pico
+const ABERRATION := 0.45      # quanto do pedido de Fx.kick vira desvio de cor
+const IMPACT := 0.72          # quanto da tela o quadro de impacto toma
 
 var _mat: ShaderMaterial
 var _waves: Array = []     # [centro na tela, idade, força]
@@ -95,6 +99,8 @@ func _process(delta: float) -> void:
 			_mat.set_shader_parameter("wave1", Vector4(0.5, 0.5, -1.0, 0.0))
 			_mat.set_shader_parameter("heat0", Vector4(0.5, 0.5, 0.0, 0.0))
 			_mat.set_shader_parameter("heat1", Vector4(0.5, 0.5, 0.0, 0.0))
+			_mat.set_shader_parameter("impact", 0.0)
+			_mat.set_shader_parameter("death", 0.0)
 		return
 	_mat.set_shader_parameter("grade", 1.0)
 	_t += delta
@@ -106,9 +112,20 @@ func _process(delta: float) -> void:
 	_mat.set_shader_parameter("time", _t)
 	_mat.set_shader_parameter("breathe", 1.0)
 	Fx.aberration = maxf(Fx.aberration - delta * 9.0, 0.0)
-	var ab := Fx.aberration + Fx.pain * 1.5
+	var ab := Fx.aberration * ABERRATION
 	_mat.set_shader_parameter("aberration", ab if Options.flashes() else ab * 0.3)
 	_heat(vp)
+	# relógio de parede: durante a parada do golpe o tempo do jogo quase não anda
+	var hit := Fx.impact_until > Time.get_ticks_msec() / 1000.0 and Graficos.on("quadro_impacto")
+	_mat.set_shader_parameter("impact", IMPACT if hit else 0.0)
+	var dying := 0.0
+	var hero := get_tree().get_first_node_in_group("player") as Player
+	if hero and Graficos.on("morte"):
+		dying = hero.dying()
+		if dying > 0.0:
+			var at: Vector2 = get_viewport().get_canvas_transform() * hero.center()
+			_mat.set_shader_parameter("death_at", Vector2(at.x / vp.x, at.y / vp.y))
+	_mat.set_shader_parameter("death", dying)
 	for w in _waves:
 		w[1] += delta
 	_waves = _waves.filter(func(w: Array) -> bool: return w[1] < WAVE_TIME)

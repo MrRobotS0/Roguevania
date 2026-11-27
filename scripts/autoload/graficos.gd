@@ -43,6 +43,8 @@ const TABLE := {
 	"brasa": [false, true, true],            # blocos que emitem luz e pulsam (Forja e Ventre)
 	"sombras": [false, false, true],         # sombra de verdade: braseiros e clarões fortes, com os blocos de oclusor
 	"calor": [false, true, true],            # ar quente tremendo sobre os braseiros
+	"quadro_impacto": [true, true, true],    # golpe forte: tela em luz e sombra chapadas por dois quadros
+	"morte": [true, true, true],             # a cor escorre e a tela fecha em volta do herói caído
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado

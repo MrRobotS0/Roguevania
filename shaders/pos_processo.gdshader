@@ -1,5 +1,6 @@
 // Pós-processamento da tela inteira (scripts/ui/post_fx.gd): gradação de cor do domínio,
-// aberração cromática, ondas de choque, filtro da loja e pontilhado de 1/255 contra degraus.
+// aberração cromática, ondas de choque, ar quente, quadro de impacto, a morte do herói,
+// filtro da loja e pontilhado de 1/255 contra degraus.
 shader_type canvas_item;
 render_mode unshaded;
 
@@ -16,6 +17,9 @@ uniform vec4 wave0 = vec4(0.5, 0.5, -1.0, 0.0);   // centro (uv), raio (uv no ei
 uniform vec4 wave1 = vec4(0.5, 0.5, -1.0, 0.0);
 uniform vec4 heat0 = vec4(0.5, 0.5, 0.0, 0.0);   // fogo: centro (uv), raio (uv no eixo y), força em pixels do jogo
 uniform vec4 heat1 = vec4(0.5, 0.5, 0.0, 0.0);
+uniform float impact = 0.0;          // quadro de impacto: 0 a 1, por dois quadros
+uniform float death = 0.0;           // morte do herói: 0 (vivo) a 1 (a tela fechou)
+uniform vec2 death_at = vec2(0.5);   // onde ele está (uv)
 uniform float aspect = 1.7778;
 uniform float time = 0.0;
 uniform float breathe = 0.0;
@@ -114,6 +118,22 @@ void fragment() {
 	float glow = (1.0 - SCREEN_UV.y) * (0.5 + 0.5 * sin(time * 0.35)) * breathe;
 	c += light_tint * glow * 0.035;
 	c = mix(base, c, grade);
+	// Quadro de impacto: no golpe que para o jogo a tela vira luz e sombra chapadas por
+	// dois quadros, como no quadro-chave de uma animação de luta.
+	if (impact > 0.0) {
+		float hard = smoothstep(0.28, 0.52, dot(c, vec3(0.299, 0.587, 0.114)));
+		c = mix(c, mix(vec3(0.05, 0.03, 0.07), vec3(1.0, 0.96, 0.88), hard), impact);
+	}
+	// Morte do herói: a cor escorre e um círculo fecha em volta dele, em degraus de
+	// pixel do jogo. O tempo do jogo não muda.
+	if (death > 0.0) {
+		float grey = dot(c, vec3(0.299, 0.587, 0.114));
+		c = mix(c, vec3(grey) * vec3(1.06, 0.93, 0.9), smoothstep(0.0, 0.45, death) * 0.85);
+		vec2 d = (floor(SCREEN_UV / px_size) + 0.5) * px_size - death_at;
+		d.x *= aspect;
+		float radius = mix(1.5, 0.17, smoothstep(0.2, 1.0, death));
+		c *= 1.0 - step(radius, length(d)) * 0.94;
+	}
 	c = store_filter(c, FRAGCOORD.xy);
 	c += bayer(FRAGCOORD.xy) / 255.0;
 	COLOR = vec4(clamp(c, 0.0, 1.0), 1.0);

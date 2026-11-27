@@ -28,8 +28,21 @@ var _stop_chain_until := 0.0
 var base_time_scale := 1.0
 
 
+# Quadro de impacto: nos golpes que param o jogo por mais tempo (crítico pesado, aparo,
+# abate de chefe) a tela vira luz e sombra chapadas por dois quadros (PostFx). Um de
+# cada vez: em sequência vira pisca-pisca. Respeita a opção de piscadas.
+const IMPACT_STOP := 0.1          # parada mínima (s) para ganhar o quadro
+const IMPACT_FRAME := 0.065       # s de relógio de parede
+const IMPACT_GAP := 0.45
+var impact_until := 0.0
+var _impact_last := -9.0
+
+
 func hitstop(seconds: float) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
+	if seconds >= IMPACT_STOP and now - _impact_last >= IMPACT_GAP and Options.flashes():
+		_impact_last = now
+		impact_until = now + IMPACT_FRAME
 	if now < _stop_chain_until and seconds < 0.15:    # o golpe final do chefe pesa sempre
 		seconds *= 0.5
 	_stop_chain_until = now + seconds + STOP_CHAIN

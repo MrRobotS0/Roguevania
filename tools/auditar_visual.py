@@ -47,6 +47,8 @@ PASSES = {
     "chefes": (CHEFES, 15, ["--robo=1"], 3, 3.2, 2.6),
     "pilhas": (["forja_rubra", "catedral", "cavernas", "mar_de_cinzas", "jardim_primordial", "ventre"], 9, ["--pilhas=1"], 2, 2.6, 1.8),
     "poca": (["catedral", "jardim_primordial", "saloes", "bosque"], 8, ["--poca=1"], 2, 2.2, 1.8),
+    "impacto": (["catedral", "forja_rubra", "jardim_primordial"], 8, ["--impacto=1"], 1, 2.0, 2.4),
+    "morte": (["catedral", "forja_rubra"], 9, ["--morte=1"], 4, 0.35, 2.3),
 }
 # (nome, largura, altura, extras): o que o `medir` compara
 CONFIGS = [

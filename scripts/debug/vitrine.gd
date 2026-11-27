@@ -33,6 +33,8 @@ var poca := false          # --poca=1: larga o herói dentro da poça mais perto
 var pilhas := false        # --pilhas=1: baús, item e moedas ao lado do herói (ver o sprite stacking)
 var _quality := ""         # --qualidade=baixo|medio|alto: fixa o nível gráfico (sem isso, AUTO)
 var _pilhas_level: Level
+var impacto := false       # --impacto=1: segura o quadro de impacto na tela (ele dura dois quadros)
+var morte := false         # --morte=1: o herói cai aos 2 s de cada estágio (ver a tela fechando)
 
 
 func _ready() -> void:
@@ -50,6 +52,8 @@ func _ready() -> void:
 			"hud": hud = kv[1] != "0"
 			"lento": Fx.base_time_scale = float(kv[1])
 			"qualidade": _quality = kv[1]
+			"impacto": impacto = kv[1] == "1"
+			"morte": morte = kv[1] == "1"
 	# os menus pausam o jogo; a vitrine precisa continuar para responder
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Meta.use_path("user://vitrine.save", true)
@@ -102,7 +106,11 @@ func _title(t: String) -> void:
 
 func _process(delta: float) -> void:
 	var lv: Level = main.level if main else null
-	if lv and is_instance_valid(lv.player):
+	if impacto:
+		Fx.impact_until = Time.get_ticks_msec() / 1000.0 + 1.0
+	if morte and lv and is_instance_valid(lv.player) and _clock >= 2.0 and lv.player.state != Player.State.DEAD:
+		lv.player._enter(Player.State.DEAD)
+	if lv and is_instance_valid(lv.player) and not morte:
 		lv.player.hp = lv.player.max_hp
 		if robo and lv != _level:
 			_level = lv
