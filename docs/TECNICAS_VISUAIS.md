@@ -60,6 +60,31 @@ Legenda:
 | Pontilhado (dithering) por cima do cenário | ⛔ | ele não gostou (v0.4.1): transparência sempre lisa |
 | CRT / linhas de varredura | ⛔ | sujaria a arte; o site já tem o CRT dele |
 
+## Passada visual da v0.12.0 (27/11/2026)
+
+O que entrou, pela ordem do que mais muda a tela. Tudo com nível em `Graficos` (BAIXA, MÉDIA, ALTA).
+
+| Técnica | Status | Onde / por quê |
+|---|---|---|
+| **Parede de fundo** entre o cenário pintado e os blocos, com relevo, luz e oclusão nos cantos | 🆕 v0.12 | `Room.draw_wall`, `BackWall`, `parede_fundo.gdshader`, `tools/gen_paredes.py` |
+| **Tom por domínio**: fundo recuado, penumbra, curva de tons no lugar do contraste linear | 🆕 v0.12 | `Depth.TOM`, `pos_processo.gdshader` |
+| **Luz própria e linha de luz no contorno** dos personagens | 🆕 v0.12 | `Depth.actor_light` (pontual: a direcional ignora máscara), `personagem.gdshader` |
+| **Adereços com arte**, pendurados que balançam, halo nas chamas | 🆕 v0.12 | `Room._build_props`, `tools/importar_aderecos.py`, `halo_chama.gdshader` |
+| **Especular** em gelo, pedra molhada, metal e carne | 🆕 v0.12 | `Depth.GLOSS`, `tools/gen_especular.py` |
+| **Sombra de verdade** de braseiros e clarões (só ALTA) | 🆕 v0.12 | `Room._build_occluders` (contorno da pedra, corte anti-horário) |
+| **Blocos que emitem e pulsam** | 🆕 v0.12 | `Room.draw_emissive`, `blocos_brasa.gdshader`, `tools/gen_emissivo.py` |
+| **Calor sobre o fogo** por varredura de linhas (desvio em pixels inteiros) | 🆕 v0.12 | `PostFx._heat`, grupo `"calor"` |
+| **Quadro de impacto**, morte com a tela fechando, aberração menor | 🆕 v0.12 | `Fx.impact_until`, `Player.dying`, `PostFx` |
+| **Tudo na grade do pixel**: mato, pilhas em quadros prontos, golpe e projéteis rasterizados, criaturas em escala inteira | 🆕 v0.12 | `Grass`, `Stack` + `tools/gen_pilhas.py`, `Pixel`, `tools/reescalar_folhas.py` |
+| Primeiro plano com matéria e poeira fora de foco | 🆕 v0.12 | `Foreground`, `FrontDust` |
+| Faísca com rampa de cor e rastro, fumaça em pixel, coleta que voa para o contador | 🆕 v0.12 | `Sparks`, `Hud` |
+| Resolução de desenho por nível no navegador | 🆕 v0.12 | `Graficos` ("escala"), `web/shell.html` |
+| Girar pixel art sem serrilhar | ✅ v0.12 | resolvido por quadros prontos (pilhas) e por varredura (golpe e projéteis) |
+
+Dependem de arte nova (lista no §42 do `DOCUMENTO_COMPLETO.md` e no relatório da passada): chama do
+braseiro desenhada, árvores grandes do Mar de Cinzas e da Necrópole, adereços que faltam em alguns
+domínios (bigorna, luneta, coral), quadros de impacto por arma.
+
 ## Arte garimpada nesta rodada
 
 | Pacote | Autor / licença | Uso |

@@ -1769,7 +1769,7 @@ Os dois ficam em MODOS, no título, ao lado do Desafio do Dia. Nenhum passa pela
 - **Sem tempestade de cinzas** no Mar de Cinzas (`weather = ""` no biome.tres): nada de vento empurrando. O código de `Weather` ficou, sem uso.
 - **PostFx** (`scripts/ui/post_fx.gd`, CanvasLayer 6, entre o clima e a vinheta): gradação de cor por domínio (sombra puxa para `sky0`, luz para `sun`, contraste 1.12, saturação 1.16), aberração cromática (`Fx.kick`, e junto da borda vermelha ao apanhar), ondas de choque (`Fx.wave`; mortes, forte em elite e chefe), luz quente que respira devagar e pontilhado Bayer contra degraus.
 - **Clarões de luz:** `Fx.flash_light` acende uma PointLight2D que apaga em ~0,15 s em todo `Fx.impact` e no golpe do herói (até 8 ao mesmo tempo; nascem em `Fx.light_root`, a fase).
-- **Sombra de contato** (`ContactShadow`, filho de todo Actor): elipse no chão sob os pés, que encolhe e clareia com a altura do pulo (raio até 96 px).
+- **Sombra de contato** (`ContactShadow`, filho de todo Actor): elipse no chão sob os pés, que encolhe e clareia com a altura do pulo (raio até 96 px). *(Saiu na v0.12.0: sobrava uma segunda sombra; ficou só a `ContactShadows` da fase, §39.)*
 - Opções > Tela > EFEITOS DE TELA (`postfx`) desliga pós-processamento, clarões e sombras. "Piscadas reduzidas" corta aberração e ondas.
 
 ## 38. Combate legível, beirada, ritmo e escolhas
@@ -1960,3 +1960,113 @@ As quatro que tinham ficado para depois no §40. Ele pediu "faz as 4 que sobrara
 
 **Baú (`Stack.chest`).** Casca de 2 voxels: com o tilt, cada fatia mostra 1 px da frente, e a casca
 de 1 voxel deixava o baú listrado.
+
+## 42. Passada visual: qualidade em níveis, luz e tom, parede de fundo, adereços e combate (v0.12.0, 27/11/2026)
+
+Pedido dele: subir a qualidade visual ao máximo **sem mexer em jogabilidade, hitbox, física ou
+balanceamento**, com tudo funcionando no navegador (WebGL 2), 60 qps e cada efeito novo com nível
+de qualidade. Primeiro a auditoria (fotos e medidas, nada alterado), depois as etapas, um commit
+por efeito. As fotos e medidas saem de `tools/auditar_visual.py` (Chrome sem janela na build web).
+
+**Níveis de qualidade (`Graficos`, autoload; Opções > Tela > QUALIDADE: AUTO | BAIXA | MÉDIA | ALTA).**
+- A tabela `Graficos.TABLE` diz o que cada efeito faz em cada nível; quem desenha pergunta
+  `Graficos.on("efeito")` ou `Graficos.num("efeito")`. Efeito novo = linha nova na tabela.
+- `escala`: em quantos pixels reais cada pixel do jogo é desenhado no navegador (BAIXA 1, MÉDIA 2,
+  ALTA todos). O `web/shell.html` cuida do tamanho do canvas (`window.mokshaRenderScale`); a tela
+  é esticada por CSS. Em vídeo integrado é o que mais pesa: a 1080p, a MÉDIA desenha um quarto dos pixels.
+- AUTO começa no nível salvo, mede janelas de 4 s e desce um nível depois de duas janelas abaixo
+  de 50 qps (fora de pausa e de troca de fase). Não sobe sozinho.
+- "EFEITOS DE TELA" desligado continua apagando tudo o que está em `Graficos.POSTFX`.
+- Só na ALTA: sombra de verdade, luz de verdade em moeda e essência, a camada de mato da frente.
+  Na BAIXA ficam: parede de fundo (sem luz), adereços, primeiro plano, contorno de elite, morte.
+
+**Descoberta que muda como se usa luz aqui.** No renderer Compatibilidade a `DirectionalLight2D`
+**ignora** `range_item_cull_mask`: uma luz "só dos personagens" acendia o cenário inteiro e custava
+uma luz a mais em cada pixel da tela (medido com uma luz verde: o chão ficou verde). Luz com
+máscara tem que ser `PointLight2D` (a dos personagens é uma pontual chapada do tamanho da sala, bem
+alta: `Depth.actor_light`). As máscaras estão em `Depth`: `MUNDO`, `HEROI`, `PERSONAGENS`, `PAREDE`.
+
+**Etapa 0, folga.** Minimapa em textura (`MapCache`, só pinta célula nova; eram 1.400 retângulos
+por quadro), inimigo fora da tela não redesenha (`Enemy.on_screen`), uma sombra de contato só,
+essência e moeda com halo em vez de luz, nuvens numa luz só, shaders em `shaders/`.
+
+**Etapa 1, defeitos.** Chão e plataformas da Torre e da Catedral voltaram a aparecer (o recorte do
+atlas começava 17 linhas acima da alvenaria); miolo da rocha num escuro liso (`Room._build_core`),
+sombra do terreno só onde há parede de fundo, brilho (bloom) só no que emite (limiar 0,9).
+
+**Etapa 2, grade do pixel.**
+- Mato em colunas de 1 pixel do jogo (`Grass`).
+- Pilhas (sprite stacking) em 32 quadros prontos por objeto: `tools/gen_pilhas.py` →
+  `assets/sprites/pilhas.png` + `.json`; `Stack.of("bau").draw(...)`. Ícone novo de item = rodar o gerador.
+- Golpe, projéteis e miras: `Pixel.polygon` / `Pixel.line` varrem a forma em pixels inteiros do jogo
+  e desenham em retângulos (entram em lote; polígono nunca entrava).
+- Criaturas em escala inteira: `tools/reescalar_folhas.py` regrava as folhas que tinham
+  `draw_scale` quebrado (o gancho fica no fim de `importar_inimigos.py`). O Astrônomo ficou como
+  estava: em escala inteira a folha passa de 6 milhões de pixels. **Não rodar `gen_emissao.py`
+  nessas folhas** (o critério dele depende do tamanho; a ferramenta leva a emissão junto).
+- De quebra: a importação do salteador (`highwayman`) cortava os quadros no lugar errado.
+
+**Etapa 3, luz e tom.**
+- `Depth.TOM`: por domínio, a penumbra, o quanto o fundo pintado recua (brilho e cor) e a curva
+  final. O pós-processamento trocou o contraste linear por gama + curva em S (`pos_processo.gdshader`).
+- Personagens: luz própria (`Depth.actor_light`) e linha de luz de 1 pixel no contorno
+  (`shaders/personagem.gdshader`). A borda de fora de cada quadro vem no **alfa do mapa de relevo**
+  (`gen_normais.py`: 128 + 16 esquerda + 32 direita + 64 cima).
+- Especular nos blocos de gelo, pedra molhada, metal e carne: `tools/gen_especular.py` →
+  `tiles_<id>_s.png`; cor e abertura em `Depth.GLOSS`; quem monta é `SpriteSheet.lit`.
+
+**Etapa 4, profundidade.**
+- Parede de fundo: `tools/gen_paredes.py` → `parede_<id>.png` (a pedra enterrada do domínio com a
+  beira quebrada, nas 16 máscaras de vizinhança); onde ela existe é `Room._build_wall` (alcance por
+  domínio em `BackWall`); o tom e a oclusão nos cantos são do `parede_fundo.gdshader` (a oclusão é
+  uma textura de 1 pixel por bloco, lida com filtro linear).
+- Adereços com arte: `tools/importar_aderecos.py` → `decor.png` + `decor.json` (69 desenhos, lista
+  por domínio e por tipo de enfeite; tipo sem lista cai no traço antigo). Os de chão são pintados
+  com o resto; os pendurados são `Sprite2D` e balançam (`Room.Hangers`, `skew`); vela, lanterna e
+  fornalha ganham halo (`halo_chama.gdshader`; a posição das chamas é achada pelo importador).
+- Primeiro plano feito da pedra do domínio (`Foreground`) e poeira fora de foco (`FrontDust`).
+
+**Etapa 5, luz dinâmica.**
+- Sombra de verdade (só ALTA): o **contorno** da pedra vira `LightOccluder2D` em trechos retos,
+  sempre no mesmo sentido, com `CULL_COUNTER_CLOCKWISE` (a luz entra na pedra pela frente e a sombra
+  nasce atrás; com o outro sentido os blocos ficavam sem luz). Braseiros e clarões de raio >= 60.
+- Blocos em brasa (Forja e Ventre): `tools/gen_emissivo.py` → `tiles_<id>_e.png`, somado por cima
+  e pulsando (`blocos_brasa.gdshader`).
+- Calor sobre o fogo: dentro do pós-processamento, as linhas da tela escorregam de 1 em 1 pixel do
+  jogo acima dos nós do grupo `"calor"`. Não precisou de outra cópia da tela.
+
+**Etapa 6, combate.** Faísca de golpe nasce quase branca, com rastro; fumaça em discos de pixel
+(`Sparks.puff`); quadro de impacto (`Fx.impact_until`, só com as piscadas ligadas, um a cada 0,45 s);
+contorno em brasa nos elites de arte pronta (o `aura` do shader do corpo); essência e moeda voam
+para o contador (`Fx.collected` → `Hud`); morte do herói: a cor escorre e a tela fecha nele (`Player.dying`).
+
+**Etapa 7, pós.** Vinheta 0,55 → 0,36; aberração cromática no máximo 1,4 pixel na borda e sem
+durar a dor inteira.
+
+**Folha branca e de aviso** (`SpriteSheet._color_texture`): com alfa binário saem de operações
+nativas da imagem, não mais pixel a pixel em GDScript.
+
+**Ordem para regerar arte:** `importar_blocos.py` → `gen_paredes.py` → `gen_normais.py` →
+`gen_especular.py` e `gen_emissivo.py`. `importar_inimigos.py` já chama a reescala e o relevo.
+`importar_aderecos.py` → `gen_normais.py decor`. `gen_pilhas.py` → `gen_normais.py pilhas`.
+
+**Vitrine:** `--qualidade=baixo|medio|alto`, `--impacto=1` (segura o quadro de impacto),
+`--morte=1` (o herói cai aos 2 s). `auditar_visual.py`: `exportar`, `fotos <passes>`, `medir`.
+
+**Medido** (build web, Chrome sem janela, Intel Iris Xe, cena parada):
+
+| Tela | ALTA | MÉDIA | BAIXA |
+|---|---|---|---|
+| 1920x1080 | 39 a 52 qps | 59 a 60 | 60 |
+| 1366x768 | (igual à MÉDIA em pixels) | 59 a 60 | 60 |
+| 2560x1440 | 28 a 35 | 56 a 59 | 60 |
+
+Em combate (robô), 1080p MÉDIA: 54 a 60. A v0.11.0 fazia 35 a 42 em 1080p e 21 a 29 em 1440p, com
+bem menos coisa na tela. Processador por quadro num andar gerado: de 6,8 a 9,7 ms para 3,3 a 5,5 ms.
+
+**Ficou de fora, de propósito:** pontilhado por cima do cenário (ele não gosta), CRT (já é o filtro
+"Fósforo" da loja), a fórmula de cor da capa (mexeria em cosmético pago) e o pré-aquecimento de
+shader (os novos compilam na carga da fase, atrás da cortina; pior quadro ao entrar: 34 a 67 ms).
+
+**Testes:** 91 (entrou `_visual_pass`: tabela de níveis, pilhas de todos os ícones, adereços dentro
+do atlas, parede de fundo, folha branca e tingida pelo atalho nativo).

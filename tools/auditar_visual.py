@@ -10,7 +10,8 @@ verdade passa pelos domínios com o herói imortal.
 
 fotos: build/auditoria/fotos/<rótulo>/<passe>_<domínio>_<n>.png e o tempo de quadro de cada
        domínio (requestAnimationFrame) em medidas_<passe>.json. Passes: estatico (herói parado),
-       robo (o robô luta), chefes, pilhas (baús, item e braseiro ao lado do herói), poca.
+       robo (o robô luta), chefes, pilhas (baús, item e braseiro ao lado do herói), poca,
+       impacto (segura o quadro de impacto na tela), morte (o herói cai e a tela fecha).
 medir: a mesma cena parada em cada nível de qualidade e em várias resoluções; separa o
        custo de preencher pixels (placa de vídeo) do custo de lógica.
 
