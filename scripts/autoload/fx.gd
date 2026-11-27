@@ -111,12 +111,21 @@ func flash_light(pos: Vector2, color: Color, radius: float, energy: float, life 
 	light.energy = energy
 	light.height = radius * 0.4
 	light.range_item_cull_mask = Depth.MUNDO | Depth.HEROI | Depth.PAREDE
+	if big_enough_for_shadow(radius):
+		light.shadow_enabled = true
+		light.shadow_filter = Light2D.SHADOW_FILTER_NONE
 	light.global_position = pos
 	light_root.add_child(light)
 	_flashes.append(light)
 	var tw := light.create_tween()
 	tw.tween_property(light, "energy", 0.0, life).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	tw.tween_callback(light.queue_free)
+
+
+# Só o clarão dos golpes fortes joga sombra (qualidade ALTA): cada luz com sombra é
+# redesenhada a cada quadro, e golpe pequeno é o que mais tem.
+func big_enough_for_shadow(radius: float) -> bool:
+	return radius >= 60.0 and Graficos.on("sombras")
 
 
 # Aberração cromática: as cores se separam um instante nas bordas da tela.

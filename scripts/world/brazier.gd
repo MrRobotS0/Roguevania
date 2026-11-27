@@ -14,6 +14,9 @@ func _ready() -> void:
 	_seed = fposmod(position.x * 0.137, TAU)
 	_light = Glow.attach(self, Color(1.0, 0.62, 0.3), 96.0, 0.9, Vector2(0, -14))
 	_light.range_item_cull_mask |= Depth.PAREDE
+	if Graficos.on("sombras"):
+		_light.shadow_enabled = true
+		_light.shadow_filter = Light2D.SHADOW_FILTER_NONE
 	var s := SpriteSheet.region_sprite("props", Interactable.props_palette(), "brazier")
 	s.show_behind_parent = true
 	add_child(s)

@@ -97,9 +97,11 @@ func load_grid(lines: PackedStringArray) -> void:
 	_build_depth()
 	_build_wall()
 	_build_decor()
+	_load_ember()
 	_build_chunks()
 	_build_props()
 	_build_core()
+	_build_occluders()
 
 
 func size_px() -> Vector2:
@@ -171,8 +173,9 @@ func _reveal_from(start: Vector2i) -> void:
 	version += 1
 	_build_wall()
 	_build_core()
+	_build_occluders()
 	for n in get_children():
-		if n is Chunk and ((n as Chunk).shade or (n as Chunk).wall):
+		if n is Chunk and ((n as Chunk).shade or (n as Chunk).wall or (n as Chunk).ember):
 			n.queue_redraw()
 	Sfx.play("secret", -4.0)
 
@@ -239,6 +242,7 @@ func strike_cracked(hit: Rect2) -> bool:
 		_build_depth()
 		_build_wall()
 		_build_core()
+		_build_occluders()
 		for c in _chunks.values():
 			c.queue_redraw()
 		for c in get_children():
@@ -339,9 +343,12 @@ class Chunk:
 	var back := false
 	var shade := false
 	var wall := false
+	var ember := false
 
 	func _draw() -> void:
-		if wall:
+		if ember:
+			room.draw_emissive(self, area)
+		elif wall:
 			room.draw_wall(self, area)
 		elif shade:
 			room.draw_depth(self, area)
@@ -415,6 +422,13 @@ func _build_chunks() -> void:
 			chunk.area = area
 			add_child(chunk)
 			_chunks[Vector2i(cx / CHUNK, cy / CHUNK)] = chunk
+			if _ember_atlas != null:
+				var glow := Chunk.new()
+				glow.room = self
+				glow.area = area
+				glow.ember = true
+				glow.material = _ember_mat
+				add_child(glow)
 	var g := Glints.new()
 	g.room = self
 	g.z_index = 1
@@ -1066,6 +1080,119 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 		if _solidish(x + 1, y - 1):
 			for i in 5:
 				ci.draw_rect(Rect2(p.x + TILE - 2 - i * 2, p.y - 5 + i, 2, 5 - i), drift)
+
+
+# --- sombra de verdade (qualidade ALTA) -----------------------------------------------
+# O contorno da pedra vira oclusor de luz: o braseiro e os clarões dos golpes jogam
+# sombra na parede de fundo e em quem está atrás de um bloco.
+#   Só o contorno (o encontro da pedra com o ar), em trechos retos e sempre no mesmo
+#   sentido (a pedra à direita de quem anda): com o corte de face do oclusor, a luz
+#   entra na pedra pela frente e a sombra só nasce do lado de trás. Retângulos cheios,
+#   um por bloco, deixavam emendas de sombra no meio do chão.
+var _occluders: Node2D
+
+
+func _occludes(x: int, y: int) -> bool:
+	var c := cell(x, y)
+	return c == SOLID or c == CRACKED or (c == FAKE and not _revealed.has(Vector2i(x, y)))
+
+
+func _build_occluders() -> void:
+	if _occluders != null:
+		_occluders.queue_free()
+		_occluders = null
+	if not Graficos.on("sombras") or cols == 0:
+		return
+	_occluders = Node2D.new()
+	add_child(_occluders)
+	# trechos horizontais: em cima (da esquerda para a direita) e embaixo (ao contrário)
+	for y in rows + 1:
+		for side in 2:
+			var start := -1
+			for x in cols + 1:
+				var edge := x < cols and (_occludes(x, y) and not _occludes(x, y - 1) if side == 0 \
+					else _occludes(x, y - 1) and not _occludes(x, y))
+				if edge and start < 0:
+					start = x
+				elif not edge and start >= 0:
+					var a := Vector2(start, y) * TILE
+					var b := Vector2(x, y) * TILE
+					if side == 0:
+						_add_occluder(a, b)
+					else:
+						_add_occluder(b, a)
+					start = -1
+	# trechos verticais: à direita da pedra (de cima para baixo) e à esquerda (ao contrário)
+	for x in cols + 1:
+		for side in 2:
+			var start := -1
+			for y in rows + 1:
+				var edge := y < rows and (_occludes(x - 1, y) and not _occludes(x, y) if side == 0 \
+					else _occludes(x, y) and not _occludes(x - 1, y))
+				if edge and start < 0:
+					start = y
+				elif not edge and start >= 0:
+					var a := Vector2(x, start) * TILE
+					var b := Vector2(x, y) * TILE
+					if side == 0:
+						_add_occluder(a, b)
+					else:
+						_add_occluder(b, a)
+					start = -1
+
+
+func _add_occluder(from: Vector2, to: Vector2) -> void:
+	var line := OccluderPolygon2D.new()
+	line.closed = false
+	line.cull_mode = OccluderPolygon2D.CULL_COUNTER_CLOCKWISE
+	line.polygon = PackedVector2Array([from, to])
+	var occluder := LightOccluder2D.new()
+	occluder.occluder = line
+	_occluders.add_child(occluder)
+
+
+# --- blocos que emitem luz ------------------------------------------------------------
+# tools/gen_emissivo.py separa do atlas o que está em brasa (metal da Forja, carne do
+# Ventre). Aqui o mesmo bloco é desenhado de novo só com
+# esses pixels, somado por cima e pulsando (shaders/blocos_brasa.gdshader).
+const EMBER_SHADER := preload("res://shaders/blocos_brasa.gdshader")
+const EMBER_PEAK := {"forja_rubra": 0.5, "ventre": 0.26}     # brilho no pico da onda
+
+var _ember_atlas: Texture2D
+var _ember_mat: ShaderMaterial
+
+
+func _load_ember() -> void:
+	_ember_atlas = null
+	var path := "res://assets/sprites/tiles_%s_e.png" % tiles_id
+	if tiles_id == "" or not Graficos.on("brasa") or not ResourceLoader.exists(path):
+		return
+	_ember_atlas = load(path)
+	if _ember_mat == null:
+		_ember_mat = ShaderMaterial.new()
+		_ember_mat.shader = EMBER_SHADER
+	_ember_mat.set_shader_parameter("forca", float(EMBER_PEAK.get(tiles_id, 0.4)))
+
+
+func draw_emissive(ci: CanvasItem, area: Rect2i) -> void:
+	if _ember_atlas == null:
+		return
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			var c := grid[y][x]
+			var row := -1
+			if c == PLATFORM:
+				row = ATLAS_PLANK
+			elif c == SOLID or c == CRACKED or (c == FAKE and not _revealed.has(Vector2i(x, y))):
+				# a mesma linha do atlas que _draw_stone escolhe; o miolo enterrado não emite
+				row = (0 if _solidish(x, y - 1) else 1) | (0 if _solidish(x + 1, y) else 2) \
+					| (0 if _solidish(x, y + 1) else 4) | (0 if _solidish(x - 1, y) else 8)
+				if row == 0:
+					continue
+			if row < 0:
+				continue
+			ci.draw_texture_rect_region(_ember_atlas, Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE)),
+				Rect2((_hash(x, y) % 4) * TILE, row * TILE, TILE, TILE))
 
 
 func _draw_plank(ci: CanvasItem, x: int, y: int) -> void:

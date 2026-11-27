@@ -40,6 +40,8 @@ const TABLE := {
 	"primeiro_plano": [true, true, true],    # silhuetas da frente feitas da pedra do domínio (senão, blocos chapados)
 	"poeira_frente": [0, 8, 14],             # discos de poeira fora de foco na frente da câmera
 	"especular": [false, true, true],        # reflexo da luz no gelo, na pedra molhada, no metal e na carne
+	"brasa": [false, true, true],            # blocos que emitem luz e pulsam (Forja e Ventre)
+	"sombras": [false, false, true],         # sombra de verdade: braseiros e clarões fortes, com os blocos de oclusor
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
@@ -48,7 +50,7 @@ const TABLE := {
 	"ar": [30, 70, 70],                      # partículas do ar de cada domínio
 }
 # o que "efeitos de tela" desligado apaga, seja qual for o nível
-const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato", "poeira_frente", "halos"]
+const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato", "poeira_frente", "halos", "brasa", "sombras"]
 
 const WINDOW := 4.0          # s de jogo por medição
 const SLOW_FPS := 50.0       # abaixo disso a janela conta como lenta
