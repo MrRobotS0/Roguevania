@@ -134,8 +134,13 @@ func _use_biome(b: BiomeData) -> void:
 	backdrop.biome_id = b.id
 	backdrop.sky = b.sky
 	backdrop.layers = b.layers
+	var tone := Depth.tom(b.id)
+	var dim := float(tone["fundo"][0])
+	# um fio de violeta no fundo, como antes: o longe é mais frio que o perto
+	backdrop.modulate = Color(dim, dim * 0.94, dim * 1.03)
 	ambience.use(b.id)
 	post_fx.use_sky(b.sky)
+	post_fx.use_tone(float(tone["gama"]), float(tone["cor"]))
 	foreground.style = b.backdrop
 	foreground.ink = b.ink
 

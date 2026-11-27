@@ -7,8 +7,9 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
 uniform vec3 shadow_tint = vec3(0.10, 0.08, 0.12);
 uniform vec3 light_tint = vec3(1.0, 0.95, 0.85);
 uniform float grade = 1.0;
-uniform float contrast = 1.12;
-uniform float saturation = 1.16;
+uniform float gamma = 0.95;          // abaixo de 1 abre os meios-tons (domínio escuro)
+uniform float curve = 0.30;          // quanto do S de contraste entra
+uniform float saturation = 1.10;
 uniform float aberration = 0.0;      // em pixels da tela do jogo
 uniform vec2 px_size = vec2(0.00208, 0.0037);
 uniform vec4 wave0 = vec4(0.5, 0.5, -1.0, 0.0);   // centro (uv), raio (uv no eixo y), força
@@ -79,8 +80,11 @@ void fragment() {
 		c = texture(screen_tex, uv).rgb;
 	}
 	vec3 base = c;
-	// contraste em torno do meio-tom, saturação pela luminância
-	c = (c - 0.5) * contrast + 0.5;
+	// Curva de tons. O contraste linear em volta de 0,5 escurecia tudo o que estava
+	// abaixo do meio (num domínio escuro, a tela inteira). A gama abre os meios-tons
+	// e o S dá o contraste segurando o preto e o branco onde estão.
+	c = pow(max(c, vec3(0.0)), vec3(gamma));
+	c = mix(c, c * c * (3.0 - 2.0 * c), curve);
 	float l = dot(c, vec3(0.299, 0.587, 0.114));
 	c = mix(vec3(l), c, saturation);
 	// tons divididos: sombra puxa para o céu, luz para o sol

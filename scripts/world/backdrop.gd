@@ -171,6 +171,9 @@ func _apply_life() -> void:
 		n.set_param("glow_speed", float(cfg.get("glow_speed", 0.5)))
 		n.set_param("fog", fog)
 		n.set_param("fog_amount", float(cfg.get("fog", 0.0)))
+		# perspectiva atmosférica: quanto mais longe, menos cor
+		var away: float = {"bd_sky": 1.0, "bd_far": 1.0, "bd_mid": 0.6, "bd_near": 0.3}.get(name, 0.0)
+		n.set_param("desat", float(Depth.tom(biome_id)["fundo"][1]) * away)
 		i += 1
 	_fauna.use(biome_id, Color(_c("sky0", Palette.SKY_0).darkened(0.35), 0.75), _c("sun", Color.WHITE).lerp(_c("glow", Palette.SKY_GLOW), 0.3))
 

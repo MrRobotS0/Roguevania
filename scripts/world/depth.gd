@@ -38,6 +38,37 @@ const HEROI := 2
 const PERSONAGENS := 4       # herói e inimigos: a luz própria dos personagens
 const SHADE_DIM := 0.86      # a penumbra fica mais escura: o resto vem da luz
 
+# Tom de cada domínio. Medido nas fotos: em 7 dos 13 domínios mais de 40% da tela
+# era quase preto (Forja e Ventre, 85%), e o fundo pintado saía mais claro e mais
+# saturado que o chão onde se pisa. A regra agora é a de qualquer cena legível:
+# fundo recuado (mais apagado e menos saturado), chão em meio-tom, personagens por
+# cima de tudo.
+#   penumbra: multiplica a luz ambiente do domínio (os mais escuros sobem)
+#   fundo:    brilho do fundo pintado e quanto ele perde de cor (a camada de longe
+#             perde tudo isso; a do meio, 60%; a de perto, 30%)
+#   gama:     curva final da tela; abaixo de 1 abre os meios-tons sem lavar o preto
+#   cor:      saturação final (os domínios de uma cor só ganham menos)
+const TOM := {
+	"mar_de_cinzas":     {"penumbra": 1.00, "fundo": [0.64, 0.28], "gama": 0.96, "cor": 1.10},
+	"saloes":            {"penumbra": 1.12, "fundo": [0.62, 0.20], "gama": 0.90, "cor": 1.12},
+	"forja_rubra":       {"penumbra": 1.40, "fundo": [0.74, 0.30], "gama": 0.80, "cor": 1.00},
+	"necropole":         {"penumbra": 1.25, "fundo": [0.66, 0.22], "gama": 0.86, "cor": 1.12},
+	"torre_babel":       {"penumbra": 1.05, "fundo": [0.62, 0.26], "gama": 0.94, "cor": 1.12},
+	"jardim_primordial": {"penumbra": 1.15, "fundo": [0.62, 0.24], "gama": 0.90, "cor": 1.10},
+	"catedral":          {"penumbra": 1.05, "fundo": [0.66, 0.20], "gama": 0.94, "cor": 1.12},
+	"carcosa":           {"penumbra": 1.18, "fundo": [0.56, 0.38], "gama": 0.90, "cor": 1.00},
+	"observatorio":      {"penumbra": 1.30, "fundo": [0.86, 0.18], "gama": 0.84, "cor": 1.12},
+	"ventre":            {"penumbra": 1.35, "fundo": [0.82, 0.34], "gama": 0.82, "cor": 0.98},
+	"penhascos":         {"penumbra": 1.00, "fundo": [0.62, 0.30], "gama": 0.98, "cor": 1.08},
+	"cavernas":          {"penumbra": 1.50, "fundo": [0.74, 0.20], "gama": 0.84, "cor": 1.12},
+	"bosque":            {"penumbra": 1.05, "fundo": [0.60, 0.30], "gama": 0.94, "cor": 1.08},
+}
+const TOM_PADRAO := {"penumbra": 1.0, "fundo": [0.68, 0.2], "gama": 0.95, "cor": 1.1}
+
+
+static func tom(biome_id: String) -> Dictionary:
+	return TOM.get(biome_id, TOM_PADRAO)
+
 
 static func key_of(biome_id: String) -> Dictionary:
 	return KEYS.get(biome_id, DEFAULT)
@@ -78,5 +109,39 @@ static func shadow_side(biome_id: String) -> float:
 	return -1.0 if sin(deg_to_rad(from)) > 0.0 else 1.0
 
 
-static func shade_color(base: Color) -> Color:
-	return Color(base.r * SHADE_DIM, base.g * SHADE_DIM, base.b * SHADE_DIM, 1.0)
+static func shade_color(base: Color, biome_id := "") -> Color:
+	var k := SHADE_DIM * float(tom(biome_id)["penumbra"])
+	return Color(minf(base.r * k, 1.0), minf(base.g * k, 1.0), minf(base.b * k, 1.0), 1.0)
+
+
+# O material do corpo de um personagem: linha de luz no contorno, do lado oposto
+# ao da luz do domínio e sempre vindo de cima (shaders/personagem.gdshader).
+# `strength` 0 a 1. Sem a qualidade para isso, devolve null (desenho comum).
+const BODY := preload("res://shaders/personagem.gdshader")
+
+
+static func body_material(biome_id: String, sky: Dictionary, strength: float) -> ShaderMaterial:
+	if not Graficos.on("contorno_luz"):
+		return null
+	var m := ShaderMaterial.new()
+	m.shader = BODY
+	var from := float(key_of(biome_id)["from"])
+	var side := -1.0 if sin(deg_to_rad(from)) > 0.0 else 1.0
+	m.set_shader_parameter("luz", Vector2(side, -0.75).normalized())
+	var tone: Color = Color(sky.get("glow", Color("b8c8ff"))).lerp(Color.WHITE, 0.55)
+	m.set_shader_parameter("contorno", Color(tone.r, tone.g, tone.b, strength))
+	return m
+
+
+# A luz dos personagens: só o herói e os inimigos a recebem (máscara PERSONAGENS).
+# De frente (sem relevo), fraca e quase branca: tira os corpos do tom do cenário,
+# que é o que faz o herói vermelho aparecer num domínio vermelho.
+static func actor_light() -> DirectionalLight2D:
+	var light := DirectionalLight2D.new()
+	light.name = "LuzDosPersonagens"
+	light.color = Color(1.0, 0.97, 0.92)
+	light.energy = 0.30
+	light.height = 1.0
+	light.blend_mode = Light2D.BLEND_MODE_ADD
+	light.range_item_cull_mask = PERSONAGENS
+	return light

@@ -220,7 +220,7 @@ def main():
         atlas.paste(tira, (0, ty))
     atlas.save(os.path.join(SAIDA, "pilhas.png"))
     with open(os.path.join(SAIDA, "pilhas.json"), "w", encoding="utf-8", newline="\n") as f:
-        json.dump({"frames": QUADROS, "itens": meta}, f, indent=1, ensure_ascii=False)
+        json.dump({"frames": QUADROS, "color": True, "w": 24, "h": 24, "itens": meta}, f, indent=1, ensure_ascii=False)
         f.write("\n")
     print("%d objetos, atlas %dx%d" % (len(objetos), atlas.width, atlas.height))
 

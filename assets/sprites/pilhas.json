@@ -1,5 +1,8 @@
 {
  "frames": 32,
+ "color": true,
+ "w": 24,
+ "h": 24,
  "itens": {
   "bau": {
    "x": 0,

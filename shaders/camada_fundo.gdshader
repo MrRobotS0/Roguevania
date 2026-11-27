@@ -9,6 +9,7 @@ uniform float wave = 0.0;        // px da ondulação de água
 uniform vec4 fog : source_color = vec4(0.0);
 uniform float fog_amount = 0.0;
 uniform float glow = 0.0;        // a camada inteira acende e apaga (pulso)
+uniform float desat = 0.0;       // quanto da cor a distância leva embora
 uniform float glow_speed = 0.5;
 varying vec4 tint;
 void vertex() { tint = COLOR; }
@@ -23,6 +24,7 @@ void fragment() {
 	uv.x += off / tex_size.x;
 	uv.y += lift / tex_size.y;
 	vec4 c = texture(TEXTURE, uv);
+	c.rgb = mix(c.rgb, vec3(dot(c.rgb, vec3(0.299, 0.587, 0.114))), desat);
 	c.rgb = mix(c.rgb, fog.rgb, fog_amount * mix(0.55, 1.0, y));
 	c.rgb *= 1.0 + glow * (0.5 + 0.5 * sin(TIME * glow_speed + uv.x * 4.0));
 	COLOR = c * tint;

@@ -1306,12 +1306,12 @@ func _setup_look() -> void:
 	body = SpriteSheet.make_sprite(SHEET)
 	body.texture = SpriteSheet.lit(SHEET, _tex)
 	body.light_mask = Depth.HEROI | Depth.PERSONAGENS
+	var home := get_parent() as Level
+	body.material = Depth.body_material(room.tiles_id if room else "", home.biome.sky if home and home.biome else {}, 0.6)
 	add_child(body)
-	# espessura, giro e contorno de luz (scripts/actors/hero_volume.gd)
-	var biome_id: String = room.tiles_id if room else ""
+	# espessura e giro (scripts/actors/hero_volume.gd)
 	_volume = HeroVolume.new()
-	_volume.attach(self, body, room.shadow_side if room else 1.0,
-		Color(Color(Depth.key_of(biome_id)["color"]).lerp(Color.WHITE, 0.25), 0.5))
+	_volume.attach(self, body, room.shadow_side if room else 1.0)
 	_front = Node2D.new()
 	add_child(_front)
 	_front.draw.connect(_draw_front)

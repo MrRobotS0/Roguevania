@@ -42,6 +42,12 @@ func use_sky(sky: Dictionary) -> void:
 	_mat.set_shader_parameter("light_tint", Vector3(lt.r, lt.g, lt.b))
 
 
+# A curva e a saturação do domínio (Depth.TOM).
+func use_tone(gamma: float, saturation: float) -> void:
+	_mat.set_shader_parameter("gamma", gamma)
+	_mat.set_shader_parameter("saturation", saturation)
+
+
 func _on_wave(world_pos: Vector2, strength: float) -> void:
 	if _waves.size() >= 2:
 		_waves.pop_front()

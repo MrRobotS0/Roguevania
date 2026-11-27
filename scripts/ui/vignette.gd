@@ -13,7 +13,7 @@ func _ready() -> void:
 	if _tex == null:
 		var g := Gradient.new()
 		g.set_color(0, Color(0, 0, 0, 0))
-		g.set_color(1, Color(0.02, 0.01, 0.03, 0.55))
+		g.set_color(1, Color(0.02, 0.01, 0.03, 0.36))
 		g.add_point(0.62, Color(0, 0, 0, 0))
 		_tex = GradientTexture2D.new()
 		_tex.gradient = g

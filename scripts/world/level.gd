@@ -258,11 +258,12 @@ func _populate(with_camera: bool) -> void:
 	# O mundo fica na penumbra e as luzes (fogo, Essência, herói) devolvem a
 	# cor. Partículas e números ficam numa camada própria, fora da sombra.
 	var shade := CanvasModulate.new()
-	shade.color = Depth.shade_color(biome.sky.get("ambient", AMBIENT) if biome else AMBIENT)
+	shade.color = Depth.shade_color(biome.sky.get("ambient", AMBIENT) if biome else AMBIENT, biome.id if biome else "")
 	add_child(shade)
 	add_child(Depth.key_light(biome.id if biome else ""))
 	if Graficos.on("luz_contorno"):
 		add_child(Depth.rim_light(biome.id if biome else "", biome.sky if biome else {}))
+	add_child(Depth.actor_light())
 	var overlay := CanvasLayer.new()
 	overlay.layer = 1
 	overlay.follow_viewport_enabled = true

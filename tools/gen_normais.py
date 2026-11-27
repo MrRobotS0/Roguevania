@@ -10,6 +10,11 @@ A altura de cada pixel sai do próprio desenho:
 Blocos do chão: cada célula de 16 px abaula só nos lados abertos (a
 máscara da linha do atlas diz quais), e a textura da pedra vira detalhe.
 
+O alfa não é usado pela luz (o Godot lê só vermelho e verde), então nas folhas
+de personagem ele guarda a borda de fora de cada quadro, para a linha de luz do
+contorno (shaders/personagem.gdshader): 128 + 16 se o pixel é o primeiro da
+linha pela esquerda, + 32 pela direita, + 64 se é o primeiro da coluna por cima.
+
     python tools/gen_normais.py            # todas
     python tools/gen_normais.py wolf hero  # só estas
 
@@ -64,7 +69,22 @@ def suavizar(x: np.ndarray) -> np.ndarray:
     return (p[1:-1, 1:-1] * 4 + p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]) / 8.0
 
 
-def personagem(img: Image.Image, colorida: bool, tamanho: int) -> np.ndarray:
+def borda_de_fora(alfa: np.ndarray, fw: int, fh: int) -> np.ndarray:
+    """Alfa codificado: quem é o primeiro pixel do quadro visto da esquerda, da direita e de cima."""
+    out = np.where(alfa, 128, 0).astype(np.uint8)
+    for y0 in range(0, alfa.shape[0] - fh + 1, fh):
+        for x0 in range(0, alfa.shape[1] - fw + 1, fw):
+            cel = alfa[y0:y0 + fh, x0:x0 + fw]
+            if not cel.any():
+                continue
+            esq = cel & (np.cumsum(cel, axis=1) == 1)
+            dir_ = cel & (np.cumsum(cel[:, ::-1], axis=1)[:, ::-1] == 1)
+            cima = cel & (np.cumsum(cel, axis=0) == 1)
+            out[y0:y0 + fh, x0:x0 + fw] += (esq * 16 + dir_ * 32 + cima * 64).astype(np.uint8)
+    return out
+
+
+def personagem(img: Image.Image, colorida: bool, tamanho: int, quadro=None) -> np.ndarray:
     a = np.asarray(img.convert("RGBA"))
     alfa = a[..., 3] >= 128
     # corpo grande abaula mais devagar (um chefe de 128 px não é uma moeda)
@@ -77,7 +97,10 @@ def personagem(img: Image.Image, colorida: bool, tamanho: int) -> np.ndarray:
     else:
         # folha indexada: o vermelho é o índice da paleta, não a luz
         altura = forma
-    return normais(altura * raio, alfa, 2.6)
+    out = normais(altura * raio, alfa, 2.6)
+    if quadro:
+        out[..., 3] = borda_de_fora(alfa, quadro[0], quadro[1])
+    return out
 
 
 def blocos(img: Image.Image) -> np.ndarray:
@@ -117,8 +140,9 @@ def processar(nome: str) -> bool:
         out = blocos(img)
     elif os.path.exists(meta_path):
         m = json.load(open(meta_path, encoding="utf-8"))
-        tamanho = max(int(m.get("w", m.get("size", 32))), int(m.get("h", m.get("size", 32))))
-        out = personagem(img, bool(m.get("color", False)), tamanho)
+        fw, fh = int(m.get("w", m.get("size", 32))), int(m.get("h", m.get("size", 32)))
+        # só folha em grade de quadros (com animações) tem borda de fora por quadro
+        out = personagem(img, bool(m.get("color", False)), max(fw, fh), (fw, fh) if "anims" in m else None)
     elif nome == "props":
         out = personagem(img, True, 32)
     else:

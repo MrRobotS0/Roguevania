@@ -100,6 +100,8 @@ func _setup_sprite() -> void:
 	body.region_enabled = true
 	body.texture = SpriteSheet.lit(sheet, _tex)
 	body.light_mask = Depth.MUNDO | Depth.PERSONAGENS
+	var home := get_parent() as Level
+	body.material = Depth.body_material(room.tiles_id if room else "", home.biome.sky if home and home.biome else {}, 0.4)
 	add_child(body)
 	_attach_emission()
 	_update_sprite()

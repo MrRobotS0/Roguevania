@@ -2506,7 +2506,7 @@ func _depth() -> void:
 	level.build_generated(Catalog.biome("bosque"), 11, false)
 	await _frames(3)
 	var lights := level.find_children("*", "DirectionalLight2D", false, false)
-	_check(lights.size() == 2, "andar com %d luzes direcionais (esperado: domínio + contorno)" % lights.size())
+	_check(lights.size() == 3, "andar com %d luzes direcionais (esperado: domínio + contorno + personagens)" % lights.size())
 	_check(level.get_children().any(func(n: Node) -> bool: return n is ContactShadows), "sem sombra no chão")
 	var p := level.player
 	_check(p.body.texture is CanvasTexture, "herói desenhado sem relevo")
