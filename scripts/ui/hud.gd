@@ -514,6 +514,7 @@ const MINI_W := 100.0
 const MINI_H := 56.0
 const MINI_SCALE := 2
 const MINI_ENEMY_RANGE := 15.0   # em blocos: só os inimigos que o herói enxerga
+var _map: MapCache
 
 
 func _draw_minimap(size: Vector2) -> void:
@@ -533,34 +534,13 @@ func _draw_minimap(size: Vector2) -> void:
 	var x0 := clampi(int(me.x) - span.x / 2, 0, maxi(room.cols - span.x, 0))
 	var y0 := clampi(int(me.y) - span.y / 2, 0, maxi(room.rows - span.y, 0))
 	var origin := box.position + Vector2(maxf((MINI_W - room.cols * s) * 0.5, 0.0), maxf((MINI_H - room.rows * s) * 0.5, 0.0)).floor()
-	var light: Color = th["light"]
-	var frame: Color = th["frame"]
-	var air := Color(th["bg"], 1.0).lerp(light, 0.4)
-	air.a = 0.85
-	var rock := Color(th["dark"], 0.95)
-	var rock_dot := Color(frame.darkened(0.3), 0.9)
-	var edge := light.lerp(frame, 0.45)
-	var ground := light.lerp(frame, 0.1)
-	var plank := Color(light, 0.8)
-	for y in range(y0, mini(y0 + span.y, room.rows)):
-		for x in range(x0, mini(x0 + span.x, room.cols)):
-			if not level.seen(x, y):
-				continue
-			var at := origin + Vector2((x - x0) * s, (y - y0) * s)
-			var cell := Rect2(at, Vector2(s, s))
-			if room._solidish(x, y):
-				if not room._solidish(x, y - 1):
-					draw_rect(cell, ground)
-				elif not room._solidish(x + 1, y) or not room._solidish(x - 1, y) or not room._solidish(x, y + 1):
-					draw_rect(cell, edge)
-				else:
-					draw_rect(cell, rock)
-					if (x + y) % 3 == 0:
-						draw_rect(Rect2(at, Vector2(1, 1)), rock_dot)
-			else:
-				draw_rect(cell, air)
-				if room.cell(x, y) == Room.PLATFORM:
-					draw_rect(Rect2(at, Vector2(s, 1)), plank)
+	# o terreno já visto mora numa imagem (MapCache): aqui só entra o recorte em volta do herói
+	if _map == null or _map.level != level:
+		_map = MapCache.new()
+		_map.bind(level, HudTheme.of(level.biome.id if level.biome else ""))
+	_map.sync()
+	var shown := Vector2(mini(span.x, room.cols - x0), mini(span.y, room.rows - y0)) * s
+	draw_texture_rect_region(_map.texture, Rect2(origin, shown), Rect2(Vector2(x0, y0) * s, shown))
 	var inner := box.grow(-1.0)
 	var pulse := 0.5 + 0.5 * sin(_t * 4.0)
 	# lugares marcados

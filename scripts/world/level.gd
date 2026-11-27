@@ -30,6 +30,7 @@ var tier := 0
 var kind := "teste"          # gerada | passagem | chefe | teste
 var is_boss_room := false
 var explored := PackedByteArray()   # 1 = o herói já viu esta célula (mapa)
+var fresh := PackedInt32Array()     # as mesmas células, na ordem em que foram vistas (o minimapa pinta só as novas)
 var _lore_index := 0
 var _after_boss: Array[Node2D] = []
 var _exit_index := 0
@@ -203,32 +204,32 @@ func _make_room(b: BiomeData) -> void:
 func _populate(with_camera: bool) -> void:
 	# (o mapa já está carregado aqui: quem lê os blocos nasce agora)
 	# mato vivo no chão (atrás e na frente dos pés), onde o domínio tem
-	if biome and Grass.has_grass(biome.id) and Options.get_value("postfx"):
-		for front in [false, true]:
+	if biome and Grass.has_grass(biome.id) and Graficos.on("mato"):
+		for front in ([false, true] if Graficos.num("mato") >= 2.0 else [false]):
 			var g := Grass.new()
 			g.room = room
 			g.biome_id = biome.id
 			g.front = front
 			add_child(g)
 	# chão molhado que espelha quem está em cima
-	if biome and Reflection.is_wet(biome.id) and Options.get_value("postfx"):
+	if biome and Reflection.is_wet(biome.id) and Graficos.on("reflexo"):
 		var wet := Reflection.new()
 		wet.room = room
 		wet.biome_id = biome.id
 		add_child(wet)
 	# sombra que as tochas jogam na parede do fundo (só em lugar fechado)
-	if biome and TorchShadows.has_shadows(biome.id) and Options.get_value("postfx"):
+	if biome and TorchShadows.has_shadows(biome.id) and Graficos.on("sombra_tochas"):
 		var torch := TorchShadows.new()
 		torch.room = room
 		torch.biome_id = biome.id
 		add_child(torch)
 	# sombra de nuvens correndo pelo chão (só a céu aberto)
-	if biome and CloudShadows.has_clouds(biome.id) and Options.get_value("postfx"):
+	if biome and CloudShadows.has_clouds(biome.id) and Graficos.on("nuvens"):
 		var clouds := CloudShadows.new()
 		clouds.biome_id = biome.id
 		add_child(clouds)
 	# poças nas valas rasas, com superfície de molas
-	if biome and Puddles.has_water(biome.id) and Options.get_value("postfx"):
+	if biome and Puddles.has_water(biome.id) and Graficos.on("pocas"):
 		var water := Puddles.new()
 		water.room = room
 		water.biome_id = biome.id
@@ -238,6 +239,7 @@ func _populate(with_camera: bool) -> void:
 	player.position = room.player_spawn
 	explored.resize(room.cols * room.rows)
 	explored.fill(0)
+	fresh.clear()
 
 	var reserved: Variant = _pick_event()
 	for m in room.markers:
@@ -259,7 +261,8 @@ func _populate(with_camera: bool) -> void:
 	shade.color = Depth.shade_color(biome.sky.get("ambient", AMBIENT) if biome else AMBIENT)
 	add_child(shade)
 	add_child(Depth.key_light(biome.id if biome else ""))
-	add_child(Depth.rim_light(biome.id if biome else "", biome.sky if biome else {}))
+	if Graficos.on("luz_contorno"):
+		add_child(Depth.rim_light(biome.id if biome else "", biome.sky if biome else {}))
 	var overlay := CanvasLayer.new()
 	overlay.layer = 1
 	overlay.follow_viewport_enabled = true
@@ -609,7 +612,10 @@ func _explore(p: Vector2) -> void:
 	var cy := floori(p.y / Room.TILE)
 	for y in range(maxi(cy - SIGHT, 0), mini(cy + SIGHT + 1, room.rows)):
 		for x in range(maxi(cx - SIGHT - 4, 0), mini(cx + SIGHT + 5, room.cols)):
-			explored[y * room.cols + x] = 1
+			var i := y * room.cols + x
+			if explored[i] == 0:
+				explored[i] = 1
+				fresh.append(i)
 
 
 func seen(x: int, y: int) -> bool:

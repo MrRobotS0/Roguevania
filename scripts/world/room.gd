@@ -38,6 +38,7 @@ var spawns: Array[Dictionary]:
 				out.append({"kind": "archer", "pos": m["pos"]})
 		return out
 
+var version := 0                     # sobe quando o desenho do mapa muda (parede revelada ou quebrada)
 var _chunks := {}
 var _revealed := {}
 var _depth := PackedByteArray()      # distância (em blocos) até o ar mais próximo
@@ -164,6 +165,7 @@ func _reveal_from(start: Vector2i) -> void:
 			_chunks[key].queue_redraw()
 		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 			todo.append(c + d)
+	version += 1
 	Sfx.play("secret", -4.0)
 
 
@@ -225,6 +227,7 @@ func strike_cracked(hit: Rect2) -> bool:
 			Fx.burst((Vector2(c) + Vector2(0.5, 0.5)) * TILE, colors["stone"], 8, 120.0, 0.6, 400.0, 3.0, 40.0)
 		(w["body"] as Node).queue_free()
 		_cracked.erase(w)
+		version += 1
 		_build_depth()
 		for c in _chunks.values():
 			c.queue_redraw()
