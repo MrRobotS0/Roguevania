@@ -12,6 +12,7 @@ var ambience: Ambience
 var weather: Weather
 var post_fx: PostFx
 var foreground: Foreground
+var front_dust: FrontDust
 var curtain: Curtain
 var map_view: MapView
 var options_screen: OptionsScreen
@@ -44,6 +45,8 @@ func _ready() -> void:
 	add_child(front_scenery)
 	foreground = Foreground.new()
 	front_scenery.add_child(foreground)
+	front_dust = FrontDust.new()
+	front_scenery.add_child(front_dust)
 
 	# Brilho (bloom) no que é muito claro: fogo, luz do Imperador, Essência.
 	# Vale para o mundo e o clima; o HUD (camada 10) fica fora.
@@ -143,6 +146,9 @@ func _use_biome(b: BiomeData) -> void:
 	post_fx.use_tone(float(tone["gama"]), float(tone["cor"]))
 	foreground.style = b.backdrop
 	foreground.ink = b.ink
+	foreground.biome_id = b.id
+	var air: Dictionary = Ambience.LOOK.get(b.id, {})
+	front_dust.tint = air.get("mote", Color(1.0, 0.9, 0.75))
 
 
 # Começar outra partida com uma salva esperando: pergunta antes de jogar fora.

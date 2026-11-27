@@ -703,6 +703,25 @@ static func _load_props() -> void:
 		_props_tex = SpriteSheet.lit("decor", load(path))
 
 
+# Para quem desenha fora da sala (as silhuetas do primeiro plano).
+static func prop_names(biome_id: String, kind: String) -> Array:
+	_load_props()
+	var domains: Dictionary = _props.get("dominios", {})
+	var lists: Dictionary = domains.get(biome_id, {})
+	return lists.get(kind, [])
+
+
+static func prop_item(name: String) -> Dictionary:
+	_load_props()
+	var items: Dictionary = _props.get("itens", {})
+	return items.get(name, {})
+
+
+static func props_texture() -> Texture2D:
+	_load_props()
+	return _props_tex
+
+
 # O desenho do enfeite `kind` nesta célula, ou {} se o domínio não tem arte para ele.
 func _prop_art(kind: String, hv: int) -> Dictionary:
 	_load_props()

@@ -2,17 +2,34 @@ class_name Foreground
 extends Node2D
 
 # Silhuetas que passam NA FRENTE da câmera, mais rápido que o mundo
-# (paralaxe > 1): pedra pendurada no alto, pano rasgado, entulho embaixo.
+# (paralaxe > 1): pedra pendurada no alto, o que o domínio pendura do teto
+# (ou pano rasgado), entulho embaixo.
 # Dão profundidade sem tapar o jogo: ficam nas bordas e bem espaçadas.
-# A borda de cima pega um fio da luz do céu, senão viram borrão.
-# Coordenadas de tela (CanvasLayer).
+# São feitas da pedra do próprio domínio (o atlas da parede de fundo, com a
+# beira quebrada) quase sem luz: o que está perto de quem olha é escuro, mas
+# tem matéria. Domínio sem esse atlas cai nos blocos chapados de antes, com a
+# borda de cima pegando um fio da luz do céu.
+# Coordenadas de tela (CanvasLayer): nenhuma luz do mundo chega aqui.
 
 const SPEED := 1.45
 const SPACING := 380.0
-const RIM := 0.18          # quanto a borda de cima clareia
+const RIM := 0.18          # quanto a borda de cima clareia (blocos chapados)
+const TILE := 16
+const DARK := 0.3          # quanto da cor da pedra sobra na silhueta
 
 var style := ""
 var ink := Color("0e0b0d")
+var biome_id := "":
+	set(v):
+		if v == biome_id:
+			return
+		biome_id = v
+		var path := "res://assets/sprites/parede_%s.png" % v
+		_stone = load(path) if v != "" and ResourceLoader.exists(path) else null
+		_hanging = Room.prop_names(v, "banner") + Room.prop_names(v, "chain")
+
+var _stone: Texture2D
+var _hanging: Array = []
 
 
 func _process(_delta: float) -> void:
@@ -26,6 +43,7 @@ func _draw() -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null:
 		return
+	var textured := _stone != null and Graficos.on("primeiro_plano")
 	var scroll := cam.get_screen_center_position().x * SPEED
 	var first := floori(scroll / SPACING) - 1
 	for i in range(first, first + int(size.x / SPACING) + 3):
@@ -33,12 +51,73 @@ func _draw() -> void:
 		var seed := absi(i * 7919)
 		match seed % 3:
 			0:
-				_overhang(x, seed)
+				if textured:
+					_stone_overhang(x, seed)
+				else:
+					_overhang(x, seed)
 			1:
-				_drapes(x, seed)
+				if textured and not _hanging.is_empty():
+					_hangers(x, seed)
+				else:
+					_drapes(x, seed)
 			_:
-				_rubble(x, size.y, seed)
+				if textured:
+					_stone_rubble(x, size.y, seed)
+				else:
+					_rubble(x, size.y, seed)
 
+
+func _tint() -> Color:
+	return Color(DARK, DARK, DARK * 1.12).lerp(ink, 0.25)
+
+
+# Um bloco do atlas da parede: a linha é a máscara dos lados abertos (1 em cima,
+# 2 à direita, 4 embaixo, 8 à esquerda), onde a beira vem quebrada.
+func _block(x: float, y: float, mask: int, seed: int) -> void:
+	draw_texture_rect_region(_stone, Rect2(x, y, TILE, TILE), Rect2((seed & 3) * TILE, mask * TILE, TILE, TILE), _tint())
+
+
+# Pedra pendurada do alto: colunas de blocos, mais compridas no meio.
+func _stone_overhang(x: float, seed: int) -> void:
+	var cols := 6 + seed % 3
+	var hang: Array[int] = []
+	for c in cols:
+		var t := (c + 0.5) / cols
+		hang.append(1 + int(sin(t * PI) * 1.7 + float((seed >> (c % 6)) & 1) * 0.6))
+	for c in cols:
+		for r in hang[c]:
+			var mask := (4 if r == hang[c] - 1 else 0) \
+				| (8 if c == 0 or hang[c - 1] <= r else 0) \
+				| (2 if c == cols - 1 or hang[c + 1] <= r else 0)
+			_block(x + c * TILE, -6.0 + r * TILE, mask, seed + c * 3 + r)
+
+
+# Entulho no canto de baixo: montes de um ou dois blocos.
+func _stone_rubble(x: float, bottom: float, seed: int) -> void:
+	var cols := 5 + seed % 3
+	var tall: Array[int] = []
+	for c in cols:
+		tall.append(1 + ((seed >> (c % 5)) & 1))
+	for c in cols:
+		for r in tall[c]:
+			var mask := (1 if r == tall[c] - 1 else 0) \
+				| (8 if c == 0 or tall[c - 1] <= r else 0) \
+				| (2 if c == cols - 1 or tall[c + 1] <= r else 0)
+			_block(x + c * TILE, bottom + 5.0 - (r + 1) * TILE, mask, seed + c * 5 + r)
+
+
+# O que o domínio pendura do teto (estalactite, raiz, presa, lanterna), em fila.
+func _hangers(x: float, seed: int) -> void:
+	var tex := Room.props_texture()
+	if tex == null:
+		return
+	for k in 3:
+		var art := Room.prop_item(String(_hanging[(seed + k) % _hanging.size()]))
+		if art.is_empty():
+			continue
+		var size := Vector2(float(art["w"]), float(art["h"]))
+		var at := Vector2(x + k * 34.0 + float((seed >> k) % 9), -2.0 - float((seed >> (k + 2)) % 5))
+		draw_texture_rect_region(tex, Rect2(at, size), Rect2(Vector2(float(art["x"]), float(art["y"])), size), _tint())
 
 
 # Rocha pendurada do alto, com a ponta irregular.

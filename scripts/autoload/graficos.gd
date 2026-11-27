@@ -37,6 +37,9 @@ const TABLE := {
 	"aderecos": [true, true, true],          # enfeites do cenário com arte (senão, o traço antigo)
 	"vento": [false, true, true],            # o que está pendurado balança
 	"halos": [false, true, true],            # halo nas velas, lanternas e fornalhas do cenário
+	"primeiro_plano": [true, true, true],    # silhuetas da frente feitas da pedra do domínio (senão, blocos chapados)
+	"poeira_frente": [0, 8, 14],             # discos de poeira fora de foco na frente da câmera
+	"especular": [false, true, true],        # reflexo da luz no gelo, na pedra molhada, no metal e na carne
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
@@ -45,7 +48,7 @@ const TABLE := {
 	"ar": [30, 70, 70],                      # partículas do ar de cada domínio
 }
 # o que "efeitos de tela" desligado apaga, seja qual for o nível
-const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato"]
+const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato", "poeira_frente", "halos"]
 
 const WINDOW := 4.0          # s de jogo por medição
 const SLOW_FPS := 50.0       # abaixo disso a janela conta como lenta
