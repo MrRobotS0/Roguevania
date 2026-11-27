@@ -95,8 +95,10 @@ func load_grid(lines: PackedStringArray) -> void:
 	_build_collision()
 	_build_cracked()
 	_build_depth()
+	_build_wall()
 	_build_decor()
 	_build_chunks()
+	_build_core()
 
 
 func size_px() -> Vector2:
@@ -166,6 +168,11 @@ func _reveal_from(start: Vector2i) -> void:
 		for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 			todo.append(c + d)
 	version += 1
+	_build_wall()
+	_build_core()
+	for n in get_children():
+		if n is Chunk and ((n as Chunk).shade or (n as Chunk).wall):
+			n.queue_redraw()
 	Sfx.play("secret", -4.0)
 
 
@@ -229,6 +236,8 @@ func strike_cracked(hit: Rect2) -> bool:
 		_cracked.erase(w)
 		version += 1
 		_build_depth()
+		_build_wall()
+		_build_core()
 		for c in _chunks.values():
 			c.queue_redraw()
 		for c in get_children():
@@ -328,9 +337,12 @@ class Chunk:
 	var area: Rect2i
 	var back := false
 	var shade := false
+	var wall := false
 
 	func _draw() -> void:
-		if shade:
+		if wall:
+			room.draw_wall(self, area)
+		elif shade:
 			room.draw_depth(self, area)
 		elif back:
 			room.draw_decor(self, area)
@@ -434,6 +446,119 @@ func _build_depth() -> void:
 
 func _air(x: int, y: int) -> bool:
 	return cell(x, y) == "."
+
+
+# --- o miolo da rocha -------------------------------------------------------------
+# Bloco enterrado escurecia em degraus de 16 px, e a parede ficava em faixas. Agora
+# o escuro é uma textura de 1 pixel por bloco, esticada com filtro suave por cima
+# dos blocos: começa pouco abaixo da superfície e fecha em três blocos, sem degrau.
+# O miolo fica calmo; a textura da pedra aparece só na casca, onde o olho precisa.
+const CORE_FROM := 1.4       # blocos de profundidade onde o escuro começa
+const CORE_FULL := 4.4       # onde chega ao máximo
+const CORE_DARK := 0.86
+var _core: Sprite2D
+
+
+func _rocky(x: int, y: int) -> bool:
+	return _solidish(x, y) and not _revealed.has(Vector2i(x, y))
+
+
+func _build_core() -> void:
+	if cols == 0 or rows == 0:
+		return
+	if _core == null:
+		_core = Sprite2D.new()
+		_core.centered = false
+		_core.scale = Vector2(TILE, TILE)
+		_core.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		# o escuro não recebe luz: tocha nenhuma acende o que está dentro da pedra
+		var mat := CanvasItemMaterial.new()
+		mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_core.material = mat
+		add_child(_core)
+	var ink: Color = Color(colors["shadow"]).darkened(0.45)
+	var bytes := PackedByteArray()
+	bytes.resize(cols * rows * 4)
+	for y in rows:
+		for x in cols:
+			var i := (y * cols + x) * 4
+			var k := 0.0
+			if _rocky(x, y):
+				k = clampf((depth(x, y) - CORE_FROM) / (CORE_FULL - CORE_FROM), 0.0, 1.0)
+			bytes[i] = ink.r8
+			bytes[i + 1] = ink.g8
+			bytes[i + 2] = ink.b8
+			bytes[i + 3] = int(k * k * (3.0 - 2.0 * k) * CORE_DARK * 255.0)
+	_core.texture = ImageTexture.create_from_image(Image.create_from_data(cols, rows, false, Image.FORMAT_RGBA8, bytes))
+
+
+# --- parede de fundo: onde ela existe ----------------------------------------------
+# Regras em BackWall. Aqui só a máscara: a parede cobre as células abertas que ficam
+# a poucos blocos da pedra (corredores, reentrâncias, o pé dos paredões).
+var wall := PackedByteArray()        # 1 = há parede de fundo atrás desta célula
+
+
+func wall_at(x: int, y: int) -> bool:
+	return x >= 0 and y >= 0 and x < cols and y < rows and wall[y * cols + x] == 1
+
+
+func _build_wall() -> void:
+	wall = PackedByteArray()
+	wall.resize(cols * rows)
+	var reach := BackWall.reach(tiles_id)
+	if reach.y <= 0:
+		return
+	# distância de cada célula aberta até a pedra (em largura, saindo da pedra)
+	var dist := PackedByteArray()
+	dist.resize(cols * rows)
+	dist.fill(99)
+	var todo: Array[Vector2i] = []
+	for y in rows:
+		for x in cols:
+			if _rocky(x, y):
+				dist[y * cols + x] = 0
+				todo.append(Vector2i(x, y))
+	var head := 0
+	while head < todo.size():
+		var c := todo[head]
+		head += 1
+		var d := dist[c.y * cols + c.x] + 1
+		if d > reach.y:
+			continue
+		for n: Vector2i in [Vector2i(c.x + 1, c.y), Vector2i(c.x - 1, c.y), Vector2i(c.x, c.y + 1), Vector2i(c.x, c.y - 1)]:
+			if n.x < 0 or n.y < 0 or n.x >= cols or n.y >= rows:
+				continue
+			if dist[n.y * cols + n.x] > d:
+				dist[n.y * cols + n.x] = d
+				todo.append(n)
+	for y in rows:
+		for x in cols:
+			var d := dist[y * cols + x]
+			if d == 0 or d > reach.y:
+				continue
+			# o alcance muda devagar ao longo do mapa: a beira da parede não sai reta
+			if d <= reach.x + roundi(_smooth(x * 0.11, y * 0.17) * (reach.y - reach.x)):
+				wall[y * cols + x] = 1
+
+
+# Ruído suave entre 0 e 1 (os mesmos números do _hash, interpolados).
+func _smooth(u: float, v: float) -> float:
+	var x0 := floori(u)
+	var y0 := floori(v)
+	var fx := u - x0
+	var fy := v - y0
+	fx = fx * fx * (3.0 - 2.0 * fx)
+	fy = fy * fy * (3.0 - 2.0 * fy)
+	var a := _hash(x0, y0) / 255.0
+	var b := _hash(x0 + 1, y0) / 255.0
+	var c := _hash(x0, y0 + 1) / 255.0
+	var d := _hash(x0 + 1, y0 + 1) / 255.0
+	return lerpf(lerpf(a, b, fx), lerpf(c, d, fx), fy)
+
+
+# A parede em si é desenhada na etapa da profundidade.
+func draw_wall(_ci: CanvasItem, _area: Rect2i) -> void:
+	pass
 
 
 func _build_decor() -> void:
@@ -599,10 +724,21 @@ func draw_depth(ci: CanvasItem, area: Rect2i) -> void:
 			var r := Rect2(Vector2(x, y) * TILE, Vector2(TILE, 6 if plank else TILE))
 			# sombra: só do que encosta no ar (dentro da rocha não se vê)
 			if not (_blocky(x - 1, y) and _blocky(x + 1, y) and _blocky(x, y - 1) and _blocky(x, y + 1)):
-				ci.draw_rect(Rect2(r.position + o2, r.size), far)
-				ci.draw_rect(Rect2(r.position + o1, r.size), near)
+				_shadow_on_wall(ci, Rect2(r.position + o2, r.size), far)
+				_shadow_on_wall(ci, Rect2(r.position + o1, r.size), near)
 			if not _blocky(x, y - 1):
 				_top_face(ci, x, y, plank)
+
+
+# A sombra de um bloco só aparece onde há parede de fundo para recebê-la. No vão
+# aberto, atrás do bloco está o céu a quilômetros: sombra ali parecia recorte de papel.
+func _shadow_on_wall(ci: CanvasItem, r: Rect2, color: Color) -> void:
+	var y1 := floori((r.end.y - 0.01) / TILE)
+	var x1 := floori((r.end.x - 0.01) / TILE)
+	for cy in range(floori(r.position.y / TILE), y1 + 1):
+		for cx in range(floori(r.position.x / TILE), x1 + 1):
+			if wall_at(cx, cy):
+				ci.draw_rect(r.intersection(Rect2(cx * TILE, cy * TILE, TILE, TILE)), color)
 
 
 # A face de cima: a primeira linha do próprio bloco esticada e mais clara,
@@ -615,7 +751,7 @@ func _top_face(ci: CanvasItem, x: int, y: int, plank: bool) -> void:
 	var mask := 1 | (0 if _solidish(x + 1, y) else 2) | (0 if _solidish(x - 1, y) else 8)
 	var row := ATLAS_PLANK if plank else mask
 	var src := Rect2((_hash(x, y) % 4) * TILE, row * TILE + 1, TILE, 2)
-	var lift := Color(1.4, 1.36, 1.3, 1.0)
+	var lift := Color(1.16, 1.13, 1.08, 1.0)
 	ci.draw_texture_rect_region(_atlas, Rect2(p + Vector2(0, -TOP_FACE), Vector2(TILE, TOP_FACE)), src, lift)
 	var edge := Color(1, 1, 1, 0.32)
 	ci.draw_rect(Rect2(p + Vector2(0, -1), Vector2(TILE, 1)), edge)
@@ -689,13 +825,11 @@ func _draw_stone(ci: CanvasItem, x: int, y: int) -> void:
 	var hv := _hash(x, y)
 
 	if buried:
-		# quanto mais fundo na rocha, mais escuro
-		var k := clampf((depth(x, y) - 2) / 4.0, 0.0, 1.0)
 		# osso (variação 1) e veio de vidro (2) são raros; o resto é rocha
 		var col: int = [0, 3, 4, 5, 6, 7][hv % 6]
 		if hv < 14:
 			col = 1 + hv % 2
-		_tile(ci, x, y, ATLAS_BURIED, col, Color.WHITE.lerp(Color(0.45, 0.42, 0.45), k))
+		_tile(ci, x, y, ATLAS_BURIED, col)
 		return
 
 	var mask := (1 if open_up else 0) | (2 if open_right else 0) | (4 if open_down else 0) | (8 if open_left else 0)
