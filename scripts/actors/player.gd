@@ -1533,11 +1533,11 @@ func _draw_slash() -> void:
 	if facing < 0:
 		for i in points.size():
 			points[i] = Vector2(-points[i].x, points[i].y)
-	pen.draw_colored_polygon(points, color)
+	Pixel.polygon(pen, points, color)
 	var edge := Palette.FLASH
 	edge.a = 0.9 * fade
 	var outer := points.slice(0, 3) if shape in ["thrust", "jab"] else points.slice(0, 9)
-	pen.draw_polyline(outer, edge, 1.0)
+	Pixel.polyline(pen, outer, edge)
 
 
 func _draw_debug() -> void:

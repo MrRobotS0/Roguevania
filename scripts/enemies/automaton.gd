@@ -56,7 +56,7 @@ func _draw() -> void:
 	if state == "aim" and alive():
 		var c := Palette.GLASS
 		c.a = 0.25 + 0.5 * state_time / 0.8
-		draw_line(Vector2(facing * 6, -17), Vector2(facing * 260, -17), c, 1.0)
+		Pixel.line(self, Vector2(facing * 6, -17), Vector2(facing * 260, -17), c)
 	super._draw()
 
 

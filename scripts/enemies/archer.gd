@@ -134,7 +134,7 @@ func _draw() -> void:
 		var from := bow() - global_position
 		var to := _target - global_position
 		if not locked or int(state_time * 20.0) % 2 == 0:
-			draw_line(from, to, c, 2.0 if locked else 1.0)
+			Pixel.line(self, from, to, c, 2 if locked else 1)
 		# o tiro carregando no arco: cresce até soltar
 		var k := clampf(state_time / aim_time, 0.0, 1.0)
 		var r := roundf(1.0 + k * 3.0)

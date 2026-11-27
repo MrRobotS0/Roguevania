@@ -58,5 +58,5 @@ func _draw() -> void:
 	var glow := c
 	glow.a = 0.3
 	draw_rect(Rect2(-6, -28 + bob, 12, 12), glow)
-	draw_colored_polygon(PackedVector2Array([Vector2(0, -27 + bob), Vector2(4, -22 + bob),
+	Pixel.polygon(self, PackedVector2Array([Vector2(0, -27 + bob), Vector2(4, -22 + bob),
 		Vector2(0, -16 + bob), Vector2(-4, -22 + bob)]), c)

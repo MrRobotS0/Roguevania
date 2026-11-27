@@ -85,7 +85,7 @@ func _draw() -> void:
 		var c := Palette.DANGER if locked else Palette.GLASS
 		c.a = 0.3 + 0.5 * state_time / AIM
 		var from := center() - global_position
-		draw_line(from + _aim * 8.0, from + _aim * 260.0, c, 1.0)
+		Pixel.line(self, from + _aim * 8.0, from + _aim * 260.0, c)
 	super._draw()
 
 

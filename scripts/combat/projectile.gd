@@ -206,12 +206,12 @@ func _draw_shape(off: Vector2) -> void:
 	var dir := velocity.normalized() if velocity.length() > 1.0 else Vector2.RIGHT
 	match style:
 		"arrow":
-			draw_line(-dir * 9.0, Vector2.ZERO, _c(color), 1.0)
-			draw_line(-dir * 9.0, -dir * 7.0 + dir.orthogonal() * 2.0, _c(Palette.UI_DIM), 1.0)
+			Pixel.line(self, -dir * 9.0, Vector2.ZERO, _c(color))
+			Pixel.line(self, -dir * 9.0, -dir * 7.0 + dir.orthogonal() * 2.0, _c(Palette.UI_DIM))
 			draw_rect(Rect2(dir - Vector2(1, 1), Vector2(2, 2)), _c(Palette.BLADE))
 		"shard":
 			var side := dir.orthogonal() * 2.0
-			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), _c(Palette.GLASS))
+			Pixel.polygon(self, PackedVector2Array([dir * 5.0, side, -dir * 4.0, -side]), _c(Palette.GLASS))
 		"glyph":
 			var c := _c(color)
 			var turn := _spin * 0.5
@@ -221,8 +221,8 @@ func _draw_shape(off: Vector2) -> void:
 			draw_rect(Rect2(-1, -1, 3, 3), _c(Palette.FLASH))
 		"thorn":
 			var side := dir.orthogonal() * 1.5
-			draw_colored_polygon(PackedVector2Array([dir * 5.0, side, -dir * 3.0, -side]), _c(Color("c8e07a")))
-			draw_line(-dir * 3.0, -dir * 6.0, _c(Color("4a7a3a")), 1.0)
+			Pixel.polygon(self, PackedVector2Array([dir * 5.0, side, -dir * 3.0, -side]), _c(Color("c8e07a")))
+			Pixel.line(self, -dir * 3.0, -dir * 6.0, _c(Color("4a7a3a")))
 		"star":
 			var c := _c(color)
 			draw_rect(Rect2(-1, -3, 3, 7), c)
@@ -255,7 +255,7 @@ func _draw_shape(off: Vector2) -> void:
 					draw_rect(Rect2(p.round() - Vector2(1, 1), Vector2(2, 2)), _c(Color("8a8a96") if i % 2 else Color("5a5a62")))
 			draw_rect(Rect2(-3, -2, 5, 4), _c(Color("c9c2b0")))
 		"javelin":
-			draw_line(-dir * 16.0, Vector2.ZERO, _c(Palette.GLASS), 2.0)
+			Pixel.line(self, -dir * 16.0, Vector2.ZERO, _c(Palette.GLASS), 2)
 			draw_rect(Rect2(dir * 2.0 - Vector2(2, 2), Vector2(3, 3)), _c(Palette.FLASH))
 		"bomb":
 			draw_rect(Rect2(-3, -3, 6, 6), _c(Palette.STONE_TOP))

@@ -140,7 +140,7 @@ func _draw() -> void:
 			var rise := minf((_t - delay) / 0.06, 1.0)
 			var glass := _tint()
 			glass.a = 0.4 + 0.6 * fade
-			draw_colored_polygon(PackedVector2Array([
+			Pixel.polygon(self, PackedVector2Array([
 				Vector2(-width * 0.5, 0), Vector2(-2, -height * rise), Vector2(1, -height * 0.8 * rise),
 				Vector2(width * 0.5, 0)]), glass)
 
