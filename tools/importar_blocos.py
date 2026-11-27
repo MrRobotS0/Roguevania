@@ -27,16 +27,19 @@ T = 16
 
 # domínio: (tileset, bloco x, y, w, h, matiz a girar em graus, saturação,
 #           altura da superfície — o miolo é lido abaixo dela —, brilho)
+# O bloco tem que começar na primeira linha DESENHADA: na Torre e na Catedral ele
+# começava 17 linhas acima da alvenaria, e a face de cima do chão e as plataformas
+# saíam transparentes no jogo (o herói andava 8 px acima do chão que se via).
 SETS = {
     "mar_de_cinzas": ("gothicvania-rocky-pass-environment/**/PNG/tileset.png", (48, 16, 32, 64), 0, 1.0, 14, 1.0),
     "saloes": ("fort-of-illusion/**/Layers/tileset.png", (48, 48, 96, 60), 0, 1.0, 8, 1.0),
     "forja_rubra": ("gothicvania-patreons-collection/**/Gothic-Castle-Files/PNG/layers/gothic-castle-tileset.png", (32, 32, 32, 32), -50, 1.4, 6, 1.0),
-    "torre_babel": ("gothicvania-church-pack/**/ENVIRONMENT/tileset.png", (0, 151, 48, 40), 120, 0.55, 8, 0.72),
+    "torre_babel": ("gothicvania-church-pack/**/ENVIRONMENT/tileset.png", (0, 168, 48, 24), 120, 0.55, 8, 0.72),
     "jardim_primordial": ("gotthicvania-swamp/**/Evironment/tileset.png", (32, 4, 76, 56), 0, 1.0, 18, 1.0),
     "carcosa": ("gothicvania-cemetery-pack/**/PNG/Environment/tileset.png", (64, 56, 64, 40), -20, 1.1, 16, 1.0),
     "observatorio": ("gothicvania-junk-wasteland-environment/**/layers/tileset.png", (64, 0, 32, 62), 0, 1.0, 20, 1.0),
     "necropole": ("gothicvania-cemetery-pack/**/PNG/Environment/tileset.png", (64, 56, 64, 40), 200, 0.3, 16, 0.9),
-    "catedral": ("gothicvania-church-pack/**/ENVIRONMENT/tileset.png", (0, 151, 48, 40), 0, 0.9, 8, 0.85),
+    "catedral": ("gothicvania-church-pack/**/ENVIRONMENT/tileset.png", (0, 168, 48, 24), 0, 0.9, 8, 0.85),
     "ventre": ("living-tissue-platform-tileset/**/layers/tileset.png", (48, 108, 128, 64), 0, 1.0, 14, 1.0),
     "penhascos": ("magic-cliffs-environment/**/PNG/tileset.png", (48, 188, 64, 80), 0, 1.0, 16, 1.0),
     "cavernas": ("cavern-tile-set/**/layers/tiles.png", (8, 238, 96, 48), 0, 1.0, 10, 1.0),
