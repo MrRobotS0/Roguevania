@@ -170,16 +170,35 @@ func _draw() -> void:
 			continue
 		var h := _h[i]
 		var b := clampf(_bend[i], -h * 0.85, h * 0.85)
-		var base := Vector2(x, _y[i] + 0.5)
-		# o fio dobra mais no alto: base reta, meio pouco, ponta muito
-		var mid := Vector2(x + roundf(b * 0.3), base.y - roundf(h * 0.55))
-		var tip := Vector2(x + roundf(b), base.y - h + absf(roundf(b * 0.3)))
 		var s := _shade[i]
 		var dark := _colors[0].lerp(_colors[1], s * 0.3)
 		var light := _colors[1 + mini(s, 1)]
-		pts.append(base); pts.append(mid)
-		cols.append(dark)
-		pts.append(mid); pts.append(tip)
-		cols.append(light)
+		# O fio é feito de colunas de 1 pixel do jogo, em degraus: pé reto, meio um pouco
+		# para o lado, ponta mais. Dobra em passos inteiros (é pixel art, não linha fina:
+		# antes saía um risco de 1 pixel da TELA, um quarto do pixel do jogo).
+		var foot := _y[i] + 1.0
+		var y_mid := foot - roundf(h * 0.5)
+		var y_top := foot - roundf(h * 0.8)
+		var y_tip := foot - h + absf(roundf(b * 0.3))
+		var o_mid := roundf(b * 0.3)
+		var o_tip := roundf(b)
+		_run(pts, cols, x, foot, y_mid, dark)
+		_run(pts, cols, x + o_mid, y_mid, y_top, light if absf(o_mid) > 0.5 else dark)
+		if y_tip < y_top:
+			# dobrou muito: a ponta deita, ligada por um degrau horizontal
+			if absf(o_tip - o_mid) > 1.5:
+				pts.append(Vector2(x + minf(o_mid, o_tip) - 0.5, y_top + 0.5))
+				pts.append(Vector2(x + maxf(o_mid, o_tip) + 0.5, y_top + 0.5))
+				cols.append(light)
+			_run(pts, cols, x + o_tip, y_top, y_tip, light)
 	if not pts.is_empty():
-		draw_multiline_colors(pts, cols, -1.0)
+		draw_multiline_colors(pts, cols, 1.0)
+
+
+# Uma coluna vertical de 1 px de largura, de `from` (embaixo) até `to` (em cima).
+func _run(pts: PackedVector2Array, cols: PackedColorArray, x: float, from: float, to: float, color: Color) -> void:
+	if from - to < 0.5:
+		return
+	pts.append(Vector2(x, from))
+	pts.append(Vector2(x, to))
+	cols.append(color)
