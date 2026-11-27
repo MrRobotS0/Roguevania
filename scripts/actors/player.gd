@@ -144,7 +144,7 @@ func _ready() -> void:
 	add_to_group("player")
 	if skin == null:
 		skin = Meta.current_skin()
-	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.6, Vector2(0, -12)).range_item_cull_mask = Depth.MUNDO
+	Glow.attach(self, Color(1.0, 0.86, 0.68), 136.0, 0.6, Vector2(0, -12)).range_item_cull_mask = Depth.MUNDO | Depth.PAREDE
 	_setup_look()
 
 

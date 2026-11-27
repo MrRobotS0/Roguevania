@@ -136,7 +136,7 @@ def processar(nome: str) -> bool:
         return False
     img = Image.open(png)
     meta_path = os.path.join(RAIZ, nome + ".json")
-    if nome.startswith("tiles"):
+    if nome.startswith(("tiles", "parede_")):
         out = blocos(img)
     elif os.path.exists(meta_path):
         m = json.load(open(meta_path, encoding="utf-8"))

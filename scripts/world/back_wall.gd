@@ -21,10 +21,10 @@ const WALLS := {
 	"jardim_primordial": {"reach": [1, 2], "tone": 0.48},
 	"catedral":          {"reach": [3, 4], "tone": 0.44},
 	"carcosa":           {"reach": [2, 3], "tone": 0.42},
-	"observatorio":      {"reach": [1, 2], "tone": 0.50},
+	"observatorio":      {"reach": [1, 2], "tone": 0.62},
 	"ventre":            {"reach": [3, 4], "tone": 0.50},
 	"penhascos":         {"reach": [0, 1], "tone": 0.50},
-	"cavernas":          {"reach": [3, 5], "tone": 0.55},
+	"cavernas":          {"reach": [3, 5], "tone": 0.74},
 	"bosque":            {"reach": [0, 1], "tone": 0.50},
 }
 

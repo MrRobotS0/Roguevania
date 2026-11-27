@@ -386,6 +386,15 @@ func _build_chunks() -> void:
 	for cy in range(0, rows, CHUNK):
 		for cx in range(0, cols, CHUNK):
 			var area := Rect2i(cx, cy, mini(CHUNK, cols - cx), mini(CHUNK, rows - cy))
+			if _wall_atlas != null:
+				var back_wall := Chunk.new()
+				back_wall.room = self
+				back_wall.area = area
+				back_wall.wall = true
+				back_wall.z_index = -2
+				back_wall.material = _wall_mat
+				back_wall.light_mask = Depth.PAREDE if Graficos.on("parede_luz") else 0
+				add_child(back_wall)
 			var behind := Chunk.new()
 			behind.room = self
 			behind.area = area
@@ -508,6 +517,7 @@ func _build_wall() -> void:
 	var reach := BackWall.reach(tiles_id)
 	if reach.y <= 0:
 		return
+	_load_wall()
 	# distância de cada célula aberta até a pedra (em largura, saindo da pedra)
 	var dist := PackedByteArray()
 	dist.resize(cols * rows)
@@ -539,6 +549,7 @@ func _build_wall() -> void:
 			# o alcance muda devagar ao longo do mapa: a beira da parede não sai reta
 			if d <= reach.x + roundi(_smooth(x * 0.11, y * 0.17) * (reach.y - reach.x)):
 				wall[y * cols + x] = 1
+	_build_occlusion(dist)
 
 
 # Ruído suave entre 0 e 1 (os mesmos números do _hash, interpolados).
@@ -556,9 +567,68 @@ func _smooth(u: float, v: float) -> float:
 	return lerpf(lerpf(a, b, fx), lerpf(c, d, fx), fy)
 
 
-# A parede em si é desenhada na etapa da profundidade.
-func draw_wall(_ci: CanvasItem, _area: Rect2i) -> void:
-	pass
+# --- parede de fundo: o desenho ---------------------------------------------------
+# O atlas vem de tools/gen_paredes.py (a pedra enterrada do domínio com a beira
+# quebrada, nas mesmas 16 máscaras de vizinhança dos blocos). O tom, a perda de cor
+# e a oclusão são do shader (shaders/parede_fundo.gdshader).
+const WALL_SHADER := preload("res://shaders/parede_fundo.gdshader")
+const OCCLUSION := [255, 150, 56, 12]    # quanto escurece a 0, 1, 2 e 3 blocos da pedra
+
+var _wall_atlas: Texture2D
+var _wall_mat: ShaderMaterial
+
+
+func _load_wall() -> void:
+	if _wall_mat != null or tiles_id == "" or not Graficos.on("parede"):
+		return
+	var path := "res://assets/sprites/parede_%s.png" % tiles_id
+	if not ResourceLoader.exists(path):
+		return
+	_wall_atlas = SpriteSheet.lit("parede_" + tiles_id, load(path))
+	_wall_mat = ShaderMaterial.new()
+	_wall_mat.shader = WALL_SHADER
+	_wall_mat.set_shader_parameter("tom", BackWall.tone(tiles_id))
+	_wall_mat.set_shader_parameter("sem_cor", 0.3)
+	_wall_mat.set_shader_parameter("nevoa", Color(Color(colors["shadow"]), 0.14))
+	_wall_mat.set_shader_parameter("forca", 0.55 if Graficos.on("oclusao") else 0.0)
+
+
+# 1 pixel por bloco: a pedra vale tudo, a parede encostada nela menos, e some em
+# três blocos. O filtro linear do shader faz o degradê.
+func _build_occlusion(dist: PackedByteArray) -> void:
+	if _wall_mat == null or cols == 0 or rows == 0:
+		return
+	var bytes := PackedByteArray()
+	bytes.resize(cols * rows)
+	for i in cols * rows:
+		var d := dist[i]
+		bytes[i] = OCCLUSION[d] if d < OCCLUSION.size() else 0
+	var img := Image.create_from_data(cols, rows, false, Image.FORMAT_R8, bytes)
+	_wall_mat.set_shader_parameter("oclusao", ImageTexture.create_from_image(img))
+	_wall_mat.set_shader_parameter("sala", Vector2(cols, rows) * TILE)
+
+
+# A parede continua atrás da pedra e para fora do mapa: a beira só quebra onde
+# do outro lado está o vão aberto.
+func _walled(x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= cols or y >= rows:
+		return true
+	return wall[y * cols + x] == 1 or _rocky(x, y)
+
+
+func draw_wall(ci: CanvasItem, area: Rect2i) -> void:
+	if _wall_atlas == null:
+		return
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			if wall[y * cols + x] != 1:
+				# atrás da casca da pedra também: o bloco de borda tem pixels vazados
+				if not (_rocky(x, y) and depth(x, y) <= 1 and (wall_at(x + 1, y) or wall_at(x - 1, y) or wall_at(x, y + 1) or wall_at(x, y - 1))):
+					continue
+			var mask := (0 if _walled(x, y - 1) else 1) | (0 if _walled(x + 1, y) else 2) \
+				| (0 if _walled(x, y + 1) else 4) | (0 if _walled(x - 1, y) else 8)
+			ci.draw_texture_rect_region(_wall_atlas, Rect2(Vector2(x, y) * TILE, Vector2(TILE, TILE)),
+				Rect2((_hash(x + 7, y + 3) % 4) * TILE, mask * TILE, TILE, TILE))
 
 
 func _build_decor() -> void:

@@ -31,6 +31,9 @@ const TABLE := {
 	"luz_moedas": [false, false, true],      # essência e moeda acendem o chão (senão, só o halo)
 	"luz_contorno": [false, true, true],     # segunda luz direcional, do lado oposto à do domínio
 	"contorno_luz": [false, true, true],     # linha de luz de 1 pixel na borda dos personagens
+	"parede": [true, true, true],            # parede de fundo perto da pedra
+	"parede_luz": [false, true, true],       # a parede recebe luz e relevo (senão, só a penumbra)
+	"oclusao": [false, true, true],          # a parede escurece no encontro com os blocos
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
