@@ -118,6 +118,12 @@ static func lit(sheet: String, tex: Texture2D) -> Texture2D:
 		var ct := CanvasTexture.new()
 		ct.diffuse_texture = tex
 		ct.normal_texture = _normals[sheet]
+		var gloss: Array = Depth.GLOSS.get(sheet, [])
+		var shine := "res://assets/sprites/%s_s.png" % sheet
+		if not gloss.is_empty() and Graficos.on("especular") and ResourceLoader.exists(shine):
+			ct.specular_texture = load(shine)
+			ct.specular_color = gloss[0]
+			ct.specular_shininess = gloss[1]
 		out = ct
 	_lit[key] = out
 	return out

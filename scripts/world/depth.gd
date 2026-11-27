@@ -64,6 +64,18 @@ const TOM := {
 	"cavernas":          {"penumbra": 1.50, "fundo": [0.74, 0.20], "gama": 0.84, "cor": 1.12},
 	"bosque":            {"penumbra": 1.05, "fundo": [0.60, 0.30], "gama": 0.94, "cor": 1.08},
 }
+# Reflexo (especular) dos blocos de cada domínio que brilha: cor e abertura
+# (0 a 1; quanto mais alto, menor e mais duro o reflexo). O mapa de onde brilha
+# vem de tools/gen_especular.py; quem monta a textura é SpriteSheet.lit.
+const GLOSS := {
+	"tiles_saloes":       [Color(0.75, 0.9, 1.0), 0.42],
+	"tiles_catedral":     [Color(0.6, 0.8, 1.0), 0.38],
+	"tiles_cavernas":     [Color(0.7, 0.85, 1.0), 0.4],
+	"tiles_ventre":       [Color(1.0, 0.7, 0.65), 0.34],
+	"tiles_observatorio": [Color(0.85, 0.8, 1.0), 0.46],
+	"tiles_forja_rubra":  [Color(1.0, 0.6, 0.35), 0.4],
+}
+
 const TOM_PADRAO := {"penumbra": 1.0, "fundo": [0.68, 0.2], "gama": 0.95, "cor": 1.1}
 
 

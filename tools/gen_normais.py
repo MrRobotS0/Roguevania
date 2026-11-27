@@ -132,7 +132,7 @@ def blocos(img: Image.Image) -> np.ndarray:
 
 def processar(nome: str) -> bool:
     png = os.path.join(RAIZ, nome + ".png")
-    if not os.path.exists(png) or nome.endswith("_n") or nome.startswith(FORA):
+    if not os.path.exists(png) or nome.endswith(("_n", "_s", "_e")) or nome.startswith(FORA):
         return False
     img = Image.open(png)
     meta_path = os.path.join(RAIZ, nome + ".json")
