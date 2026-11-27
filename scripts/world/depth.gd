@@ -36,6 +36,7 @@ const DEFAULT := {"from": -30.0, "color": Color("ffe8c8"), "energy": 0.55, "heig
 const MUNDO := 1
 const HEROI := 2
 const PERSONAGENS := 4       # herói e inimigos: a luz própria dos personagens
+const PAREDE := 8            # parede de fundo: só a luz do domínio, a do herói, braseiros e clarões
 const SHADE_DIM := 0.86      # a penumbra fica mais escura: o resto vem da luz
 
 # Tom de cada domínio. Medido nas fotos: em 7 dos 13 domínios mais de 40% da tela
@@ -85,7 +86,7 @@ static func key_light(biome_id: String) -> DirectionalLight2D:
 	# o padrão aponta para baixo (luz vinda de cima); girar muda de onde vem
 	light.rotation_degrees = -float(k["from"])
 	light.blend_mode = Light2D.BLEND_MODE_ADD
-	light.range_item_cull_mask = MUNDO | HEROI
+	light.range_item_cull_mask = MUNDO | HEROI | PAREDE
 	return light
 
 
@@ -109,9 +110,14 @@ static func shadow_side(biome_id: String) -> float:
 	return -1.0 if sin(deg_to_rad(from)) > 0.0 else 1.0
 
 
+# Um piso de luz branca por baixo da cor do domínio: sem ele o tom fica bonito mas
+# o que está na sombra some.
+const FILL := 0.2
+
+
 static func shade_color(base: Color, biome_id := "") -> Color:
 	var k := SHADE_DIM * float(tom(biome_id)["penumbra"])
-	return Color(minf(base.r * k, 1.0), minf(base.g * k, 1.0), minf(base.b * k, 1.0), 1.0)
+	return Color(minf(base.r * k + FILL, 1.0), minf(base.g * k + FILL, 1.0), minf(base.b * k + FILL, 1.0), 1.0)
 
 
 # O material do corpo de um personagem: linha de luz no contorno, do lado oposto
@@ -134,14 +140,28 @@ static func body_material(biome_id: String, sky: Dictionary, strength: float) ->
 
 
 # A luz dos personagens: só o herói e os inimigos a recebem (máscara PERSONAGENS).
-# De frente (sem relevo), fraca e quase branca: tira os corpos do tom do cenário,
-# que é o que faz o herói vermelho aparecer num domínio vermelho.
-static func actor_light() -> DirectionalLight2D:
-	var light := DirectionalLight2D.new()
+# De frente, fraca e quase branca: tira os corpos do tom do cenário, que é o que
+# faz o herói vermelho aparecer num domínio vermelho.
+#   É uma luz pontual do tamanho da sala, chapada e muito alta, e não uma direcional:
+#   no renderer Compatibilidade a direcional ignora a máscara de itens (medido no
+#   navegador: com uma luz verde "só dos personagens" o chão inteiro ficou verde).
+static var _flat: ImageTexture
+
+
+static func actor_light(room_size: Vector2) -> PointLight2D:
+	if _flat == null:
+		var img := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+		img.fill(Color.WHITE)
+		_flat = ImageTexture.create_from_image(img)
+	var span := maxf(maxf(room_size.x, room_size.y), 480.0)
+	var light := PointLight2D.new()
 	light.name = "LuzDosPersonagens"
+	light.texture = _flat
+	light.texture_scale = span / 4.0 + 64.0
+	light.position = room_size * 0.5
 	light.color = Color(1.0, 0.97, 0.92)
-	light.energy = 0.30
-	light.height = 1.0
-	light.blend_mode = Light2D.BLEND_MODE_ADD
+	light.energy = 0.26
+	# bem acima do plano: chega quase de frente em qualquer ponto da sala
+	light.height = span * 3.0
 	light.range_item_cull_mask = PERSONAGENS
 	return light

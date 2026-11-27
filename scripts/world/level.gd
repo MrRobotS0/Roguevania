@@ -263,7 +263,7 @@ func _populate(with_camera: bool) -> void:
 	add_child(Depth.key_light(biome.id if biome else ""))
 	if Graficos.on("luz_contorno"):
 		add_child(Depth.rim_light(biome.id if biome else "", biome.sky if biome else {}))
-	add_child(Depth.actor_light())
+	add_child(Depth.actor_light(room.size_px()))
 	var overlay := CanvasLayer.new()
 	overlay.layer = 1
 	overlay.follow_viewport_enabled = true
