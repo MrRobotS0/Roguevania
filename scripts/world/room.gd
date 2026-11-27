@@ -98,6 +98,7 @@ func load_grid(lines: PackedStringArray) -> void:
 	_build_wall()
 	_build_decor()
 	_build_chunks()
+	_build_props()
 	_build_core()
 
 
@@ -674,8 +675,139 @@ func draw_decor(ci: CanvasItem, area: Rect2i) -> void:
 			_draw_prop(ci, d[0], c)
 
 
+# --- adereços com arte ------------------------------------------------------------
+# tools/importar_aderecos.py recorta os enfeites de cada domínio dos pacotes de arte
+# (assets/sprites/decor.png) e diz em decor.json quais desenhos cada domínio usa em
+# cada tipo de enfeite. Tipo sem desenho no domínio continua no traço antigo.
+# Os de chão são pintados junto com o resto; os pendurados (banner, chain) viram
+# Sprite2D para balançar com o vento; vela, lanterna e fornalha ganham um halo.
+const PROP_TINT := Color(0.8, 0.8, 0.84)      # atrás da ação: um pouco apagados
+const FLAME_SHADER := preload("res://shaders/halo_chama.gdshader")
+
+static var _props := {}
+static var _props_tex: Texture2D
+static var _props_read := false
+static var _flame_mat: ShaderMaterial
+
+
+static func _load_props() -> void:
+	if _props_read:
+		return
+	_props_read = true
+	var path := "res://assets/sprites/decor.png"
+	if not ResourceLoader.exists(path):
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/decor.json"))
+	if parsed is Dictionary:
+		_props = parsed
+		_props_tex = SpriteSheet.lit("decor", load(path))
+
+
+# O desenho do enfeite `kind` nesta célula, ou {} se o domínio não tem arte para ele.
+func _prop_art(kind: String, hv: int) -> Dictionary:
+	_load_props()
+	if _props_tex == null or not Graficos.on("aderecos"):
+		return {}
+	var domains: Dictionary = _props.get("dominios", {})
+	var lists: Dictionary = domains.get(tiles_id, {})
+	var names: Array = lists.get(kind, [])
+	if names.is_empty():
+		return {}
+	var items: Dictionary = _props.get("itens", {})
+	return items.get(String(names[(hv >> 3) % names.size()]), {})
+
+
+func _prop_hash(c: Vector2i) -> int:
+	return _hash(c.x * 7, c.y * 3)
+
+
+# O canto de cima e à esquerda do desenho de chão: em pé na beira de trás da face
+# de cima do bloco (ela é pintada depois e taparia o pé do enfeite).
+func _floor_art_at(art: Dictionary, c: Vector2i) -> Vector2:
+	return Vector2(roundf(c.x * TILE + 8 - float(art["w"]) * 0.5), float((c.y + 1) * TILE - TOP_FACE + 1) - float(art["h"]))
+
+
+func _draw_floor_art(ci: CanvasItem, art: Dictionary, c: Vector2i, hv: int) -> void:
+	var size := Vector2(float(art["w"]), float(art["h"]))
+	# largura negativa = espelhado (o mesmo que o Sprite2D faz no flip_h)
+	var dest := Rect2(_floor_art_at(art, c), Vector2(-size.x if (hv & 1) == 1 else size.x, size.y))
+	ci.draw_texture_rect_region(_props_tex, dest, Rect2(Vector2(float(art["x"]), float(art["y"])), size), PROP_TINT)
+
+
+class Hangers:
+	extends Node2D
+	var swinging: Array[Sprite2D] = []
+	var _t := 0.0
+
+	func _process(delta: float) -> void:
+		if swinging.is_empty():
+			return
+		var cam := get_viewport().get_camera_2d()
+		if cam == null:
+			return
+		_t += delta
+		var cx := cam.get_screen_center_position().x
+		for s in swinging:
+			if absf(s.position.x - cx) < 300.0:
+				s.skew = sin(_t * 1.3 + s.position.x * 0.05) * 0.05 + sin(_t * 2.9 + s.position.y * 0.07) * 0.015
+
+
+var _hangers: Hangers
+
+
+# Os pendurados com arte e os halos das chamas (o resto do enfeite é desenhado).
+func _build_props() -> void:
+	if _hangers != null:
+		_hangers.queue_free()
+	_hangers = Hangers.new()
+	_hangers.z_index = -1
+	_hangers.set_process(Graficos.on("vento"))
+	add_child(_hangers)
+	for d in decor:
+		var c: Vector2i = d[1]
+		var hv := _prop_hash(c)
+		var art := _prop_art(String(d[0]), hv)
+		if art.is_empty():
+			continue
+		var size := Vector2(float(art["w"]), float(art["h"]))
+		var flip := (hv & 1) == 1
+		var holder: Node2D = _hangers
+		var corner := _floor_art_at(art, c)
+		if String(art.get("ancora", "chao")) == "teto":
+			var s := Sprite2D.new()
+			s.texture = _props_tex
+			s.region_enabled = true
+			s.region_rect = Rect2(Vector2(float(art["x"]), float(art["y"])), size)
+			s.centered = false
+			# a origem é o ponto de onde pende: é em volta dela que o vento inclina
+			s.offset = Vector2(-roundf(size.x * 0.5), 0)
+			s.position = Vector2(c.x * TILE + 8, c.y * TILE)
+			s.flip_h = flip
+			s.modulate = PROP_TINT
+			_hangers.add_child(s)
+			_hangers.swinging.append(s)
+			holder = s
+			corner = s.offset
+		if not Graficos.on("halos"):
+			continue
+		var lights: Array = art.get("luzes", [])
+		for l: Array in lights:
+			var at := Vector2(size.x - float(l[0]) if flip else float(l[0]), float(l[1]))
+			var halo := Glow.halo(holder, Color(String(art.get("cor_luz", "ffb060"))), float(l[2]), 0.5, corner + at)
+			halo.show_behind_parent = false
+			if _flame_mat == null:
+				_flame_mat = ShaderMaterial.new()
+				_flame_mat.shader = FLAME_SHADER
+			halo.material = _flame_mat
+
+
 func _draw_prop(ci: CanvasItem, kind: String, c: Vector2i) -> void:
-	var hv := _hash(c.x * 7, c.y * 3)
+	var hv := _prop_hash(c)
+	var art := _prop_art(kind, hv)
+	if not art.is_empty():
+		if String(art.get("ancora", "chao")) == "chao":
+			_draw_floor_art(ci, art, c, hv)
+		return
 	var floor_y := float((c.y + 1) * TILE)
 	var top_y := float(c.y * TILE)
 	var cx := float(c.x * TILE + 8)

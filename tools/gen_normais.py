@@ -143,7 +143,7 @@ def processar(nome: str) -> bool:
         fw, fh = int(m.get("w", m.get("size", 32))), int(m.get("h", m.get("size", 32)))
         # só folha em grade de quadros (com animações) tem borda de fora por quadro
         out = personagem(img, bool(m.get("color", False)), max(fw, fh), (fw, fh) if "anims" in m else None)
-    elif nome == "props":
+    elif nome in ("props", "decor"):
         out = personagem(img, True, 32)
     else:
         return False

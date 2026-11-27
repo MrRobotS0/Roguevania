@@ -34,6 +34,9 @@ const TABLE := {
 	"parede": [true, true, true],            # parede de fundo perto da pedra
 	"parede_luz": [false, true, true],       # a parede recebe luz e relevo (senão, só a penumbra)
 	"oclusao": [false, true, true],          # a parede escurece no encontro com os blocos
+	"aderecos": [true, true, true],          # enfeites do cenário com arte (senão, o traço antigo)
+	"vento": [false, true, true],            # o que está pendurado balança
+	"halos": [false, true, true],            # halo nas velas, lanternas e fornalhas do cenário
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
