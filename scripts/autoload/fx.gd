@@ -96,14 +96,13 @@ func impact(pos: Vector2, color: Color, big := false) -> void:
 
 # Clarão: uma luz de verdade que acende o cenário em volta do golpe e apaga
 # rápido (paredes, chão e inimigos perto ficam iluminados por um instante).
-const FLASH_LIGHTS := 8
 var _flashes: Array = []
 
 func flash_light(pos: Vector2, color: Color, radius: float, energy: float, life := 0.16) -> void:
-	if not is_instance_valid(light_root) or not light_root.is_inside_tree() or not Options.get_value("postfx"):
+	if not is_instance_valid(light_root) or not light_root.is_inside_tree():
 		return
 	_flashes = _flashes.filter(func(l: Variant) -> bool: return is_instance_valid(l))
-	if _flashes.size() >= FLASH_LIGHTS:
+	if _flashes.size() >= int(Graficos.num("claroes")):
 		return
 	var light := PointLight2D.new()
 	light.texture = Glow.texture()

@@ -12,7 +12,11 @@ var _t := 0.0
 
 func _ready() -> void:
 	z_index = 7
-	Glow.attach(self, Palette.GOLD if kind == "gold" else Palette.ESSENCE, 22.0, 0.6)
+	var glow := Palette.GOLD if kind == "gold" else Palette.ESSENCE
+	if Graficos.on("luz_moedas"):
+		Glow.attach(self, glow, 22.0, 0.6)
+	else:
+		Glow.halo(self, glow, 14.0, 0.5)
 	velocity = Vector2(randf_range(-90, 90), randf_range(-200, -110))
 
 
