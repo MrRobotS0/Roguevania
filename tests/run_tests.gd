@@ -171,6 +171,8 @@ func _ready() -> void:
 	await _case("guardião veterano e mestre aprendem golpes", _boss_veteran)
 	await _case("códice: marcos dão Essência uma vez só", _codex_rewards)
 	await _case("profundidade: relevo, luz do domínio, sombra no chão e fundo vivo", _depth)
+	await _case("qualidade gráfica: três níveis, AUTO desce sozinho e EFEITOS DE TELA apaga por cima", _quality)
+	await _case("minimapa em cache: pinta só o que foi visto e repinta quando a parede muda", _map_cache)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -2508,4 +2510,54 @@ func _depth() -> void:
 	_check(level.get_children().any(func(n: Node) -> bool: return n is ContactShadows), "sem sombra no chão")
 	var p := level.player
 	_check(p.body.texture is CanvasTexture, "herói desenhado sem relevo")
+	Run.active = false
+
+# --- passada visual (qualidade, minimapa) -------------------------------------------
+
+func _quality() -> void:
+	var before := String(Options.get_value("quality"))
+	Options.set_value("quality", "baixo")
+	_check(Graficos.level() == Graficos.BAIXO and not Graficos.on("brilho") and int(Graficos.num("claroes")) == 2, "nível baixo não aplicou")
+	_check(int(Graficos.value("escala")) == 1, "nível baixo não desenha em 1x")
+	Options.set_value("quality", "alto")
+	_check(Graficos.level() == Graficos.ALTO and Graficos.on("brilho") and Graficos.on("luz_moedas"), "nível alto não aplicou")
+	Options.set_value("postfx", false)
+	_check(not Graficos.on("mato") and int(Graficos.num("claroes")) == 0, "EFEITOS DE TELA desligado não apagou os efeitos")
+	Options.set_value("postfx", true)
+	Options.set_value("quality_auto", "medio")
+	Options.set_value("quality", "auto")
+	_check(Graficos.level() == Graficos.MEDIO and Graficos.label() == "AUTO (MÉDIA)", "AUTO não voltou ao nível salvo: " + Graficos.label())
+	# uma janela lenta não basta; duas seguidas descem um nível
+	Graficos._grace = 0.0
+	var calls := int(Graficos.WINDOW / 0.04) + 2
+	for i in calls:
+		Graficos._process(0.04)
+	_check(Graficos.level() == Graficos.MEDIO, "uma janela lenta já desceu de nível")
+	for i in calls:
+		Graficos._process(0.04)
+	_check(Graficos.level() == Graficos.BAIXO, "duas janelas lentas não desceram de nível")
+	Options.set_value("quality_auto", "alto")
+	Options.set_value("quality", before)
+
+
+func _map_cache() -> void:
+	Run.new_run(6)
+	if level:
+		remove_child(level)
+		level.queue_free()
+	level = Level.new()
+	add_child(level)
+	level.build_generated(Catalog.biome("mar_de_cinzas"), 11, false)
+	await _frames(12)
+	var cache := MapCache.new()
+	cache.bind(level, HudTheme.of("mar_de_cinzas"))
+	cache.sync()
+	_check(level.fresh.size() > 0 and cache._painted == level.fresh.size(), "o mapa em cache não pintou o que foi visto")
+	var me := Vector2i(level.player.center() / Room.TILE)
+	_check(cache._image.get_pixel(me.x * MapCache.S, me.y * MapCache.S).a > 0.5, "a célula do herói ficou sem pintar")
+	var far := Vector2i(level.room.cols - 1, 0)
+	_check(not level.seen(far.x, far.y) and cache._image.get_pixel(far.x * MapCache.S, far.y * MapCache.S).a == 0.0, "pintou célula que o herói não viu")
+	level.room.version += 1
+	cache.sync()
+	_check(cache._painted == level.fresh.size(), "não repintou depois de a parede mudar")
 	Run.active = false
