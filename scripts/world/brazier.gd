@@ -11,6 +11,7 @@ var _seed := 0.0
 
 func _ready() -> void:
 	z_index = -1
+	add_to_group("calor")
 	_seed = fposmod(position.x * 0.137, TAU)
 	_light = Glow.attach(self, Color(1.0, 0.62, 0.3), 96.0, 0.9, Vector2(0, -14))
 	_light.range_item_cull_mask |= Depth.PAREDE

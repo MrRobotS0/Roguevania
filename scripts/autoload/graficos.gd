@@ -42,6 +42,7 @@ const TABLE := {
 	"especular": [false, true, true],        # reflexo da luz no gelo, na pedra molhada, no metal e na carne
 	"brasa": [false, true, true],            # blocos que emitem luz e pulsam (Forja e Ventre)
 	"sombras": [false, false, true],         # sombra de verdade: braseiros e clarões fortes, com os blocos de oclusor
+	"calor": [false, true, true],            # ar quente tremendo sobre os braseiros
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado

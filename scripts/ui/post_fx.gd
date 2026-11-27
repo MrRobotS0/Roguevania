@@ -8,12 +8,16 @@ extends ColorRect
 # - ondas de choque (distorção em anel) na morte de elite/chefe e nos críticos;
 # - meia-luz animada: um véu de luz quente que respira bem devagar;
 # - pontilhado ordenado (Bayer 4x4) de 1/255 para não formar degraus no degradê.
+# - ar quente sobre os braseiros (grupo "calor"): as linhas da tela escorregam de 1 em
+#   1 pixel do jogo numa coluna acima da chama; só os dois fogos mais perto do centro;
 # - filtro da loja (Cosmetics.FILTERS): gradação de cor da tela inteira.
 # Opções > Tela > EFEITOS DE TELA desliga tudo, menos o filtro que o jogador escolheu.
 
 const SHADER := preload("res://shaders/pos_processo.gdshader")
 
 const WAVE_TIME := 0.55
+const HEAT_RADIUS := 26.0     # px do jogo: meia largura da coluna de ar quente
+const HEAT_FORCE := 0.9       # px do jogo de desvio no pico
 
 var _mat: ShaderMaterial
 var _waves: Array = []     # [centro na tela, idade, força]
@@ -48,6 +52,24 @@ func use_tone(gamma: float, saturation: float) -> void:
 	_mat.set_shader_parameter("saturation", saturation)
 
 
+# Os dois fogos na tela mais perto do centro viram colunas de ar quente.
+func _heat(vp: Vector2) -> void:
+	var fires: Array[Vector2] = []
+	if Graficos.on("calor"):
+		var view := get_viewport().get_canvas_transform()
+		for n in get_tree().get_nodes_in_group("calor"):
+			var at: Vector2 = view * ((n as Node2D).global_position + Vector2(0, -16))
+			if at.x > -30.0 and at.x < vp.x + 30.0 and at.y > 0.0 and at.y < vp.y + 50.0:
+				fires.append(at)
+		var middle := vp * 0.5
+		fires.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.distance_squared_to(middle) < b.distance_squared_to(middle))
+	for i in 2:
+		var h := Vector4(0.5, 0.5, 0.0, 0.0)
+		if i < fires.size():
+			h = Vector4(fires[i].x / vp.x, fires[i].y / vp.y, HEAT_RADIUS / vp.y, HEAT_FORCE)
+		_mat.set_shader_parameter("heat%d" % i, h)
+
+
 func _on_wave(world_pos: Vector2, strength: float) -> void:
 	if _waves.size() >= 2:
 		_waves.pop_front()
@@ -71,6 +93,8 @@ func _process(delta: float) -> void:
 			_mat.set_shader_parameter("breathe", 0.0)
 			_mat.set_shader_parameter("wave0", Vector4(0.5, 0.5, -1.0, 0.0))
 			_mat.set_shader_parameter("wave1", Vector4(0.5, 0.5, -1.0, 0.0))
+			_mat.set_shader_parameter("heat0", Vector4(0.5, 0.5, 0.0, 0.0))
+			_mat.set_shader_parameter("heat1", Vector4(0.5, 0.5, 0.0, 0.0))
 		return
 	_mat.set_shader_parameter("grade", 1.0)
 	_t += delta
@@ -84,6 +108,7 @@ func _process(delta: float) -> void:
 	Fx.aberration = maxf(Fx.aberration - delta * 9.0, 0.0)
 	var ab := Fx.aberration + Fx.pain * 1.5
 	_mat.set_shader_parameter("aberration", ab if Options.flashes() else ab * 0.3)
+	_heat(vp)
 	for w in _waves:
 		w[1] += delta
 	_waves = _waves.filter(func(w: Array) -> bool: return w[1] < WAVE_TIME)

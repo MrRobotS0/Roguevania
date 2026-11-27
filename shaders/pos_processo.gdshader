@@ -14,6 +14,8 @@ uniform float aberration = 0.0;      // em pixels da tela do jogo
 uniform vec2 px_size = vec2(0.00208, 0.0037);
 uniform vec4 wave0 = vec4(0.5, 0.5, -1.0, 0.0);   // centro (uv), raio (uv no eixo y), força
 uniform vec4 wave1 = vec4(0.5, 0.5, -1.0, 0.0);
+uniform vec4 heat0 = vec4(0.5, 0.5, 0.0, 0.0);   // fogo: centro (uv), raio (uv no eixo y), força em pixels do jogo
+uniform vec4 heat1 = vec4(0.5, 0.5, 0.0, 0.0);
 uniform float aspect = 1.7778;
 uniform float time = 0.0;
 uniform float breathe = 0.0;
@@ -57,6 +59,22 @@ vec2 wave_offset(vec2 uv, vec4 w) {
 	return dir * ring * w.w;
 }
 
+// Ar quente sobre o fogo: numa coluna que sobe da chama, as linhas da tela escorregam
+// para os lados em onda. É o truque de varredura dos jogos de 16 bits: o desvio é sempre
+// de pixels inteiros do jogo e igual na linha toda, então a arte treme mas não borra.
+float heat_shift(vec2 uv, vec4 h) {
+	if (h.w <= 0.0) {
+		return 0.0;
+	}
+	vec2 d = uv - h.xy;
+	d.x *= aspect;
+	float side = 1.0 - smoothstep(h.z * 0.25, h.z * 0.7, abs(d.x));
+	float up = smoothstep(-h.z * 2.2, -h.z * 0.2, d.y) * (1.0 - step(h.z * 0.1, d.y));
+	float row = floor(uv.y / px_size.y);
+	float wave = sin(row * 0.85 - time * 9.0) + 0.5 * sin(row * 0.37 + time * 5.0);
+	return floor(wave * side * up * h.w + 0.5) * px_size.x;
+}
+
 float bayer(vec2 p) {
 	int x = int(mod(p.x, 4.0));
 	int y = int(mod(p.y, 4.0));
@@ -67,6 +85,7 @@ float bayer(vec2 p) {
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
+	uv.x += heat_shift(uv, heat0) + heat_shift(uv, heat1);
 	uv -= wave_offset(uv, wave0);
 	uv -= wave_offset(uv, wave1);
 	vec3 c;
