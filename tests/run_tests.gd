@@ -173,6 +173,7 @@ func _ready() -> void:
 	await _case("profundidade: relevo, luz do domínio, sombra no chão e fundo vivo", _depth)
 	await _case("qualidade gráfica: três níveis, AUTO desce sozinho e EFEITOS DE TELA apaga por cima", _quality)
 	await _case("minimapa em cache: pinta só o que foi visto e repinta quando a parede muda", _map_cache)
+	await _case("passada visual: níveis, pilhas, adereços, parede de fundo e folha branca pelo atalho nativo", _visual_pass)
 
 	print("")
 	print("%d ok, %d falhas" % [_passed, _failures.size()])
@@ -2540,6 +2541,69 @@ func _quality() -> void:
 	_check(Graficos.level() == Graficos.BAIXO, "duas janelas lentas não desceram de nível")
 	Options.set_value("quality_auto", "alto")
 	Options.set_value("quality", before)
+
+
+func _visual_pass() -> void:
+	for key: String in Graficos.TABLE:
+		_check((Graficos.TABLE[key] as Array).size() == 3, "Graficos.TABLE[%s] sem os três níveis" % key)
+	for key: String in Graficos.POSTFX:
+		_check(Graficos.TABLE.has(key), "POSTFX cita um efeito que não existe: " + key)
+	# pilhas: baú, moeda, planta e todo ícone de item têm os quadros prontos
+	for name: String in ["bau", "bau_aberto", "bau_maldito", "bau_maldito_aberto", "moeda", "planta"]:
+		_check(Stack.of(name) != null, "falta a pilha " + name)
+	var missing := 0
+	for f in DirAccess.get_files_at("res://assets/icons"):
+		if f.ends_with("_16.png") and Stack.of("item_" + f.trim_suffix("_16.png")) == null:
+			missing += 1
+	_check(missing == 0, "%d ícones de item sem pilha (rodar tools/gen_pilhas.py)" % missing)
+	# adereços: cada desenho que um domínio pede existe e cabe no atlas
+	var atlas := Room.props_texture()
+	_check(atlas != null, "o atlas de adereços não carregou")
+	var bad := 0
+	for id: String in BackWall.WALLS:
+		for kind: String in ["tree", "column", "bones", "mound", "shards", "banner", "chain"]:
+			for n in Room.prop_names(id, kind):
+				var art := Room.prop_item(String(n))
+				if art.is_empty() or atlas == null or float(art["x"]) + float(art["w"]) > atlas.get_width() \
+						or float(art["y"]) + float(art["h"]) > atlas.get_height():
+					bad += 1
+		if BackWall.reach(id).y > 0:
+			_check(ResourceLoader.exists("res://assets/sprites/parede_%s.png" % id), "falta o atlas da parede de " + id)
+	_check(bad == 0, "%d adereços de domínio fora do atlas" % bad)
+	# a sala monta a parede e os pendurados
+	Run.new_run(6)
+	if level:
+		remove_child(level)
+		level.queue_free()
+	level = Level.new()
+	add_child(level)
+	level.build_generated(Catalog.biome("catedral"), 11, false)
+	await _frames(4)
+	var walls := 0
+	for i in level.room.wall.size():
+		walls += level.room.wall[i]
+	_check(walls > 0 and level.room._wall_atlas != null, "a Catedral ficou sem parede de fundo")
+	_check(level.room._hangers != null, "a sala não montou os adereços pendurados")
+	# folha branca e folha tingida pelo atalho nativo: iguais às feitas pixel a pixel
+	var src := SpriteSheet.image("highwayman", PackedColorArray())
+	SpriteSheet.texture("highwayman", PackedColorArray(), true)
+	var white: Image = SpriteSheet._images[SpriteSheet._key("highwayman", PackedColorArray(), true)]
+	var hot := Color(1.0, 0.4, 0.1, 0.5)
+	var tinted := SpriteSheet.image("highwayman", PackedColorArray([hot]))
+	var wrong := 0
+	for y in range(0, src.get_height(), 3):
+		for x in range(0, src.get_width(), 3):
+			var a := src.get_pixel(x, y)
+			var w := white.get_pixel(x, y)
+			if (a.a >= 0.5) != (w.a >= 0.5) or (w.a >= 0.5 and minf(w.r, minf(w.g, w.b)) < 0.99):
+				wrong += 1
+			if a.a >= 0.5:
+				var want := a.lerp(hot, hot.a)
+				var got := tinted.get_pixel(x, y)
+				if absf(got.r - want.r) > 0.02 or absf(got.g - want.g) > 0.02 or absf(got.b - want.b) > 0.02 or got.a < 0.99:
+					wrong += 1
+	_check(wrong == 0, "%d pixels diferentes na folha branca ou tingida" % wrong)
+	Run.active = false
 
 
 func _map_cache() -> void:

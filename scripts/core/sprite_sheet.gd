@@ -77,6 +77,25 @@ static func _color_texture(sheet: String, src: Image, palette: PackedColorArray,
 		_cache[key] = plain
 		_images[key] = out
 		return plain
+	# Folha de alfa binário (pixel art sem meia transparência), branca ou tingida: sai de
+	# operações nativas da imagem. Pixel a pixel em GDScript, uma folha de chefe (mais de
+	# um milhão de pixels, duas passadas) engasgava a entrada dele no navegador.
+	if not recolor and out.detect_alpha() != Image.ALPHA_BLEND:
+		if out.get_format() != Image.FORMAT_RGBA8:
+			out.convert(Image.FORMAT_RGBA8)
+		var shape := out.duplicate() as Image
+		var ink := Image.create(out.get_width(), out.get_height(), false, Image.FORMAT_RGBA8)
+		var area := Rect2i(Vector2i.ZERO, out.get_size())
+		if white:
+			ink.fill(Color.WHITE)
+			out.blit_rect_mask(ink, shape, area, Vector2i.ZERO)
+		else:
+			ink.fill(palette[0])
+			out.blend_rect_mask(ink, shape, area, Vector2i.ZERO)
+		var quick := ImageTexture.create_from_image(out)
+		_cache[key] = quick
+		_images[key] = out
+		return quick
 	var target := palette[3] if recolor else Color.WHITE
 	for y in out.get_height():
 		for x in out.get_width():
