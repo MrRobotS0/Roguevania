@@ -45,6 +45,9 @@ const TABLE := {
 	"calor": [false, true, true],            # ar quente tremendo sobre os braseiros
 	"quadro_impacto": [true, true, true],    # golpe forte: tela em luz e sombra chapadas por dois quadros
 	"morte": [true, true, true],             # a cor escorre e a tela fecha em volta do herói caído
+	"contorno_elite": [true, true, true],    # contorno em brasa, que pulsa, nos elites de arte pronta
+	"fumaca": [false, true, true],           # discos de fumaça em pixel na poeira e nos golpes fortes
+	"voo_coleta": [true, true, true],        # essência e moeda voam para o contador
 	"nuvens": [false, true, true],           # sombra de nuvens no chão
 	"sombra_tochas": [false, true, true],
 	"reflexo": [false, true, true],          # chão molhado
@@ -53,7 +56,7 @@ const TABLE := {
 	"ar": [30, 70, 70],                      # partículas do ar de cada domínio
 }
 # o que "efeitos de tela" desligado apaga, seja qual for o nível
-const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato", "poeira_frente", "halos", "brasa", "sombras"]
+const POSTFX := ["brilho", "claroes", "luz_moedas", "nuvens", "sombra_tochas", "reflexo", "pocas", "mato", "poeira_frente", "halos", "brasa", "sombras", "fumaca"]
 
 const WINDOW := 4.0          # s de jogo por medição
 const SLOW_FPS := 50.0       # abaixo disso a janela conta como lenta

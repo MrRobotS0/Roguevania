@@ -134,20 +134,25 @@ static func shade_color(base: Color, biome_id := "") -> Color:
 
 # O material do corpo de um personagem: linha de luz no contorno, do lado oposto
 # ao da luz do domínio e sempre vindo de cima (shaders/personagem.gdshader).
-# `strength` 0 a 1. Sem a qualidade para isso, devolve null (desenho comum).
+# `strength` 0 a 1. `aura` é o contorno de 1 pixel por fora do desenho (elite); vale em
+# qualquer qualidade. Sem linha de luz nem aura, devolve null (desenho comum).
 const BODY := preload("res://shaders/personagem.gdshader")
 
 
-static func body_material(biome_id: String, sky: Dictionary, strength: float) -> ShaderMaterial:
-	if not Graficos.on("contorno_luz"):
+static func body_material(biome_id: String, sky: Dictionary, strength: float, aura := Color(0, 0, 0, 0)) -> ShaderMaterial:
+	var rim := Graficos.on("contorno_luz")
+	if not rim and aura.a <= 0.0:
 		return null
 	var m := ShaderMaterial.new()
 	m.shader = BODY
-	var from := float(key_of(biome_id)["from"])
-	var side := -1.0 if sin(deg_to_rad(from)) > 0.0 else 1.0
-	m.set_shader_parameter("luz", Vector2(side, -0.75).normalized())
-	var tone: Color = Color(sky.get("glow", Color("b8c8ff"))).lerp(Color.WHITE, 0.55)
-	m.set_shader_parameter("contorno", Color(tone.r, tone.g, tone.b, strength))
+	if rim:
+		var from := float(key_of(biome_id)["from"])
+		var side := -1.0 if sin(deg_to_rad(from)) > 0.0 else 1.0
+		m.set_shader_parameter("luz", Vector2(side, -0.75).normalized())
+		var tone: Color = Color(sky.get("glow", Color("b8c8ff"))).lerp(Color.WHITE, 0.55)
+		m.set_shader_parameter("contorno", Color(tone.r, tone.g, tone.b, strength))
+	if aura.a > 0.0:
+		m.set_shader_parameter("aura", aura)
 	return m
 
 

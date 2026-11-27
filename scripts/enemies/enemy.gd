@@ -101,7 +101,9 @@ func _setup_sprite() -> void:
 	body.texture = SpriteSheet.lit(sheet, _tex)
 	body.light_mask = Depth.MUNDO | Depth.PERSONAGENS
 	var home := get_parent() as Level
-	body.material = Depth.body_material(room.tiles_id if room else "", home.biome.sky if home and home.biome else {}, 0.4)
+	# elite de arte pronta: o contorno em brasa vem do shader (o indexado troca a cor na paleta)
+	var ember := Color("d8501c") if elite and SpriteSheet.meta(sheet).get("color", false) and Graficos.on("contorno_elite") else Color(0, 0, 0, 0)
+	body.material = Depth.body_material(room.tiles_id if room else "", home.biome.sky if home and home.biome else {}, 0.4, ember)
 	add_child(body)
 	_attach_emission()
 	_update_sprite()

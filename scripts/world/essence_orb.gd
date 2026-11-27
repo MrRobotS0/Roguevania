@@ -43,6 +43,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			player.add_essence(1)
 		Sfx.play("coin" if kind == "gold" else "essence", -14.0, 0.2)
+		Fx.collected.emit(kind, global_position)
 		queue_free()
 	queue_redraw()
 

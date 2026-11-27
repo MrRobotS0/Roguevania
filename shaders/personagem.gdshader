@@ -7,7 +7,8 @@
 //   se é o primeiro da linha pela esquerda (16), pela direita (32) ou da coluna por
 //   cima (64), somado a 128 (tools/gen_normais.py). Vão entre a capa e o braço não é
 //   borda de fora, então não acende no meio do corpo.
-// Aura: contorno de 1 pixel por FORA do desenho (elite).
+// Aura: contorno de 1 pixel por FORA do desenho, que pulsa (elite de arte pronta, que
+// não tem a cor do contorno na paleta para trocar).
 //
 // O relevo continua funcionando sozinho: o shader não mexe em NORMAL.
 shader_type canvas_item;
@@ -45,7 +46,7 @@ void fragment() {
 		float perto = texture(TEXTURE, UV + vec2(px.x, 0.0)).a + texture(TEXTURE, UV - vec2(px.x, 0.0)).a
 			+ texture(TEXTURE, UV + vec2(0.0, px.y)).a + texture(TEXTURE, UV - vec2(0.0, px.y)).a;
 		if (perto > 0.5) {
-			c = aura;
+			c = vec4(aura.rgb, aura.a * (0.72 + 0.28 * sin(TIME * 5.0)));
 		}
 	}
 	COLOR = c * tinta;

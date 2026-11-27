@@ -15,6 +15,7 @@ var _stop_token := 0
 var aberration := 0.0      # pixels de aberração cromática (PostFx; some sozinha)
 var light_root: Node2D     # a fase: onde nascem as luzes de impacto
 signal wave_requested(world_pos: Vector2, strength: float)
+signal collected(kind: String, world_pos: Vector2)   # essência ou moeda recolhida: voa para o contador (Hud)
 var pain := 0.0            # 0..1: borda vermelha da tela quando o herói apanha (Vignette)
 
 
@@ -67,6 +68,8 @@ func burst(pos: Vector2, color: Color, count: int, speed: float, life := 0.35, g
 
 func dust(pos: Vector2, count := 5) -> void:
 	burst(pos, Palette.DUST, count, 55.0, 0.3, 120.0, 2.0, 25.0)
+	if is_instance_valid(sparks):
+		sparks.puff(pos, Palette.DUST, 1 + count / 4)
 
 
 func ash(parts: Array, push := Vector2.ZERO) -> void:

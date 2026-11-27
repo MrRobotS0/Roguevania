@@ -51,7 +51,62 @@ func use_theme(id: String) -> void:
 	_theme_k = 0.0
 
 
+# --- o que foi recolhido voa para o contador ----------------------------------------
+# Essência e moeda: ao tocar o herói, um ponto de luz sai de onde ele está na tela e
+# vai para o número do canto, que dá um pulso ao receber. É o que liga o que se pega
+# no chão ao número que sobe lá em cima. Curto (um terço de segundo) e acelerando.
+const FLY_TIME := 0.32
+const FLY_MAX := 16
+var _flying: Array[Dictionary] = []
+var _pulse := {"essence": 0.0, "gold": 0.0}
+var _counter_at := {"essence": Vector2(440, 11), "gold": Vector2(410, 11)}
+
+
+func _on_collected(kind: String, world_pos: Vector2) -> void:
+	if not _pulse.has(kind):
+		return
+	if not Graficos.on("voo_coleta") or _flying.size() >= FLY_MAX:
+		_pulse[kind] = 1.0
+		return
+	var from: Vector2 = get_viewport().get_canvas_transform() * world_pos
+	_flying.append({"from": from, "kind": kind, "age": 0.0})
+
+
+func _fly(delta: float) -> void:
+	for kind: String in _pulse:
+		_pulse[kind] = maxf(float(_pulse[kind]) - delta * 6.0, 0.0)
+	var keep := 0
+	for f in _flying:
+		var age: float = f["age"]
+		age += delta
+		f["age"] = age
+		if age < FLY_TIME:
+			_flying[keep] = f
+			keep += 1
+		else:
+			_pulse[String(f["kind"])] = 1.0
+	_flying.resize(keep)
+
+
+func _draw_flying() -> void:
+	for f in _flying:
+		var kind := String(f["kind"])
+		var from: Vector2 = f["from"]
+		var to: Vector2 = _counter_at[kind]
+		var age: float = f["age"]
+		var t := age / FLY_TIME
+		var k := t * t
+		var bend := from.lerp(to, 0.5) + Vector2(0, -26)
+		var at := from.lerp(bend, k).lerp(bend.lerp(to, k), k).round()
+		var tail_k := maxf(k - 0.1, 0.0)
+		var tail := from.lerp(bend, tail_k).lerp(bend.lerp(to, tail_k), tail_k).round()
+		var color: Color = Palette.GOLD if kind == "gold" else Palette.ESSENCE
+		draw_rect(Rect2(tail, Vector2.ONE), Color(color, 0.5))
+		draw_rect(Rect2(at - Vector2(1, 1), Vector2(2, 2)), color.lerp(Color.WHITE, 0.5))
+
+
 func _ready() -> void:
+	Fx.collected.connect(_on_collected)
 	Fx.toasted.connect(func(text: String) -> void: _toasts.append([text, 2.4]))
 	Fx.bannered.connect(func(title: String, sub: String) -> void:
 		_banner = title
@@ -81,6 +136,7 @@ func _process(delta: float) -> void:
 		_theme_k = move_toward(_theme_k, 1.0, delta / 0.3)
 		_theme = HudTheme.blend(_theme_from, _theme_to, _theme_k)
 	_banner_t += delta
+	_fly(delta)
 	for t in _toasts:
 		t[1] -= delta
 	_toasts = _toasts.filter(func(t: Array) -> bool: return t[1] > 0.0)
@@ -104,6 +160,7 @@ func _draw() -> void:
 		var left := _draw_health()
 		_draw_flasks(Vector2(left, _below_health))
 		_draw_right(size)
+		_draw_flying()
 		_draw_minimap(size)
 		_draw_slots(size)
 		_draw_prompt(size)
@@ -200,14 +257,21 @@ func _draw_right(size: Vector2) -> void:
 	var plate_h := 44.0 if not player.blueprints.is_empty() else 31.0
 	draw_rect(Rect2(size.x - 104.0, 4.0, 100.0, plate_h), plate)
 	draw_rect(Rect2(size.x - 104.0, 4.0 + plate_h, 100.0, 1), Color(Menu.FRAME, 0.5))
+	# o número que acabou de receber dá um salto de 1 pixel e clareia
 	var essence := "%d" % player.essence
 	var w := PixelFont.body_width(essence)
-	PixelFont.body(self, essence, Vector2(x - w, 8), Palette.ESSENCE)
-	_icon("essence", Vector2(x - w - 11, 8), Palette.ESSENCE)
+	var got: float = _pulse["essence"]
+	var tone := Palette.ESSENCE.lerp(Color.WHITE, got * 0.7)
+	PixelFont.body(self, essence, Vector2(x - w, 8 - roundf(got * 1.4)), tone)
+	_icon("essence", Vector2(x - w - 11, 8 - roundf(got * 1.4)), tone)
+	_counter_at["essence"] = Vector2(x - w - 7, 12)
 	var gold := "%d" % player.gold
 	var gx := x - w - 22 - PixelFont.body_width(gold)
-	PixelFont.body(self, gold, Vector2(gx, 8), Palette.GOLD)
-	_icon("gold", Vector2(gx - 11, 8), Palette.GOLD)
+	got = _pulse["gold"]
+	tone = Palette.GOLD.lerp(Color.WHITE, got * 0.7)
+	PixelFont.body(self, gold, Vector2(gx, 8 - roundf(got * 1.4)), tone)
+	_icon("gold", Vector2(gx - 11, 8 - roundf(got * 1.4)), tone)
+	_counter_at["gold"] = Vector2(gx - 7, 12)
 	if not player.blueprints.is_empty():
 		var n := "%d" % player.blueprints.size()
 		var nx := x - PixelFont.body_width(n)
